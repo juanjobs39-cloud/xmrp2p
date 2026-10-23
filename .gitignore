@@ -1,0 +1,56 @@
+# --- Secretos: NUNCA se suben (ni de testnet) ---
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.keystore
+keystore/
+*.mnemonic
+*mnemonic*.txt
+*.seed
+config/xmrp2p.toml
+!config/xmrp2p.example.toml
+# Wallets de Monero
+*.keys
+*.wallet
+wallets/
+# Archivos de recuperación de swaps (contienen secretos)
+*.xmrp2p-recovery.json
+recovery/
+
+# --- Node / web / workers ---
+node_modules/
+dist/
+dist-ipfs/
+.astro/
+.wrangler/
+.dev.vars
+
+# --- Rust / WASM ---
+target/
+pkg/
+
+# --- Foundry ---
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+research/**/out/
+research/**/cache/
+research/**/broadcast/
+research/**/lib/
+
+# --- Python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# --- Sistema / editores ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

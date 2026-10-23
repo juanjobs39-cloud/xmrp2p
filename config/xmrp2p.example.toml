@@ -1,0 +1,71 @@
+# Configuración central de xmrp2p.
+# Copia este archivo a config/xmrp2p.toml (ignorado por Git) y llena los valores.
+# Lo leen: la web (build), los Workers, el daemon del maker y los scripts de despliegue.
+# Formato TOML: lo leen JS (smol-toml), Python (tomli/tomllib) y Rust (toml).
+
+[marca]
+nombre = "[NOMBRE_MARCA]"          # nombre de trabajo: xmrp2p
+dominio = "[DOMINIO]"              # ej. "xmrp2p.example" (sin https://)
+email_contacto = "[EMAIL_CONTACTO]"
+
+[comision]
+# Dirección que recibe la comisión en cada red (lado USDT).
+wallet_evm = "[WALLET_COMISION_EVM]"    # 0x...
+wallet_tron = "[WALLET_COMISION_TRON]"  # T...
+# Comisión en puntos básicos (100 = 1 %). Se fija al desplegar la fábrica.
+comision_bps = 50                       # [COMISION] ejemplo: 0,5 %
+# Tope máximo. En el contrato es una CONSTANTE inmutable: cambiarlo exige un
+# contrato nuevo y una auditoría nueva. Este valor solo documenta cuál es.
+comision_tope_bps = 100
+
+[plazos]
+# Segundos. t0: hasta cuándo el taker puede marcar "listo" o reembolsar.
+# t1: desde cuándo el taker puede reembolsar si el maker no reclamó.
+# Valores provisionales; se definen en la Fase 1 según tiempos de confirmación de Monero.
+t0_segundos = 3600
+t1_segundos = 7200
+
+[limites]
+# En unidades de USDT (no en wei). Valores de ejemplo para testnet.
+monto_minimo_usdt = 10
+monto_maximo_usdt = 1000
+
+[regiones]
+# Códigos ISO 3166-1 alfa-2 bloqueados en la web (los Workers leen CF-IPCountry).
+bloqueadas = []                         # ej. ["US", "KP"]
+
+# --- Redes. `activa = false` desactiva una red sin tocar código. ---
+
+[redes.arbitrum_sepolia]
+activa = true
+tipo = "evm"
+chain_id = 421614
+rpc = "https://sepolia-rollup.arbitrum.io/rpc"
+token_usdt = ""                         # token de prueba que simula USDT (se despliega en Fase 1)
+fabrica_swaps = ""                      # dirección de la fábrica (Fase 1)
+
+[redes.tron_nile]
+activa = false                          # pendiente de confirmar compatibilidad (Fase 0)
+tipo = "tron"
+rpc = "https://nile.trongrid.io"
+token_usdt = ""
+fabrica_swaps = ""
+
+[redes.arbitrum_one]
+activa = false                          # MAINNET: no activar sin auditoría y aprobación explícita
+tipo = "evm"
+chain_id = 42161
+rpc = ""
+token_usdt = ""
+fabrica_swaps = ""
+
+[monero]
+red = "stagenet"                        # "stagenet" | "mainnet" (mainnet bloqueado hasta auditoría)
+# Nodos por defecto. El usuario siempre puede escribir el suyo en la app.
+nodos = [
+  "http://stagenet.xmr-tw.org:38081",
+  "http://node.monerodevs.org:38089",
+]
+# Proxy en Cloudflare Worker (opcional). Vacío = conexión directa al nodo.
+proxy_worker = ""
+confirmaciones_requeridas = 10
