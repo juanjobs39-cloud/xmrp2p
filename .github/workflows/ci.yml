@@ -17,7 +17,7 @@ jobs:
           fetch-depth: 0
       # Escanea todo el historial (la acción oficial falla en el primer push porque el commit raíz no tiene padre).
       - name: gitleaks
-        run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest git /repo --redact --verbose --exit-code 1
+        run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest git /repo --config /repo/.gitleaks.toml --redact --verbose --exit-code 1
 
   contratos:
     name: Contratos (Foundry)

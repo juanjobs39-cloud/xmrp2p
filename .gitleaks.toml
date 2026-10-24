@@ -1,0 +1,9 @@
+# Configuración de gitleaks: reglas por defecto + excepciones justificadas.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Vectores de prueba públicos: escalares aleatorios generados para tests, nunca usados con fondos"
+paths = [
+  '''contracts/test/vectors/.*\.json''',
+]
