@@ -15,9 +15,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Escanea todo el historial (la acción oficial falla en el primer push porque el commit raíz no tiene padre).
+      - name: gitleaks
+        run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest git /repo --redact --verbose --exit-code 1
 
   contrato-research:
     name: Prototipo de contrato (Fase 0)
