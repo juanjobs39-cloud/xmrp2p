@@ -1,6 +1,6 @@
 # Arquitectura de xmrp2p (Fase 0)
 
-> Última actualización: 24 de octubre de 2026. Estado: **investigación y diseño**. Nada de esto está desplegado en mainnet.
+> Última actualización: 24 de octubre de 2026. Estado: **Fase 0 terminada; Fase 1 (contrato) implementada y probada, sin auditoría y sin desplegar**. Nada de esto está en mainnet.
 
 **Resumen en una frase:** el protocolo de AthanorLabs adaptado a USDT es viable en el navegador con librerías existentes. Las pruebas DLEQ en WASM, el contrato con los tres comportamientos de USDT y monero-ts vía proxy funcionaron. Los dos problemas serios son que **el taker necesita estar en línea antes de t0** y que **verificar el XMR en el navegador hoy tarda ~4 minutos**.
 
@@ -123,8 +123,8 @@ stateDiagram-v2
 |---|---|---|
 | A1 | ¿Qué mitigación del riesgo 1 adoptamos? | Decisión del dueño + diseño en la Fase 1 |
 | ~~A2~~ | ~~¿`fetch()` a 38081 funciona en un Worker desplegado?~~ | **Resuelta (24-oct):** sí, `fetch()` y `connect()` funcionan en producción |
-| A3 | ¿`ecrecover` y los clones funcionan igual en Tron Nile? | Desplegar en Nile en la Fase 1 (requiere TRX de prueba del faucet) |
-| A4 | ¿USD₮0 en Arbitrum acepta `permit()` de verdad? | `DOMAIN_SEPARATOR` y `nonces` existen; probar un `permit` en un fork de Arbitrum con Foundry |
+| A3 | ¿`ecrecover` y los clones funcionan igual en Tron Nile? | **Parcial (24-oct):** compila con el solc de Tron y la red tiene activados los opcodes necesarios. Falta un despliegue en Nile (requiere TRX de prueba del faucet, paso del dueño) |
+| ~~A4~~ | ~~¿USD₮0 en Arbitrum acepta `permit()`?~~ | **Resuelta (24-oct):** sí. `newSwapWithPermit` funciona en un fork de Arbitrum One con el USD₮0 real |
 | A5 | ¿Valores de t0 y t1? | Depende del tiempo de confirmación de Monero (10 bloques ≈ 20 min) y del riesgo 1 |
 | A6 | ¿monero-ts o escáner propio con `monero-oxide`? | Prototipo comparativo al inicio de la Fase 2 |
 | A7 | ¿Serialización compacta de la DLEQ (170 KB en JSON)? | Fase 2 |
@@ -133,7 +133,7 @@ stateDiagram-v2
 
 | Fase | Entregable | Puntos clave salidos de la Fase 0 |
 |---|---|---|
-| 1 · Contrato | `contracts/` con Foundry: fábrica + escrow clon, pruebas unitarias, fuzz e invariantes, Slither | D2–D4, D9; comisión *pull*; lista fija de tokens; mitigación del riesgo 1; testnets Arbitrum Sepolia y luego Tron Nile |
+| 1 · Contrato ✅ | `contracts/` con Foundry: fábrica + escrow clon, 117 pruebas (unitarias, fuzz, invariantes, fork con USDT real), Slither | Implementado el 24-oct (ver `contracts/README.md`). Pendiente: tu decisión sobre el riesgo 1 (C6) y el despliegue real en Arbitrum Sepolia / Tron Nile, que necesita fondos de faucet |
 | 2 · Cripto WASM | `crypto-wasm/` en Rust: llaves, DLEQ, verificación, reconstrucción y barrido | `sigma_fun`; vectores cruzados con Solidity y con AthanorLabs; serialización compacta; decidir A6 |
 | 3 · Maker | `maker/` (Rust o Python) con estado persistente | Envía el ID de la tx de bloqueo; precio desde varias fuentes; límites de exposición |
 | 4 · Cloudflare | `workers/`: libro de órdenes (Workers + D1), canal (Durable Objects + WebSocket), proxy de nodos | Proxy con listas cerradas y un subdominio por nodo; límites de peticiones |

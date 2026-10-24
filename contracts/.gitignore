@@ -1,0 +1,17 @@
+# Compiler files
+cache/
+out/
+
+# Commonly ignored directories
+.logs/
+.ignore/
+
+# Ignores development broadcast logs
+# Los despliegues reales a testnet se documentan en docs/DESPLIEGUES.md; los registros locales no se suben.
+/broadcast/
+
+
+# Dotenv file
+.env
+.env.*
+!.env.example

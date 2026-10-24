@@ -19,17 +19,48 @@ jobs:
       - name: gitleaks
         run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest git /repo --redact --verbose --exit-code 1
 
-  contrato-research:
-    name: Prototipo de contrato (Fase 0)
+  contratos:
+    name: Contratos (Foundry)
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: research/contract-compat
+        working-directory: contracts
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: foundry-rs/foundry-toolchain@v1
-      - run: forge install foundry-rs/forge-std OpenZeppelin/openzeppelin-contracts@v5.4.0 --no-git
-      - run: forge test -vv
+      - run: forge fmt --check
+      - run: forge build --sizes
+      - run: FOUNDRY_PROFILE=ci forge test -vv
+
+  contratos-fork:
+    name: Contratos contra USDT real (fork)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+      - run: FORK_TESTS=true forge test --match-contract Fork -vv
+
+  slither:
+    name: Slither
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install slither-analyzer==0.11.6
+      # Falla solo con hallazgos de severidad media o alta; los informativos están en contracts/README.md.
+      - run: slither contracts --filter-paths "lib|test|script" --fail-medium
 
   dleq-research:
     name: DLEQ en Rust (Fase 0)
