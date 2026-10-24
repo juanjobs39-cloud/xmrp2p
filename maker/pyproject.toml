@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xmrp2p-maker"
+version = "0.1.0"
+description = "Daemon del maker de xmrp2p: responde atomic swaps USDT ↔ XMR (solo testnet, sin auditoría)"
+readme = "README.md"
+license = { text = "AGPL-3.0-only" }
+requires-python = ">=3.10"
+dependencies = [
+  "web3>=7,<8",
+  "requests>=2.31",
+  "tomli>=2; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+xmrp2p-maker = "xmrp2p_maker.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["xmrp2p_maker*"]
+
+[tool.setuptools.package-data]
+xmrp2p_maker = ["abi/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: necesita anvil y el binario xmrp2p-crypto"]

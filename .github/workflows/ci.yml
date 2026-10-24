@@ -89,6 +89,29 @@ jobs:
         working-directory: crypto-wasm/tests/cross
         run: npm install && npm test
 
+  maker:
+    name: Daemon del maker (Python + anvil)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crypto-wasm
+      - run: cargo build --release --bin xmrp2p-crypto
+        working-directory: crypto-wasm
+      - run: forge build
+        working-directory: contracts
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e "maker[dev]"
+      - run: python -m pytest -q
+        working-directory: maker
+
   dleq-research:
     name: DLEQ en Rust (Fase 0)
     runs-on: ubuntu-latest

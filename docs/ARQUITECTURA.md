@@ -135,7 +135,7 @@ stateDiagram-v2
 |---|---|---|
 | 1 · Contrato ✅ | `contracts/` con Foundry: fábrica + escrow clon, 117 pruebas (unitarias, fuzz, invariantes, fork con USDT real), Slither | Implementado el 24-oct (ver `contracts/README.md`). Pendiente: tu decisión sobre el riesgo 1 (C6) y el despliegue real en Arbitrum Sepolia / Tron Nile, que necesita fondos de faucet |
 | 2 · Cripto WASM ✅ | `crypto-wasm/` en Rust: llaves, DLEQ, verificación, dirección compartida, reconstrucción | Implementado el 24-oct (ver `crypto-wasm/README.md`): 14 pruebas, vectores idénticos a monero-ts y al contrato, DLEQ binaria de 56,6 KB, ~0,3 s por operación en el navegador. El barrido del XMR se hace con monero-ts usando la llave reconstruida. A6 sigue abierta |
-| 3 · Maker | `maker/` (Rust o Python) con estado persistente | Envía el ID de la tx de bloqueo; precio desde varias fuentes; límites de exposición |
+| 3 · Maker ✅ | `maker/` en Python (usa el núcleo Rust vía CLI) con estado en SQLite | Implementado el 24-oct (ver `maker/README.md`): 17 pruebas, 11 contra los contratos reales en anvil. Falta probarlo con `monero-wallet-rpc` real (Fase 7) y conectarlo al canal de la Fase 4 |
 | 4 · Cloudflare | `workers/`: libro de órdenes (Workers + D1), canal (Durable Objects + WebSocket), proxy de nodos | Proxy con listas cerradas y un subdominio por nodo; límites de peticiones |
 | 5 · App | `web/` ruta `/app`: flujo del swap, archivo de recuperación, CSP/SRI, IPFS | El archivo de recuperación se descarga **antes** del depósito |
 | 6 · Sitio y SEO | `web/` en Astro con cero JS en el contenido, robots/llms.txt, IndexNow, guías ES/EN | La API pública de cotizaciones (OpenAPI) y el servidor MCP de solo lectura viven en `workers/api` y `workers/mcp` |

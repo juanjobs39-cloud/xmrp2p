@@ -1,0 +1,40 @@
+# Configuración del daemon del maker. Copia a maker.toml (ignorado por Git) y ajusta.
+# Los secretos NO van aquí: usa variables de entorno (ver README).
+
+[maker]
+# Red EVM (solo testnet hasta la auditoría)
+evm_rpc = "https://sepolia-rollup.arbitrum.io/rpc"
+factory = "0x0000000000000000000000000000000000000000"   # SwapFactory desplegada (contracts/README.md)
+token = "0x0000000000000000000000000000000000000000"     # USDT (o TestUSDT) de esa fábrica
+fee_bps = 50                                              # debe coincidir con la fábrica; el daemon lo comprueba
+
+# Monero
+monero_network = "stagenet"                               # mainnet está bloqueado por el código
+monero_wallet_rpc = "http://127.0.0.1:38083/json_rpc"     # monero-wallet-rpc local
+monero_main_wallet = "maker"                              # nombre del archivo de la wallet principal
+
+# Archivos
+db_path = "maker.sqlite3"                                 # estado de los swaps (¡contiene secretos!)
+crypto_bin = "../crypto-wasm/target/release/xmrp2p-crypto"
+# payout_address = "0x..."                                # cobrar el USDT en otra dirección (opcional)
+poll_seconds = 15
+
+[maker.price]
+sources = ["kraken", "coingecko", "kucoin"]
+margin_bps = 150             # tu ganancia sobre el precio de referencia (1,5 %)
+max_divergence_bps = 200     # si una fuente se aleja más de 2 % de la mediana, no se cotiza
+min_sources = 2
+quote_ttl_seconds = 120
+
+[maker.limits]
+min_usdt = 10
+max_usdt = 1000
+max_exposure_xmr = 5         # XMR comprometido en swaps abiertos, como máximo
+max_concurrent = 3
+
+[maker.safety]
+min_time_to_t0 = 2700        # el depósito debe dejar ≥ 45 min hasta t0
+min_claim_window = 3600      # t1 − t0 ≥ 1 h
+claim_cutoff_before_t1 = 900 # nunca enviar claim en los últimos 15 min antes de t1
+deposit_timeout = 900        # la negociación expira si no hay depósito en 15 min
+xmr_confirmations = 10

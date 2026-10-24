@@ -59,3 +59,8 @@ Thumbs.db
 research/monero-ts-browser/bundle.js
 research/monero-ts-browser/monero.worker.js
 .claude/
+
+# Maker
+maker/maker.toml
+maker/*.sqlite3*
+maker/wallets/
