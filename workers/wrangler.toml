@@ -1,0 +1,48 @@
+# Worker principal de xmrp2p: API pública, libro de órdenes, canal de mensajes y MCP.
+# Desplegar SOLO con aprobación del dueño (ver workers/README.md). Valores para testnet.
+name = "xmrp2p-api"
+main = "src/api/index.ts"
+compatibility_date = "2026-08-20"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[vars]
+# Redes activas (separadas por coma). Quitar una la desactiva sin tocar código.
+ACTIVE_NETWORKS = "arbitrum_sepolia"
+# Países bloqueados (ISO 3166-1 alfa-2, separados por coma). Ej.: "US,KP".
+BLOCKED_REGIONS = ""
+# Orígenes permitidos para CORS ("*" para cualquiera; la API es pública y de solo lectura salvo makers firmados).
+ALLOWED_ORIGINS = "*"
+# Tiempo máximo de vida de una oferta (s): el maker la renueva mientras está en línea.
+MAX_OFFER_TTL = "900"
+# Tiempo que se espera la respuesta del maker a una solicitud de swap (ms).
+TAKE_TIMEOUT_MS = "20000"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "xmrp2p-orderbook"
+database_id = "00000000-0000-0000-0000-000000000000" # reemplazar con `wrangler d1 create xmrp2p-orderbook`
+migrations_dir = "migrations"
+
+[[durable_objects.bindings]]
+name = "MAKER_INBOX"
+class_name = "MakerInbox"
+
+[[durable_objects.bindings]]
+name = "SWAP_ROOM"
+class_name = "SwapRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["MakerInbox", "SwapRoom"]
+
+# Límite de peticiones por IP (plan gratuito). Escrituras y solicitudes de swap.
+[[ratelimits]]
+name = "WRITE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 30, period = 60 }
+
+[[ratelimits]]
+name = "READ_LIMITER"
+namespace_id = "1002"
+simple = { limit = 300, period = 60 }

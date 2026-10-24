@@ -49,7 +49,7 @@ python -m xmrp2p_maker --config maker.toml run                        # bucle: v
 python -m xmrp2p_maker --config maker.toml status
 ```
 
-En la Fase 4 el daemon se conectará al libro de órdenes y al canal de mensajes en Cloudflare; mientras tanto `take` recibe el mensaje del taker desde un archivo.
+Con `channel_api` en `maker.toml`, `run` publica tu oferta firmada cada `offer_refresh_seconds` (o la retira si no hay precio confiable o XMR libre) y atiende tu buzón en Cloudflare: las solicitudes de swap llegan solas y los eventos (XMR bloqueado, USDT cobrado) se envían a la sala del taker. Sin `channel_api`, `take` funciona en modo manual con el mensaje del taker en un archivo.
 
 ## Ciclo de vida de un swap
 

@@ -1,0 +1,8 @@
+{
+ "method": "PUT",
+ "path": "/v1/offers",
+ "body": "{\"network\":\"arbitrum_sepolia\",\"price\":\"300.500000\",\"min_usdt\":\"10\",\"max_usdt\":\"1000\",\"max_xmr\":\"5.000000\",\"ttl\":600}",
+ "x-maker-address": "0xA5387B69b8bA1D3692AaE79AdDeDe6F612D7EC31",
+ "x-timestamp": "1800000000",
+ "x-signature": "0x6facad3a00872d5d74ef661f0a2b247e180c5f9be56c235beb8748537f4d083d3e09a5d246950e7bdb3d54a71117c9d58c4f10d9ef39c648ee90489eb50971171b"
+}

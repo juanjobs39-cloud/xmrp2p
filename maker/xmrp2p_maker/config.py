@@ -57,6 +57,10 @@ class MakerConfig:
     crypto_bin: Path
     payout_address: str | None = None
     poll_seconds: int = 15
+    # Backend de Cloudflare (Fase 4). Vacío = modo manual (`take` desde archivo).
+    channel_api: str | None = None
+    evm_network: str = "arbitrum_sepolia"
+    offer_refresh_seconds: int = 300
     price: PriceConfig = field(default_factory=PriceConfig)
     limits: Limits = field(default_factory=Limits)
     safety: Safety = field(default_factory=Safety)
@@ -113,6 +117,9 @@ def load(path: str | Path) -> MakerConfig:
         crypto_bin=(base / m["crypto_bin"]).resolve(),
         payout_address=m.get("payout_address") or None,
         poll_seconds=int(m.get("poll_seconds", 15)),
+        channel_api=m.get("channel_api") or None,
+        evm_network=m.get("evm_network", "arbitrum_sepolia"),
+        offer_refresh_seconds=int(m.get("offer_refresh_seconds", 300)),
         price=PriceConfig(
             sources=tuple(p.get("sources", PriceConfig.sources)),
             margin_bps=int(p.get("margin_bps", PriceConfig.margin_bps)),

@@ -1,0 +1,18 @@
+# Proxy hacia nodos de Monero (stagenet). Opcional: el usuario siempre puede usar su propio nodo.
+# libwallet descarta la ruta de la URL, así que cada nodo se sirve en la RAÍZ de su host
+# (en producción: un subdominio por nodo, p. ej. xmr-tw.nodos.<DOMINIO>).
+name = "xmrp2p-node-proxy"
+main = "src/node-proxy/index.ts"
+compatibility_date = "2026-08-20"
+workers_dev = true
+
+[vars]
+# host → nodo. "*" es el nodo por defecto (para workers.dev).
+NODES = '{"*":"http://stagenet.xmr-tw.org:38081"}'
+BLOCKED_REGIONS = ""
+
+[[ratelimits]]
+name = "PROXY_LIMITER"
+namespace_id = "2001"
+# Una wallet nueva hace ~170 peticiones al sincronizar (Fase 0).
+simple = { limit = 600, period = 60 }

@@ -19,6 +19,11 @@ crypto_bin = "../crypto-wasm/target/release/xmrp2p-crypto-cli"
 # payout_address = "0x..."                                # cobrar el USDT en otra dirección (opcional)
 poll_seconds = 15
 
+# Backend de Cloudflare (Fase 4). Sin esto, `take` es manual.
+# channel_api = "https://xmrp2p-api.<subdominio>.workers.dev"
+evm_network = "arbitrum_sepolia"
+offer_refresh_seconds = 300
+
 [maker.price]
 sources = ["kraken", "coingecko", "kucoin"]
 margin_bps = 150             # tu ganancia sobre el precio de referencia (1,5 %)

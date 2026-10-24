@@ -5,7 +5,8 @@
   python -m xmrp2p_maker --config maker.toml status
   python -m xmrp2p_maker --config maker.toml run
 
-`take` es manual mientras no exista el canal de la Fase 4 (Durable Objects).
+Con `channel_api` configurado, `run` además publica la oferta y atiende el buzón en Cloudflare.
+Sin él, `take` funciona en modo manual con el mensaje del taker en un archivo.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import threading
 from decimal import Decimal
 
 from . import config as cfgmod
@@ -60,7 +62,54 @@ def main() -> None:
         for s in engine.store.active():
             print(s.id, s.state, s.get("escrow", "-"), s.get("xmr_txid", "-"))
     elif a.cmd == "run":
+        if engine.cfg.channel_api:
+            start_channel(engine)
         run_forever(engine, engine.cfg.poll_seconds)
+
+
+def start_channel(engine: Engine) -> None:
+    """Publica la oferta periódicamente y atiende el buzón del maker en hilos aparte."""
+    from . import pricing
+    from .channel import Channel
+
+    cfg = engine.cfg
+    ch = Channel(cfg.channel_api, cfg.evm_private_key, cfg.evm_network)
+    log = logging.getLogger("xmrp2p.maker")
+
+    def notify(swap_id: str, event: str, data: dict) -> None:
+        room = engine.store.get(swap_id).get("room_id")
+        if room:
+            ch.send_event(room, event, data)
+
+    engine.notify = notify
+
+    def on_take(m: dict) -> dict:
+        if m.get("network") != cfg.evm_network:
+            raise ValueError("red no soportada por este maker")
+        reply = engine.take(Decimal(str(m["usdt"])), m["taker_message"])
+        engine.store.update(reply["swap_id"], room_id=m["room_id"])
+        return reply
+
+    def refresh_offers() -> None:
+        while True:
+            try:
+                q = engine.quote(cfg.limits.min_usdt)
+                free = Decimal(engine.wallet.unlocked_balance() - engine.exposure_atomic()) / pricing.PICONERO
+                max_xmr = min(free, cfg.limits.max_exposure_xmr)
+                if max_xmr > 0:
+                    ch.publish_offer(q.maker_price, cfg.limits.min_usdt, cfg.limits.max_usdt, max_xmr, ttl=cfg.offer_refresh_seconds * 2)
+                else:
+                    ch.withdraw_offer()
+            except Exception as e:  # sin precio o sin red: se retira la oferta para no engañar a nadie
+                log.warning("no se pudo publicar la oferta: %s", e)
+                try:
+                    ch.withdraw_offer()
+                except Exception:
+                    pass
+            threading.Event().wait(cfg.offer_refresh_seconds)
+
+    threading.Thread(target=ch.serve, args=(on_take,), daemon=True, name="buzon").start()
+    threading.Thread(target=refresh_offers, daemon=True, name="ofertas").start()
 
 
 if __name__ == "__main__":

@@ -74,3 +74,39 @@ def test_config_bloquea_mainnet(tmp_path):
 
     with pytest.raises(ValueError, match="mainnet"):
         config.load(p)
+
+
+def test_firma_del_canal_recupera_la_direccion():
+    import secrets
+
+    from eth_account import Account
+    from eth_account.messages import encode_defunct
+
+    from xmrp2p_maker.channel import sign_headers, signed_message
+
+    key = "0x" + secrets.token_hex(32)
+    h = sign_headers(key, "PUT", "/v1/offers", '{"a":1}', ts=123)
+    msg = signed_message("PUT", "/v1/offers", h["x-maker-address"], "123", '{"a":1}')
+    assert msg.startswith("xmrp2p|PUT|/v1/offers|0x") and msg.count("|") == 5
+    assert Account.recover_message(encode_defunct(text=msg), signature=h["x-signature"]) == h["x-maker-address"]
+
+
+def test_store_desde_varios_hilos(tmp_path):
+    import threading
+
+    st = Store(tmp_path / "t.db")
+    errors = []
+
+    def worker():
+        try:
+            for _ in range(20):
+                s = st.create(NEGOTIATED, {"xmr_atomic": 1})
+                st.transition(s.id, NEGOTIATED, XMR_LOCKED)
+                list(st.active())
+        except Exception as e:  # pragma: no cover
+            errors.append(e)
+
+    ts = [threading.Thread(target=worker) for _ in range(4)]
+    [t.start() for t in ts]
+    [t.join() for t in ts]
+    assert errors == [] and len(list(st.active())) == 80
