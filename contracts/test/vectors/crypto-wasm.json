@@ -1,0 +1,60 @@
+{
+ "vectors": [
+  {
+   "commitment": "0xe9521ef566a32840d1cba13ce86bf7de907f915a799c9b0a172b3c3114053de6",
+   "secret": "0x040466423e5f09aa2750228c4ae8862d00411f319d8a4014eb2782a412a9fd30"
+  },
+  {
+   "commitment": "0xa73f964f480057cc6199be32dba9a4c8bcaa9804dc6181be13123501d94fbc9d",
+   "secret": "0x0c359b602fc0012e235b33c8e72ba9da230ceb635f2032a9aacffaecc0d04b72"
+  },
+  {
+   "commitment": "0xc0587fb35ae444fca8ccba65f923c4c9ff7d42ab0938cf2e875f19a2d57725c6",
+   "secret": "0x09d1bf82092003b5d218cc3f313764a215be800103eb66a5fed0ff07df46cb58"
+  },
+  {
+   "commitment": "0x1174b9fde911c4b0c710db9fbe42f453f9b369edcc619f0248bc810ad5495c9d",
+   "secret": "0x0d59940b5980597b3fb9979d7f38a55de0a5a205e0a398ddaa9cb09b9c78b211"
+  },
+  {
+   "commitment": "0xd778724b456c8efee24f0ec0a7594bf69c3c51e13e382cb85a694f170dfc4af7",
+   "secret": "0x0b9cd76c079d6cb77c97e1efcd0f47074035161ef45f2aa53fc8fcacd4d0f313"
+  },
+  {
+   "commitment": "0x9f603fef17789a38e4eae9d9b38fb562ff79441b202eeac3a090bd70997c6e7f",
+   "secret": "0x0338b6785892b66d865632e92d4553fa80cfc8606de43683a5aae2ddd0fd1d8f"
+  },
+  {
+   "commitment": "0x526c25c71b7056bcf261fa90d172d2dee019d73dcdd799030d0ae8867fb3e963",
+   "secret": "0x03bf64e949621831209fb8566868841c649e846d396af5906c5820441f123cfe"
+  },
+  {
+   "commitment": "0xee8a9783fd82bbc7f5ba2fd34181a99d3860e7b3c4cf7e7d4f4464d2c75c5a77",
+   "secret": "0x0d0540e4cae61593fa9c29c5c9802794d241bf4a91d0fe1b5395d32ec1fb0a63"
+  },
+  {
+   "commitment": "0x1eabb1e4caaf134ef7b933cf2a39f0e2d8db26fba2759ca2cc27d5ece2da2b34",
+   "secret": "0x093c2fb75a7b60b470ed8eed8f1ff7608cf4bf95b260d2a4091639f182d6d770"
+  },
+  {
+   "commitment": "0x0a0d41adbe224f746b70d016c21c028c3ce27c1febf3f35030006cacba94456c",
+   "secret": "0x04f2984437d9c9d6bc7eaa3a26107592d6eaadaba14a4ddd35533efca90fa51a"
+  },
+  {
+   "commitment": "0xff7fec47c83572ce11201517c473f066b2795a08fdc81cbd05c1d64c54b1eae1",
+   "secret": "0x0db3d6b6e5119b67bee235cf9376838cd8c823ae0bf239438bfc5f1a612ccc4c"
+  },
+  {
+   "commitment": "0xb2b329fd98657079ec9f7f195dde3e411370ed4c3e79675961cdeb3b017bfd73",
+   "secret": "0x0815b1999a5b594e154572a0e3d90052575e2c92e10a02ae15cdb4f8dd9444ac"
+  },
+  {
+   "commitment": "0x9b90d975b6259bd0652ad732321199bc8be03b7b16bed3d214c583af4f5d9ee8",
+   "secret": "0x0999ebd75eada57fdc6b0f7c0d205e4880a727fae020aa2524081b532b5653a7"
+  },
+  {
+   "commitment": "0x73cb57b6c63a6460010f98495145d926dc2a4be782bf5beed2e8dd93600dcb02",
+   "secret": "0x0dd5a8ece6bb47f0631ea89884a61d09b3b6f86e7730dbd65402769e6490c11e"
+  }
+ ]
+}

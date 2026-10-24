@@ -62,6 +62,33 @@ jobs:
       # Falla solo con hallazgos de severidad media o alta; los informativos están en contracts/README.md.
       - run: slither contracts --filter-paths "lib|test|script" --fail-medium
 
+  crypto-wasm:
+    name: Núcleo cripto (Rust + WASM + vectores con monero-ts)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: crypto-wasm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crypto-wasm
+      - run: cargo fmt --check
+      - run: cargo clippy --release --all-targets -- -D warnings
+      - run: cargo test --release
+      - run: cargo install wasm-pack --locked --version 0.15.0
+      - run: wasm-pack build --release --target web --out-dir pkg
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Vectores cruzados con monero-ts
+        working-directory: crypto-wasm/tests/cross
+        run: npm install && npm test
+
   dleq-research:
     name: DLEQ en Rust (Fase 0)
     runs-on: ubuntu-latest

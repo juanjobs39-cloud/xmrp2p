@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>xmrp2p-crypto · prueba en navegador</title>
+</head>
+<body>
+<h1>xmrp2p-crypto en el navegador</h1>
+<p>Simula el intercambio de llaves de un swap entre taker y maker, todo en esta pestaña.</p>
+<pre id="out"></pre>
+<script type="module">
+  import init, { generateKeys, restoreKeys, verifyCounterparty, sharedAddress, recoverWallet } from "../pkg/xmrp2p_crypto.js";
+  const out = document.getElementById("out");
+  const log = (s) => (out.textContent += s + "\n");
+  const t = () => performance.now();
+  const r = {};
+  try {
+    let a = t(); await init(); r.init = t() - a;
+    a = t(); const taker = JSON.parse(generateKeys()); r.generar_taker = t() - a;
+    a = t(); const maker = JSON.parse(generateKeys()); r.generar_maker = t() - a;
+    const tm = JSON.stringify(taker.message), mm = JSON.stringify(maker.message);
+    a = t(); const cMaker = verifyCounterparty(mm); r.verificar_maker = t() - a;
+    const cTaker = verifyCounterparty(tm);
+    const sA = JSON.parse(sharedAddress(taker.spend_private, mm, "stagenet"));
+    const sB = JSON.parse(sharedAddress(maker.spend_private, tm, "stagenet"));
+    r.misma_direccion = sA.address === sB.address && sA.private_view_key === sB.private_view_key;
+    r.commitment_ok = cMaker === maker.message.contract_commitment && cTaker === taker.message.contract_commitment;
+    a = t(); const w = JSON.parse(recoverWallet(taker.spend_private, mm, maker.contract_secret, "stagenet")); r.reconstruir = t() - a;
+    r.reconstruccion_ok = w.address === sA.address && w.private_spend_key.length === 64;
+    let rechazo = false;
+    try { recoverWallet(taker.spend_private, mm, taker.contract_secret, "stagenet"); } catch (e) { rechazo = e.message; }
+    r.secreto_falso_rechazado = rechazo;
+    const restored = JSON.parse(restoreKeys(taker.spend_private));
+    r.restaurar_ok = restored.message.contract_commitment === taker.message.contract_commitment;
+    r.tamano_mensaje_bytes = tm.length;
+    r.direccion = sA.address;
+    r.OK = r.misma_direccion && r.commitment_ok && r.reconstruccion_ok && !!r.secreto_falso_rechazado && r.restaurar_ok;
+  } catch (e) {
+    r.error = String(e?.message || e);
+    r.OK = false;
+  }
+  for (const [k, v] of Object.entries(r)) log(`${k}: ${typeof v === "number" ? v.toFixed(0) + (k.startsWith("tamano") ? " bytes" : " ms") : v}`);
+  window.__r = r;
+</script>
+</body>
+</html>

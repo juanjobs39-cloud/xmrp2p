@@ -127,14 +127,14 @@ stateDiagram-v2
 | ~~A4~~ | ~~¿USD₮0 en Arbitrum acepta `permit()`?~~ | **Resuelta (24-oct):** sí. `newSwapWithPermit` funciona en un fork de Arbitrum One con el USD₮0 real |
 | A5 | ¿Valores de t0 y t1? | Depende del tiempo de confirmación de Monero (10 bloques ≈ 20 min) y del riesgo 1 |
 | A6 | ¿monero-ts o escáner propio con `monero-oxide`? | Prototipo comparativo al inicio de la Fase 2 |
-| A7 | ¿Serialización compacta de la DLEQ (170 KB en JSON)? | Fase 2 |
+| ~~A7~~ | ~~¿Serialización compacta de la DLEQ?~~ | **Resuelta (24-oct):** binario `postcard` versionado, 56,6 KB |
 
 ## 7. Plan por fases (resumen)
 
 | Fase | Entregable | Puntos clave salidos de la Fase 0 |
 |---|---|---|
 | 1 · Contrato ✅ | `contracts/` con Foundry: fábrica + escrow clon, 117 pruebas (unitarias, fuzz, invariantes, fork con USDT real), Slither | Implementado el 24-oct (ver `contracts/README.md`). Pendiente: tu decisión sobre el riesgo 1 (C6) y el despliegue real en Arbitrum Sepolia / Tron Nile, que necesita fondos de faucet |
-| 2 · Cripto WASM | `crypto-wasm/` en Rust: llaves, DLEQ, verificación, reconstrucción y barrido | `sigma_fun`; vectores cruzados con Solidity y con AthanorLabs; serialización compacta; decidir A6 |
+| 2 · Cripto WASM ✅ | `crypto-wasm/` en Rust: llaves, DLEQ, verificación, dirección compartida, reconstrucción | Implementado el 24-oct (ver `crypto-wasm/README.md`): 14 pruebas, vectores idénticos a monero-ts y al contrato, DLEQ binaria de 56,6 KB, ~0,3 s por operación en el navegador. El barrido del XMR se hace con monero-ts usando la llave reconstruida. A6 sigue abierta |
 | 3 · Maker | `maker/` (Rust o Python) con estado persistente | Envía el ID de la tx de bloqueo; precio desde varias fuentes; límites de exposición |
 | 4 · Cloudflare | `workers/`: libro de órdenes (Workers + D1), canal (Durable Objects + WebSocket), proxy de nodos | Proxy con listas cerradas y un subdominio por nodo; límites de peticiones |
 | 5 · App | `web/` ruta `/app`: flujo del swap, archivo de recuperación, CSP/SRI, IPFS | El archivo de recuperación se descarga **antes** del depósito |

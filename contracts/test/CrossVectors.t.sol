@@ -28,7 +28,16 @@ contract CrossVectorsTest is Test {
     }
 
     function test_vectoresRust() public view {
-        string memory json = vm.readFile("test/vectors/rust-sigma_fun.json");
+        _check("test/vectors/rust-sigma_fun.json");
+    }
+
+    /// Vectores de crypto-wasm (Fase 2): `contract_secret` debe abrir `contract_commitment`.
+    function test_vectoresCryptoWasm() public view {
+        _check("test/vectors/crypto-wasm.json");
+    }
+
+    function _check(string memory path) internal view {
+        string memory json = vm.readFile(path);
         Vector[] memory vs = abi.decode(json.parseRaw(".vectors"), (Vector[]));
         assertGt(vs.length, 0);
         for (uint256 i; i < vs.length; i++) {

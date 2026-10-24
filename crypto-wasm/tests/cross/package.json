@@ -1,0 +1,8 @@
+{
+  "name": "xmrp2p-crypto-cross",
+  "private": true,
+  "type": "module",
+  "description": "Vectores cruzados: compara xmrp2p-crypto (Rust) con monero-ts (wallet2 de Monero en WASM)",
+  "scripts": { "test": "node monero-ts.mjs ../vectors/vectors.json" },
+  "devDependencies": { "monero-ts": "0.11.20" }
+}

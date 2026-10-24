@@ -1,0 +1,104 @@
+{
+  "standard": [
+    {
+      "address_mainnet": "42xAmN2kyCkgzfk2rnZVgXEEKnTvuQL3HRp7hZxoVGTrJp7faNgv3urCsMroiY8xB5R7A3Bk39YcDEaDYr4A4t7y97AnqUn",
+      "address_stagenet": "53ACrCwicorgzfk2rnZVgXEEKnTvuQL3HRp7hZxoVGTrJp7faNgv3urCsMroiY8xB5R7A3Bk39YcDEaDYr4A4t7y97S1zZa",
+      "contract_commitment": "0xe9521ef566a32840d1cba13ce86bf7de907f915a799c9b0a172b3c3114053de6",
+      "contract_secret": "0x040466423e5f09aa2750228c4ae8862d00411f319d8a4014eb2782a412a9fd30",
+      "spend_private": "30fda912a48227eb14408a9d311f41002d86e84a8c225027aa095f3e42660404",
+      "spend_public": "230f746eb788f1ef1c32b53d0443144f186816415568289457e050fcc4bdd16a",
+      "view_private": "4a8e7eaaaf567385d8301367e09dd4a1f1ca17018d370c21185968950bd0c50b"
+    },
+    {
+      "address_mainnet": "4AVct6UVbFkWUHhPjxUbKJRBZXcMgDmPEinHQydMz7xxAGeLYongDRJTRHyfXJntz7Yt4yYxhu4s5RYJXVDVaYCt5PsvKGU",
+      "address_stagenet": "5AhexwPTErrWUHhPjxUbKJRBZXcMgDmPEinHQydMz7xxAGeLYongDRJTRHyfXJntz7Yt4yYxhu4s5RYJXVDVaYCt5JK1dU2",
+      "contract_commitment": "0xa73f964f480057cc6199be32dba9a4c8bcaa9804dc6181be13123501d94fbc9d",
+      "contract_secret": "0x0c359b602fc0012e235b33c8e72ba9da230ceb635f2032a9aacffaecc0d04b72",
+      "spend_private": "724bd0c0ecfacfaaa932205f63eb0c23daa92be7c8335b232e01c02f609b350c",
+      "spend_public": "ea16779ab12b8fb0314715169c8f5590934234b00c08c9f9ca6d55855393ad37",
+      "view_private": "86691400246f06087c4e7a0df685f19e9c9eba657a8993a1595d7644f7d0550a"
+    },
+    {
+      "address_mainnet": "44gDAijJkMGaY3gs8cZJ45RzTt9wQT4ST7fN8bR6bwh7cSxDTVZcLMi2a94PWLdPAEJbAuK4BCyTiCvvsUGw1QcXQoTco1S",
+      "address_stagenet": "54tFFZeGPxNaY3gs8cZJ45RzTt9wQT4ST7fN8bR6bwh7cSxDTVZcLMi2a94PWLdPAEJbAuK4BCyTiCvvsUGw1QcXQogbbzX",
+      "contract_commitment": "0xc0587fb35ae444fca8ccba65f923c4c9ff7d42ab0938cf2e875f19a2d57725c6",
+      "contract_secret": "0x09d1bf82092003b5d218cc3f313764a215be800103eb66a5fed0ff07df46cb58",
+      "spend_private": "58cb46df07ffd0fea566eb030180be15a26437313fcc18d2b503200982bfd109",
+      "spend_public": "50938c9ad308cbc87e8da5078be3a69568f130d86c7ef027d383db0461574ed3",
+      "view_private": "25663718a6819f088ecd5925e6adae2bbc686073e2394cb592c8ea065304c203"
+    },
+    {
+      "address_mainnet": "4BKSMpP7UvhX3WVaz1JgJCVz8G5BF1ANbNstSbmcancNVdNNviB4vo68YXoRkE4NpB6QfDH7g5ucRRjzKQRHJ6ZUReBzxXp",
+      "address_stagenet": "5BXUSfJ58XoX3WVaz1JgJCVz8G5BF1ANbNstSbmcancNVdNNviB4vo68YXoRkE4NpB6QfDH7g5ucRRjzKQRHJ6ZURd7N9zC",
+      "contract_commitment": "0x1174b9fde911c4b0c710db9fbe42f453f9b369edcc619f0248bc810ad5495c9d",
+      "contract_secret": "0x0d59940b5980597b3fb9979d7f38a55de0a5a205e0a398ddaa9cb09b9c78b211",
+      "spend_private": "11b2789c9bb09caadd98a3e005a2a5e05da5387f9d97b93f7b5980590b94590d",
+      "spend_public": "ffd806d79ba926b39dea4179d78ee9ad4a1c5378e821c882cbd3587fe98d2fab",
+      "view_private": "b53799faf9edaf8e0136786498b3c5f3e7b8accd62f653a66ede0c957391410a"
+    },
+    {
+      "address_mainnet": "448FHGFkTkj6WxCQnKvnMBBHDkfeuTNQgNa8KtxPoKdxUYj6LwxM1E5VXMjErZnQyUVQKGurc7ciaVdSqz44rkwhD9mqH6a",
+      "address_stagenet": "54LHN7Ai7Mq6WxCQnKvnMBBHDkfeuTNQgNa8KtxPoKdxUYj6LwxM1E5VXMjErZnQyUVQKGurc7ciaVdSqz44rkwhD8MK5iq",
+      "contract_commitment": "0xd778724b456c8efee24f0ec0a7594bf69c3c51e13e382cb85a694f170dfc4af7",
+      "contract_secret": "0x0b9cd76c079d6cb77c97e1efcd0f47074035161ef45f2aa53fc8fcacd4d0f313",
+      "spend_private": "13f3d0d4acfcc83fa52a5ff41e16354007470fcdefe1977cb76c9d076cd79c0b",
+      "spend_public": "4208aa76f5778820fafeb3923a16ae3d7541754b324dc180f727022f917d97a4",
+      "view_private": "767847f0ce1ca99ece6076f9bc60c250b8d2c7c7c2cf58d495b0ed921e6a3c01"
+    },
+    {
+      "address_mainnet": "47go26DjykBdGGyiAnxzWVaTkeW7yzR1kb4TJDUYQ7meRQ2941RKGvGFk41cKNgRq6doqZTxBfFM95q7cwWMtGfmN7pTa54",
+      "address_stagenet": "57tq6w8hdMHdGGyiAnxzWVaTkeW7yzR1kb4TJDUYQ7meRQ2941RKGvGFk41cKNgRq6doqZTxBfFM95q7cwWMtGfmN9HH2L8",
+      "contract_commitment": "0x9f603fef17789a38e4eae9d9b38fb562ff79441b202eeac3a090bd70997c6e7f",
+      "contract_secret": "0x0338b6785892b66d865632e92d4553fa80cfc8606de43683a5aae2ddd0fd1d8f",
+      "spend_private": "8f1dfdd0dde2aaa58336e46d60c8cf80fa53452de93256866db6925878b63803",
+      "spend_public": "a001c6bfcd3558d8cdf5637c6d11fac80d3f3333009873cba0f1fe8c931cdd91",
+      "view_private": "92a19171c7379bc6bfbad99469cb870c28f03b2683c2f738100d4ddf3597ad0c"
+    }
+  ],
+  "swaps": [
+    {
+      "maker_commitment": "0xee8a9783fd82bbc7f5ba2fd34181a99d3860e7b3c4cf7e7d4f4464d2c75c5a77",
+      "maker_contract_secret": "0x0d0540e4cae61593fa9c29c5c9802794d241bf4a91d0fe1b5395d32ec1fb0a63",
+      "maker_spend": "630afbc12ed395531bfed0914abf41d2942780c9c5299cfa9315e6cae440050d",
+      "shared_address_stagenet": "57ThnxhpTuJBBQHfcvKvk3UfsUj9wUkSy8Lj54nTP8wdffJfWAmduQ9Am1D94DKspy7KrBhHQZXijjJ15Yurb2QU6M2Nt5o",
+      "shared_spend_private": "747317845890db67d5564428d9490122b1abe8311ce23b1bc52d4814cea5c400",
+      "shared_view_private": "480a980e82592c0753732746f5b626c46efea260b0adb00a85a16fce1d5ea002",
+      "taker_commitment": "0x526c25c71b7056bcf261fa90d172d2dee019d73dcdd799030d0ae8867fb3e963",
+      "taker_contract_secret": "0x03bf64e949621831209fb8566868841c649e846d396af5906c5820441f123cfe",
+      "taker_spend": "fe3c121f4420586c90f56a396d849e641c84686856b89f2031186249e964bf03"
+    },
+    {
+      "maker_commitment": "0x0a0d41adbe224f746b70d016c21c028c3ce27c1febf3f35030006cacba94456c",
+      "maker_contract_secret": "0x04f2984437d9c9d6bc7eaa3a26107592d6eaadaba14a4ddd35533efca90fa51a",
+      "maker_spend": "1aa50fa9fc3e5335dd4d4aa1abadead6927510263aaa7ebcd6c9d9374498f204",
+      "shared_address_stagenet": "53EkAenz9jedf8cuNST9ou1rAcknCQSQy4WTLBSxqEYSWWcPBKqzaSPcUho1DwVBms6AzRN1F8w6L4a5CDnjYG4K98HXZxa",
+      "shared_spend_private": "8a7ce62bee78693e8120ab53416ddf63f36c30b527396c2d8b2a5592fbc72e0e",
+      "shared_view_private": "21cb57546cb037cf93f8f028b9622a0300254b2ce647df3f85c85c13c379b40f",
+      "taker_commitment": "0x1eabb1e4caaf134ef7b933cf2a39f0e2d8db26fba2759ca2cc27d5ece2da2b34",
+      "taker_contract_secret": "0x093c2fb75a7b60b470ed8eed8f1ff7608cf4bf95b260d2a4091639f182d6d770",
+      "taker_spend": "70d7d682f1391609a4d260b295bff48c60f71f8fed8eed70b4607b5ab72f3c09"
+    },
+    {
+      "maker_commitment": "0xb2b329fd98657079ec9f7f195dde3e411370ed4c3e79675961cdeb3b017bfd73",
+      "maker_contract_secret": "0x0815b1999a5b594e154572a0e3d90052575e2c92e10a02ae15cdb4f8dd9444ac",
+      "maker_spend": "ac4494ddf8b4cd15ae020ae1922c5e575200d9e3a07245154e595b9a99b11508",
+      "shared_address_stagenet": "59bHSY5hkQsGbFKqhBk3geVWzZqhGU1hYB68M8uYoj3jjcztDa4EnS5KXS7FFCCTeuAHN9B2GDi1C5npdh6zx1gbT4VSYk4",
+      "shared_spend_private": "0b3dcbe1f8b0b7491b9f044a6256471bdf834f7770a827d4b5f46c7f5088c905",
+      "shared_view_private": "d1d7ca6ec07916e09bec27413cbc5fad0f63d1fd9d603e6fc291b7e99583aa0c",
+      "taker_commitment": "0xff7fec47c83572ce11201517c473f066b2795a08fdc81cbd05c1d64c54b1eae1",
+      "taker_contract_secret": "0x0db3d6b6e5119b67bee235cf9376838cd8c823ae0bf239438bfc5f1a612ccc4c",
+      "taker_spend": "4ccc2c611a5ffc8b4339f20bae23c8d88c837693cf35e2be679b11e5b6d6b30d"
+    },
+    {
+      "maker_commitment": "0x73cb57b6c63a6460010f98495145d926dc2a4be782bf5beed2e8dd93600dcb02",
+      "maker_contract_secret": "0x0dd5a8ece6bb47f0631ea89884a61d09b3b6f86e7730dbd65402769e6490c11e",
+      "maker_spend": "1ec190649e760254d6db30776ef8b6b3091da68498a81e63f047bbe6eca8d50d",
+      "shared_address_stagenet": "57SiMUJefxVUqkRTdZPqUwTuz3ByhhMvCdeBSwwAdDgsU2hhVWm9jTTEW4jjGiUkCKZiEBTS1bcBrjUhhCvZdE68J3MZrMw",
+      "shared_spend_private": "d840f132d72ef81f25e959b48a267f1f527bc69114b8893f70ed6845c4946f07",
+      "shared_view_private": "9d44b2cc66bceffd6c2b25cf1d9d593072f108d462d24b95bf89a374e7342c0f",
+      "taker_commitment": "0x9b90d975b6259bd0652ad732321199bc8be03b7b16bed3d214c583af4f5d9ee8",
+      "taker_contract_secret": "0x0999ebd75eada57fdc6b0f7c0d205e4880a727fae020aa2524081b532b5653a7",
+      "taker_spend": "a753562b531b082425aa20e0fa27a780485e200d7c0f6bdc7fa5ad5ed7eb9909"
+    }
+  ]
+}

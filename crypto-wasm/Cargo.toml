@@ -1,0 +1,44 @@
+[package]
+name = "xmrp2p-crypto"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "AGPL-3.0-only"
+description = "Núcleo criptográfico de xmrp2p: mitades de llave Monero, DLEQ secp256k1/ed25519 y reconstrucción de la llave compartida"
+repository = "https://github.com/juanjobs39-cloud/xmrp2p"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["wasm"]
+wasm = ["dep:wasm-bindgen", "getrandom/js"]
+
+[dependencies]
+# DLEQ entre curvas (misma construcción que eigenwallet). Sin auditoría formal: ver docs/AUDITORIA.md.
+sigma_fun = { version = "=0.9.0", default-features = false, features = ["alloc", "secp256k1", "ed25519", "serde"] }
+curve25519-dalek-ng = { version = "4", default-features = false, features = ["u64_backend", "serde"] }
+# Monero (proyecto monero-oxide).
+monero-address = "=0.1.0"
+monero-ed25519 = "=0.1.0"
+curve25519-dalek = "4"
+sha2 = "0.10"
+sha3 = "0.10"
+rand_chacha = "0.3"
+rand_core = { version = "0.6", features = ["getrandom"] }
+getrandom = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+postcard = { version = "1", default-features = false, features = ["alloc"] }
+hex = "0.4"
+zeroize = { version = "1.5", features = ["zeroize_derive"] }
+thiserror = "2"
+wasm-bindgen = { version = "0.2", optional = true }
+
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
