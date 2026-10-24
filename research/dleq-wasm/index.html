@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Fase 0 · DLEQ en WASM</title>
+</head>
+<body>
+<h1>DLEQ secp256k1/ed25519 en el navegador</h1>
+<pre id="out">Cargando…</pre>
+<script type="module">
+  import init, { prove, verify } from "./pkg/dleq_wasm_research.js";
+  const out = document.getElementById("out");
+  const log = (s) => (out.textContent += "\n" + s);
+  out.textContent = "";
+  const t0 = performance.now();
+  await init();
+  log(`init: ${(performance.now() - t0).toFixed(0)} ms`);
+  const t1 = performance.now();
+  const o = JSON.parse(prove());
+  log(`prove: ${(performance.now() - t1).toFixed(0)} ms, prueba ${o.proof_json.length} bytes`);
+  const t2 = performance.now();
+  const ok = verify(o.proof_json, o.secp256k1_pub_hex, o.ed25519_pub_hex);
+  log(`verify: ${(performance.now() - t2).toFixed(0)} ms → ${ok}`);
+  const other = JSON.parse(prove());
+  const bad = verify(o.proof_json, other.secp256k1_pub_hex, o.ed25519_pub_hex);
+  log(`verify con llave ajena → ${bad} (debe ser false)`);
+  log(`RESULTADO: ${ok && !bad ? "OK" : "FALLA"}`);
+  window.__result = { ok, bad };
+</script>
+</body>
+</html>

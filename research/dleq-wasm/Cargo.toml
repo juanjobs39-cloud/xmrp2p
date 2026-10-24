@@ -1,0 +1,28 @@
+[package]
+name = "dleq-wasm-research"
+version = "0.0.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-only"
+description = "Fase 0: prueba de la DLEQ secp256k1/ed25519 de sigma_fun compilada a WebAssembly"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+sigma_fun = { version = "0.9", default-features = false, features = ["alloc", "secp256k1", "ed25519", "serde"] }
+curve25519-dalek = { package = "curve25519-dalek-ng", version = "4", default-features = false, features = ["u64_backend", "serde"] }
+sha2 = "0.10"
+sha3 = "0.10"
+rand_chacha = "0.3"
+rand_core = { version = "0.6", features = ["getrandom"] }
+getrandom = { version = "0.2", features = ["js"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hex = "0.4"
+wasm-bindgen = "0.2"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
