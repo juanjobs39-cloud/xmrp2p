@@ -15,7 +15,7 @@ monero_main_wallet = "maker"                              # nombre del archivo d
 
 # Archivos
 db_path = "maker.sqlite3"                                 # estado de los swaps (¡contiene secretos!)
-crypto_bin = "../crypto-wasm/target/release/xmrp2p-crypto"
+crypto_bin = "../crypto-wasm/target/release/xmrp2p-crypto-cli"
 # payout_address = "0x..."                                # cobrar el USDT en otra dirección (opcional)
 poll_seconds = 15
 

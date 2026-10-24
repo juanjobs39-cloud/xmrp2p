@@ -11,7 +11,7 @@ Cualquiera puede correr su propio maker con esta guía.
 | Componente | Para qué |
 |---|---|
 | Python 3.10+ | el daemon |
-| `crypto-wasm` compilado (`cargo build --release --bin xmrp2p-crypto`) | la misma criptografía que usa el navegador del taker |
+| `crypto-wasm` compilado (`cargo build --release --bin xmrp2p-crypto-cli`) | la misma criptografía que usa el navegador del taker |
 | `monero-wallet-rpc` (de [getmonero.org](https://www.getmonero.org/downloads/)) con una wallet stagenet con fondos | enviar y recuperar XMR |
 | Una cuenta EVM de testnet con ETH para gas | enviar `claim` |
 | Dirección de la `SwapFactory` y del token | `contracts/README.md` |
@@ -88,7 +88,7 @@ Nada de esto promete ganancias: el spread puede no cubrir la volatilidad, el gas
 ## Pruebas
 
 ```bash
-cargo build --release --bin xmrp2p-crypto --manifest-path ../crypto-wasm/Cargo.toml
+cargo build --release --bin xmrp2p-crypto-cli --manifest-path ../crypto-wasm/Cargo.toml
 (cd ../contracts && forge build)
 .venv/bin/python -m pytest -q
 ```

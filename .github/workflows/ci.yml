@@ -101,7 +101,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: crypto-wasm
-      - run: cargo build --release --bin xmrp2p-crypto
+      - run: cargo build --release --bin xmrp2p-crypto-cli
         working-directory: crypto-wasm
       - run: forge build
         working-directory: contracts

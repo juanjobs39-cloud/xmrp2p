@@ -29,4 +29,4 @@ xmrp2p_maker = ["abi/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["integration: necesita anvil y el binario xmrp2p-crypto"]
+markers = ["integration: necesita anvil y el binario xmrp2p-crypto-cli"]

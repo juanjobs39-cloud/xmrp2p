@@ -21,7 +21,7 @@ from xmrp2p_maker.monero import MoneroError, SentTransfer
 
 ROOT = Path(__file__).resolve().parents[2]
 EXE = ".exe" if sys.platform == "win32" else ""
-CRYPTO_BIN = ROOT / "crypto-wasm" / "target" / "release" / f"xmrp2p-crypto{EXE}"
+CRYPTO_BIN = ROOT / "crypto-wasm" / "target" / "release" / f"xmrp2p-crypto-cli{EXE}"
 CONTRACTS_OUT = ROOT / "contracts" / "out"
 
 
@@ -33,7 +33,7 @@ def _tool(name: str) -> str | None:
 @pytest.fixture(scope="session")
 def crypto() -> Crypto:
     if not CRYPTO_BIN.exists():
-        pytest.skip("compila crypto-wasm: cargo build --release --bin xmrp2p-crypto")
+        pytest.skip("compila crypto-wasm: cargo build --release --bin xmrp2p-crypto-cli")
     return Crypto(CRYPTO_BIN)
 
 

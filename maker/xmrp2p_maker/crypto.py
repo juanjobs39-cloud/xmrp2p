@@ -1,4 +1,4 @@
-"""Puente con el núcleo criptográfico en Rust (`crypto-wasm`, binario `xmrp2p-crypto`).
+"""Puente con el núcleo criptográfico en Rust (`crypto-wasm`, binario `xmrp2p-crypto-cli`).
 
 El maker NO implementa criptografía: llama al mismo código que usa el navegador del taker.
 Los secretos viajan por stdin, nunca como argumentos del proceso.
