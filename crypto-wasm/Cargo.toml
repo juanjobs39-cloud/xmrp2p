@@ -41,4 +41,3 @@ wasm-bindgen = { version = "0.2", optional = true }
 opt-level = "z"
 lto = true
 codegen-units = 1
-panic = "abort"
