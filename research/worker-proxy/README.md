@@ -25,16 +25,29 @@ Si el usuario quiere usar **su propio nodo**, debe exponerlo con TLS y arrancar 
 | `fetch()` | ✅ 4/4 nodos | 110–200 ms |
 | `connect()` (TCP, HTTP/1.1 a mano) | ✅ 4/4 nodos | 200–410 ms |
 
-⚠️ **En local no se aplican las restricciones de producción.** La prueba desplegada en `workers.dev` quedó **pendiente**: requiere que el dueño autorice `wrangler login` (el intento del 23-oct expiró sin autorización). Comando para repetirla:
+### Worker desplegado en producción (24-oct-2026, `xmrp2p.workers.dev`)
+
+| Método | Puertos 38081 / 38089 | Latencia `get_info` |
+|---|---|---|
+| `fetch()` | ✅ 4/4 nodos (altura 2 235 831) | 87–427 ms |
+| `connect()` (TCP) | ✅ 4/4 nodos | 169–545 ms |
+
+También se verificó en producción:
+- Preflight `OPTIONS` → `204` con `Access-Control-Allow-Origin` ✅
+- `json_rpc` con método permitido (`get_block_count`) ✅; con método no permitido (`relay_tx`) → `403` ✅
+- Nodo fuera de la lista → `400` ✅
+
+**Conclusión:** en producción `fetch()` sí llega a puertos no estándar, así que el proxy de la Fase 4 puede usar `fetch()`; `connect()` queda como plan B. El Worker de prueba se borró al terminar (`wrangler delete`).
+
+Notas operativas:
+- En esta PC la variable de entorno `NODE_USE_SYSTEM_CA=1` hace que wrangler falle con `fetch failed`. Correr con `env -u NODE_USE_SYSTEM_CA npx wrangler ...`.
+- La cuenta usa el subdominio `xmrp2p.workers.dev` de forma provisional; en producción irá en el dominio propio.
 
 ```bash
-npx wrangler login
 npx wrangler deploy
-curl https://xmrp2p-research-proxy.<subdominio>.workers.dev/probe
-npx wrangler delete   # borrar el Worker de prueba al terminar
+curl https://xmrp2p-research-proxy.xmrp2p.workers.dev/probe
+npx wrangler delete
 ```
-
-`/probe` devuelve por cada nodo si funcionó `fetch()` y si funcionó `connect()`. Si `fetch()` falla en producción por el puerto, `connect()` es el plan B (la documentación solo menciona el bloqueo del puerto 25 para sockets TCP).
 
 ### Hallazgo: libwallet ignora la ruta de la URL
 

@@ -1,6 +1,6 @@
 # Arquitectura de xmrp2p (Fase 0)
 
-> Última actualización: 23 de octubre de 2026. Estado: **investigación y diseño**. Nada de esto está desplegado en mainnet.
+> Última actualización: 24 de octubre de 2026. Estado: **investigación y diseño**. Nada de esto está desplegado en mainnet.
 
 **Resumen en una frase:** el protocolo de AthanorLabs adaptado a USDT es viable en el navegador con librerías existentes. Las pruebas DLEQ en WASM, el contrato con los tres comportamientos de USDT y monero-ts vía proxy funcionaron. Los dos problemas serios son que **el taker necesita estar en línea antes de t0** y que **verificar el XMR en el navegador hoy tarda ~4 minutos**.
 
@@ -85,7 +85,7 @@ stateDiagram-v2
 | Escrow + 3 comportamientos de USDT | `research/contract-compat` | ✅ 40/40 (incluye fuzzing con 1000 corridas y aislamiento por lista negra) |
 | Slither | `research/contract-compat` | 8 avisos, ninguno crítico para el prototipo; se resuelven en la Fase 1 |
 | Nodos públicos stagenet | `research/worker-proxy` | 4/7 responden; **0 con CORS, 0 con HTTPS** |
-| Worker proxy local (`fetch` y `connect` a 38081/38089) | `research/worker-proxy` | ✅ en local · ⏳ **en producción pendiente** (falta `wrangler login`) |
+| Worker proxy (`fetch` y `connect` a 38081/38089) | `research/worker-proxy` | ✅ en local y ✅ **desplegado en producción** (4/4 nodos, CORS y filtros OK) |
 | monero-ts en el navegador | `research/monero-ts-browser` | Directo ❌ (CORS) · vía proxy ✅ · wallet de solo vista sincronizada en 226 s (169 peticiones) |
 | Tamaños vs Cloudflare Pages (25 MiB por archivo, 20 000 archivos) | — | ✅ el archivo más grande pesa 4,3 MB |
 | Durable Objects en el plan gratuito | documentación | ✅ con backend SQLite; 100 000 peticiones/día; los mensajes WebSocket cuentan 20:1 |
@@ -122,7 +122,7 @@ stateDiagram-v2
 | # | Pregunta | Cómo se resuelve |
 |---|---|---|
 | A1 | ¿Qué mitigación del riesgo 1 adoptamos? | Decisión del dueño + diseño en la Fase 1 |
-| A2 | ¿`fetch()` a 38081 funciona en un Worker desplegado, o hace falta `connect()`? | `wrangler login` + `deploy` + `/probe` (5 minutos) |
+| ~~A2~~ | ~~¿`fetch()` a 38081 funciona en un Worker desplegado?~~ | **Resuelta (24-oct):** sí, `fetch()` y `connect()` funcionan en producción |
 | A3 | ¿`ecrecover` y los clones funcionan igual en Tron Nile? | Desplegar en Nile en la Fase 1 (requiere TRX de prueba del faucet) |
 | A4 | ¿USD₮0 en Arbitrum acepta `permit()` de verdad? | `DOMAIN_SEPARATOR` y `nonces` existen; probar un `permit` en un fork de Arbitrum con Foundry |
 | A5 | ¿Valores de t0 y t1? | Depende del tiempo de confirmación de Monero (10 bloques ≈ 20 min) y del riesgo 1 |
