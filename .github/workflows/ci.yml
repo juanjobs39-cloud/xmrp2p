@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  secretos:
+    name: Buscar secretos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  contrato-research:
+    name: Prototipo de contrato (Fase 0)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: research/contract-compat
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+      - run: forge install foundry-rs/forge-std OpenZeppelin/openzeppelin-contracts@v5.4.0 --no-git
+      - run: forge test -vv
+
+  dleq-research:
+    name: DLEQ en Rust (Fase 0)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: research/dleq-wasm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: research/dleq-wasm
+      - run: cargo test --release
+      - run: cargo build --release --target wasm32-unknown-unknown
