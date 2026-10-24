@@ -69,10 +69,10 @@ const softwareLd = {
       <h2>{t("1. Elige oferta y monto", "1. Pick an offer and amount")}</h2>
       <form id="form-start" class="app">
         <label>{t("Oferta", "Offer")}<select id="offer" required></select></label>
-        <label>{t("Monto en USDT", "Amount in USDT")}<input id="usdt" inputmode="decimal" required placeholder="100" /></label>
+        <label>{t("Monto en USDT", "Amount in USDT")}<input id="usdt" type="text" inputmode="decimal" required placeholder="100" /></label>
         <label>
           {t("Tu dirección de Monero (stagenet)", "Your Monero address (stagenet)")}
-          <input id="destination" required autocomplete="off" spellcheck="false" />
+          <input id="destination" type="text" required autocomplete="off" spellcheck="false" />
           <small>{t("Aquí recibirás el XMR al final.", "This is where you will receive the XMR.")}</small>
         </label>
         <label>
@@ -82,7 +82,7 @@ const softwareLd = {
         </label>
         <label>
           {t("Nodo de Monero", "Monero node")}
-          <input id="node" required spellcheck="false" />
+          <input id="node" type="url" required spellcheck="false" />
           <small>{t("Puedes usar tu propio nodo (con CORS y HTTPS).", "You can use your own node (with CORS and HTTPS).")}</small>
         </label>
         <button class="btn" type="submit">{t("Pedir el swap", "Request the swap")}</button>

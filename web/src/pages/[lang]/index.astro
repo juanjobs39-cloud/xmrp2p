@@ -1,0 +1,80 @@
+---
+import Base from "../../layouts/Base.astro";
+import { guidePath, guides } from "../../lib/content";
+import { ROUTES, SITE, type Lang } from "../../site";
+
+export function getStaticPaths() {
+  return [{ params: { lang: "es" } }, { params: { lang: "en" } }];
+}
+const lang = Astro.params.lang as Lang;
+const t = (es: string, en: string) => (lang === "es" ? es : en);
+const list = (await guides(lang)).slice(0, 6);
+---
+<Base
+  {lang}
+  route="home"
+  title={t(`${SITE.brand}: cambia USDT por Monero sin intermediarios`, `${SITE.brand}: swap USDT for Monero without intermediaries`)}
+  description={t(
+    "Cambia USDT por Monero (XMR) con atomic swaps desde tu navegador: sin cuenta, sin descargas y sin que nadie custodie tus fondos. Código abierto.",
+    "Swap USDT for Monero (XMR) with atomic swaps from your browser: no account, no downloads, nobody holds your funds. Open source.",
+  )}
+>
+  <main id="contenido">
+    <section class="wrap">
+      <h1>{t("Cambia USDT por Monero sin entregarle tus fondos a nadie", "Swap USDT for Monero without handing your funds to anyone")}</h1>
+      <p class="answer">
+        {t(
+          `${SITE.brand} es una plataforma P2P donde cambias USDT por XMR mediante un atomic swap: un contrato inteligente retiene tu USDT y solo lo entrega al vendedor cuando tú ya puedes tomar el XMR. Si algo falla, recuperas tu USDT. No hay cuenta, no hay descargas y nadie custodia fondos.`,
+          `${SITE.brand} is a P2P platform where you swap USDT for XMR through an atomic swap: a smart contract holds your USDT and only releases it to the seller once you can take the XMR. If anything fails, you get your USDT back. No account, no downloads, nobody holds funds.`,
+        )}
+      </p>
+      <p class="notice warn">{t("Estado: pruebas en testnet, sin auditoría. No uses dinero real.", "Status: testnet trials, not audited. Do not use real money.")}</p>
+      <p>
+        <a class="btn" href={ROUTES.app[lang]}>{t("Abrir la app (testnet)", "Open the app (testnet)")}</a>{" "}
+        <a class="btn secondary" href={ROUTES.how[lang]}>{t("Cómo funciona", "How it works")}</a>
+      </p>
+    </section>
+
+    <section class="wrap">
+      <h2>{t("Cómo funciona, en 4 pasos", "How it works, in 4 steps")}</h2>
+      <ol>
+        <li>{t("Eliges una oferta y escribes tu dirección de Monero.", "Pick an offer and enter your Monero address.")}</li>
+        <li>{t("Descargas tu archivo de recuperación cifrado y depositas el USDT en un contrato desde tu wallet (MetaMask o compatible).", "Download your encrypted recovery file and deposit the USDT into a contract from your wallet (MetaMask or compatible).")}</li>
+        <li>{t("El vendedor (maker) bloquea el XMR; la app verifica el monto y tú confirmas.", "The seller (maker) locks the XMR; the app verifies the amount and you confirm.")}</li>
+        <li>{t("Al cobrar el USDT, el maker revela un secreto con el que la app envía el XMR a tu dirección.", "When the maker claims the USDT, they reveal a secret the app uses to send the XMR to your address.")}</li>
+      </ol>
+    </section>
+
+    <section class="wrap">
+      <h2>{t("Por qué un atomic swap", "Why an atomic swap")}</h2>
+      <table>
+        <thead><tr><td></td><th scope="col">{t("Atomic swap (xmrp2p)", "Atomic swap (xmrp2p)")}</th><th scope="col">{t("Exchange centralizado", "Centralized exchange")}</th><th scope="col">{t("P2P con árbitro", "P2P with arbitrator")}</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">{t("¿Quién tiene tus fondos?", "Who holds your funds?")}</th><td>{t("Nadie: un contrato y tus llaves", "Nobody: a contract and your keys")}</td><td>{t("El exchange", "The exchange")}</td><td>{t("Un escrow y un árbitro", "An escrow and an arbitrator")}</td></tr>
+          <tr><th scope="row">{t("¿Necesitas cuenta?", "Do you need an account?")}</th><td>{t("No", "No")}</td><td>{t("Sí, normalmente con verificación de identidad", "Yes, usually with identity checks")}</td><td>{t("Normalmente sí", "Usually yes")}</td></tr>
+          <tr><th scope="row">{t("Si la otra parte desaparece", "If the other party disappears")}</th><td>{t("Recuperas tu USDT con el contrato", "You recover your USDT through the contract")}</td><td>{t("Dependes del exchange", "You depend on the exchange")}</td><td>{t("Decide el árbitro", "The arbitrator decides")}</td></tr>
+          <tr><th scope="row">{t("Lo que debes hacer tú", "What you must do")}</th><td>{t("Mantener la pestaña abierta o guardar el archivo de recuperación", "Keep the tab open or keep the recovery file")}</td><td>{t("Confiar en el exchange", "Trust the exchange")}</td><td>{t("Coordinar pagos", "Coordinate payments")}</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="wrap">
+      <h2>{t("Guías", "Guides")}</h2>
+      <div class="cards">
+        {list.map((g) => (
+          <div class="card"><h3><a href={guidePath(g)}>{g.data.title}</a></h3><p>{g.data.description}</p></div>
+        ))}
+      </div>
+      <p><a href={ROUTES.guides[lang]}>{t("Ver todas las guías", "See all guides")}</a> · <a href={ROUTES.faq[lang]}>{t("Preguntas frecuentes", "FAQ")}</a></p>
+    </section>
+
+    <section class="wrap">
+      <h2>{t("Transparencia", "Transparency")}</h2>
+      <ul>
+        <li>{t("El código es abierto (AGPL-3.0) y la app que descargas se puede verificar contra el código publicado.", "The code is open source (AGPL-3.0) and the app you load can be verified against the published code.")} <a href={SITE.repo}>GitHub</a></li>
+        <li>{t("Cobramos una comisión por cada swap completado; el contrato tiene un tope de 1 % que nadie puede subir.", "We charge a fee on each completed swap; the contract has a 1% cap that nobody can raise.")}</li>
+        <li>{t("No prometemos ganancias ni tasas: el precio lo fija cada maker y cambia con el mercado.", "We promise no profits or rates: each maker sets the price and it changes with the market.")}</li>
+      </ul>
+    </section>
+  </main>
+</Base>

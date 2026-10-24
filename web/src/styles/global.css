@@ -4,7 +4,7 @@
   --muted: #5d6470;
   --line: #e2e4e8;
   --card: #ffffff;
-  --accent: #e2591b; /* naranja Monero, sobrio */
+  --accent: #b7410e; /* naranja Monero oscurecido: contraste ≥ 4.5:1 (WCAG AA) */
   --accent-fg: #ffffff;
   --warn-bg: #fff6e0;
   --warn-fg: #6b4a00;

@@ -1,6 +1,6 @@
 # Arquitectura de xmrp2p (Fase 0)
 
-> Última actualización: 24 de octubre de 2026. Estado: **Fase 0 terminada; Fase 1 (contrato) implementada y probada, sin auditoría y sin desplegar**. Nada de esto está en mainnet.
+> Última actualización: 24 de octubre de 2026. Estado: **Fases 0 a 6 implementadas y probadas en local; sin auditoría y sin desplegar** (Fase 7 pendiente: necesita fondos de testnet). Nada de esto está en mainnet.
 
 **Resumen en una frase:** el protocolo de AthanorLabs adaptado a USDT es viable en el navegador con librerías existentes. Las pruebas DLEQ en WASM, el contrato con los tres comportamientos de USDT y monero-ts vía proxy funcionaron. Los dos problemas serios son que **el taker necesita estar en línea antes de t0** y que **verificar el XMR en el navegador hoy tarda ~4 minutos**.
 
@@ -126,7 +126,7 @@ stateDiagram-v2
 | A3 | ¿`ecrecover` y los clones funcionan igual en Tron Nile? | **Parcial (24-oct):** compila con el solc de Tron y la red tiene activados los opcodes necesarios. Falta un despliegue en Nile (requiere TRX de prueba del faucet, paso del dueño) |
 | ~~A4~~ | ~~¿USD₮0 en Arbitrum acepta `permit()`?~~ | **Resuelta (24-oct):** sí. `newSwapWithPermit` funciona en un fork de Arbitrum One con el USD₮0 real |
 | A5 | ¿Valores de t0 y t1? | Depende del tiempo de confirmación de Monero (10 bloques ≈ 20 min) y del riesgo 1 |
-| A6 | ¿monero-ts o escáner propio con `monero-oxide`? | Prototipo comparativo al inicio de la Fase 2 |
+| ~~A6~~ | ~~¿monero-ts o escáner propio?~~ | **Resuelta en parte (24-oct):** se usa monero-ts con `check_tx_key` (≈5 s en vez de 226 s) gracias a la `tx_key` que envía el maker; el barrido final sí sincroniza desde la altura de restauración |
 | ~~A7~~ | ~~¿Serialización compacta de la DLEQ?~~ | **Resuelta (24-oct):** binario `postcard` versionado, 56,6 KB |
 
 ## 7. Plan por fases (resumen)
@@ -137,8 +137,8 @@ stateDiagram-v2
 | 2 · Cripto WASM ✅ | `crypto-wasm/` en Rust: llaves, DLEQ, verificación, dirección compartida, reconstrucción | Implementado el 24-oct (ver `crypto-wasm/README.md`): 14 pruebas, vectores idénticos a monero-ts y al contrato, DLEQ binaria de 56,6 KB, ~0,3 s por operación en el navegador. El barrido del XMR se hace con monero-ts usando la llave reconstruida. A6 sigue abierta |
 | 3 · Maker ✅ | `maker/` en Python (usa el núcleo Rust vía CLI) con estado en SQLite | Implementado el 24-oct (ver `maker/README.md`): 17 pruebas, 11 contra los contratos reales en anvil. Falta probarlo con `monero-wallet-rpc` real (Fase 7) y conectarlo al canal de la Fase 4 |
 | 4 · Cloudflare ✅ (local) | `workers/`: libro de órdenes (Workers + D1), canal (Durable Objects + WebSocket), proxy de nodos, API pública con OpenAPI y MCP de solo lectura | Implementado el 24-oct (ver `workers/README.md`): 19 pruebas en miniflare y una prueba de extremo a extremo con el maker real. **No desplegado**: espera tu aprobación |
-| 5 · App | `web/` ruta `/app`: flujo del swap, archivo de recuperación, CSP/SRI, IPFS | El archivo de recuperación se descarga **antes** del depósito |
-| 6 · Sitio y SEO | `web/` en Astro con cero JS en el contenido, robots/llms.txt, IndexNow, guías ES/EN | La API pública (OpenAPI) y el MCP de solo lectura ya existen en `workers/src/api` (Fase 4) |
+| 5 · App ✅ | `web/` ruta `/app`: flujo del swap, archivo de recuperación, CSP/SRI, IPFS | Implementado el 24-oct (ver `web/README.md`): lógica de decisión con prueba exhaustiva, archivo cifrado AES-GCM, `permit`, verificación del XMR con `check_tx_key` (el maker ahora envía `tx_key`), CSP estricta, SRI e import map con integrity. Probado en navegador hasta stagenet; falta el flujo completo con fondos de testnet (Fase 7) |
+| 6 · Sitio y SEO ✅ | `web/` en Astro con cero JS en el contenido, robots/llms.txt, IndexNow, guías ES/EN | Implementado el 24-oct: 42 páginas, 8 guías ×2, 17 preguntas ×2, glosario, JSON-LD, sitemap con hreflang, `.md` por guía, HTML válido y 0 enlaces rotos. Pasos manuales en `docs/PUBLICAR.md` |
 | 7 · E2E testnet | `docs/PRUEBAS.md` | Todos los casos de falla, incluido el riesgo 1 |
 
 ### Estructura prevista del monorepo

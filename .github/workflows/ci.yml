@@ -127,6 +127,38 @@ jobs:
       - run: npx tsc --noEmit
       - run: npm test
 
+  web:
+    name: Sitio y app (Astro + validación + Lighthouse)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crypto-wasm
+      - run: cargo install wasm-pack --locked --version 0.15.0
+      - run: wasm-pack build --release --target web --out-dir pkg
+        working-directory: crypto-wasm
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci --legacy-peer-deps
+        working-directory: web
+      - run: npm test
+        working-directory: web
+      - run: npm run build
+        working-directory: web
+      - run: npx html-validate "dist/**/*.html"
+        working-directory: web
+      - run: npx linkinator dist --recurse --skip "^https?://(?!localhost)"
+        working-directory: web
+      - run: npx lhci autorun
+        working-directory: web
+      - run: npm run build:ipfs
+        working-directory: web
+
   dleq-research:
     name: DLEQ en Rust (Fase 0)
     runs-on: ubuntu-latest

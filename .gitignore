@@ -71,3 +71,7 @@ web/scripts/stubs/
 web/.env
 
 web/dist-ipfs/
+
+# Web: estado local
+web/.indexnow-cache.json
+web/.lighthouseci/

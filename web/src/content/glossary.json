@@ -1,0 +1,62 @@
+[
+  {
+    "id": "es",
+    "lang": "es",
+    "items": [
+      { "term": "Atomic swap", "def": "Intercambio entre dos criptomonedas de cadenas distintas en el que o se completan ambas transferencias o ninguna, sin intermediarios." },
+      { "term": "Archivo de recuperación", "def": "Archivo cifrado con tu contraseña que contiene tu mitad de la llave de un swap en xmrp2p. Permite reanudar, reclamar el XMR o reembolsar." },
+      { "term": "Arbitrum", "def": "Red de capa 2 de Ethereum con comisiones generalmente más bajas. Arbitrum Sepolia es su red de pruebas." },
+      { "term": "Capa 2 (L2)", "def": "Red construida sobre otra (como Ethereum) para procesar transacciones más baratas y rápidas, heredando parte de su seguridad." },
+      { "term": "Confirmación", "def": "Cada bloque añadido después del que contiene tu transacción. Más confirmaciones significan más certeza de que no se revertirá." },
+      { "term": "Contrato inteligente", "def": "Programa que vive en una blockchain y se ejecuta según reglas públicas que nadie puede cambiar después de desplegarlo." },
+      { "term": "Custodia", "def": "Control de los fondos de otra persona. En xmrp2p nadie custodia: un contrato y llaves divididas reemplazan al custodio." },
+      { "term": "DLEQ", "def": "Prueba de igualdad de logaritmos discretos. Demuestra que la misma llave secreta está detrás de una llave de Monero (ed25519) y de una de Ethereum (secp256k1) sin revelarla." },
+      { "term": "Escrow", "def": "Depósito en garantía. En xmrp2p es un contrato separado por cada swap que retiene el USDT." },
+      { "term": "Gas", "def": "Comisión que se paga en la moneda de la red (por ejemplo ETH) para ejecutar transacciones y contratos." },
+      { "term": "Llave de vista", "def": "Llave de Monero que permite ver los pagos recibidos por una dirección sin poder gastarlos." },
+      { "term": "Maker", "def": "Quien ofrece XMR a cambio de USDT y corre un programa que responde swaps automáticamente." },
+      { "term": "Monero (XMR)", "def": "Criptomoneda que oculta por defecto remitente, destinatario y monto de cada transacción." },
+      { "term": "Permit (EIP-2612)", "def": "Autorización firmada que permite a un contrato mover tus tokens sin una transacción de aprobación aparte." },
+      { "term": "Reembolso (refund)", "def": "Acción con la que el taker recupera su USDT del contrato, antes de t0 sin haber confirmado o desde t1." },
+      { "term": "Semilla (seed)", "def": "Lista de palabras que permite restaurar una wallet. Quien la tiene controla los fondos." },
+      { "term": "setReady", "def": "Confirmación del taker en el contrato de que el XMR está bloqueado correctamente; a partir de ahí el maker puede cobrar." },
+      { "term": "Stagenet", "def": "Red de pruebas de Monero que imita a la red principal. Su XMR no tiene valor." },
+      { "term": "t0 y t1", "def": "Los dos plazos del contrato de xmrp2p: antes de t0 el taker confirma o reembolsa; desde t1 puede reembolsar si el maker no cobró." },
+      { "term": "Taker", "def": "Quien toma una oferta: en xmrp2p, el usuario que tiene USDT y quiere XMR." },
+      { "term": "Testnet", "def": "Red de pruebas donde los tokens no tienen valor real." },
+      { "term": "TRC-20 / ERC-20", "def": "Estándares de tokens en Tron y Ethereum. El USDT existe en ambas redes, que no son compatibles entre sí." },
+      { "term": "USDT", "def": "Moneda estable de Tether que busca valer un dólar estadounidense. Existe en varias redes y su emisor puede congelar direcciones." },
+      { "term": "Wallet", "def": "Programa que guarda tus llaves y te permite enviar y recibir criptomonedas." }
+    ]
+  },
+  {
+    "id": "en",
+    "lang": "en",
+    "items": [
+      { "term": "Atomic swap", "def": "A trade between two cryptocurrencies on different chains where either both transfers complete or neither does, with no intermediary." },
+      { "term": "Recovery file", "def": "A password-encrypted file holding your half of an xmrp2p swap key. It lets you resume, claim the XMR or refund." },
+      { "term": "Arbitrum", "def": "An Ethereum layer-2 network with generally lower fees. Arbitrum Sepolia is its test network." },
+      { "term": "Layer 2 (L2)", "def": "A network built on another (such as Ethereum) to process cheaper, faster transactions while inheriting part of its security." },
+      { "term": "Confirmation", "def": "Each block added after the one containing your transaction. More confirmations mean more certainty it will not be reversed." },
+      { "term": "Smart contract", "def": "A program living on a blockchain that runs under public rules nobody can change after deployment." },
+      { "term": "Custody", "def": "Control over someone else's funds. On xmrp2p nobody has custody: a contract and split keys replace the custodian." },
+      { "term": "DLEQ", "def": "Discrete log equality proof. It shows the same secret key is behind a Monero key (ed25519) and an Ethereum key (secp256k1) without revealing it." },
+      { "term": "Escrow", "def": "A deposit held in guarantee. On xmrp2p it is a separate contract per swap that holds the USDT." },
+      { "term": "Gas", "def": "A fee paid in the network's coin (for example ETH) to run transactions and contracts." },
+      { "term": "View key", "def": "A Monero key that shows payments received by an address without being able to spend them." },
+      { "term": "Maker", "def": "Someone who offers XMR for USDT and runs a program that answers swaps automatically." },
+      { "term": "Monero (XMR)", "def": "A cryptocurrency that hides by default the sender, receiver and amount of every transaction." },
+      { "term": "Permit (EIP-2612)", "def": "A signed authorization that lets a contract move your tokens without a separate approval transaction." },
+      { "term": "Refund", "def": "The action by which the taker recovers their USDT from the contract, before t0 without having confirmed, or from t1." },
+      { "term": "Seed", "def": "A list of words that restores a wallet. Whoever has it controls the funds." },
+      { "term": "setReady", "def": "The taker's confirmation in the contract that the XMR is correctly locked; from then on the maker can claim." },
+      { "term": "Stagenet", "def": "Monero's test network that mimics the main network. Its XMR has no value." },
+      { "term": "t0 and t1", "def": "The two deadlines of the xmrp2p contract: before t0 the taker confirms or refunds; from t1 they can refund if the maker did not claim." },
+      { "term": "Taker", "def": "Whoever takes an offer: on xmrp2p, the user who has USDT and wants XMR." },
+      { "term": "Testnet", "def": "A test network where tokens have no real value." },
+      { "term": "TRC-20 / ERC-20", "def": "Token standards on Tron and Ethereum. USDT exists on both networks, which are not compatible with each other." },
+      { "term": "USDT", "def": "Tether's stablecoin that aims to be worth one US dollar. It exists on several networks and its issuer can freeze addresses." },
+      { "term": "Wallet", "def": "A program that stores your keys and lets you send and receive cryptocurrencies." }
+    ]
+  }
+]

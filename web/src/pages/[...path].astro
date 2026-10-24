@@ -1,0 +1,182 @@
+---
+/**
+ * Genera todas las páginas de contenido (sin JavaScript): institucionales, guías, índice de
+ * guías, preguntas frecuentes y glosario, en español e inglés.
+ */
+import { getCollection, render } from "astro:content";
+import Base from "../layouts/Base.astro";
+import { fmtDate, guideAlternates, guidePath, guides } from "../lib/content";
+import { ROUTES, SITE, type Lang } from "../site";
+
+export async function getStaticPaths() {
+  const out = [];
+  const strip = (p: string) => p.replace(/^\/|\/$/g, "");
+  for (const page of await getCollection("pages")) {
+    const { key, lang } = page.data;
+    out.push({ params: { path: strip(ROUTES[key]![lang]) }, props: { kind: "page", lang, entry: page } });
+  }
+  for (const g of await getCollection("guides")) {
+    out.push({ params: { path: strip(guidePath(g)) }, props: { kind: "guide", lang: g.data.lang, entry: g } });
+  }
+  for (const lang of ["es", "en"] as Lang[]) {
+    out.push({ params: { path: strip(ROUTES.guides[lang]) }, props: { kind: "guides", lang } });
+    out.push({ params: { path: strip(ROUTES.faq[lang]) }, props: { kind: "faq", lang } });
+    out.push({ params: { path: strip(ROUTES.glossary[lang]) }, props: { kind: "glossary", lang } });
+  }
+  return out;
+}
+
+const { kind, lang, entry } = Astro.props as { kind: string; lang: Lang; entry?: any };
+const t = (es: string, en: string) => (lang === "es" ? es : en);
+const home = { name: t("Inicio", "Home"), href: ROUTES.home[lang] };
+const guidesCrumb = { name: t("Guías", "Guides"), href: ROUTES.guides[lang] };
+
+let title = "";
+let description = "";
+let route: keyof typeof ROUTES | undefined;
+let alternates: Partial<Record<Lang, string>> | undefined;
+let breadcrumbs: { name: string; href: string }[] = [];
+let jsonLd: object[] = [];
+let Content: any = null;
+let updated: Date | undefined;
+let related: Awaited<ReturnType<typeof guides>> = [];
+let list: Awaited<ReturnType<typeof guides>> = [];
+let faqItems: { q: string; a: string }[] = [];
+let glossaryItems: { term: string; def: string }[] = [];
+let mdAlt: string | undefined;
+
+if (kind === "page") {
+  ({ title, description, updated } = entry.data);
+  route = entry.data.key;
+  breadcrumbs = [home, { name: title, href: ROUTES[route!]![lang] }];
+  ({ Content } = await render(entry));
+} else if (kind === "guide") {
+  const g = entry.data;
+  ({ title, description, updated } = g);
+  alternates = await guideAlternates(g.key);
+  breadcrumbs = [home, guidesCrumb, { name: title, href: guidePath(entry) }];
+  ({ Content } = await render(entry));
+  const all = await guides(lang);
+  related = all.filter((x) => g.related.includes(x.data.key));
+  mdAlt = guidePath(entry).replace(/\/$/, ".md");
+  const url = new URL(guidePath(entry), Astro.site).href;
+  jsonLd.push({
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description,
+    inLanguage: lang,
+    datePublished: g.published.toISOString(),
+    dateModified: g.updated.toISOString(),
+    mainEntityOfPage: url,
+    author: { "@type": "Organization", name: SITE.brand },
+    publisher: { "@type": "Organization", name: SITE.brand },
+  });
+  if (g.howto) {
+    jsonLd.push({
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      name: g.howto.name,
+      inLanguage: lang,
+      ...(g.howto.totalTime ? { totalTime: g.howto.totalTime } : {}),
+      step: g.howto.steps.map((s: { name: string; text: string }, i: number) => ({ "@type": "HowToStep", position: i + 1, name: s.name, text: s.text })),
+    });
+  }
+} else if (kind === "guides") {
+  route = "guides";
+  title = t("Guías sobre USDT, Monero y atomic swaps", "Guides on USDT, Monero and atomic swaps");
+  description = t(
+    "Guías en español para cambiar USDT a Monero sin intermediarios, crear una wallet de Monero y evitar errores comunes.",
+    "Guides to swap USDT for Monero without intermediaries, create a Monero wallet and avoid common mistakes.",
+  );
+  breadcrumbs = [home, guidesCrumb];
+  list = await guides(lang);
+} else if (kind === "faq") {
+  route = "faq";
+  title = t("Preguntas frecuentes", "Frequently asked questions");
+  description = t(
+    "Respuestas directas sobre cómo funciona xmrp2p, comisiones, plazos, seguridad, reembolsos y riesgos.",
+    "Direct answers about how xmrp2p works, fees, deadlines, security, refunds and risks.",
+  );
+  breadcrumbs = [home, { name: title, href: ROUTES.faq[lang] }];
+  faqItems = (await getCollection("faq")).find((f) => f.data.lang === lang)!.data.items;
+  jsonLd.push({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    inLanguage: lang,
+    mainEntity: faqItems.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+  });
+} else if (kind === "glossary") {
+  route = "glossary";
+  title = t("Glosario de términos cripto", "Crypto glossary");
+  description = t(
+    "Definiciones cortas de atomic swap, DLEQ, USDT, Monero, wallet, gas, confirmación, testnet y otros términos.",
+    "Short definitions of atomic swap, DLEQ, USDT, Monero, wallet, gas, confirmation, testnet and more.",
+  );
+  breadcrumbs = [home, { name: title, href: ROUTES.glossary[lang] }];
+  glossaryItems = (await getCollection("glossary")).find((f) => f.data.lang === lang)!.data.items.sort((a, b) => a.term.localeCompare(b.term, lang));
+  jsonLd.push({
+    "@context": "https://schema.org",
+    "@type": "DefinedTermSet",
+    name: title,
+    inLanguage: lang,
+    hasDefinedTerm: glossaryItems.map((g) => ({ "@type": "DefinedTerm", name: g.term, description: g.def })),
+  });
+}
+const slugify = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+---
+<Base {lang} {title} {description} {route} {alternates} {breadcrumbs} {jsonLd} ogType={kind === "guide" ? "article" : "website"} markdownAlternate={mdAlt}>
+  <main id="contenido" class="prose">
+    <article>
+      <h1>{title}</h1>
+      {updated && <p class="meta">{t("Última actualización", "Last updated")}: <time datetime={updated.toISOString().slice(0, 10)}>{fmtDate(updated, lang)}</time></p>}
+      {kind === "guide" && (
+        <p class="notice warn">
+          {t("Aviso: xmrp2p cobra una comisión en cada swap completado (ver ", "Note: xmrp2p charges a fee on every completed swap (see ")}
+          <a href={ROUTES.faq[lang]}>{t("preguntas frecuentes", "FAQ")}</a>
+          {t("). El servicio está en fase de pruebas y solo funciona en testnet.", "). The service is in testing and only runs on testnet.")}
+        </p>
+      )}
+      {Content && <Content />}
+
+      {kind === "guides" && (
+        <>
+          <p class="answer">{t(
+            "Aquí explicamos, en lenguaje claro, cómo cambiar USDT por Monero sin entregar tus fondos a nadie, cómo prepararte y qué hacer si algo sale mal.",
+            "Here we explain, in plain language, how to swap USDT for Monero without handing your funds to anyone, how to prepare and what to do if something goes wrong.",
+          )}</p>
+          <ul>{list.map((g) => <li><a href={guidePath(g)}><strong>{g.data.title}</strong></a> — {g.data.description}</li>)}</ul>
+        </>
+      )}
+
+      {kind === "faq" && (
+        <>
+          <p class="answer">{t("Estas son las preguntas que más recibimos, con la respuesta primero.", "These are the questions we get most, answer first.")}</p>
+          {faqItems.map((f) => (
+            <section>
+              <h2 id={slugify(f.q)}>{f.q}</h2>
+              <p>{f.a}</p>
+            </section>
+          ))}
+        </>
+      )}
+
+      {kind === "glossary" && (
+        <>
+          <p class="answer">{t("Definiciones cortas de los términos que usamos en el sitio y en la app.", "Short definitions of the terms used across the site and the app.")}</p>
+          <dl>{glossaryItems.map((g) => <><dt id={slugify(g.term)}>{g.term}</dt><dd>{g.def}</dd></>)}</dl>
+        </>
+      )}
+
+      {related.length > 0 && (
+        <aside>
+          <h2>{t("Guías relacionadas", "Related guides")}</h2>
+          <ul>{related.map((g) => <li><a href={guidePath(g)}>{g.data.title}</a></li>)}</ul>
+        </aside>
+      )}
+      {kind === "guide" && mdAlt && (
+        <p class="meta">{t("Versión en Markdown de esta guía: ", "Markdown version of this guide: ")}<a href={mdAlt}>{mdAlt}</a></p>
+      )}
+    </article>
+  </main>
+</Base>

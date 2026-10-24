@@ -1,0 +1,22 @@
+---
+import Base from "../layouts/Base.astro";
+import { ROUTES } from "../site";
+---
+<Base lang="es" title="Página no encontrada / Page not found" description="La página no existe. Enlaces a las secciones principales de xmrp2p." noindex>
+  <main id="contenido" class="prose">
+    <h1>Página no encontrada</h1>
+    <p class="answer">La dirección no existe o cambió. Estas son las secciones principales:</p>
+    <ul>
+      <li><a href={ROUTES.home.es}>Inicio</a> · <a href={ROUTES.app.es}>Abrir la app</a></li>
+      <li><a href={ROUTES.how.es}>Cómo funciona</a></li>
+      <li><a href={ROUTES.guides.es}>Guías</a></li>
+      <li><a href={ROUTES.faq.es}>Preguntas frecuentes</a></li>
+      <li><a href={ROUTES.security.es}>Seguridad</a></li>
+    </ul>
+    <h2 lang="en">Page not found</h2>
+    <ul lang="en">
+      <li><a href={ROUTES.home.en}>Home</a> · <a href={ROUTES.app.en}>Open the app</a></li>
+      <li><a href={ROUTES.how.en}>How it works</a> · <a href={ROUTES.guides.en}>Guides</a> · <a href={ROUTES.faq.en}>FAQ</a></li>
+    </ul>
+  </main>
+</Base>

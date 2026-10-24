@@ -14,13 +14,16 @@
   },
   "dependencies": {
     "astro": "5.18.2",
-    "viem": "2.57.11",
-    "monero-ts": "0.11.20"
+    "monero-ts": "0.11.20",
+    "viem": "2.57.11"
   },
   "devDependencies": {
+    "@lhci/cli": "0.15.1",
     "assert": "2.1.0",
     "buffer": "6.0.3",
-    "process": "0.11.10",
-    "esbuild": "0.25.12"
+    "esbuild": "0.25.12",
+    "html-validate": "9.7.1",
+    "linkinator": "6.3.0",
+    "process": "0.11.10"
   }
 }
