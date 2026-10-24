@@ -54,3 +54,8 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
+
+# Artefactos de las pruebas de research/
+research/monero-ts-browser/bundle.js
+research/monero-ts-browser/monero.worker.js
+.claude/
