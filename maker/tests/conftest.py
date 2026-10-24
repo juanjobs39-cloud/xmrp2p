@@ -56,14 +56,14 @@ class FakeWallet:
     def find_outgoing(self, address: str):
         for a, amt, txid in self.sent:
             if a == address:
-                return SentTransfer(txid, amt, 0)
+                return SentTransfer(txid, amt, 0, "k" + txid[:63])
         return None
 
     def transfer(self, address: str, amount: int) -> SentTransfer:
         txid = secrets.token_hex(32)
         self.sent.append((address, amount, txid))
         self.balance -= amount
-        return SentTransfer(txid, amount, 0)
+        return SentTransfer(txid, amount, 0, "k" + txid[:63])
 
     def confirmations(self, txid: str) -> int:
         return self.conf

@@ -64,3 +64,10 @@ research/monero-ts-browser/monero.worker.js
 maker/maker.toml
 maker/*.sqlite3*
 maker/wallets/
+
+# Web
+web/public/vendor/
+web/scripts/stubs/
+web/.env
+
+web/dist-ipfs/

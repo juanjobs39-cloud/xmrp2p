@@ -17,6 +17,9 @@ class SentTransfer:
     txid: str
     amount: int
     fee: int
+    # Llave privada de la transacción: prueba el pago a una dirección (check_tx_key) sin dar
+    # ningún poder de gasto. Permite al taker verificar el bloqueo en segundos.
+    tx_key: str = ""
 
 
 class MoneroWallet(Protocol):
@@ -62,14 +65,15 @@ class WalletRpc:
             for t in res.get(kind, []):
                 for d in t.get("destinations", []):
                     if d.get("address") == address:
-                        return SentTransfer(t["txid"], int(d["amount"]), int(t.get("fee", 0)))
+                        key = self._rpc("get_tx_key", txid=t["txid"]).get("tx_key", "")
+                        return SentTransfer(t["txid"], int(d["amount"]), int(t.get("fee", 0)), key)
         return None
 
     def transfer(self, address: str, amount: int) -> SentTransfer:
         r = self._rpc(
             "transfer", destinations=[{"amount": amount, "address": address}], priority=0, get_tx_key=True
         )
-        return SentTransfer(r["tx_hash"], amount, int(r.get("fee", 0)))
+        return SentTransfer(r["tx_hash"], amount, int(r.get("fee", 0)), r.get("tx_key", ""))
 
     def confirmations(self, txid: str) -> int:
         r = self._rpc("get_transfer_by_txid", txid=txid)

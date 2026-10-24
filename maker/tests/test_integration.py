@@ -58,7 +58,8 @@ def test_swap_completo_con_ready(env):
     # El XMR fue a la dirección compartida, que el taker calcula igual por su lado.
     taker_view = e["crypto"].shared(taker_keys["spend_private"], reply["maker_message"], "stagenet")
     assert e["wallet"].sent == [(taker_view["address"], reply["xmr_atomic"], s["xmr_txid"])]
-    assert any(n[1] == "xmr_locked" for n in e["notes"])
+    (locked,) = [n for n in e["notes"] if n[1] == "xmr_locked"]
+    assert locked[2]["tx_key"] and locked[2]["xmr_atomic"] == reply["xmr_atomic"]
 
     e["chain"].send(e["taker"], escrow.functions.setReady())
     e["engine"].tick()

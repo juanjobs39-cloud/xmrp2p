@@ -1,0 +1,146 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { SITE, type Lang } from "../../../site";
+
+export function getStaticPaths() {
+  return [{ params: { lang: "es" } }, { params: { lang: "en" } }];
+}
+const lang = Astro.params.lang as Lang;
+const t = (es: string, en: string) => (lang === "es" ? es : en);
+
+// CSP estricta: solo código propio. 'wasm-unsafe-eval' es necesario para WebAssembly
+// (núcleo cripto y monero-ts); no habilita eval de JavaScript.
+const hosts = [SITE.apiUrl, import.meta.env.PUBLIC_ARBITRUM_SEPOLIA_RPC ?? "https://sepolia-rollup.arbitrum.io/rpc", import.meta.env.PUBLIC_MONERO_NODE ?? ""]
+  .filter(Boolean)
+  .map((u) => new URL(u).origin);
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'wasm-unsafe-eval'",
+  "worker-src 'self' blob:",
+  `connect-src 'self' ${hosts.join(" ")} https: http://127.0.0.1:* http://localhost:*`,
+  "img-src 'self' data:",
+  "style-src 'self'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'none'",
+].join("; ");
+
+const softwareLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: `${SITE.brand} — app de swap USDT → XMR`,
+  applicationCategory: "FinanceApplication",
+  operatingSystem: "Web (navegador)",
+  isAccessibleForFree: true,
+  license: "https://www.gnu.org/licenses/agpl-3.0.html",
+  softwareVersion: "0.1.0 (testnet)",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+};
+---
+<Base
+  lang={lang}
+  route="app"
+  csp={csp}
+  title={t("App: cambiar USDT por Monero (testnet)", "App: swap USDT for Monero (testnet)")}
+  description={t(
+    "Haz un atomic swap de USDT a XMR desde tu navegador, sin cuenta y sin que nadie custodie tus fondos. Versión de prueba en testnet.",
+    "Do a USDT to XMR atomic swap from your browser, with no account and nobody holding your funds. Testnet preview.",
+  )}
+  jsonLd={[softwareLd]}
+>
+  <main id="contenido" class="prose" data-lang={lang}>
+    <h1>{t("Cambiar USDT por XMR", "Swap USDT for XMR")}</h1>
+    <p class="notice warn">
+      {t(
+        "Versión de prueba: solo testnet (Arbitrum Sepolia + Monero stagenet). No uses fondos reales.",
+        "Preview: testnet only (Arbitrum Sepolia + Monero stagenet). Do not use real funds.",
+      )}
+    </p>
+    <p class="notice danger">
+      {t(
+        "No cierres esta pestaña hasta terminar. Si se cierra, vuelve con tu archivo de recuperación: sin él no podrás reclamar el XMR ni reembolsar el USDT. Un swap tarda normalmente entre 30 y 60 minutos.",
+        "Do not close this tab until it finishes. If it closes, come back with your recovery file: without it you cannot claim the XMR or refund the USDT. A swap normally takes 30 to 60 minutes.",
+      )}
+    </p>
+    <div id="banner" class="notice" hidden role="alert"></div>
+    <p id="status" aria-live="polite"></p>
+
+    <section id="step-start" data-step>
+      <h2>{t("1. Elige oferta y monto", "1. Pick an offer and amount")}</h2>
+      <form id="form-start" class="app">
+        <label>{t("Oferta", "Offer")}<select id="offer" required></select></label>
+        <label>{t("Monto en USDT", "Amount in USDT")}<input id="usdt" inputmode="decimal" required placeholder="100" /></label>
+        <label>
+          {t("Tu dirección de Monero (stagenet)", "Your Monero address (stagenet)")}
+          <input id="destination" required autocomplete="off" spellcheck="false" />
+          <small>{t("Aquí recibirás el XMR al final.", "This is where you will receive the XMR.")}</small>
+        </label>
+        <label>
+          {t("Contraseña del archivo de recuperación", "Recovery file password")}
+          <input id="passphrase" type="password" minlength="10" required autocomplete="new-password" />
+          <small>{t("Mínimo 10 caracteres. No la podemos recuperar por ti.", "At least 10 characters. We cannot recover it for you.")}</small>
+        </label>
+        <label>
+          {t("Nodo de Monero", "Monero node")}
+          <input id="node" required spellcheck="false" />
+          <small>{t("Puedes usar tu propio nodo (con CORS y HTTPS).", "You can use your own node (with CORS and HTTPS).")}</small>
+        </label>
+        <button class="btn" type="submit">{t("Pedir el swap", "Request the swap")}</button>
+      </form>
+    </section>
+
+    <section id="step-recovery" data-step hidden>
+      <h2>{t("2. Descarga tu archivo de recuperación", "2. Download your recovery file")}</h2>
+      <p id="quote"></p>
+      <p>{t(
+        "Es obligatorio. Está cifrado con tu contraseña y contiene tu mitad de la llave: con él puedes reanudar el swap, reclamar el XMR o reembolsar el USDT desde cualquier navegador.",
+        "It is required. It is encrypted with your password and contains your half of the key: with it you can resume, claim the XMR or refund the USDT from any browser.",
+      )}</p>
+      <button class="btn" id="btn-recovery" type="button">{t("Descargar archivo de recuperación", "Download recovery file")}</button>
+    </section>
+
+    <section id="step-deposit" data-step hidden>
+      <h2>{t("3. Deposita el USDT", "3. Deposit the USDT")}</h2>
+      <p>{t(
+        "Tu wallet (MetaMask o compatible) te pedirá firmar. El USDT queda en un contrato que solo libera al maker cuando tú lo confirmas, o te lo devuelve si algo falla.",
+        "Your wallet (MetaMask or compatible) will ask you to sign. The USDT goes into a contract that only pays the maker after you confirm, or refunds you if something fails.",
+      )}</p>
+      <button class="btn" id="btn-deposit" type="button">{t("Conectar wallet y depositar", "Connect wallet and deposit")}</button>
+    </section>
+
+    <section id="step-progress" data-step hidden>
+      <h2>{t("4. Progreso del swap", "4. Swap progress")}</h2>
+      <p id="timeline" class="meta"></p>
+      <p id="action-text" aria-live="polite"></p>
+      <button class="btn" id="btn-action" type="button" hidden></button>
+      <ol class="meta">
+        <li>{t("El maker bloquea el XMR en una dirección compartida.", "The maker locks the XMR in a shared address.")}</li>
+        <li>{t("La app verifica el monto con la llave de la transacción.", "The app verifies the amount with the transaction key.")}</li>
+        <li>{t("Confirmas (setReady). El maker cobra y, al hacerlo, revela su secreto.", "You confirm (setReady). The maker claims and, by doing so, reveals their secret.")}</li>
+        <li>{t("La app combina ambos secretos y envía el XMR a tu dirección.", "The app combines both secrets and sends the XMR to your address.")}</li>
+      </ol>
+    </section>
+
+    <section id="step-restore" data-step hidden>
+      <h2>{t("Reanudar un swap", "Resume a swap")}</h2>
+      <form id="form-restore" class="app">
+        <label>{t("Archivo de recuperación (opcional si es este navegador)", "Recovery file (optional on this browser)")}<input id="restore-file" type="file" accept=".json,application/json" /></label>
+        <label>{t("Contraseña", "Password")}<input id="restore-pass" type="password" required autocomplete="current-password" /></label>
+        <button class="btn" type="submit">{t("Reanudar", "Resume")}</button>
+      </form>
+    </section>
+    <p><a href="#step-restore" id="link-restore">{t("¿Tienes un archivo de recuperación? Reanudar", "Have a recovery file? Resume")}</a></p>
+    <noscript><p class="notice danger">{t("La app necesita JavaScript. El resto del sitio funciona sin él.", "The app needs JavaScript. The rest of the site works without it.")}</p></noscript>
+  </main>
+</Base>
+
+<script>
+  import { SwapApp } from "../../../app/app";
+  const lang = (document.querySelector("main")?.dataset.lang ?? "es") as "es" | "en";
+  const app = new SwapApp(lang);
+  void app.mount();
+  document.getElementById("link-restore")?.addEventListener("click", () => {
+    const r = document.getElementById("step-restore");
+    if (r) r.hidden = false;
+  });
+</script>

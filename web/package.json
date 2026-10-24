@@ -1,0 +1,26 @@
+{
+  "name": "xmrp2p-web",
+  "private": true,
+  "type": "module",
+  "description": "Sitio público (Astro, sin JS en el contenido) y app del swap en el navegador",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node scripts/postbuild.mjs",
+    "build:ipfs": "npm run build && node scripts/relativize.mjs",
+    "preview": "astro preview",
+    "test": "node --experimental-strip-types --test test/*.test.ts",
+    "check": "astro check",
+    "prebuild": "node scripts/build-monero.mjs"
+  },
+  "dependencies": {
+    "astro": "5.18.2",
+    "viem": "2.57.11",
+    "monero-ts": "0.11.20"
+  },
+  "devDependencies": {
+    "assert": "2.1.0",
+    "buffer": "6.0.3",
+    "process": "0.11.10",
+    "esbuild": "0.25.12"
+  }
+}

@@ -1,0 +1,124 @@
+---
+import "../styles/global.css";
+import { NAV, ROUTES, SITE, type Lang } from "../site";
+
+export interface Props {
+  lang: Lang;
+  title: string;
+  description: string;
+  /** clave de ROUTES para hreflang y selector de idioma */
+  route?: keyof typeof ROUTES;
+  /** rutas alternativas explícitas (guías) */
+  alternates?: Partial<Record<Lang, string>>;
+  jsonLd?: object[];
+  breadcrumbs?: { name: string; href: string }[];
+  /** CSP estricta para la app (las páginas de contenido no tienen JS) */
+  csp?: string;
+  ogType?: "website" | "article";
+  noindex?: boolean;
+  markdownAlternate?: string;
+}
+
+const { lang, title, description, route, jsonLd = [], breadcrumbs, csp, ogType = "website", noindex, markdownAlternate } = Astro.props;
+const site = Astro.site!;
+const path = Astro.url.pathname;
+const canonical = new URL(path, site).href;
+const alternates: Partial<Record<Lang, string>> = Astro.props.alternates ?? (route ? ROUTES[route] : {});
+const fullTitle = route === "home" ? title : `${title} · ${SITE.brand}`;
+const other: Lang = lang === "es" ? "en" : "es";
+const otherHref = alternates[other];
+const t = (es: string, en: string) => (lang === "es" ? es : en);
+
+const org = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: SITE.brand,
+  url: site.href,
+  sameAs: [SITE.repo],
+};
+const website = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: SITE.brand,
+  url: site.href,
+  inLanguage: ["es", "en"],
+};
+const crumbs = breadcrumbs && {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: breadcrumbs.map((b, i) => ({ "@type": "ListItem", position: i + 1, name: b.name, item: new URL(b.href, site).href })),
+};
+const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
+---
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {csp && <meta http-equiv="Content-Security-Policy" content={csp} />}
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {Object.entries(alternates).map(([l, href]) => <link rel="alternate" hreflang={l} href={new URL(href!, site).href} />)}
+    {alternates.es && <link rel="alternate" hreflang="x-default" href={new URL(alternates.es, site).href} />}
+    {markdownAlternate && <link rel="alternate" type="text/markdown" href={markdownAlternate} />}
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={SITE.brand} />
+    <meta property="og:locale" content={lang === "es" ? "es_419" : "en_US"} />
+    <meta property="og:image" content={new URL("/og.png", site).href} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#e2591b" />
+    {ld.map((o) => <script type="application/ld+json" set:html={JSON.stringify(o)} />)}
+  </head>
+  <body>
+    <a class="skip" href="#contenido">{t("Saltar al contenido", "Skip to content")}</a>
+    <header class="site">
+      <div class="wrap">
+        <a class="brand" href={ROUTES.home[lang]}>{SITE.brand}</a>
+        <nav aria-label={t("Principal", "Main")}>
+          <ul>
+            {NAV.map((n) => (
+              <li><a href={ROUTES[n.key][lang]} aria-current={path === ROUTES[n.key][lang] ? "page" : undefined}>{n[lang]}</a></li>
+            ))}
+            <li><a href={ROUTES.app[lang]}><strong>{t("Abrir la app", "Open the app")}</strong></a></li>
+          </ul>
+        </nav>
+        {otherHref && <a class="lang" href={otherHref} hreflang={other} lang={other}>{other === "en" ? "English" : "Español"}</a>}
+      </div>
+    </header>
+    {breadcrumbs && (
+      <nav class="breadcrumbs wrap" aria-label={t("Migas de pan", "Breadcrumbs")}>
+        <ol>{breadcrumbs.map((b, i) => <li>{i < breadcrumbs.length - 1 ? <a href={b.href}>{b.name}</a> : <span aria-current="page">{b.name}</span>}</li>)}</ol>
+      </nav>
+    )}
+    <slot />
+    <footer class="site">
+      <div class="wrap">
+        <p class="notice warn">
+          {t(
+            "⚠️ Software experimental en testnet, sin auditoría. Las transacciones de cripto son irreversibles, el precio es volátil, el emisor de USDT puede congelar direcciones y tú eres responsable de cumplir las leyes de tu país.",
+            "⚠️ Experimental testnet software, not audited. Crypto transactions are irreversible, prices are volatile, the USDT issuer can freeze addresses, and you are responsible for complying with your country's laws.",
+          )}{" "}
+          <a href={ROUTES.risks[lang]}>{t("Aviso de riesgos", "Risk notice")}</a>
+        </p>
+        <ul>
+          <li><a href={ROUTES.about[lang]}>{t("Acerca de", "About")}</a></li>
+          <li><a href={ROUTES.contact[lang]}>{t("Contacto", "Contact")}</a></li>
+          <li><a href={ROUTES.terms[lang]}>{t("Términos de uso", "Terms of use")}</a></li>
+          <li><a href={ROUTES.privacy[lang]}>{t("Privacidad", "Privacy")}</a></li>
+          <li><a href={ROUTES.risks[lang]}>{t("Aviso de riesgos", "Risk notice")}</a></li>
+          <li><a href={ROUTES.glossary[lang]}>{t("Glosario", "Glossary")}</a></li>
+          <li><a href={SITE.repo} rel="noopener">{t("Código fuente (AGPL-3.0)", "Source code (AGPL-3.0)")}</a></li>
+        </ul>
+        <p>{t("Nadie custodia tus fondos: ni nosotros ni los makers.", "Nobody holds your funds: not us, not the makers.")}</p>
+      </div>
+    </footer>
+  </body>
+</html>

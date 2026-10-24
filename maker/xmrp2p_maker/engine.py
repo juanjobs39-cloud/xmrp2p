@@ -198,8 +198,12 @@ class Engine:
         sent = self.wallet.find_outgoing(s["shared_address"])
         if sent is None:
             sent = self.wallet.transfer(s["shared_address"], int(s["xmr_atomic"]))
-        self.store.transition(s.id, LOCKING_XMR, XMR_LOCKED, "XMR enviado", xmr_txid=sent.txid)
-        self.notify(s.id, "xmr_locked", {"txid": sent.txid, "shared_address": s["shared_address"]})
+        self.store.transition(s.id, LOCKING_XMR, XMR_LOCKED, "XMR enviado", xmr_txid=sent.txid, xmr_tx_key=sent.tx_key)
+        self.notify(
+            s.id,
+            "xmr_locked",
+            {"txid": sent.txid, "tx_key": sent.tx_key, "xmr_atomic": int(s["xmr_atomic"]), "shared_address": s["shared_address"]},
+        )
         log.info("swap %s: XMR bloqueado en %s (tx %s)", s.id, s["shared_address"], sent.txid)
 
     # XMR_LOCKED / CLAIMING → CLAIMED | RECOVERING_XMR
