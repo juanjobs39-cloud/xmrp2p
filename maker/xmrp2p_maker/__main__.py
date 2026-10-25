@@ -94,7 +94,8 @@ def start_channel(engine: Engine) -> None:
         while True:
             try:
                 q = engine.quote(cfg.limits.min_usdt)
-                free = Decimal(engine.wallet.unlocked_balance() - engine.exposure_atomic()) / pricing.PICONERO
+                # El saldo desbloqueado ya excluye el XMR enviado; solo se resta lo comprometido que aún no salió.
+                free = Decimal(engine.wallet.unlocked_balance() - engine.pending_send_atomic()) / pricing.PICONERO
                 max_xmr = min(free, cfg.limits.max_exposure_xmr)
                 if max_xmr > 0:
                     ch.publish_offer(q.maker_price, cfg.limits.min_usdt, cfg.limits.max_usdt, max_xmr, ttl=cfg.offer_refresh_seconds * 2)

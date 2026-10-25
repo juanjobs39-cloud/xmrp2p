@@ -1,0 +1,111 @@
+{
+ "id": "E1",
+ "title": "Swap exitoso",
+ "expect": "xmr",
+ "outcome": "error",
+ "ok": false,
+ "minutes": 10,
+ "events": [
+  {
+   "t": "2026-10-25T21:54:30.723Z",
+   "e": "negociado",
+   "d": {
+    "xmr": 0.008231720292,
+    "shared": "55NAsG3ukVnE"
+   }
+  },
+  {
+   "t": "2026-10-25T21:54:37.480Z",
+   "e": "depositado",
+   "d": {
+    "escrow": "0x3059602AbF9CeC391E0ED3e460C431cb443C785b",
+    "tx": "0x672aa5452597a5cdb2633d9822caebaac68691379d71036e07dd0f6fd00c7e6b"
+   }
+  },
+  {
+   "t": "2026-10-25T21:55:26.011Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:55:51.931Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:56:17.121Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:56:42.952Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:57:08.991Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:57:33.910Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:57:59.310Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:58:28.552Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:58:59.092Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:59:34.468Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:00:13.850Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:00:53.683Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:01:38.291Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:02:44.409Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:03:28.148Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:04:01.156Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:04:28.221Z",
+   "e": "ERROR",
+   "d": "fetch failed"
+  }
+ ]
+}

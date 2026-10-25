@@ -2,15 +2,15 @@
 key: terms
 lang: en
 title: Terms of use
-description: "Conditions for using xmrp2p: experimental non-custodial software, user responsibilities, fees and limitation of liability."
+description: "Conditions for using MoneroP2P: experimental non-custodial software, user responsibilities, fees and limitation of liability."
 updated: 2026-10-24
 ---
 
-**Summary:** xmrp2p is experimental, non-custodial software. You use it at your own risk and you are responsible for your keys, your recovery file and complying with your country's laws. This text is a template and must be reviewed by a lawyer before handling real money.
+**Summary:** MoneroP2P is experimental, non-custodial software. You use it at your own risk and you are responsible for your keys, your recovery file and complying with your country's laws. This text is a template and must be reviewed by a lawyer before handling real money.
 
 ## The service
 
-xmrp2p provides a web interface and open-source software to perform atomic swaps between USDT and Monero with independent counterparties (makers). We are not a party to the trade, we do not hold funds and we cannot reverse transactions.
+MoneroP2P provides a web interface and open-source software to perform atomic swaps between USDT and Monero with independent counterparties (makers). We are not a party to the trade, we do not hold funds and we cannot reverse transactions.
 
 ## Testing status
 

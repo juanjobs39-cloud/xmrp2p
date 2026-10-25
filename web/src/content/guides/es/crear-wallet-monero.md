@@ -18,10 +18,10 @@ howto:
     - name: Guarda la frase semilla
       text: Escribe la frase semilla en papel, en orden, y guárdala en un lugar seguro y sin conexión.
     - name: Copia tu dirección
-      text: En la sección Recibir, copia tu dirección. Para probar xmrp2p usa una wallet de stagenet.
+      text: En la sección Recibir, copia tu dirección. Para probar MoneroP2P usa una wallet de stagenet.
 ---
 
-**Respuesta corta:** descarga una wallet de Monero desde su sitio oficial, crea una wallet nueva, escribe la frase semilla en papel y copia tu dirección en la sección "Recibir". Para probar xmrp2p necesitas una wallet en **stagenet** (la red de pruebas de Monero), que algunas wallets de escritorio permiten elegir.
+**Respuesta corta:** descarga una wallet de Monero desde su sitio oficial, crea una wallet nueva, escribe la frase semilla en papel y copia tu dirección en la sección "Recibir". Para probar MoneroP2P necesitas una wallet en **stagenet** (la red de pruebas de Monero), que algunas wallets de escritorio permiten elegir.
 
 ## Opciones conocidas
 
@@ -42,11 +42,11 @@ howto:
 4. **Anota la altura de restauración** si la wallet la muestra: acelera la recuperación.
 5. **Copia tu dirección** desde "Recibir". Las direcciones principales de Monero en la red real empiezan con `4`; las subdirecciones, con `8`. En stagenet empiezan con `5` o `7`.
 
-## Para probar xmrp2p (stagenet)
+## Para probar MoneroP2P (stagenet)
 
 - En Monero GUI o Feather, elige **stagenet** al crear la wallet (en ajustes o al iniciar).
 - El XMR de stagenet no tiene valor; se obtiene en faucets de stagenet.
-- La app de xmrp2p rechaza direcciones que no sean de stagenet mientras estemos en pruebas.
+- La app de MoneroP2P rechaza direcciones que no sean de stagenet mientras estemos en pruebas.
 
 ## Buenas prácticas
 

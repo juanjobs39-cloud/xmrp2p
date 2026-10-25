@@ -1,0 +1,48 @@
+{
+ "id": "E2",
+ "title": "Cierra la pestaña antes del bloqueo",
+ "expect": "xmr",
+ "outcome": "error",
+ "ok": false,
+ "minutes": 21,
+ "events": [
+  {
+   "t": "2026-10-25T21:55:15.126Z",
+   "e": "negociado",
+   "d": {
+    "xmr": 0.009878394494,
+    "shared": "5ATT5nGVMFrX"
+   }
+  },
+  {
+   "t": "2026-10-25T21:55:20.484Z",
+   "e": "depositado",
+   "d": {
+    "escrow": "0xf438aC54520127081819b4c2457B48aDCc6dA941",
+    "tx": "0xf1e54b820356ca6ad9af68b557e524542049660b8549a90e19bf201948c26327"
+   }
+  },
+  {
+   "t": "2026-10-25T21:55:20.485Z",
+   "e": "pestaña cerrada"
+  },
+  {
+   "t": "2026-10-25T22:10:22.932Z",
+   "e": "reanudado con el archivo de recuperación"
+  },
+  {
+   "t": "2026-10-25T22:12:37.780Z",
+   "e": "setReady",
+   "d": {
+    "tx": "0xd4c5fd14852a1207db2ab8b5bff955f0b699f6001c6445fa1d95040756b075c6",
+    "received": "9878394494",
+    "conf": 10
+   }
+  },
+  {
+   "t": "2026-10-25T22:16:31.881Z",
+   "e": "ERROR",
+   "d": "no connection to daemon"
+  }
+ ]
+}

@@ -2,7 +2,7 @@
 key: risks
 lang: es
 title: Aviso de riesgos
-description: "Riesgos de usar xmrp2p: volatilidad, transacciones irreversibles, congelación de USDT, software en pruebas, plazos y responsabilidad legal."
+description: "Riesgos de usar MoneroP2P: volatilidad, transacciones irreversibles, congelación de USDT, software en pruebas, plazos y responsabilidad legal."
 updated: 2026-10-24
 ---
 

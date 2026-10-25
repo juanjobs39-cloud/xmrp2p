@@ -18,10 +18,10 @@ howto:
     - name: Back up the seed phrase
       text: Write the seed phrase on paper, in order, and keep it somewhere safe and offline.
     - name: Copy your address
-      text: In the Receive section, copy your address. To try xmrp2p use a stagenet wallet.
+      text: In the Receive section, copy your address. To try MoneroP2P use a stagenet wallet.
 ---
 
-**Short answer:** download a Monero wallet from its official site, create a new wallet, write the seed phrase on paper and copy your address from "Receive". To try xmrp2p you need a **stagenet** wallet (Monero's test network), which some desktop wallets let you choose.
+**Short answer:** download a Monero wallet from its official site, create a new wallet, write the seed phrase on paper and copy your address from "Receive". To try MoneroP2P you need a **stagenet** wallet (Monero's test network), which some desktop wallets let you choose.
 
 ## Well-known options
 
@@ -42,11 +42,11 @@ howto:
 4. **Note the restore height** if the wallet shows it: it speeds up recovery.
 5. **Copy your address** from "Receive". Main Monero addresses on the real network start with `4`; subaddresses with `8`. On stagenet they start with `5` or `7`.
 
-## To try xmrp2p (stagenet)
+## To try MoneroP2P (stagenet)
 
 - In Monero GUI or Feather, choose **stagenet** when creating the wallet (in settings or at startup).
 - Stagenet XMR has no value; you get it from stagenet faucets.
-- The xmrp2p app rejects non-stagenet addresses while we are testing.
+- The MoneroP2P app rejects non-stagenet addresses while we are testing.
 
 ## Good practices
 

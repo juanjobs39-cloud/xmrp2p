@@ -1,0 +1,23 @@
+{
+ "id": "E2",
+ "title": "Cierra la pestaña antes del bloqueo",
+ "expect": "xmr",
+ "outcome": "error",
+ "ok": false,
+ "minutes": 0,
+ "events": [
+  {
+   "t": "2026-10-25T21:51:24.917Z",
+   "e": "negociado",
+   "d": {
+    "xmr": 0.009869323576,
+    "shared": "56gujNXdH5jh"
+   }
+  },
+  {
+   "t": "2026-10-25T21:51:26.490Z",
+   "e": "ERROR",
+   "d": "Maximum call stack size exceeded"
+  }
+ ]
+}

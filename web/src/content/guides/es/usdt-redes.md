@@ -28,7 +28,7 @@ related: [common-mistakes, swap-usdt-xmr]
 
 Sí en valor, no en red. Un USDT en Tron no se puede enviar directamente a una dirección en Ethereum: necesitas un exchange o un puente. Enviar por la red equivocada es uno de los [errores más comunes](/es/guias/errores-comunes-al-enviar-cripto/).
 
-## ¿Cuál usa xmrp2p?
+## ¿Cuál usa MoneroP2P?
 
 - **Ahora:** Arbitrum Sepolia (testnet), con un token de prueba.
 - **Previsto:** Arbitrum, cuyo USDT (USD₮0) permite autorizar el depósito con una firma, sin transacción extra de aprobación.
@@ -43,4 +43,4 @@ Sí en valor, no en red. Un USDT en Tron no se puede enviar directamente a una d
 
 ## Riesgo común a todas
 
-Tether puede congelar direcciones en todas estas redes. xmrp2p usa un contrato separado por cada swap para que una congelación no afecte a los demás, pero el riesgo existe. Lee el [aviso de riesgos](/es/aviso-de-riesgos/).
+Tether puede congelar direcciones en todas estas redes. MoneroP2P usa un contrato separado por cada swap para que una congelación no afecte a los demás, pero el riesgo existe. Lee el [aviso de riesgos](/es/aviso-de-riesgos/).

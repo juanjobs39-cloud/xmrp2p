@@ -2,7 +2,7 @@
 key: privacy
 lang: en
 title: Privacy policy
-description: "What data xmrp2p processes (almost none), what is public on-chain, what the node proxy sees and how to reduce exposure."
+description: "What data MoneroP2P processes (almost none), what is public on-chain, what the node proxy sees and how to reduce exposure."
 updated: 2026-10-24
 ---
 

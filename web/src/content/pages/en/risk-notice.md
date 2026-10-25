@@ -2,7 +2,7 @@
 key: risks
 lang: en
 title: Risk notice
-description: "Risks of using xmrp2p: volatility, irreversible transactions, USDT freezes, software in testing, deadlines and legal responsibility."
+description: "Risks of using MoneroP2P: volatility, irreversible transactions, USDT freezes, software in testing, deadlines and legal responsibility."
 updated: 2026-10-24
 ---
 

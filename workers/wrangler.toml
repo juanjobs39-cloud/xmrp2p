@@ -5,6 +5,8 @@ main = "src/api/index.ts"
 compatibility_date = "2026-08-20"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
+# Dominio propio (la URL de workers.dev sigue activa para pruebas)
+routes = [{ pattern = "api.monerop2p.app", custom_domain = true }]
 
 [vars]
 # Redes activas (separadas por coma). Quitar una la desactiva sin tocar código.

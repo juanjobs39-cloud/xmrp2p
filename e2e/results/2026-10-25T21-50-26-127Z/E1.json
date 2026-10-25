@@ -1,0 +1,23 @@
+{
+ "id": "E1",
+ "title": "Swap exitoso",
+ "expect": "xmr",
+ "outcome": "error",
+ "ok": false,
+ "minutes": 1,
+ "events": [
+  {
+   "t": "2026-10-25T21:50:51.780Z",
+   "e": "negociado",
+   "d": {
+    "xmr": 0.008225260267,
+    "shared": "54Lr22VttXra"
+   }
+  },
+  {
+   "t": "2026-10-25T21:51:05.403Z",
+   "e": "ERROR",
+   "d": "Maximum call stack size exceeded"
+  }
+ ]
+}

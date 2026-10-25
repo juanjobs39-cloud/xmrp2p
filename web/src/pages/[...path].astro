@@ -95,8 +95,8 @@ if (kind === "page") {
   route = "faq";
   title = t("Preguntas frecuentes", "Frequently asked questions");
   description = t(
-    "Respuestas directas sobre cómo funciona xmrp2p, comisiones, plazos, seguridad, reembolsos y riesgos.",
-    "Direct answers about how xmrp2p works, fees, deadlines, security, refunds and risks.",
+    "Respuestas directas sobre cómo funciona MoneroP2P, comisiones, plazos, seguridad, reembolsos y riesgos.",
+    "Direct answers about how MoneroP2P works, fees, deadlines, security, refunds and risks.",
   );
   breadcrumbs = [home, { name: title, href: ROUTES.faq[lang] }];
   faqItems = (await getCollection("faq")).find((f) => f.data.lang === lang)!.data.items;
@@ -132,7 +132,7 @@ const slugify = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]
       {updated && <p class="meta">{t("Última actualización", "Last updated")}: <time datetime={updated.toISOString().slice(0, 10)}>{fmtDate(updated, lang)}</time></p>}
       {kind === "guide" && (
         <p class="notice warn">
-          {t("Aviso: xmrp2p cobra una comisión en cada swap completado (ver ", "Note: xmrp2p charges a fee on every completed swap (see ")}
+          {t("Aviso: MoneroP2P cobra una comisión en cada swap completado (ver ", "Note: MoneroP2P charges a fee on every completed swap (see ")}
           <a href={ROUTES.faq[lang]}>{t("preguntas frecuentes", "FAQ")}</a>
           {t("). El servicio está en fase de pruebas y solo funciona en testnet.", "). The service is in testing and only runs on testnet.")}
         </p>

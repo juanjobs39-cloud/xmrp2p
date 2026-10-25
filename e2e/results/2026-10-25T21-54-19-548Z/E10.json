@@ -1,0 +1,15 @@
+{
+ "id": "E10",
+ "title": "tx_key malformado",
+ "expect": "refund",
+ "outcome": "error",
+ "ok": false,
+ "minutes": 0,
+ "events": [
+  {
+   "t": "2026-10-25T22:01:11.048Z",
+   "e": "ERROR",
+   "d": "/v1/swaps: el maker no tiene XMR disponible suficiente"
+  }
+ ]
+}

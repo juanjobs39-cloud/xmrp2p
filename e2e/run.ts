@@ -87,11 +87,15 @@ async function retry<T>(what: string, id: string, fn: () => Promise<T>, tries = 
 }
 
 async function negotiate(c: Case, chain: Chain, path: string): Promise<State> {
-  const { offers } = await retry("ofertas", c.id, () => api.offers());
-  const offer = offers[0];
-  if (!offer) throw new Error("no hay ofertas");
+  // Esperar hasta 15 min a que el maker publique una oferta (la renueva cada 5 min).
+  const offer = await retry("ofertas", c.id, async () => {
+    const o = (await api.offers()).offers[0];
+    if (!o) throw new Error("no hay ofertas todavía");
+    return o;
+  }, 18);
   const keys = core.generate();
-  const r = await retry("crear swap", c.id, () => api.createSwap(offer.id, String(c.usdt), keys.message), 3);
+  // El maker puede rechazar mientras su XMR de cambio está bloqueado (~20 min): reintentar con paciencia.
+  const r = await retry("crear swap", c.id, () => api.createSwap(offer.id, String(c.usdt), keys.message), 30);
   const reply = r.maker_reply;
   // Igual que app.ts: verificar todo lo que afirma el maker antes de depositar.
   if (core.verify(reply.maker_message).toLowerCase() !== reply.claim_commitment.toLowerCase()) throw new Error("DLEQ/commitment del maker no coincide");

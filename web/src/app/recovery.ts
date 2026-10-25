@@ -68,5 +68,5 @@ export async function decryptRecovery<T = unknown>(file: RecoveryFile, passphras
 
 export function recoveryFilename(network: string): string {
   const d = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-  return `xmrp2p-${network}-${d}.xmrp2p-recovery.json`;
+  return `monerop2p-${network}-${d}.xmrp2p-recovery.json`;
 }

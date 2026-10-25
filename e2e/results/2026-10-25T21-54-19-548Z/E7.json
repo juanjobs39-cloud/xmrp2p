@@ -1,0 +1,61 @@
+{
+ "id": "E7",
+ "title": "Nodo de Monero caído",
+ "expect": "refund",
+ "outcome": "error",
+ "ok": false,
+ "minutes": 6,
+ "events": [
+  {
+   "t": "2026-10-25T21:59:13.354Z",
+   "e": "negociado",
+   "d": {
+    "xmr": 0.014836434491,
+    "shared": "57XWJvRBSXN4"
+   }
+  },
+  {
+   "t": "2026-10-25T21:59:17.432Z",
+   "e": "depositado",
+   "d": {
+    "escrow": "0x3360640073d3C6e954033b46EBda30873635B333",
+    "tx": "0x4ce11087fe3eb859f5e3501d3c13171e27f525cbd52e2ad1e4ac71630c1423d0"
+   }
+  },
+  {
+   "t": "2026-10-25T22:00:33.882Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T22:00:58.866Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T22:01:38.293Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T22:02:44.409Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T22:03:16.240Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T22:03:54.710Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T22:04:25.743Z",
+   "e": "ERROR",
+   "d": "fetch failed"
+  }
+ ]
+}

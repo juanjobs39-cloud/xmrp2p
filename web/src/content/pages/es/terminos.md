@@ -2,15 +2,15 @@
 key: terms
 lang: es
 title: Términos de uso
-description: "Condiciones para usar xmrp2p: software experimental sin custodia, responsabilidades del usuario, comisiones y limitación de responsabilidad."
+description: "Condiciones para usar MoneroP2P: software experimental sin custodia, responsabilidades del usuario, comisiones y limitación de responsabilidad."
 updated: 2026-10-24
 ---
 
-**Resumen:** xmrp2p es software experimental y sin custodia. Lo usas bajo tu propio riesgo, eres responsable de tus llaves, de tu archivo de recuperación y de cumplir las leyes de tu país. Este texto es una plantilla y debe revisarlo un abogado antes de operar con dinero real.
+**Resumen:** MoneroP2P es software experimental y sin custodia. Lo usas bajo tu propio riesgo, eres responsable de tus llaves, de tu archivo de recuperación y de cumplir las leyes de tu país. Este texto es una plantilla y debe revisarlo un abogado antes de operar con dinero real.
 
 ## Qué es el servicio
 
-xmrp2p ofrece una interfaz web y software de código abierto para hacer atomic swaps entre USDT y Monero con contrapartes independientes (makers). No somos parte del intercambio, no custodiamos fondos y no podemos revertir transacciones.
+MoneroP2P ofrece una interfaz web y software de código abierto para hacer atomic swaps entre USDT y Monero con contrapartes independientes (makers). No somos parte del intercambio, no custodiamos fondos y no podemos revertir transacciones.
 
 ## Estado de pruebas
 

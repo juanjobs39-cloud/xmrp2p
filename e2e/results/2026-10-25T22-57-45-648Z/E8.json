@@ -1,0 +1,16 @@
+{
+ "id": "E8",
+ "title": "Conexión perdida con el backend",
+ "expect": "xmr",
+ "outcome": "error",
+ "ok": false,
+ "minutes": 0,
+ "recovery": "C:\\plataforma\\e2e\\.secrets\\recovery\\2026-10-25T22-57-45-648Z-E8.json",
+ "events": [
+  {
+   "t": "2026-10-25T22:58:37.161Z",
+   "e": "ERROR",
+   "d": "no hay ofertas"
+  }
+ ]
+}

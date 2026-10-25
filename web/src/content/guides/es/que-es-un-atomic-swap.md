@@ -36,12 +36,12 @@ Cuando el vendedor cobra el USDT, su mitad queda publicada en la cadena; el comp
 
 ## Lo que sí debes cuidar
 
-- **Los plazos.** Los atomic swaps son seguros si cada parte actúa a tiempo. En xmrp2p, si el XMR no se verifica antes del plazo t0, debes reembolsar.
+- **Los plazos.** Los atomic swaps son seguros si cada parte actúa a tiempo. En MoneroP2P, si el XMR no se verifica antes del plazo t0, debes reembolsar.
 - **Tu archivo de recuperación.** Si cierras el navegador, lo necesitas para terminar o reembolsar.
-- **El software.** La seguridad depende de que el código sea correcto; xmrp2p aún no tiene auditoría.
+- **El software.** La seguridad depende de que el código sea correcto; MoneroP2P aún no tiene auditoría.
 
 ## Un poco de historia
 
-La idea de los atomic swaps se discute desde principios de la década de 2010 para Bitcoin. Para Monero, que no tiene scripts, se desarrollaron protocolos con llaves divididas: el de COMIT (hoy eigenwallet) para Bitcoin y el de AthanorLabs para Ethereum, en el que se basa xmrp2p.
+La idea de los atomic swaps se discute desde principios de la década de 2010 para Bitcoin. Para Monero, que no tiene scripts, se desarrollaron protocolos con llaves divididas: el de COMIT (hoy eigenwallet) para Bitcoin y el de AthanorLabs para Ethereum, en el que se basa MoneroP2P.
 
 Sigue con: [cómo cambiar USDT a Monero sin intermediarios](/es/guias/como-cambiar-usdt-a-monero-sin-intermediarios/).

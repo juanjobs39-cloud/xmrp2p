@@ -1,0 +1,61 @@
+{
+ "id": "E6",
+ "title": "Plazos: el taker no confirma; el maker cobra tras t0",
+ "expect": "xmr",
+ "outcome": "error",
+ "ok": false,
+ "minutes": 7,
+ "events": [
+  {
+   "t": "2026-10-25T21:58:13.625Z",
+   "e": "negociado",
+   "d": {
+    "xmr": 0.013174054621,
+    "shared": "55P1rYP95Yi7"
+   }
+  },
+  {
+   "t": "2026-10-25T21:58:17.457Z",
+   "e": "depositado",
+   "d": {
+    "escrow": "0xc7504319C78B33ad0B4d6D908C1967570d080412",
+    "tx": "0xcd132d4663f98a046ab11483067d423987cab54d8d7a972f8e9c96b870eaab5f"
+   }
+  },
+  {
+   "t": "2026-10-25T21:59:34.469Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:00:13.965Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:00:53.685Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:01:38.293Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:02:44.405Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:03:44.071Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:04:48.292Z",
+   "e": "ERROR",
+   "d": "The request took too long to respond.\n\nURL: https://sepolia-rollup.arbitrum.io/rpc\nRequest body: {\"method\":\"eth_getBlockByNumber\",\"params\":[\"latest\",false]}\n\nDetails: The request timed out.\nVersion: viem@2.57.11"
+  }
+ ]
+}

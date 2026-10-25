@@ -2,7 +2,7 @@
 key: contact
 lang: en
 title: Contact
-description: "How to reach the xmrp2p team and how to report vulnerabilities privately."
+description: "How to reach the MoneroP2P team and how to report vulnerabilities privately."
 updated: 2026-10-24
 ---
 

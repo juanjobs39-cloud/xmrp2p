@@ -3,7 +3,7 @@ key: closed-tab
 lang: en
 slug: what-to-do-if-you-closed-the-tab
 title: What to do if you closed the tab mid-swap
-description: "How to resume an xmrp2p swap with your recovery file, what happens with deadlines t0 and t1 and when you must refund."
+description: "How to resume an MoneroP2P swap with your recovery file, what happens with deadlines t0 and t1 and when you must refund."
 published: 2026-10-24
 updated: 2026-10-24
 order: 6
@@ -13,7 +13,7 @@ howto:
   totalTime: PT5M
   steps:
     - name: Open the app
-      text: Open the xmrp2p app in any browser, ideally on the same device.
+      text: Open the MoneroP2P app in any browser, ideally on the same device.
     - name: Choose Resume
       text: Click "Resume" and upload your recovery file (or use the copy in this browser if you saved it here).
     - name: Enter your password

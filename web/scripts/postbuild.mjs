@@ -35,6 +35,15 @@ const vendor = {
 };
 const wasmHash = sri(await readFile(join(dist, "vendor/crypto/xmrp2p_crypto_bg.wasm")));
 
+// 0. Marcadores de contenido ([EMAIL_CONTACTO]) en HTML, Markdown y texto plano.
+const contact = process.env.PUBLIC_CONTACT_EMAIL;
+if (contact) {
+  for (const f of files.filter((p) => /\.(html|md|txt)$/.test(p))) {
+    const t = await readFile(f, "utf8");
+    if (t.includes("[EMAIL_CONTACTO]")) await writeFile(f, t.split("[EMAIL_CONTACTO]").join(contact));
+  }
+}
+
 let pages = 0;
 for (const f of files.filter((p) => p.endsWith(".html"))) {
   let html = await readFile(f, "utf8");

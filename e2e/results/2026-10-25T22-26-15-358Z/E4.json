@@ -1,0 +1,39 @@
+{
+ "id": "E4",
+ "title": "Maker cae antes de bloquear",
+ "expect": "refund",
+ "outcome": "refund",
+ "ok": true,
+ "minutes": 36,
+ "recovery": "C:\\plataforma\\e2e\\.secrets\\recovery\\2026-10-25T22-26-15-358Z-E4.json",
+ "events": [
+  {
+   "t": "2026-10-25T22:28:48.736Z",
+   "e": "negociado",
+   "d": {
+    "xmr": 0.021580619342,
+    "shared": "57j8GqeBadF7"
+   }
+  },
+  {
+   "t": "2026-10-25T22:28:52.802Z",
+   "e": "depositado",
+   "d": {
+    "escrow": "0xcf87F14dCcCc20BEE42182c7B065AA25503B11f6",
+    "tx": "0x7e7a1d0cd0a362f42a4dbb7f1b5fd49709214fdd928990fd485f1a145b2f51e4"
+   }
+  },
+  {
+   "t": "2026-10-25T23:03:56.127Z",
+   "e": "reembolso",
+   "d": {
+    "tx": "0x4d86c38b5cad8285d878f08ba0177ae36ddbcd17a94d1aff839b522e64121c68",
+    "motivo": "el XMR no está verificado y se acerca t0"
+   }
+  },
+  {
+   "t": "2026-10-25T23:04:18.173Z",
+   "e": "FIN: reembolsado"
+  }
+ ]
+}

@@ -16,7 +16,7 @@ related: [usdt-networks, monero-wallet, swap-usdt-xmr]
 
 El mismo token existe en varias redes (por ejemplo, USDT en Tron, Ethereum y Arbitrum). Si envías por una red que el destino no soporta, los fondos pueden perderse o requerir un rescate costoso.
 
-**Cómo evitarlo:** confirma la red con quien recibe. En la app de xmrp2p solo aparecen redes activas.
+**Cómo evitarlo:** confirma la red con quien recibe. En la app de MoneroP2P solo aparecen redes activas.
 
 ## Error 2: Olvidar el memo, tag o payment ID
 
@@ -26,7 +26,7 @@ Algunos exchanges comparten una sola dirección entre muchos clientes y te ident
 
 ## Error 3: Enviar menos del mínimo
 
-Exchanges y servicios tienen montos mínimos de depósito. Por debajo, el depósito puede no acreditarse. En xmrp2p cada oferta muestra su mínimo y su máximo.
+Exchanges y servicios tienen montos mínimos de depósito. Por debajo, el depósito puede no acreditarse. En MoneroP2P cada oferta muestra su mínimo y su máximo.
 
 ## Error 4: Quedarse sin gas
 
@@ -44,7 +44,7 @@ Los atacantes envían montos diminutos desde direcciones que se parecen a las tu
 
 Algunas apps piden permiso para gastar una cantidad ilimitada de tus tokens. Si esa app se ve comprometida, puede vaciar tu saldo.
 
-**Cómo evitarlo:** autoriza solo el monto necesario. xmrp2p autoriza exactamente el monto del swap.
+**Cómo evitarlo:** autoriza solo el monto necesario. MoneroP2P autoriza exactamente el monto del swap.
 
 ## Error 7: Confiar en "soporte" que te escribe
 
@@ -56,4 +56,4 @@ Nadie legítimo te pedirá tu semilla, tu archivo de recuperación ni que envíe
 - [ ] ¿La dirección coincide completa?
 - [ ] ¿El monto supera el mínimo?
 - [ ] ¿Tengo gas suficiente?
-- [ ] ¿Guardé mi archivo de recuperación (en xmrp2p)?
+- [ ] ¿Guardé mi archivo de recuperación (en MoneroP2P)?

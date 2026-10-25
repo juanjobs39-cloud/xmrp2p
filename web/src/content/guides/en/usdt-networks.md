@@ -28,7 +28,7 @@ related: [common-mistakes, swap-usdt-xmr]
 
 Same value, different network. USDT on Tron cannot be sent directly to an Ethereum address: you need an exchange or a bridge. Sending on the wrong network is one of the [most common mistakes](/en/guides/common-mistakes-when-sending-crypto/).
 
-## Which one does xmrp2p use?
+## Which one does MoneroP2P use?
 
 - **Now:** Arbitrum Sepolia (testnet), with a test token.
 - **Planned:** Arbitrum, whose USDT (USD₮0) lets you authorize the deposit with a signature, with no extra approval transaction.
@@ -43,4 +43,4 @@ Same value, different network. USDT on Tron cannot be sent directly to an Ethere
 
 ## A risk shared by all
 
-Tether can freeze addresses on all these networks. xmrp2p uses a separate contract per swap so one freeze does not affect others, but the risk exists. Read the [risk notice](/en/risk-notice/).
+Tether can freeze addresses on all these networks. MoneroP2P uses a separate contract per swap so one freeze does not affect others, but the risk exists. Read the [risk notice](/en/risk-notice/).

@@ -1,0 +1,31 @@
+{
+ "id": "E4",
+ "title": "Maker cae antes de bloquear",
+ "expect": "refund",
+ "outcome": "error",
+ "ok": false,
+ "minutes": 5,
+ "events": [
+  {
+   "t": "2026-10-25T21:56:44.322Z",
+   "e": "negociado",
+   "d": {
+    "xmr": 0.021383534415,
+    "shared": "588YEobfZHaH"
+   }
+  },
+  {
+   "t": "2026-10-25T21:56:53.201Z",
+   "e": "depositado",
+   "d": {
+    "escrow": "0x5963B0e31b6964194Ab0D68a7be5F93698E7AA61",
+    "tx": "0x30de113f1be16ac54d4838a0e0051cdc657f6a764993d0b79b40fffaefd68a4e"
+   }
+  },
+  {
+   "t": "2026-10-25T22:02:04.160Z",
+   "e": "ERROR",
+   "d": "fetch failed"
+  }
+ ]
+}

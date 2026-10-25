@@ -36,7 +36,7 @@ Because history is not visible, every XMR is interchangeable with any other. Wit
 
 ## View key
 
-Monero lets you share a **view key**, which shows received payments without allowing spending. xmrp2p uses it so the buyer can verify the XMR reached the shared address.
+Monero lets you share a **view key**, which shows received payments without allowing spending. MoneroP2P uses it so the buyer can verify the XMR reached the shared address.
 
 ## What to keep in mind
 

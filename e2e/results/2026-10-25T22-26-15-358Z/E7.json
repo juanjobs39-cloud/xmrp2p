@@ -1,0 +1,16 @@
+{
+ "id": "E7",
+ "title": "Nodo de Monero caído",
+ "expect": "refund",
+ "outcome": "error",
+ "ok": false,
+ "minutes": 1,
+ "recovery": "C:\\plataforma\\e2e\\.secrets\\recovery\\2026-10-25T22-26-15-358Z-E7.json",
+ "events": [
+  {
+   "t": "2026-10-25T22:31:22.279Z",
+   "e": "ERROR",
+   "d": "/v1/swaps: el maker no tiene XMR disponible suficiente"
+  }
+ ]
+}

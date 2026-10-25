@@ -1,12 +1,12 @@
 ---
 key: about
 lang: es
-title: Acerca de xmrp2p
-description: "Qué es xmrp2p, quién lo hace, en qué estado está y cómo se financia (comisión por swap completado)."
+title: Acerca de MoneroP2P
+description: "Qué es MoneroP2P, quién lo hace, en qué estado está y cómo se financia (comisión por swap completado)."
 updated: 2026-10-24
 ---
 
-**Respuesta corta:** xmrp2p es un proyecto de código abierto para cambiar USDT por Monero sin intermediarios, mediante atomic swaps que corren en el navegador. Está en fase de pruebas en testnet y todavía no tiene auditoría.
+**Respuesta corta:** MoneroP2P es un proyecto de código abierto para cambiar USDT por Monero sin intermediarios, mediante atomic swaps que corren en el navegador. Está en fase de pruebas en testnet y todavía no tiene auditoría.
 
 ## Qué hacemos
 

@@ -1,0 +1,76 @@
+{
+ "id": "E5",
+ "title": "Maker cae tras bloquear y cobra tarde",
+ "expect": "xmr",
+ "outcome": "error",
+ "ok": false,
+ "minutes": 7,
+ "events": [
+  {
+   "t": "2026-10-25T21:57:28.463Z",
+   "e": "negociado",
+   "d": {
+    "xmr": 0.023051898467,
+    "shared": "54yX8JL3fy99"
+   }
+  },
+  {
+   "t": "2026-10-25T21:57:36.020Z",
+   "e": "depositado",
+   "d": {
+    "escrow": "0xEf9cc80a4cE04ABa9be11c56F93266e256a1c508",
+    "tx": "0xa6cfe7ec4480ffbafdee098d27759380e28a076988d4a9acf6d08aaf2dd9b86c"
+   }
+  },
+  {
+   "t": "2026-10-25T21:58:28.690Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:58:59.092Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:59:34.469Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:00:13.967Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:00:53.685Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:01:38.293Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:02:44.407Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:03:28.439Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:04:19.014Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:04:49.849Z",
+   "e": "ERROR",
+   "d": "fetch failed"
+  }
+ ]
+}

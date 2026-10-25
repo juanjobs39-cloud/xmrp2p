@@ -3,7 +3,7 @@ key: closed-tab
 lang: es
 slug: que-hacer-si-cerraste-la-pestana
 title: Qué hacer si cerraste la pestaña a mitad de un swap
-description: "Cómo reanudar un swap de xmrp2p con tu archivo de recuperación, qué pasa con los plazos t0 y t1 y cuándo debes reembolsar."
+description: "Cómo reanudar un swap de MoneroP2P con tu archivo de recuperación, qué pasa con los plazos t0 y t1 y cuándo debes reembolsar."
 published: 2026-10-24
 updated: 2026-10-24
 order: 6
@@ -13,7 +13,7 @@ howto:
   totalTime: PT5M
   steps:
     - name: Abre la app
-      text: Abre la app de xmrp2p en cualquier navegador, idealmente en el mismo dispositivo.
+      text: Abre la app de MoneroP2P en cualquier navegador, idealmente en el mismo dispositivo.
     - name: Elige Reanudar
       text: Pulsa "Reanudar" y sube tu archivo de recuperación (o úsalo desde este navegador si lo guardaste aquí).
     - name: Escribe tu contraseña

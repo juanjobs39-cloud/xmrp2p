@@ -1,0 +1,15 @@
+{
+ "id": "E9",
+ "title": "El maker envía menos XMR",
+ "expect": "refund",
+ "outcome": "error",
+ "ok": false,
+ "minutes": 0,
+ "events": [
+  {
+   "t": "2026-10-25T22:00:25.568Z",
+   "e": "ERROR",
+   "d": "/v1/swaps: el maker no tiene XMR disponible suficiente"
+  }
+ ]
+}

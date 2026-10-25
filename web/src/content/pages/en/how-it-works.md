@@ -1,7 +1,7 @@
 ---
 key: how
 lang: en
-title: How a USDT to Monero swap works on xmrp2p
+title: How a USDT to Monero swap works on MoneroP2P
 description: "An atomic swap trades your USDT for XMR with no intermediary: a contract holds the USDT and only releases it once you can take the XMR. Simple and technical explanation."
 updated: 2026-10-24
 ---

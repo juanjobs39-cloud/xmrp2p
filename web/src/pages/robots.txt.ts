@@ -22,6 +22,6 @@ const BOTS: [string, string][] = [
 
 export const GET: APIRoute = ({ site }) => {
   const blocks = BOTS.map(([ua, why]) => `# ${why}\nUser-agent: ${ua}\nAllow: /\n`).join("\n");
-  const body = `# robots.txt de xmrp2p: el contenido es público y puede citarse.\n\n${blocks}\n# Cualquier otro rastreador\nUser-agent: *\nAllow: /\n\nSitemap: ${new URL("/sitemap.xml", site).href}\n`;
+  const body = `# robots.txt de MoneroP2P: el contenido es público y puede citarse.\n\n${blocks}\n# Cualquier otro rastreador\nUser-agent: *\nAllow: /\n\nSitemap: ${new URL("/sitemap.xml", site).href}\n`;
   return new Response(body, { headers: { "content-type": "text/plain; charset=utf-8" } });
 };

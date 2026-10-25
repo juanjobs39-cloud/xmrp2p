@@ -28,7 +28,7 @@ howto:
 
 **Short answer:** open the app, pick an offer, enter your Monero address, download your recovery file, deposit the USDT from your wallet and wait. The app verifies the XMR, asks you to confirm and finally sends the XMR to your address. If something fails, it asks you to refund the USDT. The whole process usually takes 30 to 60 minutes.
 
-> Right now xmrp2p only runs on **testnet** (Arbitrum Sepolia and Monero stagenet). The steps are the same as the real version will have.
+> Right now MoneroP2P only runs on **testnet** (Arbitrum Sepolia and Monero stagenet). The steps are the same as the real version will have.
 
 ## Before you start
 

@@ -1,0 +1,91 @@
+{
+ "id": "E3",
+ "title": "Cierra la pestaña tras confirmar",
+ "expect": "xmr",
+ "outcome": "error",
+ "ok": false,
+ "minutes": 8,
+ "events": [
+  {
+   "t": "2026-10-25T21:55:59.320Z",
+   "e": "negociado",
+   "d": {
+    "xmr": 0.011528453953,
+    "shared": "59MJ8BotLS21"
+   }
+  },
+  {
+   "t": "2026-10-25T21:56:03.541Z",
+   "e": "depositado",
+   "d": {
+    "escrow": "0x33c5091d50A310Fc46F5A93D75350aecEF7e123A",
+    "tx": "0x2a8e18fee86f236f75a903fa33eb5579b425f42c11e8b1e336a5164ca1ba7814"
+   }
+  },
+  {
+   "t": "2026-10-25T21:56:49.876Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:57:16.115Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:57:41.521Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:58:06.831Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:58:33.822Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:59:04.136Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T21:59:39.236Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:00:13.967Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:00:53.685Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:01:38.292Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:02:44.408Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:03:44.071Z",
+   "e": "verificación falló",
+   "d": "Failed to get transaction from daemon"
+  },
+  {
+   "t": "2026-10-25T22:04:18.376Z",
+   "e": "ERROR",
+   "d": "fetch failed"
+  }
+ ]
+}

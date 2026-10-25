@@ -36,7 +36,7 @@ Como el historial no es visible, cada XMR es intercambiable por otro. En monedas
 
 ## Llave de vista
 
-Monero permite compartir una **llave de vista**, que muestra los pagos recibidos sin permitir gastar. xmrp2p la usa para que el comprador verifique que el XMR llegó a la dirección compartida.
+Monero permite compartir una **llave de vista**, que muestra los pagos recibidos sin permitir gastar. MoneroP2P la usa para que el comprador verifique que el XMR llegó a la dirección compartida.
 
 ## Lo que debes saber
 

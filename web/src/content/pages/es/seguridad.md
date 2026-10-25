@@ -1,12 +1,12 @@
 ---
 key: security
 lang: es
-title: Seguridad de xmrp2p
+title: Seguridad de MoneroP2P
 description: "Por qué nadie custodia tus fondos, cómo funcionan los reembolsos, qué riesgos existen y cómo verificar el código. Estado: testnet, sin auditoría."
 updated: 2026-10-24
 ---
 
-**Respuesta corta:** en xmrp2p nadie custodia fondos. Tu USDT está en un contrato que solo libera el dinero según reglas públicas, y el XMR está en una dirección que nadie puede mover sin las dos mitades de la llave. Aun así, el software es experimental y **no tiene auditoría todavía**: úsalo solo en testnet.
+**Respuesta corta:** en MoneroP2P nadie custodia fondos. Tu USDT está en un contrato que solo libera el dinero según reglas públicas, y el XMR está en una dirección que nadie puede mover sin las dos mitades de la llave. Aun así, el software es experimental y **no tiene auditoría todavía**: úsalo solo en testnet.
 
 ## Por qué nadie custodia tus fondos
 

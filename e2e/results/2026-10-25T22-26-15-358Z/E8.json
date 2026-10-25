@@ -1,0 +1,16 @@
+{
+ "id": "E8",
+ "title": "Conexión perdida con el backend",
+ "expect": "xmr",
+ "outcome": "error",
+ "ok": false,
+ "minutes": 1,
+ "recovery": "C:\\plataforma\\e2e\\.secrets\\recovery\\2026-10-25T22-26-15-358Z-E8.json",
+ "events": [
+  {
+   "t": "2026-10-25T22:32:08.645Z",
+   "e": "ERROR",
+   "d": "/v1/swaps: el maker no tiene XMR disponible suficiente"
+  }
+ ]
+}

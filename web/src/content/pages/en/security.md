@@ -1,12 +1,12 @@
 ---
 key: security
 lang: en
-title: xmrp2p security
+title: MoneroP2P security
 description: "Why nobody holds your funds, how refunds work, which risks exist and how to verify the code. Status: testnet, not audited."
 updated: 2026-10-24
 ---
 
-**Short answer:** on xmrp2p nobody holds funds. Your USDT is in a contract that only releases money under public rules, and the XMR is in an address nobody can move without both key halves. Even so, the software is experimental and **has not been audited yet**: use it on testnet only.
+**Short answer:** on MoneroP2P nobody holds funds. Your USDT is in a contract that only releases money under public rules, and the XMR is in an address nobody can move without both key halves. Even so, the software is experimental and **has not been audited yet**: use it on testnet only.
 
 ## Why nobody holds your funds
 

@@ -2,7 +2,7 @@
 key: privacy
 lang: es
 title: Política de privacidad
-description: "Qué datos procesa xmrp2p (casi ninguno), qué es público en las cadenas, qué ve el proxy de nodos y cómo reducir lo que se expone."
+description: "Qué datos procesa MoneroP2P (casi ninguno), qué es público en las cadenas, qué ve el proxy de nodos y cómo reducir lo que se expone."
 updated: 2026-10-24
 ---
 

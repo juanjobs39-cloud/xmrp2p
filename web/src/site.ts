@@ -1,6 +1,6 @@
 /** Datos del sitio. Los valores entre corchetes se reemplazan desde config/xmrp2p.example.toml. */
 export const SITE = {
-  brand: import.meta.env.PUBLIC_BRAND ?? "xmrp2p",
+  brand: import.meta.env.PUBLIC_BRAND ?? "MoneroP2P",
   email: import.meta.env.PUBLIC_CONTACT_EMAIL ?? "[EMAIL_CONTACTO]",
   repo: "https://github.com/juanjobs39-cloud/xmrp2p",
   apiUrl: import.meta.env.PUBLIC_API_URL ?? "",
