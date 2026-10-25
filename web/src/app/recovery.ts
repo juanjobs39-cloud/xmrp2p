@@ -19,7 +19,12 @@ export interface RecoveryFile {
   hint: { network: string; escrow?: string; shared_address?: string };
 }
 
-const b64 = (u: Uint8Array) => btoa(String.fromCharCode(...u));
+/** Base64 por bloques: con `String.fromCharCode(...u)` un archivo de >100 KB desborda la pila. */
+const b64 = (u: Uint8Array) => {
+  let s = "";
+  for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000));
+  return btoa(s);
+};
 const unb64 = (s: string) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 
 async function deriveKey(passphrase: string, salt: Uint8Array, iterations: number): Promise<CryptoKey> {

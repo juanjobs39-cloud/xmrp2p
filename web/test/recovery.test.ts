@@ -22,3 +22,10 @@ test("contraseña incorrecta o archivo alterado → error", async () => {
 test("exige una contraseña de al menos 10 caracteres", async () => {
   await assert.rejects(encryptRecovery(state, "corta", { network: "x" }), /al menos 10/);
 });
+
+test("archivos grandes (mensaje del maker con la prueba DLEQ, >100 KB) no desbordan la pila", async () => {
+  // Regresión encontrada en la Fase 7: el estado real incluye la prueba DLEQ del maker (~113 KB).
+  const big = { ...state, maker_message: { dleq_proof: "ab".repeat(120_000) } };
+  const f = await encryptRecovery(big, "una frase larga y segura", { network: "x" });
+  assert.deepEqual(await decryptRecovery(f, "una frase larga y segura"), big);
+});
