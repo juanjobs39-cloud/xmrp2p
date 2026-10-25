@@ -25,14 +25,14 @@ interface Case {
 }
 
 const CASES: Case[] = [
-  { id: "E1", title: "Swap exitoso", usdt: 15, expect: "xmr" },
-  { id: "E2", title: "Cierra la pestaña antes del bloqueo", usdt: 16, expect: "xmr", closeAfterDepositMin: 15 },
-  { id: "E3", title: "Cierra la pestaña tras confirmar", usdt: 17, expect: "xmr", closeAfterReadyMin: 20 },
+  { id: "E1", title: "Swap exitoso", usdt: 5, expect: "xmr" },
+  { id: "E2", title: "Cierra la pestaña antes del bloqueo", usdt: 6, expect: "xmr", closeAfterDepositMin: 15 },
+  { id: "E3", title: "Cierra la pestaña tras confirmar", usdt: 7, expect: "xmr", closeAfterReadyMin: 20 },
   { id: "E4", title: "Maker cae antes de bloquear", usdt: 13, expect: "refund" },
   { id: "E5", title: "Maker cae tras bloquear y cobra tarde", usdt: 14, expect: "xmr" },
-  { id: "E6", title: "Plazos: el taker no confirma; el maker cobra tras t0", usdt: 18, expect: "xmr", neverReady: true },
-  { id: "E7", title: "Nodo de Monero caído", usdt: 19, expect: "refund", badNode: true },
-  { id: "E8", title: "Conexión perdida con el backend", usdt: 20, expect: "xmr", apiOutageMin: 10 },
+  { id: "E6", title: "Plazos: el taker no confirma; el maker cobra tras t0", usdt: 8, expect: "xmr", neverReady: true },
+  { id: "E7", title: "Nodo de Monero caído", usdt: 9, expect: "refund", badNode: true },
+  { id: "E8", title: "Conexión perdida con el backend", usdt: 10, expect: "xmr", apiOutageMin: 10 },
   { id: "E9", title: "El maker envía menos XMR", usdt: 11, expect: "refund" },
   { id: "E10", title: "tx_key malformado", usdt: 12, expect: "refund" },
 ];
