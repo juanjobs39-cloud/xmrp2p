@@ -21,7 +21,7 @@ TAKE_TIMEOUT_MS = "20000"
 [[d1_databases]]
 binding = "DB"
 database_name = "xmrp2p-orderbook"
-database_id = "00000000-0000-0000-0000-000000000000" # reemplazar con `wrangler d1 create xmrp2p-orderbook`
+database_id = "c0f6152c-7e12-4f4a-a22d-bed94dd28b4c"
 migrations_dir = "migrations"
 
 [[durable_objects.bindings]]
