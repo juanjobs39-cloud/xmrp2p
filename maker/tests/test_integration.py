@@ -186,3 +186,30 @@ def test_limite_de_exposicion(env):
     e["wallet"].balance = 10**12 // 10  # 0,1 XMR disponible
     with pytest.raises(RejectedRequest, match="XMR disponible"):
         _negotiate(e, usdt="100")
+
+
+def test_fallas_de_prueba_por_monto(env, monkeypatch):
+    e = env
+    monkeypatch.setenv("XMRP2P_TEST_FAULTS", "1")
+    _, r11 = _negotiate(e, usdt="11")
+    _deposit(e, r11, salt=b"" * 32)
+    _, r12 = _negotiate(e, usdt="12")
+    _deposit(e, r12, salt=b"" * 32)
+    _, r13 = _negotiate(e, usdt="13")
+    _deposit(e, r13, salt=b"" * 32)
+    e["engine"].tick()
+    sent = {amt for _, amt, _ in e["wallet"].sent}
+    assert r11["xmr_atomic"] // 2 in sent  # short_xmr: envía la mitad
+    assert r12["xmr_atomic"] in sent  # bad_tx_key: monto correcto…
+    bad = [n for n in e["notes"] if n[0] == r12["swap_id"] and n[1] == "xmr_locked"][0]
+    assert bad[2]["tx_key"] == "ff" * 32  # …pero llave de tx malformada
+    assert e["engine"].store.get(r13["swap_id"]).state == ABORTED  # no_lock
+    assert len(e["wallet"].sent) == 2
+
+
+def test_fallas_de_prueba_apagadas_por_defecto(env):
+    e = env
+    _, r = _negotiate(e, usdt="11")
+    _deposit(e, r)
+    e["engine"].tick()
+    assert e["wallet"].sent[0][1] == r["xmr_atomic"]  # sin la variable, monto completo

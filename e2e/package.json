@@ -1,0 +1,8 @@
+{
+  "name": "xmrp2p-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Fase 7: taker automatizado contra Arbitrum Sepolia + Monero stagenet (usa la misma lógica que la app)",
+  "scripts": { "run": "node --experimental-strip-types run.ts" },
+  "dependencies": { "viem": "2.57.11", "monero-ts": "0.11.20" }
+}

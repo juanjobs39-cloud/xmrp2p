@@ -1,0 +1,9 @@
+{
+  "api": "https://xmrp2p-api.xmrp2p.workers.dev",
+  "rpc": "https://sepolia-rollup.arbitrum.io/rpc",
+  "factory": "0x0000000000000000000000000000000000000000",
+  "token": "0x0000000000000000000000000000000000000000",
+  "node": "https://xmrp2p-node-proxy.xmrp2p.workers.dev",
+  "network": "stagenet",
+  "takerXmrAddress": "55YhSq37sMoGt8zZN5xjEcDXnF4KkMfsSDHurH39DVyTSQvdgZqfYnMGaTcJYJrpaGCSR5nWRzMx8c1SgAUcQRBiDfyvYsq"
+}

@@ -75,3 +75,8 @@ web/dist-ipfs/
 # Web: estado local
 web/.indexnow-cache.json
 web/.lighthouseci/
+
+# E2E: secretos de testnet y estado local
+e2e/.secrets/
+e2e/node_modules/
+crypto-wasm/pkg-node/

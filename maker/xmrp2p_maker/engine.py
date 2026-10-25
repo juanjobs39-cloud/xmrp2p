@@ -13,6 +13,7 @@ Reglas de seguridad (las más importantes primero):
 from __future__ import annotations
 
 import logging
+import os
 import time
 from decimal import Decimal
 from typing import Any, Callable
@@ -41,6 +42,11 @@ log = logging.getLogger("xmrp2p.maker")
 Notify = Callable[[str, str, dict[str, Any]], None]
 
 
+# Fallas de prueba (Fase 7). Solo con XMRP2P_TEST_FAULTS=1 y nunca en mainnet. El taker de prueba
+# elige la falla con el monto en USDT para poder correr varios casos a la vez sobre el mismo maker.
+TEST_FAULTS_BY_USDT = {11: "short_xmr", 12: "bad_tx_key", 13: "no_lock", 14: "late_claim"}
+
+
 class RejectedRequest(Exception):
     """El maker rechaza la solicitud del taker (límites, precio, mensaje inválido…)."""
 
@@ -61,6 +67,16 @@ class Engine:
         self.notify = notify or (lambda sid, ev, data: None)
         self.price_fetch = price_fetch
         self.clock = clock
+
+    def _fault(self, s: Swap) -> str | None:
+        if os.environ.get("XMRP2P_TEST_FAULTS") != "1":
+            return None
+        if self.cfg.monero_network == "mainnet":
+            raise RuntimeError("las fallas de prueba están prohibidas en mainnet")
+        usdt = int(s["usdt_atomic"]) // 1_000_000
+        if int(s["usdt_atomic"]) % 1_000_000:
+            return None
+        return TEST_FAULTS_BY_USDT.get(usdt)
 
     # ------------------------------------------------------------------ negociación
 
@@ -195,14 +211,21 @@ class Engine:
             self.store.transition(s.id, LOCKING_XMR, ABORTED, "se acercó t0 antes de poder bloquear XMR")
             self.notify(s.id, "aborted", {"reason": "el maker no bloqueó XMR a tiempo; reembolsa tu USDT"})
             return
+        fault = self._fault(s)
+        if fault == "no_lock":
+            # Simula un maker que se cae antes de bloquear: no envía XMR y nunca reclamará.
+            self.store.transition(s.id, LOCKING_XMR, ABORTED, "PRUEBA: maker caído antes de bloquear")
+            return
         sent = self.wallet.find_outgoing(s["shared_address"])
         if sent is None:
-            sent = self.wallet.transfer(s["shared_address"], int(s["xmr_atomic"]))
+            amount = int(s["xmr_atomic"]) // 2 if fault == "short_xmr" else int(s["xmr_atomic"])
+            sent = self.wallet.transfer(s["shared_address"], amount)
         self.store.transition(s.id, LOCKING_XMR, XMR_LOCKED, "XMR enviado", xmr_txid=sent.txid, xmr_tx_key=sent.tx_key)
+        tx_key = "ff" * 32 if fault == "bad_tx_key" else sent.tx_key
         self.notify(
             s.id,
             "xmr_locked",
-            {"txid": sent.txid, "tx_key": sent.tx_key, "xmr_atomic": int(s["xmr_atomic"]), "shared_address": s["shared_address"]},
+            {"txid": sent.txid, "tx_key": tx_key, "xmr_atomic": int(s["xmr_atomic"]), "shared_address": s["shared_address"]},
         )
         log.info("swap %s: XMR bloqueado en %s (tx %s)", s.id, s["shared_address"], sent.txid)
 
@@ -227,6 +250,10 @@ class Engine:
                 self.store.update(s.id, past_cutoff=True)
                 log.error("swap %s: pasó el corte de reclamo sin cobrar; se espera el refund", s.id)
             return
+        if self._fault(s) == "late_claim" and now < info.t0 + 5 * 60:
+            return  # PRUEBA: maker caído hasta 5 min después de t0
+        if self._fault(s) in ("short_xmr", "bad_tx_key") and info.stage != "READY":
+            return  # PRUEBA: un maker deshonesto no debe poder cobrar; aquí no lo intenta sin READY
         if info.stage == "READY":
             pass  # el taker ya verificó el XMR
         elif now >= info.t0:
