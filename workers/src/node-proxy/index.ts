@@ -11,14 +11,18 @@ interface Env {
   PROXY_LIMITER?: RateLimit;
 }
 
+// wallet2 (monero-ts y monero-wallet-rpc) usa los nombres antiguos de varias rutas
+// (/gettransactions, /sendrawtransaction, /getheight…): se aceptan ambos (hallazgo de la Fase 7).
 export const ALLOWED_PATHS = new Set([
-  "/json_rpc", "/get_height", "/get_info", "/get_transactions", "/get_outs.bin", "/getblocks.bin",
-  "/getblocks_by_height.bin", "/gethashes.bin", "/get_o_indexes.bin", "/send_raw_transaction",
-  "/get_transaction_pool_hashes.bin", "/get_output_distribution.bin", "/get_fee_estimate",
+  "/json_rpc", "/get_height", "/getheight", "/get_info", "/getinfo", "/get_transactions", "/gettransactions",
+  "/get_outs.bin", "/get_outs", "/getblocks.bin", "/getblocks_by_height.bin", "/gethashes.bin", "/get_o_indexes.bin",
+  "/send_raw_transaction", "/sendrawtransaction", "/is_key_image_spent", "/get_transaction_pool_hashes.bin",
+  "/get_transaction_pool_hashes", "/get_output_distribution.bin", "/get_fee_estimate",
 ]);
 export const ALLOWED_JSON_METHODS = new Set([
   "get_info", "get_block_count", "get_last_block_header", "get_block_header_by_height", "get_block_headers_range",
   "get_block", "get_fee_estimate", "get_version", "hard_fork_info", "get_output_distribution",
+  "get_output_histogram", "get_txpool_backlog",
 ]);
 const MAX_BODY = 512 * 1024;
 

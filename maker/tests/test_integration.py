@@ -213,3 +213,18 @@ def test_fallas_de_prueba_apagadas_por_defecto(env):
     _deposit(e, r)
     e["engine"].tick()
     assert e["wallet"].sent[0][1] == r["xmr_atomic"]  # sin la variable, monto completo
+
+
+def test_xmr_ya_enviado_no_se_cuenta_dos_veces(env):
+    # Regresión de la Fase 7: con XMR justo para dos swaps, el segundo se rechazaba porque el
+    # XMR del primero se restaba del saldo Y se sumaba a la exposición.
+    e = env
+    _, r1 = _negotiate(e, usdt="100")
+    e["wallet"].balance = int(r1["xmr_atomic"] * 2.05)
+    _deposit(e, r1)
+    e["engine"].tick()  # bloquea el primero: el saldo baja
+    assert e["engine"].store.get(r1["swap_id"]).state == XMR_LOCKED
+    _, r2 = _negotiate(e, usdt="100")  # antes fallaba con "no tiene XMR disponible suficiente"
+    assert r2["xmr_atomic"] > 0
+    with pytest.raises(RejectedRequest, match="XMR disponible"):
+        _negotiate(e, usdt="100")  # el tercero sí no cabe

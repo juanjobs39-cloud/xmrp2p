@@ -132,6 +132,12 @@ export class Chain {
   /** Depósito con permit (EIP-2612), igual que la app. */
   async deposit(p: { claimer: Address; claimCommitment: Hex; refundCommitment: Hex; d0: number; d1: number; amount: bigint; salt: Hex }) {
     const escrow = await this.pub.readContract({ address: cfg.factory, abi: FACTORY_ABI, functionName: "predictEscrow", args: [this.account.address, p.salt] });
+    // Idempotente (como la app): si un intento anterior ya depositó con este salt, no repetir.
+    const code = await this.pub.getCode({ address: escrow });
+    if (code && code !== "0x") {
+      const now = Number(await this.pub.getBlockNumber());
+      return { escrow, hash: "0x" as Hex, block: Math.max(0, now - 100_000) };
+    }
     const d = await this.pub.readContract({ address: cfg.token, abi: TOKEN_ABI, functionName: "eip712Domain" });
     const nonce = await this.pub.readContract({ address: cfg.token, abi: TOKEN_ABI, functionName: "nonces", args: [this.account.address] });
     const deadline = BigInt(Math.floor(Date.now() / 1000) + 1800);

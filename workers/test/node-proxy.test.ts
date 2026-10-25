@@ -20,6 +20,12 @@ describe("proxy de nodos de Monero", () => {
     expect((await call("/get_info", { method: "PUT" })).status).toBe(405);
   });
 
+  it("acepta los nombres antiguos que usa wallet2 (sin llegar al nodo: 502 por nodo caído, no 403)", async () => {
+    for (const p of ["/gettransactions", "/sendrawtransaction", "/getheight", "/is_key_image_spent"]) {
+      expect((await call(p, { method: "POST", body: "{}" })).status).toBe(502);
+    }
+  }, 60_000);
+
   it("bloquea regiones configuradas", async () => {
     const r = await proxy.fetch(
       new Request("https://nodo.xmrp2p.test/get_info", { cf: { country: "KP" } } as RequestInit) as never,

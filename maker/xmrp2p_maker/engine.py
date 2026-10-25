@@ -88,6 +88,10 @@ class Engine:
             int(s["xmr_atomic"]) for s in self.store.active() if s.state in ACTIVE_WITH_XMR | {NEGOTIATED}
         )
 
+    def pending_send_atomic(self) -> int:
+        """XMR comprometido que todavía no salió de la wallet."""
+        return sum(int(s["xmr_atomic"]) for s in self.store.active() if s.state in {NEGOTIATED, LOCKING_XMR})
+
     def take(self, usdt: Decimal, taker_message: dict[str, Any]) -> dict[str, Any]:
         """El taker pide un swap. Devuelve lo que necesita para depositar."""
         active = list(self.store.active())
@@ -101,7 +105,9 @@ class Engine:
         exposure = self.exposure_atomic() + q.xmr_atomic
         if exposure > max_exp:
             raise RejectedRequest("se superaría el límite de exposición del maker")
-        if self.wallet.unlocked_balance() < exposure:
+        # El saldo desbloqueado ya NO incluye el XMR enviado a swaps bloqueados: solo hay que cubrir
+        # lo comprometido que aún no salió (negociado o enviándose) más este swap. (Bug hallado en la Fase 7.)
+        if self.wallet.unlocked_balance() < self.pending_send_atomic() + q.xmr_atomic:
             raise RejectedRequest("el maker no tiene XMR disponible suficiente")
         try:
             taker_commitment = self.crypto.verify(taker_message)
