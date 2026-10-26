@@ -117,3 +117,28 @@ Usuario real con una cuenta nueva de MetaMask, en https://monerop2p.app/es/app/ 
 | 14 | El maker se caía si había un corte de red al arrancar | ⏳ mitigado con reinicio automático en el lanzador; falta reintento dentro del daemon |
 | 15 | Tras pedir el swap no hay un indicador claro de "cargando" | ⏳ pendiente |
 | 16 | El usuario confirmó cerca de t0 (~4 min antes) | ⏳ pendiente: aviso visual/sonoro cuando la app necesita una acción del usuario |
+
+## 6. Maker en el navegador (26 de octubre de 2026)
+
+Maker creado en `/es/maker/` (vista previa en Cloudflare Pages) con una wallet nueva de stagenet, 0,06 XMR y 0,003 ETH de gas. Taker: el automático `e2e/run.ts E1` con `E2E_MAKER` apuntando a ese maker.
+
+| Paso | Hora (UTC) | Resultado |
+|---|---|---|
+| Solicitud y negociación (5 tUSDT → 0,00832 XMR) | 05:12 | ✅ |
+| Depósito del taker | 05:12 | ✅ escrow [`0xadc0…efB6`](https://sepolia.arbiscan.io/address/0xadc07e27f880BE78e9cAFa01803ac2c7E7e1efB6) |
+| El maker del navegador valida el depósito y bloquea el XMR | 05:16 | ✅ tx `ff71b6d8…` |
+| El taker verifica (11 confirmaciones) y confirma | 05:36 | ✅ [`0x23e17dc7…`](https://sepolia.arbiscan.io/tx/0x23e17dc7cb8c528b7dbcf866608d3d4ba8124ef08b033b5eeacd90ddef1c85d5) |
+| El maker cobra solo, sin clics | 05:37 | ✅ |
+| El taker barre el XMR | 05:40 | ✅ tx `d0098faf…`, 0,008319653396 XMR |
+
+**Swap completo en 30 minutos.** También se comprobó crear el maker, descargar el respaldo, cerrarlo y reabrirlo con la contraseña, y la protección de una sola pestaña.
+
+### Problemas encontrados
+
+| # | Problema | Estado |
+|---|---|---|
+| 17 | Desde Cloudflare solo respondía 1 fuente de precio (CoinGecko bloquea a Cloudflare) | ✅ se agregaron MEXC y HTX; cada fuente tiene 5 s |
+| 18 | Una solicitud tardó más de 45 s (pestaña en segundo plano), el taker reintentó y el maker aceptó las dos | ✅ solicitudes en serie y aviso `take_expired` del backend para descartar las vencidas (también en el maker de Python) |
+| 19 | Crear la wallet nueva conectada al nodo se colgaba | ✅ la semilla se crea sin conexión y se abre desde la altura actual |
+| 20 | La primera sincronización de la wallet tarda unos minutos (wallet2 descarga los hashes de bloques) | ⏳ se avisa en la página; las siguientes usan caché |
+| 21 | En una pestaña oculta el navegador frena los ciclos (bloquear el XMR tardó 4 min) | ⏳ aviso de dejar la pestaña visible; mitigado con Wake Lock |
