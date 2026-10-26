@@ -12,7 +12,7 @@ routes = [{ pattern = "api.monerop2p.app", custom_domain = true }]
 # Redes activas (separadas por coma). Quitar una la desactiva sin tocar código.
 # Beta con dinero real (Arbitrum One, tope de 100 USDT por swap en offers.ts/swaps.ts):
 # activarla con ACTIVE_NETWORKS = "arbitrum_sepolia,arbitrum_one" y desplegar (solo con aprobación del dueño).
-ACTIVE_NETWORKS = "arbitrum_sepolia"
+ACTIVE_NETWORKS = "arbitrum_sepolia,arbitrum_one"
 # Países bloqueados (ISO 3166-1 alfa-2, separados por coma). Ej.: "US,KP".
 BLOCKED_REGIONS = ""
 # Orígenes permitidos para CORS ("*" para cualquiera; la API es pública y de solo lectura salvo makers firmados).
@@ -23,7 +23,7 @@ MAX_OFFER_TTL = "900"
 TAKE_TIMEOUT_MS = "45000"
 # Monitoreo de la fábrica con dinero real (vacío = apagado). Avisos por Telegram con los secretos
 # TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID (wrangler secret put …).
-MONITOR_FACTORY = ""
+MONITOR_FACTORY = "0x88fc05Cb07C5b69fbed1F7B1c1F784Cd26e99535"
 MONITOR_RPC = "https://arb1.arbitrum.io/rpc"
 MONITOR_EXPLORER = "https://arbiscan.io"
 

@@ -36,3 +36,23 @@ Fondeo: 0,101 ETH de Ethereum Sepolia (faucet) → 0,09 ETH puenteados a Arbitru
 | SwapEscrow (implementación) | [`0xaE106Bb4f201013588d8a2cB3F61d5e05aB345D3`](https://sepolia.arbiscan.io/address/0xaE106Bb4f201013588d8a2cB3F61d5e05aB345D3) |
 
 Parámetros: comisión 50 bps (0,5 %) → `0xaB78…72FC`; monto mínimo 1 tUSDT; plazos entre 5 min y 2 días. Desplegado con `contracts/script/Deploy.s.sol` desde el commit actual de `main`. Verificado en cadena: `TOKEN()`, `FEE_BPS()`, `MIN_DURATION()`.
+
+## Arbitrum One (DINERO REAL, beta) — 26-oct-2026
+
+> Beta sin auditoría externa, por decisión del dueño (`docs/MAINNET.md`). Tope de 100 USDT por swap en el contrato.
+
+| Recurso | Valor |
+|---|---|
+| SwapFactory | [`0x88fc05Cb07C5b69fbed1F7B1c1F784Cd26e99535`](https://arbiscan.io/address/0x88fc05Cb07C5b69fbed1F7B1c1F784Cd26e99535) |
+| Implementación (SwapEscrow) | [`0xea627C04432e9959eAF15Fe7EE25DE7588bdA341`](https://arbiscan.io/address/0xea627C04432e9959eAF15Fe7EE25DE7588bdA341) |
+| Token | USD₮0 `0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9` |
+| Comisión | 50 bps (0,5 %) para `0xFdeceACBCcD5F963d3340abeD7e1eaE2Aca0FF9C` (cuenta del dueño) |
+| Montos | mínimo 1 USDT, **máximo 100 USDT** (`MAX_AMOUNT`) |
+| Plazos | 10 min – 2 días |
+| Código verificado | Sourcify, coincidencia exacta (fábrica e implementación) |
+| Desplegó | el dueño, con su propia cuenta (`mainnet-deployer`) |
+| Backend | `ACTIVE_NETWORKS` incluye `arbitrum_one`; monitoreo cada 5 min sobre la fábrica |
+| Nodo Monero mainnet | https://nodo-xmr.monerop2p.app |
+| Vista previa con modo real | https://maker-preview.monerop2p.pages.dev (`?red=real`) |
+
+La comisión queda en cada escrow tras el cobro y se retira con `withdrawFee()` (cualquiera puede llamarla; siempre va a la dirección de arriba).
