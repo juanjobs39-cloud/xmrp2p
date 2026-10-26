@@ -24,6 +24,7 @@ export const ROUTES: Record<string, Record<Lang, string>> = {
   privacy: { es: "/es/privacidad/", en: "/en/privacy/" },
   risks: { es: "/es/aviso-de-riesgos/", en: "/en/risk-notice/" },
   app: { es: "/es/app/", en: "/en/app/" },
+  makerApp: { es: "/es/maker/", en: "/en/maker/" },
 };
 
 export const NAV: { key: keyof typeof ROUTES; es: string; en: string }[] = [

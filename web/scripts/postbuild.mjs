@@ -82,6 +82,10 @@ await writeFile(
   Content-Security-Policy: frame-ancestors 'none'
   Cache-Control: no-store
 
+/*/maker/*
+  Content-Security-Policy: frame-ancestors 'none'
+  Cache-Control: no-store
+
 /vendor/*
   Cache-Control: public, max-age=31536000, immutable
 `,

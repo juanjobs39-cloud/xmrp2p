@@ -1,0 +1,172 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { ROUTES, SITE, type Lang } from "../../../site";
+
+export function getStaticPaths() {
+  return [{ params: { lang: "es" } }, { params: { lang: "en" } }];
+}
+const lang = Astro.params.lang as Lang;
+const t = (es: string, en: string) => (lang === "es" ? es : en);
+
+// Misma CSP estricta que la app del taker, más el WebSocket del buzón del maker.
+const hosts = [SITE.apiUrl, import.meta.env.PUBLIC_ARBITRUM_SEPOLIA_RPC ?? "https://sepolia-rollup.arbitrum.io/rpc", import.meta.env.PUBLIC_MONERO_NODE ?? ""]
+  .filter(Boolean)
+  .map((u) => new URL(u).origin);
+const ws = SITE.apiUrl ? new URL(SITE.apiUrl).origin.replace(/^http/, "ws") : "";
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'wasm-unsafe-eval'",
+  "worker-src 'self' blob:",
+  `connect-src 'self' ${hosts.join(" ")} ${ws} https: http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:*`,
+  "img-src 'self' data:",
+  "style-src 'self'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'none'",
+].join("; ");
+---
+<Base
+  lang={lang}
+  route="makerApp"
+  csp={csp}
+  title={t("Ser maker desde el navegador (testnet)", "Be a maker from your browser (testnet)")}
+  description={t(
+    "Ofrece XMR a cambio de USDT desde tu navegador, sin instalar nada y sin que nadie custodie tus fondos. Versión de prueba en testnet.",
+    "Offer XMR for USDT from your browser, with nothing to install and nobody holding your funds. Testnet preview.",
+  )}
+>
+  <main id="contenido" class="prose wide" data-lang={lang}>
+    <h1>{t("Ser maker desde el navegador", "Be a maker from your browser")} <span class="badge">Testnet</span></h1>
+    <p class="lead">{t(
+      "Ofrece tu XMR y cobra USDT con tu margen. Esta pestaña hace de servidor mientras está abierta.",
+      "Offer your XMR and get paid in USDT with your margin. This tab works as your server while it is open.",
+    )}</p>
+    <ul class="trust">
+      <li><strong>{t("Sin custodia", "Non-custodial")}</strong> {t("Tu semilla y tus llaves se crean y se quedan en este navegador.", "Your seed and keys are created and stay in this browser.")}</li>
+      <li><strong>{t("Cobras en tu MetaMask", "Paid to your MetaMask")}</strong> {t("El USDT va directo a tu dirección de cobro.", "USDT goes straight to your payout address.")}</li>
+      <li><strong>{t("Automático", "Automatic")}</strong> {t("Responde, bloquea y cobra sin pedirte clics.", "It answers, locks and claims without asking for clicks.")}</li>
+      <li><strong>{t("Respaldo obligatorio", "Backup required")}</strong> {t("Un archivo cifrado con tu contraseña.", "A file encrypted with your password.")}</li>
+    </ul>
+    <p class="notice warn">{t(
+      "Versión de prueba: solo testnet (Arbitrum Sepolia + Monero stagenet). Deja esta pestaña abierta mientras ofreces; en el celular el navegador la duerme, así que usa una computadora. Si quieres estar 24/7, corre tu propio maker en tu PC o servidor.",
+      "Preview: testnet only (Arbitrum Sepolia + Monero stagenet). Keep this tab open while offering; phones put tabs to sleep, so use a computer. To be online 24/7, run your own maker on your PC or server.",
+    )} <a href={ROUTES.maker[lang]}>{t("Ver las opciones", "See the options")}</a></p>
+    <div id="mk-banner" class="notice" hidden role="alert"></div>
+    <p id="mk-status" class="meta" aria-live="polite"></p>
+
+    <section id="mk-setup" data-mk hidden class="panel">
+      <h2>{t("1. Crea tu maker", "1. Create your maker")}</h2>
+      <form id="mk-form-setup" class="app">
+        <fieldset class="choice">
+          <legend>{t("Wallet de Monero", "Monero wallet")}</legend>
+          <label class="inline"><input type="radio" name="mk-mode" value="new" checked /> {t("Crear una wallet nueva (recomendado)", "Create a new wallet (recommended)")}</label>
+          <label class="inline"><input type="radio" name="mk-mode" value="import" /> {t("Importar una semilla existente", "Import an existing seed")}</label>
+          <div id="mk-import" hidden class="app">
+            <label>{t("Semilla (25 palabras)", "Seed (25 words)")}<textarea id="mk-seed" rows="3" spellcheck="false" autocomplete="off"></textarea></label>
+            <label>{t("Altura de restauración", "Restore height")}<input id="mk-height" type="number" min="0" inputmode="numeric" placeholder="0" />
+              <small>{t("Bloque desde el que se busca tu saldo. Más alto = sincroniza más rápido.", "Block to start scanning from. Higher = faster sync.")}</small></label>
+          </div>
+          <small>{t("Usa una wallet solo para el maker, con lo que quieras ofrecer.", "Use a wallet only for the maker, with what you want to offer.")}</small>
+        </fieldset>
+        <label>
+          {t("Dirección de cobro (USDT, Arbitrum)", "Payout address (USDT, Arbitrum)")}
+          <span class="row"><input id="mk-payout" type="text" required spellcheck="false" autocomplete="off" placeholder="0x…" /><button class="btn secondary small" id="mk-btn-payout-mm" type="button">{t("Usar mi MetaMask", "Use my MetaMask")}</button></span>
+          <small>{t("Aquí llega el USDT de cada swap.", "This is where each swap's USDT arrives.")}</small>
+        </label>
+        <label>{t("Contraseña", "Password")}<input id="mk-pass" type="password" minlength="10" required autocomplete="new-password" />
+          <small>{t("Cifra tu respaldo y tu wallet. Mínimo 10 caracteres. No la podemos recuperar.", "Encrypts your backup and wallet. At least 10 characters. We cannot recover it.")}</small></label>
+        <label>{t("Repite la contraseña", "Repeat the password")}<input id="mk-pass2" type="password" minlength="10" required autocomplete="new-password" /></label>
+        <label>{t("Nodo de Monero", "Monero node")}<input id="mk-node" type="url" required spellcheck="false" /></label>
+        <button class="btn" type="submit">{t("Crear mi maker", "Create my maker")}</button>
+      </form>
+    </section>
+
+    <section id="mk-unlock" data-mk hidden class="panel">
+      <h2>{t("Abrir tu maker", "Open your maker")}</h2>
+      <form id="mk-form-unlock" class="app">
+        <label>{t("Archivo de respaldo (opcional si es este navegador)", "Backup file (optional on this browser)")}<input id="mk-unlock-file" type="file" accept=".json,application/json" /></label>
+        <label>{t("Contraseña", "Password")}<input id="mk-unlock-pass" type="password" required autocomplete="current-password" /></label>
+        <button class="btn" type="submit">{t("Abrir mi maker", "Open my maker")}</button>
+      </form>
+      <p><button class="btn secondary" id="mk-btn-wipe" type="button">{t("Borrar el maker de este navegador", "Delete the maker from this browser")}</button></p>
+    </section>
+
+    <section id="mk-backup" data-mk hidden class="panel">
+      <h2>{t("2. Descarga tu respaldo", "2. Download your backup")}</h2>
+      <p>{t(
+        "Contiene tu semilla de Monero, la llave con la que tu maker cobra y el estado de tus swaps, cifrados con tu contraseña. Con él recuperas tu maker en cualquier navegador. Vuelve a descargarlo de vez en cuando: incluye los swaps en curso.",
+        "It holds your Monero seed, the key your maker uses to claim, and your swaps, encrypted with your password. With it you can restore your maker in any browser. Download it again from time to time: it includes swaps in progress.",
+      )}</p>
+      <p class="row wrap">
+        <button class="btn" id="mk-btn-backup" type="button">{t("Descargar respaldo", "Download backup")}</button>
+        <button class="btn secondary" id="mk-btn-continue" type="button" disabled>{t("Continuar al panel", "Continue to the dashboard")}</button>
+      </p>
+    </section>
+
+    <section id="mk-panel" data-mk hidden class="panel">
+      <div class="row wrap between">
+        <h2>{t("Tu maker", "Your maker")}</h2>
+        <span id="mk-state" class="pill" data-state="paused"></span>
+      </div>
+      <p><button class="btn big" id="mk-btn-toggle" type="button"></button></p>
+      <div class="cards stats">
+        <div class="card">
+          <h3>{t("XMR disponible", "Available XMR")}</h3>
+          <p class="stat" id="mk-xmr-unlocked">…</p>
+          <p class="meta" id="mk-xmr-total"></p>
+          <p class="meta" id="mk-offerable"></p>
+        </div>
+        <div class="card">
+          <h3>{t("Tu precio", "Your price")}</h3>
+          <p class="stat" id="mk-price">…</p>
+          <p class="meta" id="mk-price-ref"></p>
+        </div>
+        <div class="card">
+          <h3>{t("Gas para cobrar", "Gas to claim")}</h3>
+          <p class="stat" id="mk-gas">…</p>
+          <p><button class="btn secondary small" id="mk-btn-gas" type="button">{t("Recargar gas (0,002 ETH)", "Top up gas (0.002 ETH)")}</button></p>
+        </div>
+      </div>
+      <h3>{t("Deposita XMR en tu maker", "Deposit XMR into your maker")}</h3>
+      <p class="addr"><code id="mk-address"></code> <button class="btn secondary small" id="mk-btn-copy" type="button">{t("Copiar", "Copy")}</button></p>
+      <p class="meta">{t("Cobro de USDT", "USDT payout")}: <code id="mk-payout-show"></code> · {t("Cuenta que cobra (gas)", "Claiming account (gas)")}: <code id="mk-hot"></code></p>
+
+      <h3>{t("Swaps", "Swaps")}</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>{t("Fecha", "Date")}</th><th>USDT</th><th>XMR</th><th>{t("Estado", "Status")}</th><th>{t("Detalle", "Detail")}</th></tr></thead>
+          <tbody id="mk-swaps"></tbody>
+        </table>
+      </div>
+      <p id="mk-empty" class="meta">{t("Todavía no hay swaps.", "No swaps yet.")}</p>
+
+      <h3>{t("Actividad", "Activity")}</h3>
+      <ul id="mk-log" class="log"></ul>
+
+      <details>
+        <summary>{t("Ajustes", "Settings")}</summary>
+        <form id="mk-form-settings" class="app">
+          <label>{t("Margen sobre el precio de referencia (%)", "Margin over the reference price (%)")}<input id="mk-margin" type="number" step="0.1" min="0" max="10" /></label>
+          <label>{t("Mínimo por swap (USDT)", "Minimum per swap (USDT)")}<input id="mk-min" type="number" step="1" min="1" /></label>
+          <label>{t("Máximo por swap (USDT)", "Maximum per swap (USDT)")}<input id="mk-max" type="number" step="1" min="1" /></label>
+          <button class="btn" type="submit">{t("Guardar ajustes", "Save settings")}</button>
+        </form>
+      </details>
+      <details>
+        <summary>{t("Respaldo y retiros", "Backup and withdrawals")}</summary>
+        <p><button class="btn secondary" id="mk-btn-backup2" type="button">{t("Descargar respaldo actualizado", "Download updated backup")}</button></p>
+        <label class="app">{t("Retirar todo el XMR disponible a", "Withdraw all available XMR to")}
+          <span class="row"><input id="mk-withdraw-to" type="text" spellcheck="false" autocomplete="off" placeholder="5…" /><button class="btn secondary small" id="mk-btn-withdraw-xmr" type="button">{t("Retirar XMR", "Withdraw XMR")}</button></span>
+        </label>
+        <p><button class="btn secondary small" id="mk-btn-withdraw-gas" type="button">{t("Devolver el gas sobrante a mi dirección de cobro", "Return leftover gas to my payout address")}</button></p>
+      </details>
+    </section>
+    <noscript><p class="notice danger">{t("El maker necesita JavaScript.", "The maker needs JavaScript.")}</p></noscript>
+  </main>
+</Base>
+
+<script>
+  import { MakerApp } from "../../../maker/maker-app";
+  const lang = (document.querySelector("main")?.dataset.lang ?? "es") as "es" | "en";
+  void new MakerApp(lang).mount();
+</script>

@@ -7,6 +7,7 @@ export const FACTORY_ABI = parseAbi([
   "function predictEscrow(address owner, bytes32 salt) view returns (address)",
   "function TOKEN() view returns (address)",
   "function FEE_BPS() view returns (uint16)",
+  "event SwapCreated(address indexed escrow, address indexed owner, address indexed claimer, bytes32 claimCommitment, bytes32 refundCommitment, uint64 t0, uint64 t1, uint256 amount)",
 ]);
 
 export const ESCROW_ABI = parseAbi([
@@ -20,6 +21,7 @@ export const ESCROW_ABI = parseAbi([
   "function refundCommitment() view returns (bytes32)",
   "function setReady()",
   "function refund(bytes32 secret, address to)",
+  "function claim(bytes32 secret, address to)",
   "event Claimed(bytes32 secret, address indexed to, uint256 amountToClaimer, uint256 fee)",
   "event Refunded(bytes32 secret, address indexed to, uint256 amount)",
 ]);

@@ -10,6 +10,7 @@ import { decide, type Action, type XmrCheck } from "./decide";
 import { Evm, type WalletStep } from "./evm";
 import { t, type Key, type Lang } from "./i18n";
 import { decryptRecovery, encryptRecovery, recoveryFilename, type RecoveryFile } from "./recovery";
+import { cryptoLib, xmrLib } from "./libs";
 import { attention, setStage, startLoading, type Stage } from "./ui";
 
 interface PublicMessage {
@@ -46,48 +47,7 @@ interface SwapState {
   last_seq: number;
 }
 
-type Crypto = {
-  generateKeys(): string;
-  verifyCounterparty(msg: string): string;
-  sharedAddress(own: string, cp: string, net: string): string;
-  recoverWallet(own: string, cp: string, secret: string, net: string): string;
-};
-
 const STORAGE_KEY = "xmrp2p:swap";
-const vendor = (p: string) => new URL(`../../vendor/${p}`, location.href).href;
-
-let crypto_: Crypto | null = null;
-async function cryptoLib(): Promise<Crypto> {
-  if (!crypto_) {
-    // El JS lo verifica el import map (integrity); el WASM lo verificamos aquí antes de ejecutarlo.
-    const m = await import(/* @vite-ignore */ vendor("crypto/xmrp2p_crypto.js"));
-    const bytes = await (await fetch(vendor("crypto/xmrp2p_crypto_bg.wasm"))).arrayBuffer();
-    const expected = document.querySelector('meta[name="xmrp2p-wasm-integrity"]')?.getAttribute("content");
-    if (expected) {
-      const digest = new Uint8Array(await crypto.subtle.digest("SHA-384", bytes));
-      const got = "sha384-" + btoa(String.fromCharCode(...digest));
-      if (got !== expected) throw new Error("El núcleo criptográfico no coincide con el publicado. No continúes.");
-    }
-    await m.default({ module_or_path: bytes });
-    crypto_ = m as unknown as Crypto;
-  }
-  return crypto_;
-}
-
-type Xmr = {
-  init(worker: string): void;
-  verifyLock(a: { node: string; network: string; txid: string; txKey: string; address: string }): Promise<{ received: string; confirmations: number; inPool: boolean }>;
-  sweep(a: Record<string, unknown>): Promise<{ txids: string[] }>;
-  daemonHeight(node: string): Promise<number>;
-};
-let xmr_: Xmr | null = null;
-async function xmrLib(): Promise<Xmr> {
-  if (!xmr_) {
-    xmr_ = (await import(/* @vite-ignore */ vendor("xmr/xmr.js"))) as Xmr;
-    xmr_.init(vendor("xmr/monero.worker.js"));
-  }
-  return xmr_;
-}
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const hex32 = () => `0x${[...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, "0")).join("")}` as Hex;
