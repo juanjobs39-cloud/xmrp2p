@@ -6,16 +6,15 @@
  */
 import { formatEther, getAddress, isAddress, parseEther, toHex, type Address, type Hex } from "viem";
 import { generatePrivateKey } from "viem/accounts";
-import { API_URL, isDeployed, MONERO, NETWORKS } from "../app/config";
+import { API_URL, isDeployed, selectedNetwork, validXmrAddress, type EvmNetwork } from "../app/config";
 import { cryptoLib, xmrLib, type MakerWalletInfo } from "../app/libs";
 import type { RecoveryFile } from "../app/recovery";
 import { startLoading } from "../app/ui";
 import { MakerChannel, type TakeRequest } from "./channel";
 import { ACTIVE, DEFAULT_CONFIG, nextStep, offerable, PICONERO, quote, rejectTake, type MakerConfig, type MakerSwap, type PublicMessage, type Step } from "./engine";
-import { hasVault, kv, openVault, saveVault, wipe, type Vault } from "./store";
+import { hasVault, keys, kv, openVault, saveVault, wipe, type Vault } from "./store";
 import { T, type Lang, type MKey } from "./texts";
 
-const NET_ID = "arbitrum_sepolia";
 const TICK_MS = 20_000;
 const OFFER_TTL = 150;
 const GAS_TOPUP = "0.002";
@@ -44,6 +43,8 @@ export class MakerApp {
   private backupDone = false;
   private takeQueue: Promise<unknown> = Promise.resolve();
   private log: string[] = [];
+  /** Red elegida en la página (?red=real para dinero real). Cada red tiene su propia bóveda. */
+  private net: EvmNetwork = selectedNetwork();
 
   constructor(private lang: Lang) {}
 
@@ -54,7 +55,8 @@ export class MakerApp {
   // ------------------------------------------------------------------ arranque
 
   async mount(): Promise<void> {
-    const net = NETWORKS[NET_ID]!;
+    const net = this.net;
+    document.body.dataset.net = net.testnet ? "test" : "real";
     if (!isDeployed(net) || !API_URL) this.banner(this.t("not_ready"), "warn");
     // Un solo maker por navegador: dos pestañas podrían enviar el mismo XMR dos veces.
     const got = await this.singleTab();
@@ -63,7 +65,7 @@ export class MakerApp {
       for (const el of document.querySelectorAll<HTMLElement>("[data-mk]")) el.hidden = true;
       return;
     }
-    $<HTMLInputElement>("mk-node").value = MONERO.defaultNode;
+    $<HTMLInputElement>("mk-node").value = net.monero.defaultNode;
     this.bind();
     window.addEventListener("beforeunload", (e) => {
       if (this.offering || this.vault?.swaps.some((s) => ACTIVE.has(s.state))) {
@@ -74,14 +76,14 @@ export class MakerApp {
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible" && this.offering) void this.keepAwake();
     });
-    this.show((await hasVault()) ? "mk-unlock" : "mk-setup");
+    this.show((await hasVault(net.id)) ? "mk-unlock" : "mk-setup");
   }
 
   private async singleTab(): Promise<boolean> {
     const locks = (navigator as Navigator & { locks?: LockManager }).locks;
     if (!locks) return true;
     return new Promise((res) => {
-      void locks.request("monerop2p-maker", { ifAvailable: true }, (lock) => {
+      void locks.request(`monerop2p-maker:${this.net.id}`, { ifAvailable: true }, (lock) => {
         if (!lock) {
           res(false);
           return;
@@ -157,18 +159,18 @@ export class MakerApp {
 
     this.status(this.t("creating_wallet"));
     const xmr = await xmrLib();
-    const info = await xmr.makerOpen({ node, network: MONERO.network, password: pass, seed: mode === "import" ? seed : undefined, restoreHeight: mode === "import" ? height : undefined });
+    const info = await xmr.makerOpen({ node, network: this.net.monero.network, password: pass, seed: mode === "import" ? seed : undefined, restoreHeight: mode === "import" ? height : undefined });
     this.vault = {
       v: 1,
       kind: "maker",
       created_at: Date.now(),
-      network: NET_ID,
+      network: this.net.id,
       evm_key: generatePrivateKey(),
       seed: info.seed,
       restore_height: mode === "import" ? height : info.restoreHeight,
       payout: getAddress(payout),
       node,
-      config: { ...DEFAULT_CONFIG, maxExposure: DEFAULT_CONFIG.maxExposure.toString() },
+      config: { ...this.capped(DEFAULT_CONFIG), maxExposure: DEFAULT_CONFIG.maxExposure.toString() },
       swaps: [],
     };
     this.pass = pass;
@@ -183,17 +185,17 @@ export class MakerApp {
     const pass = $<HTMLInputElement>("mk-unlock-pass").value;
     const fileInput = $<HTMLInputElement>("mk-unlock-file");
     const file = fileInput.files?.[0] ? (JSON.parse(await fileInput.files[0].text()) as RecoveryFile) : undefined;
-    this.vault = await openVault(pass, file);
+    this.vault = await openVault(this.net.id, pass, file);
     this.pass = pass;
     if (file) await this.persist();
     this.status(this.t("opening_wallet"));
     const xmr = await xmrLib();
-    const data = file ? undefined : await kv.get<{ keysData: Uint8Array; cacheData: Uint8Array }>("wallet");
+    const data = file ? undefined : await kv.get<{ keysData: Uint8Array; cacheData: Uint8Array }>(keys(this.net.id).wallet);
     try {
-      this.wallet = await xmr.makerOpen({ node: this.vault.node, network: MONERO.network, password: pass, ...(data ?? {}) });
+      this.wallet = await xmr.makerOpen({ node: this.vault.node, network: this.net.monero.network, password: pass, ...(data ?? {}) });
     } catch {
       // Datos de la wallet ilegibles o de otra versión: se restaura desde la semilla.
-      this.wallet = await xmr.makerOpen({ node: this.vault.node, network: MONERO.network, password: pass, seed: this.vault.seed, restoreHeight: this.vault.restore_height });
+      this.wallet = await xmr.makerOpen({ node: this.vault.node, network: this.net.monero.network, password: pass, seed: this.vault.seed, restoreHeight: this.vault.restore_height });
     }
     this.backupDone = true;
     this.status("");
@@ -216,10 +218,10 @@ export class MakerApp {
   private async enterPanel(): Promise<void> {
     if (!this.backupDone) throw new Error(this.t("backup_first"));
     const v = this.need();
-    this.cfg = { ...v.config, maxExposure: BigInt(v.config.maxExposure) };
+    this.cfg = this.capped({ ...v.config, maxExposure: BigInt(v.config.maxExposure) });
     const { MakerChain } = await import("./chain");
-    this.chain = new MakerChain(NETWORKS[NET_ID]!, v.evm_key);
-    this.channel = new MakerChannel(API_URL, this.chain.account, NET_ID);
+    this.chain = new MakerChain(this.net, v.evm_key);
+    this.channel = new MakerChannel(API_URL, this.chain.account, this.net.id);
     // Las solicitudes se atienden de una en una: si llegan dos juntas, la segunda ve a la primera.
     this.channel.onTake = (m) => {
       const run = this.takeQueue.then(() => this.onTake(m));
@@ -366,12 +368,12 @@ export class MakerApp {
           await this.move(s, "RECOVERING_XMR", this.t("log_refunded"));
         }
         const c = await cryptoLib();
-        const w = JSON.parse(c.recoverWallet(s.maker_spend, JSON.stringify(s.taker_message), s.taker_secret!, MONERO.network)) as {
+        const w = JSON.parse(c.recoverWallet(s.maker_spend, JSON.stringify(s.taker_message), s.taker_secret!, this.net.monero.network)) as {
           address: string; private_view_key: string; private_spend_key: string;
         };
         if (w.address !== s.shared_address) throw new Error("la llave reconstruida no corresponde a la dirección compartida");
         const r = await xmr.sweep({
-          node: this.need().node, network: MONERO.network, address: w.address, viewKey: w.private_view_key, spendKey: w.private_spend_key,
+          node: this.need().node, network: this.net.monero.network, address: w.address, viewKey: w.private_view_key, spendKey: w.private_spend_key,
           restoreHeight: s.xmr_restore_height, destination: this.wallet!.address,
         });
         s.sweep_tx = r.txids.join(",");
@@ -461,7 +463,7 @@ export class MakerApp {
   private async onTake(m: TakeRequest): Promise<unknown> {
     const started = Date.now();
     if (!this.offering) throw new Error("el maker está en pausa");
-    if (m.network !== NET_ID) throw new Error("red no soportada por este maker");
+    if (m.network !== this.net.id) throw new Error("red no soportada por este maker");
     if (!this.price) throw new Error("el maker no tiene precio de referencia");
     const v = this.need();
     const q = quote(String(m.usdt), this.price, this.cfg);
@@ -476,7 +478,7 @@ export class MakerApp {
       throw new Error(`mensaje del taker inválido: ${(e as Error).message}`);
     }
     const keys = JSON.parse(c.generateKeys()) as { spend_private: string; contract_secret: Hex; message: PublicMessage };
-    const shared = JSON.parse(c.sharedAddress(keys.spend_private, takerJson, MONERO.network)) as { address: string; private_view_key: string };
+    const shared = JSON.parse(c.sharedAddress(keys.spend_private, takerJson, this.net.monero.network)) as { address: string; private_view_key: string };
     const now = this.chainNow && Date.now() - this.chainNow.at < 60_000 ? this.chainNow : { ...(await this.chain!.now()), at: Date.now() };
     const elapsed = Math.floor((Date.now() - now.at) / 1000);
     const s: MakerSwap = {
@@ -544,7 +546,7 @@ export class MakerApp {
     const eth = (globalThis as { ethereum?: Eip1193 }).ethereum;
     if (!eth) throw new Error(this.t("no_metamask"));
     const [from] = (await this.mm(eth.request({ method: "eth_requestAccounts" }), "mm_connect")) as Address[];
-    const net = NETWORKS[NET_ID]!;
+    const net = this.net;
     const chainId = toHex(net.chainId);
     if ((await eth.request({ method: "eth_chainId" })) !== chainId) {
       try {
@@ -588,7 +590,7 @@ export class MakerApp {
     if (this.need().swaps.some((s) => ACTIVE.has(s.state))) throw new Error(this.t("busy_swaps"));
     if (this.offering) throw new Error(this.t("pause_first"));
     const to = $<HTMLInputElement>("mk-withdraw-to").value.trim();
-    if (!MONERO.addressPrefixes.includes(to[0] ?? "") || !/^[1-9A-HJ-NP-Za-km-z]{95}$/.test(to)) throw new Error(this.t("bad_xmr_address"));
+    if (!validXmrAddress(to, this.net.monero)) throw new Error(this.t("bad_xmr_address"));
     if (!window.confirm(this.t("confirm_withdraw_xmr"))) return;
     const txids = await (await xmrLib()).makerSweepTo(to);
     this.note(this.t("log_withdrawn", { tx: txids.join(", ").slice(0, 40) }));
@@ -605,6 +607,7 @@ export class MakerApp {
     const min = Number($<HTMLInputElement>("mk-min").value);
     const max = Number($<HTMLInputElement>("mk-max").value);
     if (!(margin >= 0 && margin <= 10) || !(min >= 1) || !(max >= min)) throw new Error(this.t("bad_settings"));
+    if (this.net.maxUsdt && max > this.net.maxUsdt) throw new Error(this.t("over_cap", { max: this.net.maxUsdt }));
     this.cfg = { ...this.cfg, marginBps: Math.round(margin * 100), minUsdt: min, maxUsdt: max };
     this.need().config = { ...this.cfg, maxExposure: this.cfg.maxExposure.toString() };
     await this.persist();
@@ -616,7 +619,7 @@ export class MakerApp {
   private async wipeMaker(): Promise<void> {
     if (this.vault?.swaps.some((s) => ACTIVE.has(s.state))) throw new Error(this.t("busy_swaps"));
     if (!window.confirm(this.t("confirm_wipe"))) return;
-    await wipe();
+    await wipe(this.net.id);
     location.reload();
   }
 
@@ -640,11 +643,17 @@ export class MakerApp {
     if (this.vault && this.pass) await saveVault(this.vault, this.pass);
   }
 
+  /** En la red real, el máximo por swap nunca supera el tope (el contrato también lo impone). */
+  private capped<C extends { maxUsdt: number }>(c: C): C {
+    const cap = this.net.maxUsdt;
+    return cap && c.maxUsdt > cap ? { ...c, maxUsdt: cap } : c;
+  }
+
   private walletSavedAt = 0;
   private async persistWallet(): Promise<void> {
     if (Date.now() - this.walletSavedAt < 5 * 60_000) return;
     try {
-      await kv.put("wallet", await (await xmrLib()).makerData());
+      await kv.put(keys(this.net.id).wallet, await (await xmrLib()).makerData());
       this.walletSavedAt = Date.now();
     } catch {
       /* se reintenta; sin estos datos se resincroniza desde la semilla */

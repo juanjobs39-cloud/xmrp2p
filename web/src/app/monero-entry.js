@@ -94,7 +94,6 @@ async function makerInfo() {
 
 /** Crea (sin semilla), restaura (con semilla) o reabre (con keysData/cacheData) la wallet del maker. */
 export async function makerOpen({ node, network, password, seed, restoreHeight, keysData, cacheData }) {
-  if (network === "mainnet") throw new Error("el maker en el navegador solo opera en testnet");
   if (maker) await makerClose();
   const base = { networkType: NET[network], server: { uri: node }, password, proxyToWorker: true };
   if (keysData) {

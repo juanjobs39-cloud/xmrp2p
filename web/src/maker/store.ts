@@ -49,25 +49,33 @@ export const kv = {
   del: (k: string) => op<void>("readwrite", (s) => s.delete(k)),
 };
 
-export async function hasVault(): Promise<boolean> {
-  return !!(await kv.get("vault"));
+/**
+ * Claves por red: la de práctica conserva los nombres originales ("vault", "wallet") y la de
+ * dinero real usa otros, para que nunca se mezclen.
+ */
+export const keys = (net: string) =>
+  net === "arbitrum_sepolia" ? { vault: "vault", wallet: "wallet" } : { vault: `vault:${net}`, wallet: `wallet:${net}` };
+
+export async function hasVault(net: string): Promise<boolean> {
+  return !!(await kv.get(keys(net).vault));
 }
 
 export async function saveVault(v: Vault, pass: string): Promise<RecoveryFile> {
   const file = await encryptRecovery(v, pass, { network: v.network });
-  await kv.put("vault", file);
+  await kv.put(keys(v.network).vault, file);
   return file;
 }
 
-export async function openVault(pass: string, file?: RecoveryFile): Promise<Vault> {
-  const f = file ?? (await kv.get<RecoveryFile>("vault"));
+export async function openVault(net: string, pass: string, file?: RecoveryFile): Promise<Vault> {
+  const f = file ?? (await kv.get<RecoveryFile>(keys(net).vault));
   if (!f) throw new Error("no hay un maker guardado en este navegador; sube tu respaldo");
   const v = await decryptRecovery<Vault>(f, pass);
   if (v.kind !== "maker") throw new Error("ese archivo no es un respaldo de maker");
+  if (v.network !== net) throw new Error(`ese respaldo es de otra red (${v.network}); cambia de red arriba`);
   return v;
 }
 
-export async function wipe(): Promise<void> {
-  await kv.del("vault");
-  await kv.del("wallet");
+export async function wipe(net: string): Promise<void> {
+  await kv.del(keys(net).vault);
+  await kv.del(keys(net).wallet);
 }

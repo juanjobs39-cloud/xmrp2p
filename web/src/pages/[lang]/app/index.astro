@@ -1,6 +1,7 @@
 ---
 import Base from "../../../layouts/Base.astro";
-import { SITE, type Lang } from "../../../site";
+import { ROUTES, SITE, type Lang } from "../../../site";
+import NetSwitch from "../../../components/NetSwitch.astro";
 
 export function getStaticPaths() {
   return [{ params: { lang: "es" } }, { params: { lang: "en" } }];
@@ -8,6 +9,7 @@ export function getStaticPaths() {
 const lang = Astro.params.lang as Lang;
 const t = (es: string, en: string) => (lang === "es" ? es : en);
 const factory = import.meta.env.PUBLIC_ARBITRUM_SEPOLIA_FACTORY ?? "";
+const factoryReal = import.meta.env.PUBLIC_ARBITRUM_ONE_FACTORY ?? "";
 
 // CSP estricta: solo código propio. 'wasm-unsafe-eval' es necesario para WebAssembly
 // (núcleo cripto y monero-ts); no habilita eval de JavaScript.
@@ -42,7 +44,7 @@ const softwareLd = {
   lang={lang}
   route="app"
   csp={csp}
-  title={t("App: cambiar USDT por Monero (testnet)", "App: swap USDT for Monero (testnet)")}
+  title={t("App: cambiar USDT por Monero", "App: swap USDT for Monero")}
   description={t(
     "Haz un atomic swap de USDT a XMR desde tu navegador, sin cuenta y sin que nadie custodie tus fondos. Versión de prueba en testnet.",
     "Do a USDT to XMR atomic swap from your browser, with no account and nobody holding your funds. Testnet preview.",
@@ -50,16 +52,23 @@ const softwareLd = {
   jsonLd={[softwareLd]}
 >
   <main id="contenido" class="prose" data-lang={lang}>
-    <h1>{t("Cambiar USDT por XMR", "Swap USDT for XMR")} <span class="badge">Testnet</span></h1>
-    <p class="notice warn">
+    <h1>{t("Cambiar USDT por XMR", "Swap USDT for XMR")} <span class="badge only-test">Testnet</span><span class="badge real only-real">{t("Dinero real · beta", "Real money · beta")}</span></h1>
+    <NetSwitch lang={lang} />
+    <p class="notice warn only-test">
       {t(
-        "Versión de prueba: solo testnet (Arbitrum Sepolia + Monero stagenet). No uses fondos reales.",
-        "Preview: testnet only (Arbitrum Sepolia + Monero stagenet). Do not use real funds.",
+        "Modo práctica: Arbitrum Sepolia + Monero stagenet. Los fondos no tienen valor.",
+        "Practice mode: Arbitrum Sepolia + Monero stagenet. Funds have no value.",
+      )}
+    </p>
+    <p class="notice danger only-real">
+      {t(
+        "Dinero real (Arbitrum One + Monero). Beta: el contrato todavía no tiene auditoría externa. Máximo 100 USDT por swap, también en el contrato. Úsalo bajo tu propio riesgo.",
+        "Real money (Arbitrum One + Monero). Beta: the contract has no external audit yet. Maximum 100 USDT per swap, also enforced by the contract. Use at your own risk.",
       )}
     </p>
     <ul class="trust">
       <li><strong>{t("Sin custodia", "Non-custodial")}</strong> {t("Tus llaves se generan y se quedan en tu navegador.", "Your keys are created and stay in your browser.")}</li>
-      <li><strong>{t("Contrato público", "Public contract")}</strong> <a href={`https://sepolia.arbiscan.io/address/${factory}`} rel="noopener">{t("Ver en Arbiscan", "View on Arbiscan")}</a></li>
+      <li><strong>{t("Contrato público", "Public contract")}</strong> <a class="only-test" href={`https://sepolia.arbiscan.io/address/${factory}`} rel="noopener">{t("Ver en Arbiscan", "View on Arbiscan")}</a><a class="only-real" href={`https://arbiscan.io/address/${factoryReal}`} rel="noopener">{t("Ver en Arbiscan", "View on Arbiscan")}</a></li>
       <li><strong>{t("Código abierto", "Open source")}</strong> <a href={SITE.repo} rel="noopener">AGPL-3.0</a></li>
       <li><strong>{t("Comisión 0,5 %", "0.5% fee")}</strong> {t("La paga el maker al cobrar; tú solo pagas el gas.", "Paid by the maker on claim; you only pay gas.")}</li>
     </ul>
@@ -88,7 +97,7 @@ const softwareLd = {
         </label>
         <label>{t("Monto en USDT", "Amount in USDT")}<input id="usdt" type="text" inputmode="decimal" required placeholder="100" /></label>
         <label>
-          {t("Tu dirección de Monero (stagenet)", "Your Monero address (stagenet)")}
+          <span class="only-test">{t("Tu dirección de Monero (stagenet)", "Your Monero address (stagenet)")}</span><span class="only-real">{t("Tu dirección de Monero", "Your Monero address")}</span>
           <input id="destination" type="text" required autocomplete="off" spellcheck="false" />
           <small>{t("Aquí recibirás el XMR al final.", "This is where you will receive the XMR.")}</small>
         </label>
@@ -148,6 +157,7 @@ const softwareLd = {
       </form>
       <p><button class="btn secondary" id="btn-discard" type="button">{t("Descartar el swap guardado", "Discard the saved swap")}</button></p>
     </section>
+    <p class="meta">{t("¿Tienes XMR?", "Have XMR?")} <a href={ROUTES.makerApp[lang]}><strong>{t("Ser maker y ganar un margen →", "Be a maker and earn a margin →")}</strong></a></p>
     <p><a href="#step-restore" id="link-restore">{t("¿Tienes un archivo de recuperación? Reanudar", "Have a recovery file? Resume")}</a></p>
     <noscript><p class="notice danger">{t("La app necesita JavaScript. El resto del sitio funciona sin él.", "The app needs JavaScript. The rest of the site works without it.")}</p></noscript>
   </main>

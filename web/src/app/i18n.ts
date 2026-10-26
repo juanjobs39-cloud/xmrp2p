@@ -52,6 +52,9 @@ const S = {
     offer_gone: "Esa oferta ya no está disponible. Elige otra de la lista actualizada.",
     amount_range: "El monto debe estar entre {min} y {max} USDT para esta oferta.",
     action_needed: "Acción requerida",
+    bad_address_main: "La dirección de Monero no parece válida (empieza con 4 u 8 y tiene 95 caracteres).",
+    over_cap: "En la beta con dinero real el máximo por swap es {max} USDT.",
+    confirm_real: "Vas a depositar {usdt} USDT REALES en un contrato de la beta (sin auditoría externa todavía). Si algo falla, la app te guía para reembolsar. ¿Continuar?",
   },
   en: {
     not_deployed: "The contract is not deployed on testnet yet: the app can only be previewed, not complete swaps.",
@@ -104,6 +107,9 @@ const S = {
     offer_gone: "That offer is no longer available. Pick another one from the updated list.",
     amount_range: "The amount must be between {min} and {max} USDT for this offer.",
     action_needed: "Action required",
+    bad_address_main: "The Monero address does not look valid (starts with 4 or 8, 95 characters).",
+    over_cap: "In the real-money beta the maximum per swap is {max} USDT.",
+    confirm_real: "You are about to deposit {usdt} REAL USDT into a beta contract (not externally audited yet). If anything fails, the app guides you to refund. Continue?",
   },
 } as const;
 

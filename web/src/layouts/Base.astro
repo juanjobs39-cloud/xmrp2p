@@ -87,7 +87,8 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
             {NAV.map((n) => (
               <li><a href={ROUTES[n.key][lang]} aria-current={path === ROUTES[n.key][lang] ? "page" : undefined}>{n[lang]}</a></li>
             ))}
-            <li><a href={ROUTES.app[lang]}><strong>{t("Abrir la app", "Open the app")}</strong></a></li>
+            <li><a class="nav-cta" href={ROUTES.makerApp[lang]} aria-current={path === ROUTES.makerApp[lang] ? "page" : undefined}>{t("Ser maker", "Be a maker")}</a></li>
+            <li><a class="nav-cta primary" href={ROUTES.app[lang]} aria-current={path === ROUTES.app[lang] ? "page" : undefined}>{t("Abrir la app", "Open the app")}</a></li>
           </ul>
         </nav>
         {otherHref && <a class="lang" href={otherHref} hreflang={other} lang={other}>{other === "en" ? "English" : "Español"}</a>}

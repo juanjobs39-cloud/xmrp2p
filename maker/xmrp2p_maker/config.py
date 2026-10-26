@@ -14,6 +14,12 @@ else:  # pragma: no cover
     import tomli as tomllib
 
 
+# Beta en dinero real: solo Arbitrum One y con tope por swap (el contrato también lo impone).
+MAINNET_EVM_NETWORK = "arbitrum_one"
+MAINNET_MAX_USDT = Decimal("100")
+MAINNET_ENV_FLAG = "XMRP2P_ALLOW_MAINNET"
+
+
 @dataclass(frozen=True)
 class PriceConfig:
     sources: tuple[str, ...] = ("kraken", "coingecko", "kucoin")
@@ -70,7 +76,7 @@ class MakerConfig:
     def evm_private_key(self) -> str:
         key = os.environ.get("MAKER_EVM_PRIVATE_KEY", "")
         if not key:
-            raise RuntimeError("Falta MAKER_EVM_PRIVATE_KEY (llave de la cuenta del maker; solo testnet)")
+            raise RuntimeError("Falta MAKER_EVM_PRIVATE_KEY (llave de la cuenta del maker)")
         return key
 
     @property
@@ -84,8 +90,8 @@ class MakerConfig:
 
     def validate(self) -> None:
         if self.monero_network == "mainnet":
-            raise ValueError("mainnet está bloqueado hasta la auditoría (docs/MAINNET.md)")
-        if self.monero_network not in ("stagenet", "testnet"):
+            self._validate_mainnet()
+        elif self.monero_network not in ("stagenet", "testnet"):
             raise ValueError(f"red de Monero desconocida: {self.monero_network}")
         if not 0 <= self.fee_bps <= 100:
             raise ValueError("fee_bps fuera del tope del contrato (0–100)")
@@ -93,6 +99,20 @@ class MakerConfig:
             raise ValueError("límites de monto inválidos")
         if self.safety.claim_cutoff_before_t1 >= self.safety.min_claim_window:
             raise ValueError("claim_cutoff_before_t1 debe ser menor que min_claim_window")
+
+    def _validate_mainnet(self) -> None:
+        """Modo real (beta, sin auditoría): exige las tres condiciones a la vez."""
+        faltan = []
+        if self.evm_network != MAINNET_EVM_NETWORK:
+            faltan.append(f'evm_network = "{MAINNET_EVM_NETWORK}" (está "{self.evm_network}")')
+        if self.limits.max_usdt > MAINNET_MAX_USDT:
+            faltan.append(f"limits.max_usdt <= {MAINNET_MAX_USDT} (está {self.limits.max_usdt})")
+        if os.environ.get(MAINNET_ENV_FLAG) != "1":
+            faltan.append(f"la variable de entorno {MAINNET_ENV_FLAG}=1")
+        if faltan:
+            raise ValueError(
+                "mainnet (beta en dinero real, sin auditoría) requiere: " + "; ".join(faltan)
+            )
 
 
 def load(path: str | Path) -> MakerConfig:

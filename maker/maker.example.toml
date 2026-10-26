@@ -2,14 +2,14 @@
 # Los secretos NO van aquí: usa variables de entorno (ver README).
 
 [maker]
-# Red EVM (solo testnet hasta la auditoría)
+# Red EVM (testnet; para dinero real ver README, «Modo real (beta)»)
 evm_rpc = "https://sepolia-rollup.arbitrum.io/rpc"
 factory = "0x89b330882Ea2a18aF6FE507e5832bB15ccA5542e"   # SwapFactory en Arbitrum Sepolia (docs/DESPLIEGUES.md)
 token = "0x7c08fD8C4E1774f685EA03e6c50Ee9a6B20C8064"     # TestUSDT de esa fábrica
 fee_bps = 50                                              # debe coincidir con la fábrica; el daemon lo comprueba
 
 # Monero
-monero_network = "stagenet"                               # mainnet está bloqueado por el código
+monero_network = "stagenet"                               # mainnet solo en modo beta (ver README, «Modo real»)
 monero_wallet_rpc = "http://127.0.0.1:38083/json_rpc"     # monero-wallet-rpc local
 monero_main_wallet = "maker"                              # nombre del archivo de la wallet principal
 

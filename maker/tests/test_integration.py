@@ -20,7 +20,8 @@ pytestmark = pytest.mark.integration
 def env(chain, crypto, tmp_path):
     usdt = chain.deploy("TestUSDT")
     fee_to = chain.new_account().address
-    factory = chain.deploy("SwapFactory", (usdt.address, 50, fee_to, 10**6, 10 * 60, 2 * 24 * 3600))
+    # (token, feeBps, feeRecipient, minAmount, maxAmount, minDuration, maxDuration)
+    factory = chain.deploy("SwapFactory", (usdt.address, 50, fee_to, 10**6, 10_000 * 10**6, 10 * 60, 2 * 24 * 3600))
     maker_acct = chain.new_account()
     taker = chain.new_account()
     chain.send(taker, usdt.functions.faucet(10_000 * 10**6))

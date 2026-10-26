@@ -1,0 +1,21 @@
+---
+/**
+ * Selector Testnet / Dinero real. Solo aparece si el build tiene el modo real activo
+ * (PUBLIC_MAINNET=on y fábrica de Arbitrum One configurada). La página marca la red activa con
+ * `body[data-net]` desde el script de la app.
+ */
+import { MAINNET_ON } from "../app/config";
+import type { Lang } from "../site";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = (es: string, en: string) => (lang === "es" ? es : en);
+---
+{MAINNET_ON && (
+  <nav class="netswitch" aria-label={t("Red", "Network")}>
+    <a href="?" class="net-test">{t("Práctica (testnet)", "Practice (testnet)")}</a>
+    <a href="?red=real" class="net-real">{t("Dinero real · beta", "Real money · beta")}</a>
+  </nav>
+)}

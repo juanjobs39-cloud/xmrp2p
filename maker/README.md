@@ -1,6 +1,6 @@
 # Maker 24/7 en tu propia PC o servidor
 
-> ⚠️ **Solo testnet, sin auditoría.** El código se niega a operar en mainnet.
+> ⚠️ **Sin auditoría.** Por defecto solo testnet. El modo real (beta) exige Arbitrum One, un tope de 100 USDT por swap y `XMRP2P_ALLOW_MAINNET=1`: ver «Modo real (beta)».
 
 Un **maker** ofrece XMR a cambio de USDT y gana el margen que fija sobre el precio de referencia. Hay dos formas de serlo:
 
@@ -23,9 +23,10 @@ Guarda el estado de cada swap en SQLite y lo reanuda después de un reinicio. **
 **Índice:**
 1. Opción A: en tu PC (Windows, Linux o macOS)
 2. Opción B: en un servidor en la nube (Linux, 24/7)
-3. Seguridad
-4. Actualizar y respaldar
-5. Problemas comunes
+3. Modo real (beta)
+4. Seguridad
+5. Actualizar y respaldar
+6. Problemas comunes
 
 Al final: cómo funciona por dentro.
 
@@ -209,6 +210,48 @@ La RPC de la wallet escucha solo en `127.0.0.1`. Nunca la expongas.
 
 ---
 
+## Modo real (beta)
+
+> ⚠️ Dinero real **sin auditoría externa**. Arriesga solo lo que puedas perder.
+
+El daemon acepta `monero_network = "mainnet"` solo si se cumplen **las tres** condiciones; si falta alguna, se niega a arrancar y dice cuál:
+
+1. `evm_network = "arbitrum_one"`;
+2. `[maker.limits] max_usdt` ≤ 100 (el contrato de la beta también rechaza más de 100 USDT por swap);
+3. la variable de entorno `XMRP2P_ALLOW_MAINNET=1` (en `maker.env` o en la terminal).
+
+Las fallas de prueba (`XMRP2P_TEST_FAULTS`) siguen prohibidas en mainnet.
+
+Ejemplo de `maker.toml` para Arbitrum One:
+
+```toml
+[maker]
+evm_rpc = "https://arb1.arbitrum.io/rpc"                  # mejor un RPC propio o de pago
+factory = "0x0000000000000000000000000000000000000000"   # SwapFactory de la beta: se llena tras el despliegue
+token = "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"     # USD₮0 en Arbitrum One
+fee_bps = 50                                              # debe coincidir con la fábrica
+
+monero_network = "mainnet"
+monero_wallet_rpc = "http://127.0.0.1:18083/json_rpc"     # monero-wallet-rpc SIN --stagenet
+monero_main_wallet = "maker"
+
+db_path = "maker.sqlite3"
+crypto_bin = "../crypto-wasm/target/release/xmrp2p-crypto-cli"
+channel_api = "https://api.monerop2p.app"
+evm_network = "arbitrum_one"
+
+[maker.limits]
+min_usdt = 10
+max_usdt = 100               # obligatorio ≤ 100 en la beta
+max_exposure_xmr = 1
+max_concurrent = 2
+```
+
+Diferencias con testnet:
+- Crea una wallet de Monero **nueva** de mainnet (sin `--stagenet`) y arranca `monero-wallet-rpc` sin `--stagenet`, idealmente contra tu propio `monerod`.
+- La cuenta EVM necesita ETH real en Arbitrum One para el gas.
+- Empieza con montos pequeños y respalda `maker.sqlite3` antes de cada swap.
+
 ## Seguridad
 
 - **Sin custodia:** tus llaves (EVM y Monero) solo existen en tu máquina. Ni MoneroP2P ni el backend las ven.
@@ -218,7 +261,7 @@ La RPC de la wallet escucha solo en `127.0.0.1`. Nunca la expongas.
 - **La base SQLite contiene las mitades de llave de cada swap.** Sin ella no puedes recuperar el XMR si un taker reembolsa. Respáldala, cifrada.
 - **Contraseña de la RPC en la lista de procesos:** con `--rpc-login`, la contraseña se ve en `ps` para otros usuarios del mismo sistema. En un servidor solo tuyo no importa. Si lo compartes, usa `--config-file` con permisos 600.
 - **Nodo propio (recomendado):** un nodo público puede mentirte sobre la cadena. Con `monerod --stagenet` propio, cambia `--daemon-address` a `127.0.0.1:38081` y quita `--untrusted-daemon`.
-- **Solo testnet:** el daemon se niega a mainnet hasta la auditoría externa (`docs/MAINNET.md`).
+- **Mainnet solo en modo beta:** el daemon se niega a mainnet salvo con las tres condiciones de «Modo real (beta)».
 - **Si el servidor se cae a mitad de un swap:**
   - Si vuelve antes de `t1`, el daemon reanuda desde SQLite y cobra.
   - Si vuelve después de `t1`, el taker ya reembolsó y el daemon recupera tu XMR con el secreto que reveló el reembolso.
@@ -289,7 +332,7 @@ stateDiagram-v2
 4. **No envía `claim` en los últimos `claim_cutoff_before_t1` segundos**: una tx fallida dejaría `s_b` público y el taker podría quedarse con el XMR y además reembolsar.
 5. **Simula `claim` antes de enviarlo.**
 6. **No paga dos veces**: antes de enviar XMR comprueba si ya hay un envío a esa dirección.
-7. **Se niega a operar** si la fábrica no usa el token o la comisión configurados, o si la red es mainnet.
+7. **Se niega a operar** si la fábrica no usa el token o la comisión configurados, o si la red es mainnet sin las condiciones del modo real (beta).
 
 ## Precio y límites
 
@@ -307,7 +350,7 @@ cargo build --release --bin xmrp2p-crypto-cli --manifest-path ../crypto-wasm/Car
 .venv/bin/python -m pytest -q
 ```
 
-17 pruebas (24-oct-2026): 6 unitarias (precio, almacén, puente cripto, bloqueo de mainnet) y 11 de integración **contra los contratos reales en anvil**, con el núcleo cripto real y una wallet de Monero simulada. Cubren el swap completo, el reclamo tras t0, el reembolso del taker con recuperación del XMR, los depósitos inválidos, la expiración, el reinicio sin doble envío, el corte antes de t1 y los rechazos por límites.
+30 pruebas (26-oct-2026): 16 unitarias (precio, almacén, puente cripto, condiciones del modo real en mainnet, fallas de prueba prohibidas en mainnet) y 14 de integración **contra los contratos reales en anvil**, con el núcleo cripto real y una wallet de Monero simulada. Cubren el swap completo, el reclamo tras t0, el reembolso del taker con recuperación del XMR, los depósitos inválidos, la expiración, el reinicio sin doble envío, el corte antes de t1 y los rechazos por límites.
 
 **Probado en testnet (Fase 7):** 10 casos de punta a punta con `monero-wallet-rpc` real en stagenet y un swap manual con MetaMask (`docs/PRUEBAS.md`).
 

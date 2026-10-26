@@ -5,7 +5,7 @@
  */
 import type { Address, Hex } from "viem";
 import { api, type MakerReply, type Offer } from "./api";
-import { isDeployed, MONERO, NETWORKS, POLICY } from "./config";
+import { isDeployed, NETWORKS, POLICY, selectedNetwork, validXmrAddress, type EvmNetwork } from "./config";
 import { decide, type Action, type XmrCheck } from "./decide";
 import { Evm, type WalletStep } from "./evm";
 import { t, type Key, type Lang } from "./i18n";
@@ -58,15 +58,19 @@ export class SwapApp {
   private evm: Evm | null = null;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private busy = false;
+  /** Red elegida en la página (?red=real). Un swap reanudado usa la suya. */
+  private net: EvmNetwork = selectedNetwork();
 
   constructor(private lang: Lang) {}
 
   // ------------------------------------------------------------------ arranque
 
   async mount(): Promise<void> {
-    const net = NETWORKS.arbitrum_sepolia!;
+    const net = this.net;
+    document.body.dataset.net = net.testnet ? "test" : "real";
     if (!isDeployed(net)) this.banner(t(this.lang, "not_deployed"), "warn");
-    $<HTMLInputElement>("node").value = MONERO.defaultNode;
+    $<HTMLInputElement>("node").value = net.monero.defaultNode;
+    if (net.maxUsdt) $<HTMLInputElement>("usdt").placeholder = `5–${net.maxUsdt}`;
     // Cada acción desactiva su botón y muestra un spinner mientras corre: un segundo clic no hace nada.
     const submitter = (e: Event) => (e as SubmitEvent).submitter;
     $("form-start").addEventListener("submit", (e) => (e.preventDefault(), this.guard(() => this.start(), submitter(e), "loading_request")));
@@ -110,7 +114,7 @@ export class SwapApp {
     sel.classList.add("skeleton");
     if (!sel.options.length) sel.append(new Option(t(this.lang, "loading_offers")));
     try {
-      const offers = await api.offers("arbitrum_sepolia");
+      const offers = await api.offers(this.net.id);
       sel.innerHTML = "";
       for (const o of offers) {
         const opt = document.createElement("option");
@@ -145,9 +149,9 @@ export class SwapApp {
     if (!opt?.dataset.offer) throw new Error(t(this.lang, "pick_offer"));
     const chosen = JSON.parse(opt.dataset.offer) as Offer;
     if (!/^\d+(\.\d{1,6})?$/.test(usdt)) throw new Error(t(this.lang, "bad_amount"));
-    if (!MONERO.addressPrefixes.includes(destination[0] ?? "") || !/^[1-9A-HJ-NP-Za-km-z]{95}$/.test(destination)) {
-      throw new Error(t(this.lang, "bad_address"));
-    }
+    const net = this.net;
+    if (!validXmrAddress(destination, net.monero)) throw new Error(t(this.lang, net.testnet ? "bad_address" : "bad_address_main"));
+    if (net.maxUsdt && Number(usdt) > net.maxUsdt) throw new Error(t(this.lang, "over_cap", { max: net.maxUsdt }));
     if (pass.length < 10) throw new Error(t(this.lang, "short_pass"));
     if (!node) throw new Error(t(this.lang, "need_node"));
     // Recargar las ofertas justo antes de pedir el swap: la elegida pudo vencer mientras se llenaba el formulario.
@@ -161,7 +165,7 @@ export class SwapApp {
 
     const c = await cryptoLib();
     const keys = JSON.parse(c.generateKeys()) as SwapState["keys"];
-    this.state = { v: 1, network: "arbitrum_sepolia", created_at: Date.now(), usdt, offer, destination, node, keys, recovery_saved: false, last_seq: 0 };
+    this.state = { v: 1, network: net.id, created_at: Date.now(), usdt, offer, destination, node, keys, recovery_saved: false, last_seq: 0 };
 
     this.status(t(this.lang, "asking_maker"));
     const r = await api.createSwap(offer.id, usdt, keys.message);
@@ -171,7 +175,7 @@ export class SwapApp {
     const makerCommitment = c.verifyCounterparty(makerMsg); // DLEQ + commitment
     if (makerCommitment.toLowerCase() !== reply.claim_commitment.toLowerCase()) throw new Error("claim_commitment del maker no coincide con su DLEQ");
     if (reply.refund_commitment.toLowerCase() !== keys.message.contract_commitment.toLowerCase()) throw new Error("el maker no usó nuestro commitment");
-    const shared = JSON.parse(c.sharedAddress(keys.spend_private, makerMsg, MONERO.network)) as SwapState["shared"];
+    const shared = JSON.parse(c.sharedAddress(keys.spend_private, makerMsg, net.monero.network)) as SwapState["shared"];
     if (shared!.address !== reply.shared_address) throw new Error("la dirección compartida del maker no coincide con la nuestra");
     if (reply.usdt_atomic !== Math.round(Number(usdt) * 1e6)) throw new Error("el monto de USDT del maker no coincide");
     const expectedXmr = Number(usdt) / Number(offer.price);
@@ -217,6 +221,7 @@ export class SwapApp {
     if (Date.now() / 1000 > s.reply!.deposit_deadline) throw new Error(t(this.lang, "deposit_expired"));
     const net = NETWORKS[s.network]!;
     if (!isDeployed(net)) throw new Error(t(this.lang, "not_deployed"));
+    if (!net.testnet && !window.confirm(t(this.lang, "confirm_real", { usdt: s.usdt }))) return;
     this.evm ??= this.makeEvm(net);
     const account = await this.evm.connect();
     const amount = BigInt(s.reply!.usdt_atomic);
@@ -281,13 +286,13 @@ export class SwapApp {
     // Verificación rápida del XMR con check_tx_key (sin sincronizar la wallet).
     let check: XmrCheck | undefined;
     if (s.xmr_lock && view.stage === "PENDING" && view.now < view.t0) {
-      const r = await (await xmrLib()).verifyLock({ node: s.node, network: MONERO.network, txid: s.xmr_lock.txid, txKey: s.xmr_lock.tx_key, address: s.shared!.address });
+      const r = await (await xmrLib()).verifyLock({ node: s.node, network: NETWORKS[s.network]!.monero.network, txid: s.xmr_lock.txid, txKey: s.xmr_lock.tx_key, address: s.shared!.address });
       s.xmr_check = { received: r.received, confirmations: r.confirmations };
     }
     if (s.xmr_check) check = { received: BigInt(s.xmr_check.received), confirmations: s.xmr_check.confirmations };
     await this.persist();
 
-    const action = decide(view, check, { expectedXmr: BigInt(s.reply!.xmr_atomic), minConfirmations: MONERO.minConfirmations, refundMarginS: POLICY.refundMarginS });
+    const action = decide(view, check, { expectedXmr: BigInt(s.reply!.xmr_atomic), minConfirmations: NETWORKS[s.network]!.monero.minConfirmations, refundMarginS: POLICY.refundMarginS });
     this.pending = action;
     this.renderAction(action, view.t0, view.t1, view.now);
     // Acciones que no requieren firma se ejecutan solas; las demás piden un clic.
@@ -307,12 +312,12 @@ export class SwapApp {
       s.refund_tx = await this.evm.refund(s.escrow!, s.keys.contract_secret);
     } else if (a.kind === "sweep") {
       const c = await cryptoLib();
-      const w = JSON.parse(c.recoverWallet(s.keys.spend_private, JSON.stringify(s.reply!.maker_message), a.makerSecret, MONERO.network)) as {
+      const w = JSON.parse(c.recoverWallet(s.keys.spend_private, JSON.stringify(s.reply!.maker_message), a.makerSecret, NETWORKS[s.network]!.monero.network)) as {
         address: string; private_view_key: string; private_spend_key: string;
       };
       this.status(t(this.lang, "sweeping"));
       const r = await (await xmrLib()).sweep({
-        node: s.node, network: MONERO.network, address: w.address, viewKey: w.private_view_key, spendKey: w.private_spend_key,
+        node: s.node, network: NETWORKS[s.network]!.monero.network, address: w.address, viewKey: w.private_view_key, spendKey: w.private_spend_key,
         restoreHeight: s.restore_height ?? 0, destination: s.destination,
         onProgress: (pct: number) => this.status(`${t(this.lang, "sweeping")} ${Math.round(pct * 100)} %`),
       });
@@ -378,6 +383,8 @@ export class SwapApp {
       file = JSON.parse(saved) as RecoveryFile;
     }
     this.state = await decryptRecovery<SwapState>(file, pass);
+    this.net = NETWORKS[this.state.network] ?? this.net;
+    document.body.dataset.net = this.net.testnet ? "test" : "real";
     this.passphrase = pass;
     if (this.state.escrow) {
       this.show("step-progress");

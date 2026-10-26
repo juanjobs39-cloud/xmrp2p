@@ -32,5 +32,5 @@ export const NAV: { key: keyof typeof ROUTES; es: string; en: string }[] = [
   { key: "security", es: "Seguridad", en: "Security" },
   { key: "guides", es: "Guías", en: "Guides" },
   { key: "faq", es: "Preguntas", en: "FAQ" },
-  { key: "maker", es: "Ser maker", en: "Become a maker" },
+  { key: "maker", es: "Cómo ser maker", en: "How to be a maker" },
 ];
