@@ -1,0 +1,14 @@
+# Sitio de vista previa con el modo real encendido (beta.monerop2p.app), servido como archivos
+# estáticos desde un Worker. Sirve para probar antes de abrir el dinero real en monerop2p.app.
+# Se usa un subdominio propio porque MetaMask desconfía de los dominios *.pages.dev.
+# Construir antes:  cd ../web && PUBLIC_MAINNET=on npm run build
+# Desplegar:        env -u NODE_USE_SYSTEM_CA npx wrangler deploy -c wrangler.beta-site.toml
+name = "monerop2p-beta"
+compatibility_date = "2026-08-20"
+workers_dev = false
+routes = [{ pattern = "beta.monerop2p.app", custom_domain = true }]
+
+[assets]
+directory = "../web/dist"
+not_found_handling = "404-page"
+html_handling = "auto-trailing-slash"
