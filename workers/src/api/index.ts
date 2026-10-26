@@ -1,5 +1,5 @@
 import { verifyMaker } from "./auth";
-import { activeNetworks, blockedRegion, clientIp, Env, HttpError, json, requireNetwork, decimal } from "./env";
+import { activeNetworks, blockedRegion, clientIp, Env, HttpError, json, MAINNET_NETWORKS, requireNetwork, decimal } from "./env";
 import { handleMcp } from "./mcp";
 import { bestQuote, handleOffers } from "./offers";
 import { openapi } from "./openapi";
@@ -35,7 +35,10 @@ async function route(req: Request, env: Env): Promise<Response> {
   const p = url.pathname;
   const write = req.method !== "GET" && req.method !== "HEAD";
 
-  if (p === "/v1/health") return json({ ok: true, networks: [...activeNetworks(env)], testnet_only: true });
+  if (p === "/v1/health") {
+    const nets = [...activeNetworks(env)];
+    return json({ ok: true, networks: nets, testnet_only: !nets.some((n) => MAINNET_NETWORKS.has(n)) });
+  }
 
   const country = blockedRegion(req, env);
   if (country) throw new HttpError(451, `el servicio no está disponible en tu región (${country})`);

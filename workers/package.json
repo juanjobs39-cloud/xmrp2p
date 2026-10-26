@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "dev:proxy": "wrangler dev -c wrangler.node-proxy.toml",
+    "dev:proxy-mainnet": "wrangler dev -c wrangler.node-proxy-mainnet.toml",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

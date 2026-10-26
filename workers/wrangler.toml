@@ -10,6 +10,8 @@ routes = [{ pattern = "api.monerop2p.app", custom_domain = true }]
 
 [vars]
 # Redes activas (separadas por coma). Quitar una la desactiva sin tocar código.
+# Beta con dinero real (Arbitrum One, tope de 100 USDT por swap en offers.ts/swaps.ts):
+# activarla con ACTIVE_NETWORKS = "arbitrum_sepolia,arbitrum_one" y desplegar (solo con aprobación del dueño).
 ACTIVE_NETWORKS = "arbitrum_sepolia"
 # Países bloqueados (ISO 3166-1 alfa-2, separados por coma). Ej.: "US,KP".
 BLOCKED_REGIONS = ""

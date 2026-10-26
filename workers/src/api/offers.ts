@@ -1,5 +1,5 @@
 import { verifyMaker } from "./auth";
-import { decimal, Env, HttpError, json, randomId, readJson, requireNetwork } from "./env";
+import { assertUsdtCap, decimal, Env, HttpError, json, randomId, readJson, requireNetwork } from "./env";
 
 export interface Offer {
   id: string;
@@ -55,6 +55,7 @@ export async function handleOffers(req: Request, env: Env, url: URL): Promise<Re
     const max = decimal(data.max_usdt, "max_usdt");
     const maxXmr = decimal(data.max_xmr, "max_xmr");
     if (Number(min) > Number(max)) throw new HttpError(400, "min_usdt mayor que max_usdt");
+    assertUsdtCap(network, max, "max_usdt");
     const ttl = Math.min(Number(data.ttl ?? env.MAX_OFFER_TTL), Number(env.MAX_OFFER_TTL));
     if (!(ttl > 0)) throw new HttpError(400, "ttl inválido");
     const t = now();

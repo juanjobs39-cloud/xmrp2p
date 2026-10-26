@@ -34,6 +34,20 @@ export function activeNetworks(env: Env): Set<string> {
   return new Set(env.ACTIVE_NETWORKS.split(",").map((s) => s.trim()).filter(Boolean));
 }
 
+/** Redes con dinero real. Mientras alguna esté activa, /v1/health deja de decir testnet_only. */
+export const MAINNET_NETWORKS = new Set(["arbitrum_one"]);
+
+/** Tope de USDT por swap en las redes en beta con dinero real. */
+export const USDT_CAP: Record<string, number> = { arbitrum_one: 100 };
+
+/** Lanza 400 si el monto supera el tope de la red (si tiene uno). */
+export function assertUsdtCap(network: string, usdt: string, field: string): void {
+  const cap = USDT_CAP[network];
+  if (cap !== undefined && Number(usdt) > cap) {
+    throw new HttpError(400, `${field} supera el tope de ${cap} USDT por swap en ${network} (beta con dinero real)`);
+  }
+}
+
 export function requireNetwork(env: Env, network: string | null): string {
   if (!network) throw new HttpError(400, "falta el parámetro network");
   if (!activeNetworks(env).has(network)) throw new HttpError(404, `la red ${network} no está activa`);

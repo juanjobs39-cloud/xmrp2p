@@ -1,0 +1,26 @@
+# Proxy hacia nodos de Monero MAINNET (beta con dinero real). Mismo código que el de stagenet
+# (src/node-proxy/): mismas rutas RPC permitidas, CORS y límite por IP.
+# Opcional: el usuario siempre puede usar su propio nodo (recomendado por privacidad).
+# Desplegar SOLO con aprobación del dueño:
+#   env -u NODE_USE_SYSTEM_CA npx wrangler deploy -c wrangler.node-proxy-mainnet.toml
+name = "xmrp2p-node-proxy-mainnet"
+main = "src/node-proxy/index.ts"
+compatibility_date = "2026-08-20"
+workers_dev = true
+routes = [{ pattern = "nodo-xmr.monerop2p.app", custom_domain = true }]
+
+[vars]
+# host → nodos (se prueban en orden; si uno no responde o da 5xx se pasa al siguiente).
+# Nodos públicos de mainnet en modo restringido, con HTTPS (verificados el 2026-10-26):
+#   - Cake Wallet:   https://xmr-node.cakewallet.com:18081
+#   - monerodevs:    https://node.monerodevs.org:18089
+#   - Stack Wallet:  https://monero.stackwallet.com:18081
+NODES = '{"nodo-xmr.monerop2p.app":["https://xmr-node.cakewallet.com:18081","https://node.monerodevs.org:18089","https://monero.stackwallet.com:18081"],"*":["https://xmr-node.cakewallet.com:18081","https://node.monerodevs.org:18089","https://monero.stackwallet.com:18081"]}'
+BLOCKED_REGIONS = ""
+
+[[ratelimits]]
+name = "PROXY_LIMITER"
+# Espacio de nombres propio para no compartir el contador con el proxy de stagenet.
+namespace_id = "2002"
+# Una wallet nueva hace ~170 peticiones al sincronizar (Fase 0).
+simple = { limit = 600, period = 60 }

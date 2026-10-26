@@ -1,5 +1,5 @@
 import { getOffer } from "./offers";
-import { assertNoPrivateKeys, decimal, Env, HttpError, json, randomId, readJson, requireNetwork, sha256Hex } from "./env";
+import { assertNoPrivateKeys, assertUsdtCap, decimal, Env, HttpError, json, randomId, readJson, requireNetwork, sha256Hex } from "./env";
 
 /**
  * POST /v1/swaps  { offer_id, usdt, taker_message }
@@ -17,6 +17,7 @@ export async function createSwap(req: Request, env: Env): Promise<Response> {
   const offer = await getOffer(env, data.offer_id);
   if (!offer) throw new HttpError(404, "la oferta no existe o expiró");
   requireNetwork(env, offer.network);
+  assertUsdtCap(offer.network, usdt, "el monto");
   if (Number(usdt) < Number(offer.min_usdt) || Number(usdt) > Number(offer.max_usdt)) {
     throw new HttpError(400, `el monto debe estar entre ${offer.min_usdt} y ${offer.max_usdt} USDT`);
   }

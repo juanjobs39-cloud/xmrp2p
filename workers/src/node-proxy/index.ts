@@ -1,6 +1,7 @@
 /**
  * Proxy hacia nodos de Monero (Fase 0 probó que `fetch()` llega a los puertos 38081/38089).
- * - Lista cerrada de nodos por host (no es un proxy abierto).
+ * - Lista cerrada de nodos por host (no es un proxy abierto). Un host puede tener varios nodos:
+ *   se prueban en orden y se pasa al siguiente si uno no responde o da 5xx.
  * - Lista cerrada de rutas y métodos RPC de lectura + envío de transacciones firmadas.
  * - Añade CORS para que la wallet del navegador pueda usarlo.
  * Privacidad: el proxy ve qué consulta cada IP. La app debe dejar elegir un nodo propio.
@@ -46,9 +47,10 @@ export default {
     const blocked = env.BLOCKED_REGIONS.split(",").map((s) => s.trim().toUpperCase()).filter(Boolean);
     if (country && blocked.includes(country)) return fail(451, "no disponible en tu región");
 
-    const nodes = JSON.parse(env.NODES) as Record<string, string>;
-    const upstream = nodes[url.hostname] ?? nodes["*"];
-    if (!upstream) return fail(404, "nodo no configurado para este host");
+    const nodes = JSON.parse(env.NODES) as Record<string, string | string[]>;
+    const entry = nodes[url.hostname] ?? nodes["*"];
+    const upstreams = (Array.isArray(entry) ? entry : entry ? [entry] : []).filter(Boolean);
+    if (!upstreams.length) return fail(404, "nodo no configurado para este host");
     if (!ALLOWED_PATHS.has(url.pathname)) return fail(403, "ruta RPC no permitida");
     if (req.method !== "POST" && req.method !== "GET") return fail(405, "método no permitido");
 
@@ -70,15 +72,24 @@ export default {
         return fail(400, "JSON inválido");
       }
     }
-    try {
-      const r = await fetch(upstream + url.pathname, {
-        method: req.method,
-        body,
-        headers: { "content-type": req.headers.get("content-type") ?? "application/json" },
-      });
-      return new Response(r.body, { status: r.status, headers: { "content-type": r.headers.get("content-type") ?? "", ...cors } });
-    } catch (e) {
-      return fail(502, `nodo no disponible: ${(e as Error).message}`);
+    let lastError = "";
+    for (const [i, upstream] of upstreams.entries()) {
+      try {
+        const r = await fetch(upstream + url.pathname, {
+          method: req.method,
+          body,
+          headers: { "content-type": req.headers.get("content-type") ?? "application/json" },
+        });
+        // Con 5xx se prueba el siguiente nodo (si queda alguno).
+        if (r.status >= 500 && i < upstreams.length - 1) {
+          lastError = `HTTP ${r.status}`;
+          continue;
+        }
+        return new Response(r.body, { status: r.status, headers: { "content-type": r.headers.get("content-type") ?? "", ...cors } });
+      } catch (e) {
+        lastError = (e as Error).message;
+      }
     }
+    return fail(502, `nodo no disponible: ${lastError}`);
   },
 } satisfies ExportedHandler<Env>;
