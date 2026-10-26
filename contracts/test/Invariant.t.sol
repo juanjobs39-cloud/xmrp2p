@@ -113,7 +113,7 @@ contract InvariantTest is Test {
         vm.warp(1_800_000_000);
         usdt = new MockUSDT(MockUSDT.Mode.FALSE_RETURN_TRON);
         factory =
-            new SwapFactory(SwapFactory.Config(IERC20(address(usdt)), 100, feeTo, 1e6, 10 minutes, 2 days));
+            new SwapFactory(SwapFactory.Config(IERC20(address(usdt)), 100, feeTo, 1e6, type(uint256).max, 10 minutes, 2 days));
         handler = new Handler(usdt, factory, feeTo);
         targetContract(address(handler));
     }

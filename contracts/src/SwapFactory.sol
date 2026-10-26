@@ -21,6 +21,9 @@ contract SwapFactory {
     address public immutable FEE_RECIPIENT;
     /// @notice Monto mínimo por swap (evita spam de escrows diminutos).
     uint256 public immutable MIN_AMOUNT;
+    /// @notice Monto máximo por swap. En la beta sin auditoría externa acota lo que un error podría
+    ///         poner en riesgo en un solo swap (p. ej. 100 USDT). Inmutable: nadie puede subirlo.
+    uint256 public immutable MAX_AMOUNT;
     /// @notice Límites de cada plazo (duración hasta t0 y de t0 a t1), en segundos.
     uint64 public immutable MIN_DURATION;
     uint64 public immutable MAX_DURATION;
@@ -37,6 +40,7 @@ contract SwapFactory {
     );
 
     error AmountTooLow();
+    error AmountTooHigh();
     error InvalidDuration();
     error InvalidParams();
     error InvalidConfig();
@@ -46,18 +50,22 @@ contract SwapFactory {
         uint16 feeBps;
         address feeRecipient;
         uint256 minAmount;
+        uint256 maxAmount;
         uint64 minDuration;
         uint64 maxDuration;
     }
 
     constructor(Config memory c) {
-        if (c.minAmount == 0 || c.minDuration == 0 || c.maxDuration < c.minDuration) revert InvalidConfig();
+        if (c.minAmount == 0 || c.maxAmount < c.minAmount || c.minDuration == 0 || c.maxDuration < c.minDuration) {
+            revert InvalidConfig();
+        }
         // El constructor de SwapEscrow valida token, receptor y el tope de comisión.
         IMPLEMENTATION = address(new SwapEscrow(c.token, c.feeBps, c.feeRecipient));
         TOKEN = c.token;
         FEE_BPS = c.feeBps;
         FEE_RECIPIENT = c.feeRecipient;
         MIN_AMOUNT = c.minAmount;
+        MAX_AMOUNT = c.maxAmount;
         MIN_DURATION = c.minDuration;
         MAX_DURATION = c.maxDuration;
     }
@@ -78,6 +86,7 @@ contract SwapFactory {
         bytes32 salt
     ) public returns (address escrow) {
         if (amount < MIN_AMOUNT) revert AmountTooLow();
+        if (amount > MAX_AMOUNT) revert AmountTooHigh();
         if (
             duration0 < MIN_DURATION || duration0 > MAX_DURATION || duration1 < MIN_DURATION
                 || duration1 > MAX_DURATION

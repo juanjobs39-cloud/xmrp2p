@@ -21,7 +21,7 @@ contract ReentrancyTest is Test {
     /// El maker es este contrato para poder reingresar como `claimer`.
     function setUp() public {
         tok = new ReentrantToken();
-        factory = new SwapFactory(SwapFactory.Config(IERC20(address(tok)), 50, feeTo, 1, 10 minutes, 2 days));
+        factory = new SwapFactory(SwapFactory.Config(IERC20(address(tok)), 50, feeTo, 1, type(uint256).max, 10 minutes, 2 days));
         tok.mint(taker, AMOUNT);
         vm.prank(taker);
         tok.approve(address(factory), AMOUNT);

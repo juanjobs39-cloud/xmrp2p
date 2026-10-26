@@ -18,7 +18,7 @@ contract PermitTest is Test {
     function setUp() public {
         tok = new TestUSDT();
         factory = new SwapFactory(
-            SwapFactory.Config(IERC20(address(tok)), 50, makeAddr("fee"), 1e6, 10 minutes, 2 days)
+            SwapFactory.Config(IERC20(address(tok)), 50, makeAddr("fee"), 1e6, type(uint256).max, 10 minutes, 2 days)
         );
         taker = vm.addr(takerKey);
         vm.prank(taker);

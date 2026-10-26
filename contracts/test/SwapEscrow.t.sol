@@ -102,13 +102,15 @@ abstract contract SwapEscrowTest is Base {
         vm.expectRevert(SwapEscrow.FeeTooHigh.selector);
         _factory(101);
         vm.expectRevert(SwapFactory.InvalidConfig.selector);
-        new SwapFactory(SwapFactory.Config(IERC20(address(usdt)), FEE_BPS, feeTo, 0, MIN_D, MAX_D));
+        new SwapFactory(SwapFactory.Config(IERC20(address(usdt)), FEE_BPS, feeTo, 0, type(uint256).max, MIN_D, MAX_D));
         vm.expectRevert(SwapFactory.InvalidConfig.selector);
-        new SwapFactory(SwapFactory.Config(IERC20(address(usdt)), FEE_BPS, feeTo, 1, MAX_D, MIN_D));
+        new SwapFactory(SwapFactory.Config(IERC20(address(usdt)), FEE_BPS, feeTo, 1, type(uint256).max, MAX_D, MIN_D));
+        vm.expectRevert(SwapFactory.InvalidConfig.selector); // máximo menor que el mínimo
+        new SwapFactory(SwapFactory.Config(IERC20(address(usdt)), FEE_BPS, feeTo, 10, 9, MIN_D, MAX_D));
         vm.expectRevert(SwapEscrow.ZeroAddress.selector);
-        new SwapFactory(SwapFactory.Config(IERC20(address(usdt)), FEE_BPS, address(0), 1, MIN_D, MAX_D));
+        new SwapFactory(SwapFactory.Config(IERC20(address(usdt)), FEE_BPS, address(0), 1, type(uint256).max, MIN_D, MAX_D));
         vm.expectRevert(SwapEscrow.ZeroAddress.selector);
-        new SwapFactory(SwapFactory.Config(IERC20(address(0)), FEE_BPS, feeTo, 1, MIN_D, MAX_D));
+        new SwapFactory(SwapFactory.Config(IERC20(address(0)), FEE_BPS, feeTo, 1, type(uint256).max, MIN_D, MAX_D));
     }
 
     // ---------------------------------------------------------------- inicialización

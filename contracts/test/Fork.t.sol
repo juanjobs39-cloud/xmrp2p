@@ -31,7 +31,7 @@ abstract contract ForkBase is Test {
         vm.createSelectFork(rpc());
         taker = vm.addr(takerKey);
         usdt = IERC20(token());
-        factory = new SwapFactory(SwapFactory.Config(usdt, 50, feeTo, 1e6, 10 minutes, 2 days));
+        factory = new SwapFactory(SwapFactory.Config(usdt, 50, feeTo, 1e6, type(uint256).max, 10 minutes, 2 days));
         deal(address(usdt), taker, AMOUNT * 4);
     }
 

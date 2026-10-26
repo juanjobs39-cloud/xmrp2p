@@ -50,6 +50,7 @@ abstract contract Base is Test {
                 feeBps: bps,
                 feeRecipient: feeTo,
                 minAmount: MIN_AMOUNT,
+                maxAmount: type(uint256).max,
                 minDuration: MIN_D,
                 maxDuration: MAX_D
             })
