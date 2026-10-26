@@ -139,7 +139,7 @@ stateDiagram-v2
 | 4 · Cloudflare ✅ (local) | `workers/`: libro de órdenes (Workers + D1), canal (Durable Objects + WebSocket), proxy de nodos, API pública con OpenAPI y MCP de solo lectura | Implementado el 24-oct (ver `workers/README.md`): 19 pruebas en miniflare y una prueba de extremo a extremo con el maker real. **No desplegado**: espera tu aprobación |
 | 5 · App ✅ | `web/` ruta `/app`: flujo del swap, archivo de recuperación, CSP/SRI, IPFS | Implementado el 24-oct (ver `web/README.md`): lógica de decisión con prueba exhaustiva, archivo cifrado AES-GCM, `permit`, verificación del XMR con `check_tx_key` (el maker ahora envía `tx_key`), CSP estricta, SRI e import map con integrity. Probado en navegador hasta stagenet; falta el flujo completo con fondos de testnet (Fase 7) |
 | 6 · Sitio y SEO ✅ | `web/` en Astro con cero JS en el contenido, robots/llms.txt, IndexNow, guías ES/EN | Implementado el 24-oct: 42 páginas, 8 guías ×2, 17 preguntas ×2, glosario, JSON-LD, sitemap con hreflang, `.md` por guía, HTML válido y 0 enlaces rotos. Pasos manuales en `docs/PUBLICAR.md` |
-| 7 · E2E testnet ✅ | `docs/PRUEBAS.md` | 10/10 casos superados el 25–26 de octubre; 8 problemas encontrados y corregidos. Falta la prueba manual con MetaMask |
+| 7 · E2E testnet ✅ | `docs/PRUEBAS.md` | 10/10 casos automáticos y prueba manual con MetaMask superados el 25–26 de octubre; 16 problemas encontrados (12 corregidos, 4 pendientes de UX/robustez) |
 
 ### Estructura prevista del monorepo
 

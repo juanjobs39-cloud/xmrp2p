@@ -1,6 +1,6 @@
 # Pruebas de extremo a extremo (Fase 7)
 
-> Última actualización: 26 de octubre de 2026. Estado: **10 de 10 casos superados en testnet** (Arbitrum Sepolia + Monero stagenet). Falta la prueba manual con MetaMask.
+> Última actualización: 26 de octubre de 2026. Estado: **10 de 10 casos automáticos superados en testnet y prueba manual con MetaMask completada** en https://monerop2p.app.
 
 **Resumen:** todas las piezas se probaron por separado y varias juntas (contrato real + daemon del maker en anvil; backend real + cliente del maker; app + núcleo cripto + monero-ts contra stagenet). Lo que falta es un swap completo en Arbitrum Sepolia con Monero stagenet y los casos de falla en vivo.
 
@@ -92,6 +92,28 @@ Los registros completos de cada caso están en `e2e/results/`.
 - **El riesgo principal (taker ausente antes de t0) se comportó como estaba diseñado:** en todos los casos sin XMR verificado (E4, E7, E9, E10) se reembolsó antes de t0.
 - **Monero condiciona la experiencia:** ~20 min de confirmaciones y ~20 min de bloqueo del cambio del maker tras cada envío, lo que limita cuántos swaps simultáneos puede atender un maker con pocas salidas.
 
-### Pendiente
+## 5. Prueba manual con MetaMask (25 de octubre de 2026)
 
-- Prueba manual con MetaMask en https://monerop2p.app/es/app/ (guía en `docs/PRUEBA-MANUAL.md`).
+Usuario real con una cuenta nueva de MetaMask, en https://monerop2p.app/es/app/ (Arbitrum Sepolia + Monero stagenet).
+
+| Paso | Hora | Resultado |
+|---|---|---|
+| Pedir el swap (10 tUSDT → 0,016623 XMR) | 19:36 | ✅ |
+| Depósito con permit desde MetaMask | 19:43 | ✅ escrow [`0x9530…A115`](https://sepolia.arbiscan.io/address/0x9530989Ed13Ac832FD301C60e688137Ee3bBA115) |
+| El maker bloquea el XMR | 19:44 | ✅ ~20 s después del depósito |
+| El usuario confirma (setReady) | ~20:38 | ✅ antes de t0 (20:42) |
+| El maker cobra | 20:39 | ✅ [`0x43b25913…`](https://sepolia.arbiscan.io/tx/0x43b25913d9ef34dac9d80f47f8c9fbac1a9eb4fb17c991ebf45250aa9041628d) |
+| La app barre el XMR a la dirección del usuario | ~20:45 | ✅ **0,016593 XMR** recibidos (tx `6119476a…`; 0,00003 XMR de comisión de red) |
+
+### Problemas encontrados en la prueba manual
+
+| # | Problema | Estado |
+|---|---|---|
+| 9 | MetaMask fijaba `maxFeePerGas` justo en la comisión base y Arbitrum rechazaba el depósito | ✅ corregido: la app fija comisiones con margen (3× la base) |
+| 10 | Un swap guardado en el navegador bloqueaba empezar uno nuevo | ✅ corregido: formulario siempre visible + botón para descartar |
+| 11 | 15 min para depositar es poco para usuarios nuevos de MetaMask | ✅ corregido: 30 min |
+| 12 | El maker tardaba más de 20 s en responder si su wallet estaba ocupada | ✅ mitigado: espera de 45 s en el backend |
+| 13 | La oferta venció mientras la wallet del maker sincronizaba una recuperación; la app mostró una oferta vieja | ⏳ pendiente: renovar la oferta sin depender de la wallet y recargar ofertas antes de pedir el swap |
+| 14 | El maker se caía si había un corte de red al arrancar | ⏳ mitigado con reinicio automático en el lanzador; falta reintento dentro del daemon |
+| 15 | Tras pedir el swap no hay un indicador claro de "cargando" | ⏳ pendiente |
+| 16 | El usuario confirmó cerca de t0 (~4 min antes) | ⏳ pendiente: aviso visual/sonoro cuando la app necesita una acción del usuario |

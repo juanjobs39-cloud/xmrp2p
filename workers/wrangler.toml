@@ -18,7 +18,7 @@ ALLOWED_ORIGINS = "*"
 # Tiempo máximo de vida de una oferta (s): el maker la renueva mientras está en línea.
 MAX_OFFER_TTL = "900"
 # Tiempo que se espera la respuesta del maker a una solicitud de swap (ms).
-TAKE_TIMEOUT_MS = "20000"
+TAKE_TIMEOUT_MS = "45000"
 
 [[d1_databases]]
 binding = "DB"
