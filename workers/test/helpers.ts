@@ -11,13 +11,13 @@ export function newMaker() {
 export type Maker = ReturnType<typeof newMaker>;
 
 /** Petición firmada por un maker (mismo formato que usa el daemon de Python). */
-export async function signed(maker: Maker, method: string, path: string, body: unknown, tsOffset = 0) {
+export async function signed(maker: Maker, method: string, path: string, body: unknown, tsOffset = 0, extra: Record<string, string> = {}) {
   const raw = body === undefined ? "" : JSON.stringify(body);
   const ts = String(Math.floor(Date.now() / 1000) + tsOffset);
   const sig = await maker.signMessage({ message: await signedMessage(method, path, maker.address, ts, raw) });
   return SELF.fetch(BASE + path, {
     method,
-    headers: { "content-type": "application/json", "x-maker-address": maker.address, "x-timestamp": ts, "x-signature": sig },
+    headers: { "content-type": "application/json", "x-maker-address": maker.address, "x-timestamp": ts, "x-signature": sig, ...extra },
     body: raw || undefined,
   });
 }

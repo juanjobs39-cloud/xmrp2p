@@ -42,6 +42,19 @@ export const openapi = {
         responses: { "201": { description: "Sala creada y respuesta del maker" }, "409": { description: "El maker rechazó" }, "503": { description: "Maker desconectado" } },
       },
     },
+    "/v1/price": {
+      get: {
+        summary: "Precio de referencia XMR/USDT (mediana de Kraken, CoinGecko y KuCoin; caché de 60 s)",
+        responses: { "200": { description: "{ price, sources, at }" }, "503": { description: "Fuentes insuficientes o divergentes" } },
+      },
+    },
+    "/v1/makers/ws-ticket": {
+      post: {
+        summary: "Ticket de un solo uso (60 s) para abrir el buzón del maker desde un navegador: wss://…/v1/makers/inbox?maker=…&ticket=…",
+        security: [{ makerSignature: [] }],
+        responses: { "200": { description: "{ ticket, expires_in }" }, "401": { description: "Firma inválida" } },
+      },
+    },
     "/v1/swaps/{room}/events": { get: { summary: "Mensajes de la sala (token del taker)", responses: { "200": { description: "Mensajes" } } } },
     "/mcp": { post: { summary: "Servidor MCP de solo lectura (JSON-RPC 2.0)", responses: { "200": { description: "Respuesta JSON-RPC" } } } },
   },

@@ -1,7 +1,9 @@
 import { DurableObject } from "cloudflare:workers";
 import type { Env } from "../api/env";
 
-type Pending = { resolve: (v: { ok: boolean; result?: unknown; error?: string }) => void; timer: ReturnType<typeof setTimeout> };
+const TICKET_TTL_MS = 60_000;
+
+type Pending ={ resolve: (v: { ok: boolean; result?: unknown; error?: string }) => void; timer: ReturnType<typeof setTimeout> };
 
 /**
  * Buzón de un maker (uno por dirección EVM). El daemon del maker mantiene un WebSocket abierto
@@ -17,8 +19,22 @@ export class MakerInbox extends DurableObject<Env> {
 
   async fetch(req: Request): Promise<Response> {
     const url = new URL(req.url);
-    if (url.pathname === "/connect") {
+    if (url.pathname === "/ticket" && req.method === "POST") {
+      // Ticket de un solo uso para abrir el WebSocket desde un navegador (que no puede firmar cabeceras).
       const maker = req.headers.get("x-verified-maker");
+      if (!maker) return new Response("sin autenticar", { status: 401 });
+      const ticket = [...crypto.getRandomValues(new Uint8Array(24))].map((b) => b.toString(16).padStart(2, "0")).join("");
+      await this.ctx.storage.put(`ticket:${ticket}`, { maker, exp: Date.now() + TICKET_TTL_MS });
+      return Response.json({ ticket, expires_in: TICKET_TTL_MS / 1000 });
+    }
+    if (url.pathname === "/connect") {
+      let maker = req.headers.get("x-verified-maker");
+      const ticket = url.searchParams.get("ticket");
+      if (!maker && ticket && /^[0-9a-f]{48}$/.test(ticket)) {
+        const t = await this.ctx.storage.get<{ maker: string; exp: number }>(`ticket:${ticket}`);
+        await this.ctx.storage.delete(`ticket:${ticket}`);
+        if (t && t.exp > Date.now()) maker = t.maker;
+      }
       if (!maker) return new Response("sin autenticar", { status: 401 });
       const pair = new WebSocketPair();
       // Una sola conexión activa por maker: la nueva reemplaza a la anterior.

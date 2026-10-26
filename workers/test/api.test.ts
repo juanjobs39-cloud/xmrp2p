@@ -215,3 +215,46 @@ describe("compatibilidad de firma Python → Worker", () => {
     await expect(verifyMaker(req, v.path!, v.body! + " ", 1_800_000_000)).rejects.toThrow(/firma inválida/);
   });
 });
+
+describe("buzón desde el navegador (ticket de un solo uso)", () => {
+  // IP propia para no compartir el límite de escrituras con las demás pruebas.
+  const ip = { "cf-connecting-ip": "203.0.113.7" };
+  const openWithTicket = (maker: string, ticket: string) =>
+    get(`/v1/makers/inbox?maker=${maker}&ticket=${ticket}`, { headers: { upgrade: "websocket", ...ip } });
+
+  it("un ticket firmado abre el WebSocket una sola vez", async () => {
+    const m = newMaker();
+    const r = await signed(m, "POST", "/v1/makers/ws-ticket", undefined, 0, ip);
+    expect(r.status).toBe(200);
+    const { ticket, expires_in } = (await r.json()) as { ticket: string; expires_in: number };
+    expect(ticket).toMatch(/^[0-9a-f]{48}$/);
+    expect(expires_in).toBe(60);
+    const ok = await openWithTicket(m.address.toLowerCase(), ticket);
+    expect(ok.status).toBe(101);
+    ok.webSocket!.accept();
+    // El mismo ticket ya no sirve.
+    expect((await openWithTicket(m.address.toLowerCase(), ticket)).status).toBe(401);
+    ok.webSocket!.close();
+  });
+
+  it("un ticket no sirve para otro maker ni sin firma", async () => {
+    const m = newMaker();
+    const other = newMaker();
+    const { ticket } = (await (await signed(m, "POST", "/v1/makers/ws-ticket", undefined, 0, ip)).json()) as { ticket: string };
+    expect((await openWithTicket(other.address.toLowerCase(), ticket)).status).toBe(401);
+    expect((await openWithTicket(m.address.toLowerCase(), "ab".repeat(24))).status).toBe(401);
+    expect((await get("/v1/makers/ws-ticket", { method: "POST", headers: ip })).status).toBe(401);
+  });
+});
+
+describe("precio de referencia", () => {
+  it("mediana, mínimo de fuentes y divergencia", async () => {
+    const { aggregate, median } = await import("../src/api/price");
+    expect(median([3, 1, 2])).toBe(2);
+    expect(median([1, 2, 3, 4])).toBe(2.5);
+    expect(aggregate({ kraken: 600, coingecko: 601, kucoin: 599 }).price).toBe(600);
+    expect(() => aggregate({ kraken: 600 })).toThrow(/fuentes/);
+    expect(() => aggregate({ kraken: 600, coingecko: 600, kucoin: 700 })).toThrow(/divergentes/);
+    expect(aggregate({ kraken: 600, coingecko: Number.NaN, kucoin: 602 }).price).toBe(601);
+  });
+});

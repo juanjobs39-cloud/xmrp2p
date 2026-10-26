@@ -3,6 +3,7 @@ import { activeNetworks, blockedRegion, clientIp, Env, HttpError, json, requireN
 import { handleMcp } from "./mcp";
 import { bestQuote, handleOffers } from "./offers";
 import { openapi } from "./openapi";
+import { referencePrice } from "./price";
 import { createSwap, roomRequest } from "./swaps";
 
 export { MakerInbox } from "../do/MakerInbox";
@@ -51,13 +52,24 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (p === "/v1/swaps" && req.method === "POST") return createSwap(req, env);
   const room = /^\/v1\/swaps\/([^/]+)\/(events|messages|ws)$/.exec(p);
   if (room) return roomRequest(req, env, room[1]!, room[2]!);
-  if (p === "/v1/makers/inbox" && req.headers.get("upgrade") === "websocket") {
-    // La firma cubre GET /v1/makers/inbox con cuerpo vacío.
-    const maker = await verifyMaker(req, p, "");
-    const headers = new Headers(req.headers);
-    headers.set("x-verified-maker", maker);
+  if (p === "/v1/price" && req.method === "GET") return json(await referencePrice());
+  if (p === "/v1/makers/ws-ticket" && req.method === "POST") {
+    const body = await req.text();
+    const maker = await verifyMaker(req, p, body);
     const inbox = env.MAKER_INBOX.get(env.MAKER_INBOX.idFromName(maker));
-    return inbox.fetch("https://inbox/connect", { headers });
+    return inbox.fetch("https://inbox/ticket", { method: "POST", headers: { "x-verified-maker": maker } });
+  }
+  if (p === "/v1/makers/inbox" && req.headers.get("upgrade") === "websocket") {
+    const headers = new Headers(req.headers);
+    headers.delete("x-verified-maker");
+    const ticket = url.searchParams.get("ticket");
+    const viaTicket = !req.headers.get("x-signature") && ticket;
+    // Daemon: la firma cubre GET /v1/makers/inbox con cuerpo vacío. Navegador: ?maker=…&ticket=… (un solo uso).
+    const maker = viaTicket ? (url.searchParams.get("maker") ?? "").toLowerCase() : await verifyMaker(req, p, "");
+    if (viaTicket && !/^0x[0-9a-f]{40}$/.test(maker)) throw new HttpError(400, "parámetro maker inválido");
+    if (!viaTicket) headers.set("x-verified-maker", maker);
+    const inbox = env.MAKER_INBOX.get(env.MAKER_INBOX.idFromName(maker));
+    return inbox.fetch(`https://inbox/connect${viaTicket ? `?ticket=${encodeURIComponent(ticket!)}` : ""}`, { headers });
   }
   if (p === "/mcp") return handleMcp(req, env);
   throw new HttpError(404, "ruta no encontrada");
