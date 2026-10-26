@@ -528,13 +528,15 @@ export class MakerApp {
   /** Espera a MetaMask con un límite: si la ventana nunca aparece, la página no se queda trabada. */
   private async mm<T>(p: Promise<T>, step: MKey): Promise<T> {
     const box = $("mk-mm");
-    box.textContent = this.t(step);
+    const netName = this.net.name.replace(" (testnet)", "");
+    box.textContent = this.t(step, { net: netName });
     box.hidden = false;
+    console.info("[maker] esperando a MetaMask:", step);
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       return await Promise.race([
         p,
-        new Promise<never>((_, rej) => (timer = setTimeout(() => rej(new Error(this.t("mm_timeout", { addr: this.chain?.address ?? "" }))), 180_000))),
+        new Promise<never>((_, rej) => (timer = setTimeout(() => rej(new Error(this.t("mm_timeout", { addr: this.chain?.address ?? "", net: netName }))), 180_000))),
       ]);
     } finally {
       clearTimeout(timer);
@@ -542,8 +544,24 @@ export class MakerApp {
     }
   }
 
+  /**
+   * Proveedor de MetaMask. Con varias extensiones de wallet instaladas, `window.ethereum` puede ser
+   * otra; por eso se pide la lista (EIP-6963) y se prefiere MetaMask por su identificador.
+   */
+  private async provider(): Promise<Eip1193 | null> {
+    const found: { info: { rdns: string; name: string }; provider: Eip1193 }[] = [];
+    const on = (e: Event) => found.push((e as CustomEvent).detail);
+    window.addEventListener("eip6963:announceProvider", on);
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+    await new Promise((r) => setTimeout(r, 300));
+    window.removeEventListener("eip6963:announceProvider", on);
+    const mm = found.find((p) => p.info?.rdns === "io.metamask") ?? found[0];
+    if (mm) console.info("[maker] wallet:", mm.info?.name, "de", found.map((p) => p.info?.name).join(", "));
+    return mm?.provider ?? (globalThis as { ethereum?: Eip1193 }).ethereum ?? null;
+  }
+
   private async metamask(): Promise<{ eth: Eip1193; from: Address }> {
-    const eth = (globalThis as { ethereum?: Eip1193 }).ethereum;
+    const eth = await this.provider();
     if (!eth) throw new Error(this.t("no_metamask"));
     const [from] = (await this.mm(eth.request({ method: "eth_requestAccounts" }), "mm_connect")) as Address[];
     const net = this.net;
@@ -574,6 +592,7 @@ export class MakerApp {
     const { eth, from } = await this.metamask();
     const value = parseEther(GAS_TOPUP);
     const fees = await this.chain!.topUpParams(from, value);
+    console.info("[maker] recarga de gas", { from, to: this.chain!.address, ...fees });
     const tx = (await this.mm(
       eth.request({ method: "eth_sendTransaction", params: [{ from, to: this.chain!.address, value: toHex(value), ...fees }] }),
       "mm_send",
