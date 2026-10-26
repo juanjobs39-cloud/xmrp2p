@@ -1,6 +1,46 @@
-# Lista obligatoria antes de mainnet
+# Mainnet: beta con dinero real y lista para la versión completa
 
-> Nada se despliega en una red principal hasta que **todas** las casillas estén marcadas y el dueño lo apruebe por escrito.
+## Decisión del dueño (26 de octubre de 2026)
+
+> «NECESITO QUE YA FUNCIONE, DESPUES VEMOS LO DEMAS TOPE 100 USDT POR COMPRA QUE QUEDE LIBRE PARA REGISTRO DE MARKERS»
+
+El dueño no tiene capital para la auditoría externa y decidió lanzar **una beta con dinero real sin auditoría**, con estas condiciones:
+
+| Condición | Cómo se cumple |
+|---|---|
+| Solo Arbitrum One + Monero mainnet | `Deploy.s.sol` bloquea las demás redes principales |
+| Tope de 100 USDT por swap | `MAX_AMOUNT` inmutable en la fábrica (el contrato revierte con `AmountTooHigh`), y también en la API, la web y los dos makers |
+| Makers libres | Cualquiera publica ofertas firmadas, sin registro |
+| Avisos claros | Insignia «Dinero real · beta» y aviso de «sin auditoría externa» en la portada, la app y el maker |
+| Práctica separada | Testnet sigue disponible; bóvedas del maker separadas por red |
+
+**Revisión gratuita hecha en lugar de la auditoría (26-oct):**
+- 122 pruebas en verde, más una corrida larga: 20 000 casos por prueba de fuzz y 100 000 llamadas en las invariantes.
+- Fork contra USD₮0 real en verde.
+- Slither sin hallazgos nuevos.
+
+**La auditoría externa sigue pendiente:** antes de subir el tope o abrir otras redes, completar la lista de abajo.
+
+## Desplegar la fábrica en Arbitrum One (lo corre el dueño)
+
+La llave con dinero real **nunca** la maneja nadie más. Necesitas ~0,003 ETH en Arbitrum One en la cuenta que despliega.
+
+```bash
+# 1. Importar tu cuenta a Foundry (te pide la llave privada y una contraseña; queda cifrada en tu PC)
+cast wallet import mainnet-deployer --interactive
+
+# 2. Desplegar (cambia FEE_RECIPIENT por tu dirección que cobra la comisión)
+cd contracts
+FEE_RECIPIENT=0xTU_DIRECCION TOKEN=0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9 MAX_AMOUNT=100000000 FEE_BPS=50 I_ACCEPT_MAINNET=yes forge script script/Deploy.s.sol --rpc-url https://arb1.arbitrum.io/rpc --account mainnet-deployer --broadcast
+```
+
+Con wallet de hardware: cambia `--account mainnet-deployer` por `--ledger`. Pasa la dirección `SwapFactory` que imprime y yo activo el resto: backend, web, proxy de Monero mainnet y alertas.
+
+---
+
+# Lista obligatoria para la versión completa (sin tope)
+
+> Para subir el tope o abrir otras redes, **todas** las casillas deben estar marcadas y el dueño debe aprobarlo por escrito.
 
 ## Seguridad
 
