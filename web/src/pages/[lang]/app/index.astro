@@ -123,11 +123,13 @@ const softwareLd = {
 
     <section id="step-restore" data-step hidden>
       <h2>{t("Reanudar un swap", "Resume a swap")}</h2>
+      <p id="saved-note" class="notice warn"></p>
       <form id="form-restore" class="app">
         <label>{t("Archivo de recuperación (opcional si es este navegador)", "Recovery file (optional on this browser)")}<input id="restore-file" type="file" accept=".json,application/json" /></label>
         <label>{t("Contraseña", "Password")}<input id="restore-pass" type="password" required autocomplete="current-password" /></label>
         <button class="btn" type="submit">{t("Reanudar", "Resume")}</button>
       </form>
+      <p><button class="btn secondary" id="btn-discard" type="button">{t("Descartar el swap guardado", "Discard the saved swap")}</button></p>
     </section>
     <p><a href="#step-restore" id="link-restore">{t("¿Tienes un archivo de recuperación? Reanudar", "Have a recovery file? Resume")}</a></p>
     <noscript><p class="notice danger">{t("La app necesita JavaScript. El resto del sitio funciona sin él.", "The app needs JavaScript. The rest of the site works without it.")}</p></noscript>

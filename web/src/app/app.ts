@@ -117,7 +117,24 @@ export class SwapApp {
         e.returnValue = "";
       }
     });
-    if (localStorage.getItem(STORAGE_KEY)) this.show("step-restore");
+    // Un swap guardado no debe bloquear uno nuevo: se muestra el aviso de reanudar junto al formulario.
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      let deposited = false;
+      try {
+        deposited = !!(JSON.parse(saved) as RecoveryFile).hint?.escrow;
+      } catch {
+        /* archivo ilegible: se puede descartar */
+      }
+      $("step-restore").hidden = false;
+      $("saved-note").textContent = t(this.lang, deposited ? "saved_with_deposit" : "saved_without_deposit");
+      $("btn-discard").addEventListener("click", () => {
+        if (window.confirm(t(this.lang, deposited ? "discard_confirm_deposit" : "discard_confirm"))) {
+          localStorage.removeItem(STORAGE_KEY);
+          $("step-restore").hidden = true;
+        }
+      });
+    }
     await this.loadOffers();
   }
 

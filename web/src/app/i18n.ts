@@ -31,6 +31,10 @@ const S = {
     done_xmr: "¡Listo! Tu XMR fue enviado (tx {tx}). Puede tardar unos minutos en verse en tu wallet.",
     done_refund: "Reembolso completado: tu USDT volvió a tu wallet.",
     no_saved: "No hay un swap guardado en este navegador. Sube tu archivo de recuperación.",
+    saved_without_deposit: "Tienes un swap guardado en este navegador que no llegó a depositarse. Puedes reanudarlo o descartarlo y empezar uno nuevo abajo.",
+    saved_with_deposit: "Tienes un swap guardado CON depósito en este navegador. Reanúdalo para recibir tu XMR o reembolsar tu USDT.",
+    discard_confirm: "¿Descartar el swap guardado? No tiene depósito, así que no pierdes fondos.",
+    discard_confirm_deposit: "Este swap YA tiene un depósito. Si lo descartas y no tienes el archivo de recuperación, podrías perder tus fondos. ¿Descartarlo de todos modos?",
   },
   en: {
     not_deployed: "The contract is not deployed on testnet yet: the app can only be previewed, not complete swaps.",
@@ -62,6 +66,10 @@ const S = {
     done_xmr: "Done! Your XMR was sent (tx {tx}). It may take a few minutes to show in your wallet.",
     done_refund: "Refund complete: your USDT is back in your wallet.",
     no_saved: "There is no swap saved in this browser. Upload your recovery file.",
+    saved_without_deposit: "You have a swap saved in this browser that was never deposited. Resume it or discard it and start a new one below.",
+    saved_with_deposit: "You have a saved swap WITH a deposit in this browser. Resume it to receive your XMR or refund your USDT.",
+    discard_confirm: "Discard the saved swap? It has no deposit, so you lose no funds.",
+    discard_confirm_deposit: "This swap ALREADY has a deposit. If you discard it and do not have the recovery file, you could lose your funds. Discard anyway?",
   },
 } as const;
 
