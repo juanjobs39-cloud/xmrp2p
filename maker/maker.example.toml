@@ -4,8 +4,8 @@
 [maker]
 # Red EVM (solo testnet hasta la auditoría)
 evm_rpc = "https://sepolia-rollup.arbitrum.io/rpc"
-factory = "0x0000000000000000000000000000000000000000"   # SwapFactory desplegada (contracts/README.md)
-token = "0x0000000000000000000000000000000000000000"     # USDT (o TestUSDT) de esa fábrica
+factory = "0x89b330882Ea2a18aF6FE507e5832bB15ccA5542e"   # SwapFactory en Arbitrum Sepolia (docs/DESPLIEGUES.md)
+token = "0x7c08fD8C4E1774f685EA03e6c50Ee9a6B20C8064"     # TestUSDT de esa fábrica
 fee_bps = 50                                              # debe coincidir con la fábrica; el daemon lo comprueba
 
 # Monero
@@ -14,13 +14,13 @@ monero_wallet_rpc = "http://127.0.0.1:38083/json_rpc"     # monero-wallet-rpc lo
 monero_main_wallet = "maker"                              # nombre del archivo de la wallet principal
 
 # Archivos
-db_path = "maker.sqlite3"                                 # estado de los swaps (¡contiene secretos!)
+db_path = "maker.sqlite3"                                 # estado de los swaps (¡contiene secretos! ponlo fuera del repo)
 crypto_bin = "../crypto-wasm/target/release/xmrp2p-crypto-cli"
 # payout_address = "0x..."                                # cobrar el USDT en otra dirección (opcional)
 poll_seconds = 15
 
-# Backend de Cloudflare (Fase 4). Sin esto, `take` es manual.
-# channel_api = "https://xmrp2p-api.<subdominio>.workers.dev"
+# Backend de MoneroP2P. Sin esto no publicas ofertas (`take` queda en modo manual).
+channel_api = "https://api.monerop2p.app"
 evm_network = "arbitrum_sepolia"
 offer_refresh_seconds = 300
 

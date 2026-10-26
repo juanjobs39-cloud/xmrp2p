@@ -1,0 +1,27 @@
+# Unidad systemd para el daemon del maker de MoneroP2P.
+# Instalar:  sudo cp xmrp2p-maker.service /etc/systemd/system/
+#            sudo systemctl daemon-reload && sudo systemctl enable --now xmrp2p-maker
+# Logs:      journalctl -u xmrp2p-maker -f
+[Unit]
+Description=Maker de MoneroP2P (testnet)
+After=network-online.target monero-wallet-rpc.service
+Wants=network-online.target
+Requires=monero-wallet-rpc.service
+
+[Service]
+User=xmrp2p
+Group=xmrp2p
+EnvironmentFile=/etc/xmrp2p/maker.env
+WorkingDirectory=/opt/xmrp2p/repo/maker
+ExecStart=/opt/xmrp2p/repo/maker/.venv/bin/python -m xmrp2p_maker --config /opt/xmrp2p/maker.toml run
+# Si se cae (corte de red, nodo caído), systemd lo reinicia. El daemon reanuda cada swap desde SQLite.
+Restart=always
+RestartSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/xmrp2p
+
+[Install]
+WantedBy=multi-user.target

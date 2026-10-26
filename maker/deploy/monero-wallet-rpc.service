@@ -1,0 +1,33 @@
+# Unidad systemd para monero-wallet-rpc del maker (stagenet).
+# Instalar:  sudo cp monero-wallet-rpc.service /etc/systemd/system/
+#            sudo systemctl daemon-reload && sudo systemctl enable --now monero-wallet-rpc
+# Logs:      journalctl -u monero-wallet-rpc -f
+[Unit]
+Description=monero-wallet-rpc del maker de MoneroP2P (stagenet)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=xmrp2p
+Group=xmrp2p
+EnvironmentFile=/etc/xmrp2p/maker.env
+WorkingDirectory=/opt/xmrp2p
+# La RPC escucha SOLO en 127.0.0.1: nunca la expongas a internet.
+# Cambia el nodo por el tuyo si corres monerod propio (recomendado).
+ExecStart=/opt/monero/monero-wallet-rpc --stagenet \
+  --daemon-address stagenet.xmr-tw.org:38081 --untrusted-daemon \
+  --rpc-bind-ip 127.0.0.1 --rpc-bind-port 38083 \
+  --rpc-login ${MONERO_WALLET_RPC_USER}:${MONERO_WALLET_RPC_PASSWORD} \
+  --wallet-dir /opt/xmrp2p/wallets \
+  --log-file /opt/xmrp2p/wallets/wallet-rpc.log --log-level 0
+Restart=always
+RestartSec=10
+# Endurecimiento básico
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/xmrp2p
+
+[Install]
+WantedBy=multi-user.target
