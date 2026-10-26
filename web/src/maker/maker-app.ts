@@ -111,6 +111,10 @@ export class MakerApp {
     on("mk-btn-withdraw-xmr", "click", () => this.withdrawXmr());
     on("mk-btn-withdraw-gas", "click", () => this.withdrawGas());
     on("mk-btn-wipe", "click", () => this.wipeMaker());
+    on("mk-btn-copy-hot", "click", async () => {
+      await navigator.clipboard.writeText(this.chain?.address ?? "");
+      this.status(this.t("copied"));
+    });
     on("mk-btn-copy", "click", async () => {
       await navigator.clipboard.writeText(this.wallet?.address ?? "");
       this.status(this.t("copied"));
@@ -519,19 +523,42 @@ export class MakerApp {
 
   // ------------------------------------------------------------------ gas, cobro y retiros
 
+  /** Espera a MetaMask con un límite: si la ventana nunca aparece, la página no se queda trabada. */
+  private async mm<T>(p: Promise<T>, step: MKey): Promise<T> {
+    const box = $("mk-mm");
+    box.textContent = this.t(step);
+    box.hidden = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        p,
+        new Promise<never>((_, rej) => (timer = setTimeout(() => rej(new Error(this.t("mm_timeout", { addr: this.chain?.address ?? "" }))), 180_000))),
+      ]);
+    } finally {
+      clearTimeout(timer);
+      box.hidden = true;
+    }
+  }
+
   private async metamask(): Promise<{ eth: Eip1193; from: Address }> {
     const eth = (globalThis as { ethereum?: Eip1193 }).ethereum;
     if (!eth) throw new Error(this.t("no_metamask"));
-    const [from] = (await eth.request({ method: "eth_requestAccounts" })) as Address[];
+    const [from] = (await this.mm(eth.request({ method: "eth_requestAccounts" }), "mm_connect")) as Address[];
     const net = NETWORKS[NET_ID]!;
     const chainId = toHex(net.chainId);
-    try {
-      await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId }] });
-    } catch {
-      await eth.request({
-        method: "wallet_addEthereumChain",
-        params: [{ chainId, chainName: net.name, nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: [net.rpc], blockExplorerUrls: [net.explorer] }],
-      });
+    if ((await eth.request({ method: "eth_chainId" })) !== chainId) {
+      try {
+        await this.mm(eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId }] }), "mm_network");
+      } catch (e) {
+        if ((e as { code?: number }).code !== 4902) throw e;
+        await this.mm(
+          eth.request({
+            method: "wallet_addEthereumChain",
+            params: [{ chainId, chainName: net.name, nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: [net.rpc], blockExplorerUrls: [net.explorer] }],
+          }),
+          "mm_network",
+        );
+      }
     }
     return { eth, from: getAddress(from!) };
   }
@@ -543,8 +570,18 @@ export class MakerApp {
 
   private async topUpGas(): Promise<void> {
     const { eth, from } = await this.metamask();
-    await eth.request({ method: "eth_sendTransaction", params: [{ from, to: this.chain!.address, value: toHex(parseEther(GAS_TOPUP)) }] });
+    const value = parseEther(GAS_TOPUP);
+    const fees = await this.chain!.topUpParams(from, value);
+    const tx = (await this.mm(
+      eth.request({ method: "eth_sendTransaction", params: [{ from, to: this.chain!.address, value: toHex(value), ...fees }] }),
+      "mm_send",
+    )) as Hex;
     this.note(this.t("log_gas_sent"));
+    this.status(this.t("gas_waiting"));
+    await this.chain!.pub.waitForTransactionReceipt({ hash: tx });
+    this.gas = await this.chain!.gas();
+    this.status("");
+    this.render();
   }
 
   private async withdrawXmr(): Promise<void> {

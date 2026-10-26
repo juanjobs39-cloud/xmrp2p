@@ -102,7 +102,7 @@ body.busy .btn:not(.loading) { opacity: 0.6; pointer-events: none; }
 .row select { flex: 1; }
 .skeleton { color: transparent !important; background: linear-gradient(90deg, var(--line) 25%, var(--card) 50%, var(--line) 75%) 0 0 / 200% 100% !important; animation: shimmer 1.2s linear infinite; }
 #status { color: var(--muted); min-height: 1.5em; }
-#wallet-step { font-weight: 600; border-left: 4px solid var(--accent); background: var(--card); border-top: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+#wallet-step, #mk-mm { font-weight: 600; border-left: 4px solid var(--accent); background: var(--card); border-top: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .notice[data-kind="warn"] { background: var(--warn-bg); color: var(--warn-fg); }
 .notice[data-kind="danger"] { background: var(--danger-bg); color: var(--danger-fg); }
 .badge { display: inline-block; vertical-align: middle; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.2rem 0.55rem; border-radius: 999px; background: var(--warn-bg); color: var(--warn-fg); }

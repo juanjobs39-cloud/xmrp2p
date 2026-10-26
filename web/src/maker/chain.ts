@@ -91,6 +91,18 @@ export class MakerChain {
     return hash;
   }
 
+  /**
+   * Parámetros para que MetaMask envíe ETH a esta cuenta sin tener que estimar: gas +30 % y comisión
+   * con margen (MetaMask a veces fija maxFeePerGas en la base exacta y Arbitrum rechaza la tx).
+   */
+  async topUpParams(from: Address, value: bigint): Promise<{ gas: Hex; maxFeePerGas: Hex; maxPriorityFeePerGas: Hex }> {
+    const block = await this.pub.getBlock();
+    const base = block.baseFeePerGas ?? (await this.pub.getGasPrice());
+    const gas = ((await this.pub.estimateGas({ account: from, to: this.address, value })) * 13n) / 10n;
+    const hex = (n: bigint) => `0x${n.toString(16)}` as Hex;
+    return { gas: hex(gas), maxFeePerGas: hex(base * 3n + 1_000_000n), maxPriorityFeePerGas: "0x0" };
+  }
+
   /** Devuelve el ETH de gas sobrante a otra dirección (retiro del maker). */
   async withdrawGas(to: Address): Promise<Hex | null> {
     const bal = await this.gas();

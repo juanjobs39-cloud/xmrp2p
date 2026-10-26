@@ -53,6 +53,7 @@ const csp = [
     )} <a href={ROUTES.maker[lang]}>{t("Ver las opciones", "See the options")}</a></p>
     <div id="mk-banner" class="notice" hidden role="alert"></div>
     <p id="mk-status" class="meta" aria-live="polite"></p>
+    <p id="mk-mm" class="notice" hidden aria-live="polite"></p>
 
     <section id="mk-setup" data-mk hidden class="panel">
       <h2>{t("1. Crea tu maker", "1. Create your maker")}</h2>
@@ -129,7 +130,8 @@ const csp = [
       </div>
       <h3>{t("Deposita XMR en tu maker", "Deposit XMR into your maker")}</h3>
       <p class="addr"><code id="mk-address"></code> <button class="btn secondary small" id="mk-btn-copy" type="button">{t("Copiar", "Copy")}</button></p>
-      <p class="meta">{t("Cobro de USDT", "USDT payout")}: <code id="mk-payout-show"></code> · {t("Cuenta que cobra (gas)", "Claiming account (gas)")}: <code id="mk-hot"></code></p>
+      <p class="meta">{t("Cobro de USDT", "USDT payout")}: <code id="mk-payout-show"></code> · {t("Cuenta que cobra (gas)", "Claiming account (gas)")}: <code id="mk-hot"></code> <button class="btn secondary small" id="mk-btn-copy-hot" type="button">{t("Copiar", "Copy")}</button></p>
+      <p class="meta">{t("También puedes recargar el gas enviando ETH de Arbitrum Sepolia a esa cuenta desde cualquier wallet.", "You can also top up gas by sending Arbitrum Sepolia ETH to that account from any wallet.")}</p>
 
       <h3>{t("Swaps", "Swaps")}</h3>
       <div class="table-wrap">
