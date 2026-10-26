@@ -7,6 +7,7 @@ export function getStaticPaths() {
 }
 const lang = Astro.params.lang as Lang;
 const t = (es: string, en: string) => (lang === "es" ? es : en);
+const factory = import.meta.env.PUBLIC_ARBITRUM_SEPOLIA_FACTORY ?? "";
 
 // CSP estricta: solo código propio. 'wasm-unsafe-eval' es necesario para WebAssembly
 // (núcleo cripto y monero-ts); no habilita eval de JavaScript.
@@ -49,13 +50,26 @@ const softwareLd = {
   jsonLd={[softwareLd]}
 >
   <main id="contenido" class="prose" data-lang={lang}>
-    <h1>{t("Cambiar USDT por XMR", "Swap USDT for XMR")}</h1>
+    <h1>{t("Cambiar USDT por XMR", "Swap USDT for XMR")} <span class="badge">Testnet</span></h1>
     <p class="notice warn">
       {t(
         "Versión de prueba: solo testnet (Arbitrum Sepolia + Monero stagenet). No uses fondos reales.",
         "Preview: testnet only (Arbitrum Sepolia + Monero stagenet). Do not use real funds.",
       )}
     </p>
+    <ul class="trust">
+      <li><strong>{t("Sin custodia", "Non-custodial")}</strong> {t("Tus llaves se generan y se quedan en tu navegador.", "Your keys are created and stay in your browser.")}</li>
+      <li><strong>{t("Contrato público", "Public contract")}</strong> <a href={`https://sepolia.arbiscan.io/address/${factory}`} rel="noopener">{t("Ver en Arbiscan", "View on Arbiscan")}</a></li>
+      <li><strong>{t("Código abierto", "Open source")}</strong> <a href={SITE.repo} rel="noopener">AGPL-3.0</a></li>
+      <li><strong>{t("Comisión 0,5 %", "0.5% fee")}</strong> {t("La paga el maker al cobrar; tú solo pagas el gas.", "Paid by the maker on claim; you only pay gas.")}</li>
+    </ul>
+    <ol id="stepper" class="stepper" aria-label={t("Etapas del swap", "Swap stages")}>
+      <li data-stage="step-start">{t("Oferta", "Offer")}</li>
+      <li data-stage="step-recovery">{t("Respaldo", "Backup")}</li>
+      <li data-stage="step-deposit">{t("Depósito", "Deposit")}</li>
+      <li data-stage="step-progress">{t("Seguimiento", "Progress")}</li>
+      <li data-stage="done">{t("Listo", "Done")}</li>
+    </ol>
     <p class="notice danger">
       {t(
         "No cierres esta pestaña hasta terminar. Si se cierra, vuelve con tu archivo de recuperación: sin él no podrás reclamar el XMR ni reembolsar el USDT. Un swap tarda normalmente entre 30 y 60 minutos.",
@@ -69,7 +83,9 @@ const softwareLd = {
     <section id="step-start" data-step>
       <h2>{t("1. Elige oferta y monto", "1. Pick an offer and amount")}</h2>
       <form id="form-start" class="app">
-        <label>{t("Oferta", "Offer")}<select id="offer" required></select></label>
+        <label>{t("Oferta", "Offer")}
+          <span class="row"><select id="offer" required></select><button class="btn secondary small" id="btn-offers" type="button">{t("Actualizar", "Refresh")}</button></span>
+        </label>
         <label>{t("Monto en USDT", "Amount in USDT")}<input id="usdt" type="text" inputmode="decimal" required placeholder="100" /></label>
         <label>
           {t("Tu dirección de Monero (stagenet)", "Your Monero address (stagenet)")}

@@ -45,6 +45,13 @@ const S = {
     step_send: "MetaMask te pedirá confirmar la transacción. Puede tardar en aparecer; si no ves la ventana, da clic en el ícono de MetaMask.",
     step_mining: "Transacción enviada; esperando que la red la confirme.",
     step_more: "Después viene otra confirmación.",
+    loading: "Procesando…",
+    loading_request: "Pidiendo el swap…",
+    loading_wallet: "Esperando a tu wallet…",
+    loading_offers: "Cargando ofertas…",
+    offer_gone: "Esa oferta ya no está disponible. Elige otra de la lista actualizada.",
+    amount_range: "El monto debe estar entre {min} y {max} USDT para esta oferta.",
+    action_needed: "Acción requerida",
   },
   en: {
     not_deployed: "The contract is not deployed on testnet yet: the app can only be previewed, not complete swaps.",
@@ -90,6 +97,13 @@ const S = {
     step_send: "MetaMask will ask you to confirm the transaction. It may take a while to appear; if you do not see the window, click the MetaMask icon.",
     step_mining: "Transaction sent; waiting for the network to confirm it.",
     step_more: "Another confirmation comes next.",
+    loading: "Processing…",
+    loading_request: "Requesting the swap…",
+    loading_wallet: "Waiting for your wallet…",
+    loading_offers: "Loading offers…",
+    offer_gone: "That offer is no longer available. Pick another one from the updated list.",
+    amount_range: "The amount must be between {min} and {max} USDT for this offer.",
+    action_needed: "Action required",
   },
 } as const;
 

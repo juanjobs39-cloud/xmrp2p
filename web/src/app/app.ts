@@ -10,6 +10,7 @@ import { decide, type Action, type XmrCheck } from "./decide";
 import { Evm, type WalletStep } from "./evm";
 import { t, type Key, type Lang } from "./i18n";
 import { decryptRecovery, encryptRecovery, recoveryFilename, type RecoveryFile } from "./recovery";
+import { attention, setStage, startLoading, type Stage } from "./ui";
 
 interface PublicMessage {
   spend_public_ed25519: string;
@@ -106,11 +107,15 @@ export class SwapApp {
     const net = NETWORKS.arbitrum_sepolia!;
     if (!isDeployed(net)) this.banner(t(this.lang, "not_deployed"), "warn");
     $<HTMLInputElement>("node").value = MONERO.defaultNode;
-    $("form-start").addEventListener("submit", (e) => (e.preventDefault(), this.guard(() => this.start())));
-    $("btn-recovery").addEventListener("click", () => this.guard(() => this.downloadRecovery()));
-    $("btn-deposit").addEventListener("click", () => this.guard(() => this.deposit()));
-    $("btn-action").addEventListener("click", () => this.guard(() => this.runAction()));
-    $("form-restore").addEventListener("submit", (e) => (e.preventDefault(), this.guard(() => this.restore())));
+    // Cada acción desactiva su botón y muestra un spinner mientras corre: un segundo clic no hace nada.
+    const submitter = (e: Event) => (e as SubmitEvent).submitter;
+    $("form-start").addEventListener("submit", (e) => (e.preventDefault(), this.guard(() => this.start(), submitter(e), "loading_request")));
+    $("btn-recovery").addEventListener("click", (e) => this.guard(() => this.downloadRecovery(), e.currentTarget as Element));
+    $("btn-deposit").addEventListener("click", (e) => this.guard(() => this.deposit(), e.currentTarget as Element, "loading_wallet"));
+    $("btn-action").addEventListener("click", (e) => this.guard(() => this.runAction(), e.currentTarget as Element, "loading_wallet"));
+    $("form-restore").addEventListener("submit", (e) => (e.preventDefault(), this.guard(() => this.restore(), submitter(e))));
+    $("btn-offers").addEventListener("click", (e) => this.guard(() => this.loadOffers(), e.currentTarget as Element, "loading_offers"));
+    setStage("step-start");
     window.addEventListener("beforeunload", (e) => {
       if (this.state && !this.finished()) {
         e.preventDefault();
@@ -138,8 +143,12 @@ export class SwapApp {
     await this.loadOffers();
   }
 
-  private async loadOffers(): Promise<void> {
+  private async loadOffers(): Promise<Offer[]> {
     const sel = $<HTMLSelectElement>("offer");
+    const keep = sel.value;
+    sel.disabled = true;
+    sel.classList.add("skeleton");
+    if (!sel.options.length) sel.append(new Option(t(this.lang, "loading_offers")));
     try {
       const offers = await api.offers("arbitrum_sepolia");
       sel.innerHTML = "";
@@ -150,9 +159,18 @@ export class SwapApp {
         opt.dataset.offer = JSON.stringify(o);
         sel.append(opt);
       }
-      if (!offers.length) this.banner(t(this.lang, "no_offers"), "warn");
+      if (offers.some((o) => o.id === keep)) sel.value = keep;
+      if (!offers.length) {
+        sel.append(new Option(t(this.lang, "no_offers"), ""));
+        this.banner(t(this.lang, "no_offers"), "warn");
+      }
+      return offers;
     } catch (e) {
       this.banner(`${t(this.lang, "backend_error")}: ${(e as Error).message}`, "warn");
+      return [];
+    } finally {
+      sel.disabled = false;
+      sel.classList.remove("skeleton");
     }
   }
 
@@ -165,13 +183,20 @@ export class SwapApp {
     const node = $<HTMLInputElement>("node").value.trim();
     const opt = $<HTMLSelectElement>("offer").selectedOptions[0];
     if (!opt?.dataset.offer) throw new Error(t(this.lang, "pick_offer"));
-    const offer = JSON.parse(opt.dataset.offer) as Offer;
+    const chosen = JSON.parse(opt.dataset.offer) as Offer;
     if (!/^\d+(\.\d{1,6})?$/.test(usdt)) throw new Error(t(this.lang, "bad_amount"));
     if (!MONERO.addressPrefixes.includes(destination[0] ?? "") || !/^[1-9A-HJ-NP-Za-km-z]{95}$/.test(destination)) {
       throw new Error(t(this.lang, "bad_address"));
     }
     if (pass.length < 10) throw new Error(t(this.lang, "short_pass"));
     if (!node) throw new Error(t(this.lang, "need_node"));
+    // Recargar las ofertas justo antes de pedir el swap: la elegida pudo vencer mientras se llenaba el formulario.
+    this.status(t(this.lang, "loading_offers"));
+    const offer = (await this.loadOffers()).find((o) => o.id === chosen.id);
+    if (!offer) throw new Error(t(this.lang, "offer_gone"));
+    if (Number(usdt) < Number(offer.min_usdt) || Number(usdt) > Number(offer.max_usdt)) {
+      throw new Error(t(this.lang, "amount_range", { min: offer.min_usdt, max: offer.max_usdt }));
+    }
     this.passphrase = pass;
 
     const c = await cryptoLib();
@@ -340,7 +365,14 @@ export class SwapApp {
   private renderAction(a: Action, t0: number, t1: number, now: number): void {
     const btn = $<HTMLButtonElement>("btn-action");
     const msg = $("action-text");
-    btn.hidden = true;
+    const loading = btn.classList.contains("loading");
+    if (!loading) btn.hidden = true;
+    const label = (k: Key) => {
+      if (!loading) btn.textContent = t(this.lang, k);
+      btn.hidden = false;
+    };
+    this.needsUser(a.kind === "set_ready" || a.kind === "refund_now");
+    if ((a.kind === "sweep" && this.state?.sweep_txids) || a.kind === "done_refunded") setStage("done");
     const mins = (x: number) => Math.max(0, Math.round((x - now) / 60));
     $("timeline").textContent = t(this.lang, "timeline", { t0: mins(t0), t1: mins(t1) });
     switch (a.kind) {
@@ -349,13 +381,11 @@ export class SwapApp {
         break;
       case "set_ready":
         msg.textContent = t(this.lang, "xmr_ok");
-        btn.textContent = t(this.lang, "btn_ready");
-        btn.hidden = false;
+        label("btn_ready");
         break;
       case "refund_now":
         msg.textContent = `${a.urgent ? "⚠️ " : ""}${t(this.lang, "refund")} (${a.reason})`;
-        btn.textContent = t(this.lang, "btn_refund");
-        btn.hidden = false;
+        label("btn_refund");
         if (a.urgent) this.banner(t(this.lang, "refund_urgent"), "danger");
         break;
       case "wait_claim":
@@ -414,15 +444,19 @@ export class SwapApp {
     return this.state;
   }
 
-  private async guard(fn: () => Promise<void>): Promise<void> {
+  /** Ejecuta una acción del usuario: una a la vez, con su botón en estado de carga. */
+  private async guard(fn: () => Promise<unknown>, el?: Element | null, label: Key = "loading"): Promise<void> {
     if (this.busy) return;
     this.busy = true;
+    $("banner").hidden = true;
     document.body.classList.add("busy");
+    const stop = startLoading(el, t(this.lang, label));
     try {
       await fn();
     } catch (e) {
       this.banner((e as Error).message, "danger");
     } finally {
+      stop();
       this.busy = false;
       document.body.classList.remove("busy");
     }
@@ -430,7 +464,20 @@ export class SwapApp {
 
   private show(id: string): void {
     for (const el of document.querySelectorAll<HTMLElement>("[data-step]")) el.hidden = el.id !== id;
-    $(id).scrollIntoView({ block: "start" });
+    if (id !== "step-restore") setStage(id as Stage);
+    $(id).scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+
+  private stopAttention: (() => void) | null = null;
+
+  /** Resalta la acción y avisa (título + pitido) cuando el swap espera un clic del usuario. */
+  private needsUser(on: boolean): void {
+    $("step-progress").classList.toggle("attention", on);
+    if (on && !this.stopAttention) this.stopAttention = attention(t(this.lang, "action_needed"));
+    if (!on && this.stopAttention) {
+      this.stopAttention();
+      this.stopAttention = null;
+    }
   }
 
   private makeEvm(net: ConstructorParameters<typeof Evm>[0]): Evm {
