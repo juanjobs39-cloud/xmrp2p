@@ -282,6 +282,7 @@ export class MakerApp {
       this.priceAt = Date.now();
     } catch (e) {
       this.price = null;
+      this.priceAt = Date.now() - 30_000; // reintentar en ~30 s
       this.note(`${this.t("no_price")}: ${(e as Error).message}`);
     }
   }
@@ -611,6 +612,10 @@ export class MakerApp {
       const mine = (this.price * (10_000 + this.cfg.marginBps)) / 10_000;
       $("mk-price").textContent = `${mine.toFixed(2)} USDT/XMR`;
       $("mk-price-ref").textContent = this.t("price_ref", { ref: this.price.toFixed(2), m: (this.cfg.marginBps / 100).toFixed(2) });
+    } else if (this.priceAt) {
+      // Sin precio confiable no se muestra uno viejo (y la oferta se retira).
+      $("mk-price").textContent = "—";
+      $("mk-price-ref").textContent = this.t("no_price");
     }
     const can = offerable(v.swaps, BigInt(this.wallet.unlocked), this.cfg);
     $("mk-offerable").textContent = this.t("offerable", { v: xmr(can) });

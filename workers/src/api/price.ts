@@ -1,14 +1,17 @@
 import { HttpError } from "./env";
 
 /**
- * Precio de referencia XMR/USDT: mediana de Kraken, CoinGecko y KuCoin (misma regla que
+ * Precio de referencia XMR/USDT: mediana de Kraken, KuCoin, MEXC, HTX y CoinGecko (misma regla que
  * `maker/xmrp2p_maker/pricing.py`). Se exigen 2 fuentes y que ninguna se aleje más de 2 % de la
  * mediana. Lo usa el maker en el navegador, que no puede consultar todas las fuentes por CORS.
  * Solo informa un precio: no toca fondos.
  */
+// Cada fuente tiene 5 s; CoinGecko suele bloquear las IP de Cloudflare, por eso hay varias más.
+const get = async (url: string) => (await fetch(url, { signal: AbortSignal.timeout(5000) })).json();
+
 const SOURCES: Record<string, () => Promise<number>> = {
   kraken: async () => {
-    const r = (await (await fetch("https://api.kraken.com/0/public/Ticker?pair=XMRUSDT")).json()) as {
+    const r = (await get("https://api.kraken.com/0/public/Ticker?pair=XMRUSDT")) as {
       error?: string[];
       result: Record<string, { c: string[] }>;
     };
@@ -16,16 +19,24 @@ const SOURCES: Record<string, () => Promise<number>> = {
     return Number(Object.values(r.result)[0]!.c[0]);
   },
   coingecko: async () => {
-    const r = (await (await fetch("https://api.coingecko.com/api/v3/simple/price?ids=monero&vs_currencies=usd")).json()) as {
+    const r = (await get("https://api.coingecko.com/api/v3/simple/price?ids=monero&vs_currencies=usd")) as {
       monero: { usd: number };
     };
     return Number(r.monero.usd);
   },
   kucoin: async () => {
-    const r = (await (await fetch("https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=XMR-USDT")).json()) as {
+    const r = (await get("https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=XMR-USDT")) as {
       data: { price: string };
     };
     return Number(r.data.price);
+  },
+  mexc: async () => {
+    const r = (await get("https://api.mexc.com/api/v3/ticker/price?symbol=XMRUSDT")) as { price: string };
+    return Number(r.price);
+  },
+  htx: async () => {
+    const r = (await get("https://api.huobi.pro/market/detail/merged?symbol=xmrusdt")) as { tick: { close: number } };
+    return Number(r.tick.close);
   },
 };
 

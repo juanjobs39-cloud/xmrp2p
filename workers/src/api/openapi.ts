@@ -44,7 +44,7 @@ export const openapi = {
     },
     "/v1/price": {
       get: {
-        summary: "Precio de referencia XMR/USDT (mediana de Kraken, CoinGecko y KuCoin; caché de 60 s)",
+        summary: "Precio de referencia XMR/USDT (mediana de Kraken, KuCoin, MEXC, HTX y CoinGecko; mínimo 2 fuentes; caché de 60 s)",
         responses: { "200": { description: "{ price, sources, at }" }, "503": { description: "Fuentes insuficientes o divergentes" } },
       },
     },
