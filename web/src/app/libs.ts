@@ -56,6 +56,7 @@ export type Xmr = {
   makerConfirmations(txid: string): Promise<number | null>;
   makerSweepTo(address: string): Promise<string[]>;
   makerClose(): Promise<void>;
+  makerIncoming(): Promise<{ txid: string; amount: string; confirmations: number; inPool: boolean }[]>;
   makerKeys(): Promise<{ address: string; seed: string; viewKey: string; spendKey: string; restoreHeight: number }>;
 };
 

@@ -185,3 +185,17 @@ export async function makerKeys() {
     restoreHeight: Number(await maker.getRestoreHeight()),
   };
 }
+
+/** Depósitos entrantes aún bloqueados: confirmaciones de cada uno (para el panel del maker). */
+export async function makerIncoming() {
+  const txs = await maker.getTxs({ isIncoming: true });
+  return txs
+    .filter((t) => !t.getIsLocked || t.getIsLocked())
+    .map((t) => ({
+      txid: t.getHash(),
+      amount: String(t.getIncomingAmount() ?? 0n),
+      confirmations: Number(t.getNumConfirmations() ?? 0),
+      inPool: !!t.getInTxPool(),
+    }))
+    .filter((t) => t.confirmations < 10);
+}

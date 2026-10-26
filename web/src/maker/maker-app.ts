@@ -42,6 +42,8 @@ export class MakerApp {
   private wakeLock: { release(): Promise<void> } | null = null;
   private backupDone = false;
   private takeQueue: Promise<unknown> = Promise.resolve();
+  /** Depósitos de XMR que aún no tienen 10 confirmaciones. */
+  private incoming: { txid: string; amount: string; confirmations: number; inPool: boolean }[] = [];
   private log: string[] = [];
   /** Red elegida en la página (?red=real para dinero real). Cada red tiene su propia bóveda. */
   private net: EvmNetwork = selectedNetwork();
@@ -288,6 +290,11 @@ export class MakerApp {
       this.status(this.t("syncing"));
       this.wallet = await xmr.makerSync((pct) => this.status(`${this.t("syncing")} ${Math.round(pct * 100)} %`));
       this.status("");
+      try {
+        this.incoming = await xmr.makerIncoming();
+      } catch {
+        this.incoming = [];
+      }
       for (const s of this.need().swaps.filter((x) => ACTIVE.has(x.state))) {
         try {
           await this.advance(s, now.time);
@@ -705,6 +712,9 @@ export class MakerApp {
     const xmr = (a: string | bigint) => (Number(a) / 1e12).toFixed(6);
     $("mk-xmr-unlocked").textContent = `${xmr(this.wallet.unlocked)} XMR`;
     $("mk-xmr-total").textContent = this.t("total", { v: xmr(this.wallet.balance) });
+    $("mk-incoming").textContent = this.incoming
+      .map((d) => this.t(d.inPool ? "incoming_pool" : "incoming", { v: xmr(d.amount), n: d.confirmations, left: Math.max(0, 10 - d.confirmations) * 2 }))
+      .join(" · ");
     $("mk-address").textContent = this.wallet.address;
     $("mk-gas").textContent = this.gas === null ? "…" : `${Number(formatEther(this.gas)).toFixed(5)} ETH`;
     $("mk-gas").classList.toggle("low", this.gas !== null && this.gas < parseEther("0.0002"));
