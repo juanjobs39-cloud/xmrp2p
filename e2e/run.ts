@@ -89,7 +89,9 @@ async function retry<T>(what: string, id: string, fn: () => Promise<T>, tries = 
 async function negotiate(c: Case, chain: Chain, path: string): Promise<State> {
   // Esperar hasta 15 min a que el maker publique una oferta (la renueva cada 5 min).
   const offer = await retry("ofertas", c.id, async () => {
-    const o = (await api.offers()).offers[0];
+    // E2E_MAKER=0x… elige un maker concreto (p. ej. el maker en el navegador).
+    const want = process.env.E2E_MAKER?.toLowerCase();
+    const o = (await api.offers()).offers.find((x) => !want || x.maker.toLowerCase() === want);
     if (!o) throw new Error("no hay ofertas todavía");
     return o;
   }, 18);

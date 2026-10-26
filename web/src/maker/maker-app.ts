@@ -170,6 +170,7 @@ export class MakerApp {
     this.wallet = info;
     await this.persist();
     await this.persistWallet();
+    this.status("");
     this.show("mk-backup");
   }
 
@@ -190,6 +191,7 @@ export class MakerApp {
       this.wallet = await xmr.makerOpen({ node: this.vault.node, network: MONERO.network, password: pass, seed: this.vault.seed, restoreHeight: this.vault.restore_height });
     }
     this.backupDone = true;
+    this.status("");
     await this.enterPanel();
   }
 

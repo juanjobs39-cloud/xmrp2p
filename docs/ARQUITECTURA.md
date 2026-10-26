@@ -6,7 +6,7 @@
 
 ## 1. Roles y llaves
 
-| | Taker (navegador) | Maker (daemon) |
+| | Taker (navegador) | Maker (navegador o daemon) |
 |---|---|---|
 | Tiene / quiere | USDT / XMR | XMR / USDT |
 | En el protocolo de AthanorLabs es | Alice (lado del token) | Bob (lado de Monero) |
@@ -140,6 +140,7 @@ stateDiagram-v2
 | 5 · App ✅ | `web/` ruta `/app`: flujo del swap, archivo de recuperación, CSP/SRI, IPFS | Implementado el 24-oct (ver `web/README.md`): lógica de decisión con prueba exhaustiva, archivo cifrado AES-GCM, `permit`, verificación del XMR con `check_tx_key` (el maker ahora envía `tx_key`), CSP estricta, SRI e import map con integrity. Probado en navegador hasta stagenet; falta el flujo completo con fondos de testnet (Fase 7) |
 | 6 · Sitio y SEO ✅ | `web/` en Astro con cero JS en el contenido, robots/llms.txt, IndexNow, guías ES/EN | Implementado el 24-oct: 42 páginas, 8 guías ×2, 17 preguntas ×2, glosario, JSON-LD, sitemap con hreflang, `.md` por guía, HTML válido y 0 enlaces rotos. Pasos manuales en `docs/PUBLICAR.md` |
 | 7 · E2E testnet ✅ | `docs/PRUEBAS.md` | 10/10 casos automáticos y prueba manual con MetaMask superados el 25–26 de octubre; 16 problemas encontrados (12 corregidos, 4 pendientes de UX/robustez) |
+| 8 · Maker en el navegador | `web/src/maker/` y `/es/maker/` | El maker opera desde una pestaña, sin instalar nada y sin custodia: wallet completa de monero-ts en el navegador, llave EVM propia para cobrar sin clics, estado cifrado en IndexedDB + respaldo obligatorio, una sola pestaña (Web Locks). Motor puro con las reglas del daemon (`engine.ts`, 11 pruebas). Backend: `GET /v1/price` y ticket de un solo uso para el WebSocket del buzón. El daemon de Python sigue para quien quiera estar 24/7 |
 
 ### Estructura prevista del monorepo
 

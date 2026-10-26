@@ -13,6 +13,8 @@
 
 Verificado: `/v1/health`, `/v1/offers`, `/openapi.json`, `/mcp` (3 herramientas) y el proxy (`get_block_count` en stagenet).
 
+**26-oct-2026:** nuevos `GET /v1/price` (mediana de Kraken, CoinGecko y KuCoin) y `POST /v1/makers/ws-ticket` (buzón del maker desde el navegador). Vista previa del sitio con el maker en el navegador: https://maker-preview.monerop2p.pages.dev (rama `maker-preview` de Pages, no es producción).
+
 ## Cuentas de prueba (Fase 7)
 
 | Uso | Dirección |

@@ -2,20 +2,32 @@
 key: maker
 lang: en
 title: Become a maker
-description: "A maker provides XMR and earns a margin over the market price. What you need, how to run the daemon and which risks you take."
-updated: 2026-10-24
+description: "A maker provides XMR and earns a margin over the market price. Do it from your browser with nothing to install, or 24/7 with your own server."
+updated: 2026-10-26
 ---
 
-**Short answer:** a maker holds XMR and offers it in exchange for USDT. They run a program (daemon) on their own server or computer that publishes offers, answers swaps automatically, locks the XMR and claims the USDT. They earn the margin they set over the reference price. At this stage it only runs on testnet.
+**Short answer:** a maker holds XMR and offers it for USDT, with a margin over the reference price. You can do it **from your browser with nothing to install** (the open tab works as your server), or **24/7 with your own server or computer**. Either way, nobody holds your funds. At this stage it only runs on testnet.
 
-## What you need
+## Two ways to be a maker
+
+| | In your browser (recommended) | Your own 24/7 server |
+|---|---|---|
+| For | Anyone | Technical makers |
+| Setup | None: open [the maker page](/en/maker/) | Python, `monero-wallet-rpc` and the daemon ([guide](https://github.com/juanjobs39-cloud/xmrp2p/blob/main/maker/README.md)) |
+| When you offer | While the tab is open on a computer | All the time |
+| Your keys | In your browser, encrypted with your password and in a backup | On your server |
+| USDT payout | Straight to your MetaMask | To the address you configure |
+
+**Start here:** [Be a maker from your browser →](/en/maker/)
+
+## What you need in the browser
 
 | Requirement | Detail |
 |---|---|
-| A machine that stays on | The daemon must be online to answer and claim in time |
-| `monero-wallet-rpc` with a funded wallet | Locking and recovering XMR |
-| An account on the EVM network with some gas | Sending `claim` |
-| Python 3.10+ and the compiled crypto core | Instructions in `maker/README.md` |
+| A computer with the tab open | Phones put tabs to sleep |
+| XMR to offer | Send it to the address the page gives you; it unlocks after 10 confirmations |
+| A little ETH for gas | To claim; top it up with one click from MetaMask |
+| A password and your backup file | Without the backup you cannot restore your maker in another browser |
 
 ## How the price is set
 
@@ -26,7 +38,7 @@ The daemon takes the median of several public sources (Kraken, CoinGecko and KuC
 - the maximum exposure (XMR committed at once),
 - the number of concurrent swaps.
 
-## Daemon safety rules
+## Safety rules (browser and server)
 
 - It never sends XMR without a valid on-chain deposit.
 - It never claims if it did not lock the XMR.
@@ -37,8 +49,8 @@ The daemon takes the median of several public sources (Kraken, CoinGecko and KuC
 ## Risks for the maker
 
 - **Volatility:** the price can move between the quote and the claim.
-- **Availability:** if your daemon is down between t0 and t1, you will not get paid and must recover your XMR.
-- **Backups:** the daemon database holds the key halves of each swap; without it you cannot recover the XMR.
+- **Availability:** if you close the tab (or your server goes down) between t0 and t1, you will not get paid; the taker will refund and you must come back to recover your XMR.
+- **Backups:** your backup file (or the daemon database) holds the key halves of each swap; without it you cannot recover the XMR.
 - **Regulation:** acting as a maker may have legal implications in your country. Check before you start.
 
 None of this guarantees profits. The full install guide is in [maker/README.md](https://github.com/juanjobs39-cloud/xmrp2p/blob/main/maker/README.md).
