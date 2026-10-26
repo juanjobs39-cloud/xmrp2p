@@ -1,0 +1,28 @@
+{
+ "id": "E6",
+ "title": "Plazos: el taker no confirma; el maker cobra tras t0",
+ "expect": "xmr",
+ "outcome": "xmr",
+ "ok": true,
+ "minutes": 4,
+ "recovery": ".secrets/recovery/2026-10-25T22-26-15-358Z-E6.json",
+ "events": [
+  {
+   "t": "2026-10-25T23:57:59.194Z",
+   "e": "reanudado desde archivo",
+   "d": {
+    "escrow": "0x44D034D6E764bFf970aF98A7Fc895a82759DDC70"
+   }
+  },
+  {
+   "t": "2026-10-26T00:01:52.338Z",
+   "e": "FIN: XMR barrido a la wallet del taker",
+   "d": {
+    "txids": [
+     "f5ef1375b8cbd651a70d6d6f7376db76dc14d1713251140763d4df1f81fd4dd1"
+    ],
+    "piconero": "13265182353"
+   }
+  }
+ ]
+}

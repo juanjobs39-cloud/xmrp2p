@@ -1,0 +1,28 @@
+{
+ "id": "E5",
+ "title": "Maker cae tras bloquear y cobra tarde",
+ "expect": "xmr",
+ "outcome": "xmr",
+ "ok": true,
+ "minutes": 4,
+ "recovery": ".secrets/recovery/2026-10-25T22-26-15-358Z-E5.json",
+ "events": [
+  {
+   "t": "2026-10-26T00:07:23.058Z",
+   "e": "reanudado desde archivo",
+   "d": {
+    "escrow": "0xB78079D01d3C058B4dCf97e24513BaA49f684469"
+   }
+  },
+  {
+   "t": "2026-10-26T00:10:56.745Z",
+   "e": "FIN: XMR barrido a la wallet del taker",
+   "d": {
+    "txids": [
+     "5e96e22a2b087ece22b5fda24bc2b5d9c506f122e3278ef83bf03379f984ddf7"
+    ],
+    "piconero": "0"
+   }
+  }
+ ]
+}

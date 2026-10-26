@@ -1,0 +1,28 @@
+{
+ "id": "E1",
+ "title": "Swap exitoso",
+ "expect": "xmr",
+ "outcome": "xmr",
+ "ok": true,
+ "minutes": 3,
+ "recovery": ".secrets/recovery/2026-10-25T22-26-15-358Z-E1.json",
+ "events": [
+  {
+   "t": "2026-10-26T00:06:28.959Z",
+   "e": "reanudado desde archivo",
+   "d": {
+    "escrow": "0xAEFBbcF1692f57831d8234aDb56f17F7f07d2129"
+   }
+  },
+  {
+   "t": "2026-10-26T00:09:55.021Z",
+   "e": "FIN: XMR barrido a la wallet del taker",
+   "d": {
+    "txids": [
+     "a4bcb45ef2fdc98e1e153b60bcfccf7ad6579eec9bb6625e448dc959b5481121"
+    ],
+    "piconero": "0"
+   }
+  }
+ ]
+}

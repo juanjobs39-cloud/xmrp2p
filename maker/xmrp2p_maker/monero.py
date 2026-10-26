@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import threading
 from dataclasses import dataclass
+from functools import wraps
 from typing import Any, Protocol
 
 import requests
@@ -31,6 +33,18 @@ class MoneroWallet(Protocol):
     def height(self) -> int: ...
 
 
+def _serialized(fn):
+    """monero-wallet-rpc tiene UNA wallet abierta a la vez: mientras se barre con la wallet de
+    recuperación, ningún otro hilo debe consultar ni enviar (hallazgo de la Fase 7)."""
+
+    @wraps(fn)
+    def inner(self, *a, **k):
+        with self._lock:
+            return fn(self, *a, **k)
+
+    return inner
+
+
 class WalletRpc:
     """Implementación real contra `monero-wallet-rpc --rpc-bind-port … --wallet-dir …`."""
 
@@ -38,9 +52,15 @@ class WalletRpc:
         self.url = url
         self.main_wallet = main_wallet
         self.main_password = main_password
+        self._lock = threading.RLock()
         self.session = requests.Session()
         if auth:
             self.session.auth = requests.auth.HTTPDigestAuth(*auth)
+        # Si un reinicio interrumpió un barrido, la wallet abierta podría ser la de recuperación.
+        try:
+            self._rpc("open_wallet", filename=self.main_wallet, password=self.main_password)
+        except Exception:
+            pass
 
     def _rpc(self, method: str, **params: Any) -> dict[str, Any]:
         r = self.session.post(
@@ -52,12 +72,15 @@ class WalletRpc:
             raise MoneroError(f"{method}: {j['error'].get('message')}")
         return j.get("result", {})
 
+    @_serialized
     def height(self) -> int:
         return int(self._rpc("get_height")["height"])
 
+    @_serialized
     def unlocked_balance(self) -> int:
         return int(self._rpc("get_balance", account_index=0)["unlocked_balance"])
 
+    @_serialized
     def find_outgoing(self, address: str) -> SentTransfer | None:
         """Idempotencia: ¿ya enviamos a esta dirección? (evita pagar dos veces tras un reinicio)."""
         res = self._rpc("get_transfers", out=True, pending=True, pool=True)
@@ -69,31 +92,40 @@ class WalletRpc:
                         return SentTransfer(t["txid"], int(d["amount"]), int(t.get("fee", 0)), key)
         return None
 
+    @_serialized
     def transfer(self, address: str, amount: int) -> SentTransfer:
         r = self._rpc(
             "transfer", destinations=[{"amount": amount, "address": address}], priority=0, get_tx_key=True
         )
         return SentTransfer(r["tx_hash"], amount, int(r.get("fee", 0)), r.get("tx_key", ""))
 
+    @_serialized
     def confirmations(self, txid: str) -> int:
         r = self._rpc("get_transfer_by_txid", txid=txid)
         return int(r.get("transfer", {}).get("confirmations", 0))
 
+    @_serialized
     def sweep_from_keys(self, address: str, spend_key: str, view_key: str, restore_height: int) -> str:
         """Abre la wallet compartida con la llave completa, barre todo a la wallet principal y vuelve a abrirla."""
         main_addr = self._rpc("get_address", account_index=0)["address"]
         name = f"recover-{address[:12]}"
         try:
-            self._rpc(
-                "generate_from_keys",
-                filename=name,
-                address=address,
-                spendkey=spend_key,
-                viewkey=view_key,
-                restore_height=restore_height,
-                password="",
-                autosave_current=True,
-            )
+            try:
+                self._rpc(
+                    "generate_from_keys",
+                    filename=name,
+                    address=address,
+                    spendkey=spend_key,
+                    viewkey=view_key,
+                    restore_height=restore_height,
+                    password="",
+                    autosave_current=True,
+                )
+            except MoneroError as e:
+                # Un intento anterior ya creó la wallet de recuperación (hallazgo de la Fase 7): abrirla.
+                if "already exists" not in str(e):
+                    raise
+                self._rpc("open_wallet", filename=name, password="")
             self._rpc("refresh", start_height=restore_height)
             r = self._rpc("sweep_all", address=main_addr, account_index=0)
             txids = r.get("tx_hash_list", [])

@@ -1,0 +1,38 @@
+[
+ {
+  "id": "E7",
+  "title": "Nodo de Monero caído",
+  "expect": "refund",
+  "outcome": "refund",
+  "ok": true,
+  "minutes": 36,
+  "recovery": "C:\\plataforma\\e2e\\.secrets\\recovery\\2026-10-25T23-05-26-628Z-E7.json"
+ },
+ {
+  "id": "E8",
+  "title": "Conexión perdida con el backend",
+  "expect": "xmr",
+  "outcome": "xmr",
+  "ok": true,
+  "minutes": 44,
+  "recovery": "C:\\plataforma\\e2e\\.secrets\\recovery\\2026-10-25T23-05-26-628Z-E8.json"
+ },
+ {
+  "id": "E9",
+  "title": "El maker envía menos XMR",
+  "expect": "refund",
+  "outcome": "refund",
+  "ok": true,
+  "minutes": 40,
+  "recovery": "C:\\plataforma\\e2e\\.secrets\\recovery\\2026-10-25T23-05-26-628Z-E9.json"
+ },
+ {
+  "id": "E10",
+  "title": "tx_key malformado",
+  "expect": "refund",
+  "outcome": "error",
+  "ok": false,
+  "minutes": 26,
+  "recovery": "C:\\plataforma\\e2e\\.secrets\\recovery\\2026-10-25T23-05-26-628Z-E10.json"
+ }
+]

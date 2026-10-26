@@ -1,0 +1,16 @@
+{
+ "id": "E10",
+ "title": "tx_key malformado",
+ "expect": "refund",
+ "outcome": "error",
+ "ok": false,
+ "minutes": 26,
+ "recovery": "C:\\plataforma\\e2e\\.secrets\\recovery\\2026-10-25T23-05-26-628Z-E10.json",
+ "events": [
+  {
+   "t": "2026-10-25T23:34:10.242Z",
+   "e": "ERROR",
+   "d": "/v1/swaps: la oferta no existe o expiró"
+  }
+ ]
+}

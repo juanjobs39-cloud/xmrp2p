@@ -1,0 +1,94 @@
+{
+ "id": "E9",
+ "title": "El maker envía menos XMR",
+ "expect": "refund",
+ "outcome": "refund",
+ "ok": true,
+ "minutes": 40,
+ "recovery": "C:\\plataforma\\e2e\\.secrets\\recovery\\2026-10-25T23-05-26-628Z-E9.json",
+ "events": [
+  {
+   "t": "2026-10-25T23:07:11.588Z",
+   "e": "negociado",
+   "d": {
+    "xmr": 0.018282395532,
+    "shared": "59L3K694vhY2"
+   }
+  },
+  {
+   "t": "2026-10-25T23:07:15.618Z",
+   "e": "depositado",
+   "d": {
+    "escrow": "0xe3bf10d78e78124443392F824988FFFbb52F19f7",
+    "tx": "0x3021bae742242e0583db0ceb54d5d2eb34bb3e18047b8d56d67436380dccd382"
+   }
+  },
+  {
+   "t": "2026-10-25T23:09:15.839Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:09:37.251Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:09:58.621Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:10:19.787Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:10:44.482Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:11:33.909Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:11:56.581Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:12:18.048Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:12:39.446Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:13:01.308Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:16:46.729Z",
+   "e": "error transitorio; reintento",
+   "d": "RPC Request failed.\n\nURL: https://sepolia-rollup.arbitrum.io/rpc\nRequest body: {\"method\":\"eth_call\","
+  },
+  {
+   "t": "2026-10-25T23:46:43.010Z",
+   "e": "reembolso",
+   "d": {
+    "tx": "0x17e5d89d8c3dac1440143cf188872159afb9de76f25514128b970ca1585d1a68",
+    "motivo": "el XMR no está verificado y se acerca t0"
+   }
+  },
+  {
+   "t": "2026-10-25T23:47:04.800Z",
+   "e": "FIN: reembolsado"
+  }
+ ]
+}

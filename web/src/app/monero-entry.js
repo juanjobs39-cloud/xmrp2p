@@ -59,6 +59,12 @@ export async function sweep({ node, network, address, viewKey, spendKey, restore
           })()
         : undefined,
     );
+    // Si un intento anterior ya envió el barrido (y falló después), la dirección queda vacía con una
+    // salida: tratarlo como hecho en vez de reintentar para siempre (hallazgo de la Fase 7).
+    if (BigInt(await wallet.getBalance()) === 0n) {
+      const out = (await wallet.getTxs()).filter((t) => BigInt(t.getOutgoingAmount() ?? 0n) > 0n);
+      if (out.length) return { txids: out.map((t) => t.getHash()), alreadySwept: true };
+    }
     const txs = await wallet.sweepUnlocked({ address: destination, relay: true });
     return { txids: txs.map((t) => t.getHash()) };
   } finally {

@@ -22,7 +22,9 @@ export const ALLOWED_PATHS = new Set([
 export const ALLOWED_JSON_METHODS = new Set([
   "get_info", "get_block_count", "get_last_block_header", "get_block_header_by_height", "get_block_headers_range",
   "get_block", "get_fee_estimate", "get_version", "hard_fork_info", "get_output_distribution",
-  "get_output_histogram", "get_txpool_backlog",
+  "get_output_histogram", "get_txpool_backlog", "get_block_header_by_hash",
+  // Nombres antiguos que usa wallet2 (hallazgo de la Fase 7).
+  "getblockheadersrange", "getblockcount", "getlastblockheader", "getblockheaderbyheight", "getblockheaderbyhash", "getblock",
 ]);
 const MAX_BODY = 512 * 1024;
 
@@ -60,7 +62,10 @@ export default {
     if (url.pathname === "/json_rpc") {
       try {
         const j = JSON.parse(new TextDecoder().decode(body ?? new ArrayBuffer(0))) as { method?: string };
-        if (!j.method || !ALLOWED_JSON_METHODS.has(j.method)) return fail(403, `método ${j.method} no permitido`);
+        if (!j.method || !ALLOWED_JSON_METHODS.has(j.method)) {
+          console.log(`bloqueado json_rpc: ${j.method}`);
+          return fail(403, `método ${j.method} no permitido`);
+        }
       } catch {
         return fail(400, "JSON inválido");
       }

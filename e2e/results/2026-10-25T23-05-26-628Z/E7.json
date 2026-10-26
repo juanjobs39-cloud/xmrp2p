@@ -1,0 +1,244 @@
+{
+ "id": "E7",
+ "title": "Nodo de Monero caído",
+ "expect": "refund",
+ "outcome": "refund",
+ "ok": true,
+ "minutes": 36,
+ "recovery": "C:\\plataforma\\e2e\\.secrets\\recovery\\2026-10-25T23-05-26-628Z-E7.json",
+ "events": [
+  {
+   "t": "2026-10-25T23:05:43.324Z",
+   "e": "negociado",
+   "d": {
+    "xmr": 0.014943953946,
+    "shared": "53uSHKESLxM1"
+   }
+  },
+  {
+   "t": "2026-10-25T23:05:48.356Z",
+   "e": "depositado",
+   "d": {
+    "escrow": "0x0b221d1FfE8Fb213195286D450eCdAD01CB03371",
+    "tx": "0x24a4ebc55837f50ab525d34bfd0994b5bbdfb1a0da1fed01a3bf1bb8369b1b6a"
+   }
+  },
+  {
+   "t": "2026-10-25T23:07:24.173Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:07:51.403Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:08:17.499Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:08:43.853Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:09:15.751Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:09:42.802Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:10:09.805Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:10:38.068Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:11:00.193Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:11:21.933Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:11:43.655Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:12:05.126Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:12:26.697Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:12:48.439Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:13:09.557Z",
+   "e": "error transitorio; reintento",
+   "d": "ENOSPC: no space left on device, write"
+  },
+  {
+   "t": "2026-10-25T23:13:37.013Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:14:05.917Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:14:34.352Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:15:02.955Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:15:30.172Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:15:57.314Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:16:30.645Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:16:58.261Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:17:30.247Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:18:02.109Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:18:36.454Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:19:07.380Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:19:40.872Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:20:15.623Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:20:57.705Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:21:23.722Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:21:51.725Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:22:19.397Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:22:47.165Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:23:15.455Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:23:42.314Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:24:16.430Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:32:49.630Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:33:25.706Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:40:47.214Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:41:26.942Z",
+   "e": "verificación falló",
+   "d": "Failed to connect to daemon: http://127.0.0.1:9"
+  },
+  {
+   "t": "2026-10-25T23:41:29.862Z",
+   "e": "reembolso",
+   "d": {
+    "tx": "0x250b2d1c5258da9d1e271c9dd605b3b91a54c4d37cb5723f054f501008ca94fe",
+    "motivo": "el XMR no está verificado y se acerca t0"
+   }
+  },
+  {
+   "t": "2026-10-25T23:41:51.831Z",
+   "e": "FIN: reembolsado"
+  }
+ ]
+}

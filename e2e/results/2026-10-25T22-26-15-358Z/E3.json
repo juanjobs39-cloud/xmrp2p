@@ -1,0 +1,59 @@
+{
+ "id": "E3",
+ "title": "Cierra la pestaña tras confirmar",
+ "expect": "xmr",
+ "outcome": "xmr",
+ "ok": true,
+ "minutes": 88,
+ "recovery": "C:\\plataforma\\e2e\\.secrets\\recovery\\2026-10-25T22-26-15-358Z-E3.json",
+ "events": [
+  {
+   "t": "2026-10-25T22:27:56.301Z",
+   "e": "negociado",
+   "d": {
+    "xmr": 0.011622487654,
+    "shared": "51qS8kuSX9LH"
+   }
+  },
+  {
+   "t": "2026-10-25T22:28:00.490Z",
+   "e": "depositado",
+   "d": {
+    "escrow": "0xf7AF88A77E2e12382dCA863Ff89507c699226857",
+    "tx": "0xaed0e5a2aa3159d41f95b8d2b167517ee15351babda540d21d14603d9c6b18bc"
+   }
+  },
+  {
+   "t": "2026-10-25T22:46:00.632Z",
+   "e": "setReady",
+   "d": {
+    "tx": "0x72fe24429063f40e12ae94c42a74dcdbaae041ef9a223c129eb536d6cc7e323b",
+    "received": "11622487654",
+    "conf": 10
+   }
+  },
+  {
+   "t": "2026-10-25T22:46:00.791Z",
+   "e": "pestaña cerrada tras confirmar"
+  },
+  {
+   "t": "2026-10-25T23:06:06.024Z",
+   "e": "reanudado con el archivo de recuperación"
+  },
+  {
+   "t": "2026-10-25T23:39:26.789Z",
+   "e": "error transitorio; reintento",
+   "d": "no connection to daemon"
+  },
+  {
+   "t": "2026-10-25T23:55:45.025Z",
+   "e": "FIN: XMR barrido a la wallet del taker",
+   "d": {
+    "txids": [
+     "e222e192b9db0aaa940a50bc185e7d1799d6b7a1778d494935325229f4843c7f"
+    ],
+    "piconero": "11622487654"
+   }
+  }
+ ]
+}

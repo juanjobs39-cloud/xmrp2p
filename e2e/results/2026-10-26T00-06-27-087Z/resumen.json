@@ -1,0 +1,11 @@
+[
+ {
+  "id": "E1",
+  "title": "Swap exitoso",
+  "expect": "xmr",
+  "outcome": "xmr",
+  "ok": true,
+  "minutes": 3,
+  "recovery": ".secrets/recovery/2026-10-25T22-26-15-358Z-E1.json"
+ }
+]

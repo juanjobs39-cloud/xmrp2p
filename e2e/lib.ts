@@ -210,6 +210,12 @@ export async function sweep(p: { address: string; viewKey: string; spendKey: str
     await w.sync();
     const bal = BigInt(await w.getBalance());
     const unlocked = BigInt(await w.getUnlockedBalance());
+    // Un intento anterior pudo haber enviado el barrido y fallar después (hallazgo de la Fase 7):
+    // si la dirección compartida ya está vacía y tiene una salida, el barrido está hecho.
+    if (bal === 0n) {
+      const out = (await w.getTxs()).filter((t: any) => BigInt(t.getOutgoingAmount() ?? 0n) > 0n);
+      if (out.length) return { txids: out.map((t: any) => t.getHash()) as string[], balance: 0n, unlocked: 0n, alreadySwept: true };
+    }
     if (unlocked === 0n) return { txids: [] as string[], balance: bal, unlocked };
     const txs = await w.sweepUnlocked({ address: p.destination, relay: true });
     return { txids: txs.map((t: any) => t.getHash()) as string[], balance: bal, unlocked };

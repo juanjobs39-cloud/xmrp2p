@@ -1,0 +1,28 @@
+{
+ "id": "E2",
+ "title": "Cierra la pestaña antes del bloqueo",
+ "expect": "xmr",
+ "outcome": "xmr",
+ "ok": true,
+ "minutes": 4,
+ "recovery": ".secrets/recovery/2026-10-25T22-26-15-358Z-E2.json",
+ "events": [
+  {
+   "t": "2026-10-26T00:06:42.707Z",
+   "e": "reanudado desde archivo",
+   "d": {
+    "escrow": "0x31A773Dc84cFAB6B50a6FD60286562dc68615abA"
+   }
+  },
+  {
+   "t": "2026-10-26T00:10:12.094Z",
+   "e": "FIN: XMR barrido a la wallet del taker",
+   "d": {
+    "txids": [
+     "9d20131b60864ec1e77b82f9efac5c04c4dc1f7a8413b207ed5a750f219e9ec3"
+    ],
+    "piconero": "0"
+   }
+  }
+ ]
+}

@@ -1,0 +1,28 @@
+{
+ "id": "E3",
+ "title": "Cierra la pestaña tras confirmar",
+ "expect": "xmr",
+ "outcome": "xmr",
+ "ok": true,
+ "minutes": 4,
+ "recovery": ".secrets/recovery/2026-10-25T22-26-15-358Z-E3.json",
+ "events": [
+  {
+   "t": "2026-10-26T00:07:03.603Z",
+   "e": "reanudado desde archivo",
+   "d": {
+    "escrow": "0xf7AF88A77E2e12382dCA863Ff89507c699226857"
+   }
+  },
+  {
+   "t": "2026-10-26T00:10:32.700Z",
+   "e": "FIN: XMR barrido a la wallet del taker",
+   "d": {
+    "txids": [
+     "e222e192b9db0aaa940a50bc185e7d1799d6b7a1778d494935325229f4843c7f"
+    ],
+    "piconero": "0"
+   }
+  }
+ ]
+}
