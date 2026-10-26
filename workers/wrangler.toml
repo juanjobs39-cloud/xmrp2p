@@ -21,6 +21,14 @@ ALLOWED_ORIGINS = "*"
 MAX_OFFER_TTL = "900"
 # Tiempo que se espera la respuesta del maker a una solicitud de swap (ms).
 TAKE_TIMEOUT_MS = "45000"
+# Monitoreo de la fábrica con dinero real (vacío = apagado). Avisos por Telegram con los secretos
+# TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID (wrangler secret put …).
+MONITOR_FACTORY = ""
+MONITOR_RPC = "https://arb1.arbitrum.io/rpc"
+MONITOR_EXPLORER = "https://arbiscan.io"
+
+[triggers]
+crons = ["*/5 * * * *"]
 
 [[d1_databases]]
 binding = "DB"

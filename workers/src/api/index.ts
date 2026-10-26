@@ -2,6 +2,7 @@ import { verifyMaker } from "./auth";
 import { activeNetworks, blockedRegion, clientIp, Env, HttpError, json, MAINNET_NETWORKS, requireNetwork, decimal } from "./env";
 import { handleMcp } from "./mcp";
 import { bestQuote, handleOffers } from "./offers";
+import { runMonitor, type MonitorEnv } from "./monitor";
 import { openapi } from "./openapi";
 import { referencePrice } from "./price";
 import { createSwap, roomRequest } from "./swaps";
@@ -94,5 +95,9 @@ export default {
     for (const [k, v] of Object.entries(cors)) out.headers.set(k, v);
     out.headers.set("x-content-type-options", "nosniff");
     return out;
+  },
+  // Monitoreo de la fábrica con dinero real (cron en wrangler.toml).
+  async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(runMonitor(env as MonitorEnv).then((r) => console.log("monitor", JSON.stringify(r))));
   },
 } satisfies ExportedHandler<Env>;
