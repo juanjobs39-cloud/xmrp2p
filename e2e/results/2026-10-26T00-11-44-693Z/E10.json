@@ -1,0 +1,66 @@
+{
+ "id": "E10",
+ "title": "tx_key malformado",
+ "expect": "refund",
+ "outcome": "refund",
+ "ok": true,
+ "minutes": 36,
+ "recovery": "C:\\plataforma\\e2e\\.secrets\\recovery\\2026-10-26T00-11-44-693Z-E10.json",
+ "events": [
+  {
+   "t": "2026-10-26T00:11:58.706Z",
+   "e": "negociado",
+   "d": {
+    "xmr": 0.019902798051,
+    "shared": "57ZnUejinx3C"
+   }
+  },
+  {
+   "t": "2026-10-26T00:12:02.601Z",
+   "e": "depositado",
+   "d": {
+    "escrow": "0x11e337B5dBCD081aD98e22563E0a49c18D03b677",
+    "tx": "0xb1948b0eeaa9bde9bf6365117c4eb28e3e48e023954eed505e7dcf89eaf784ab"
+   }
+  },
+  {
+   "t": "2026-10-26T00:13:06.425Z",
+   "e": "datos de bloqueo inválidos rechazados",
+   "d": {
+    "tx_key": "ffffffff"
+   }
+  },
+  {
+   "t": "2026-10-26T00:26:01.035Z",
+   "e": "error transitorio; reintento",
+   "d": "The request took too long to respond.\n\nURL: https://sepolia-rollup.arbitrum.io/rpc\nRequest body: {\"m"
+  },
+  {
+   "t": "2026-10-26T00:26:31.927Z",
+   "e": "error transitorio; reintento",
+   "d": "fetch failed"
+  },
+  {
+   "t": "2026-10-26T00:26:52.018Z",
+   "e": "error transitorio; reintento",
+   "d": "fetch failed"
+  },
+  {
+   "t": "2026-10-26T00:41:09.799Z",
+   "e": "error transitorio; reintento",
+   "d": "fetch failed"
+  },
+  {
+   "t": "2026-10-26T00:47:07.689Z",
+   "e": "reembolso",
+   "d": {
+    "tx": "0xec27c4e694ce6f90b0ac6d8d6ceae111229d9bc9b92ba3afbf8ac40d3f050da7",
+    "motivo": "el XMR no está verificado y se acerca t0"
+   }
+  },
+  {
+   "t": "2026-10-26T00:47:29.417Z",
+   "e": "FIN: reembolsado"
+  }
+ ]
+}

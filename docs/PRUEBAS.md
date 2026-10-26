@@ -1,6 +1,6 @@
 # Pruebas de extremo a extremo (Fase 7)
 
-> Última actualización: 24 de octubre de 2026. Estado: **plan listo y pruebas locales hechas; faltan las corridas en testnet**, que necesitan fondos de faucet (paso manual del dueño).
+> Última actualización: 26 de octubre de 2026. Estado: **10 de 10 casos superados en testnet** (Arbitrum Sepolia + Monero stagenet). Falta la prueba manual con MetaMask.
 
 **Resumen:** todas las piezas se probaron por separado y varias juntas (contrato real + daemon del maker en anvil; backend real + cliente del maker; app + núcleo cripto + monero-ts contra stagenet). Lo que falta es un swap completo en Arbitrum Sepolia con Monero stagenet y los casos de falla en vivo.
 
@@ -44,6 +44,54 @@
 
 Registrar en cada caso: hashes de transacciones, tiempos, capturas y cualquier desviación.
 
-## 4. Resultados en testnet
+## 4. Resultados en testnet (25–26 de octubre de 2026)
 
-*(pendiente)*
+Entorno: contrato en Arbitrum Sepolia (`docs/DESPLIEGUES.md`), backend en `api.monerop2p.app` y `nodo.monerop2p.app`, maker real (`maker/`) con `monero-wallet-rpc` v0.18.5.4 en stagenet, y el taker automatizado `e2e/run.ts`, que usa la misma lógica de decisión que la app. Montos de 5 a 14 tUSDT (el XMR estaba en ~600 USD).
+
+| Caso | Qué prueba | Esperado | Resultado | Evidencia |
+|---|---|---|---|---|
+| E1 | Swap exitoso | XMR al taker | ✅ | barrido `a4bcb45e…` |
+| E2 | Cierra la pestaña antes del bloqueo | XMR al taker | ✅ reanudado con el archivo | barrido `9d20131b…` |
+| E3 | Cierra la pestaña tras confirmar | XMR al taker | ✅ reanudado con el archivo | barrido `e222e192…` |
+| E4 | Maker cae antes de bloquear | reembolso | ✅ reembolso antes de t0 | [`0x4d86c3…`](https://sepolia.arbiscan.io/tx/0x4d86c38b5cad8285d878f08ba0177ae36ddbcd17a94d1aff839b522e64121c68) |
+| E5 | Maker cobra tarde (t0 + 5 min) | XMR al taker | ✅ | — |
+| E6 | El taker no confirma; el maker cobra tras t0 | XMR al taker | ✅ | — |
+| E7 | Nodo de Monero caído | reembolso | ✅ y el maker recuperó su XMR | [`0x250b2d…`](https://sepolia.arbiscan.io/tx/0x250b2d1c5258da9d1e271c9dd605b3b91a54c4d37cb5723f054f501008ca94fe) |
+| E8 | Conexión perdida con el backend (10 min) | XMR al taker | ✅ | barrido `5380b406…` |
+| E9 | El maker envía la mitad del XMR | reembolso | ✅ nunca confirmó; el maker recuperó su XMR | [`0x17e5d8…`](https://sepolia.arbiscan.io/tx/0x17e5d89d8c3dac1440143cf188872159afb9de76f25514128b970ca1585d1a68) |
+| E10 | `tx_key` malformado | reembolso | ✅ datos rechazados sin romper monero-ts | [`0xec27c4…`](https://sepolia.arbiscan.io/tx/0xec27c4e694ce6f90b0ac6d8d6ceae111229d9bc9b92ba3afbf8ac40d3f050da7) |
+
+Los registros completos de cada caso están en `e2e/results/`.
+
+### Tiempos medidos
+
+| Tramo | Tiempo |
+|---|---|
+| Depósito en Arbitrum Sepolia | segundos |
+| El maker bloquea el XMR tras ver el depósito | ~20–40 s |
+| Verificación del XMR con `check_tx_key` | ~5 s por intento |
+| Depósito → XMR verificado con 10 confirmaciones → `setReady` | **17–19 min** |
+| Swap completo (hasta el barrido del XMR) | **~30–45 min** |
+
+### Problemas encontrados y corregidos
+
+| # | Problema | Dónde | Corrección |
+|---|---|---|---|
+| 1 | El archivo de recuperación fallaba con datos reales (>100 KB: la prueba DLEQ del maker) | app | base64 por bloques + prueba de regresión |
+| 2 | El proxy bloqueaba los nombres antiguos de rutas que usa wallet2 (`/gettransactions`, `/sendrawtransaction`…) | proxy | lista ampliada; sin esto la app no podía verificar ni recibir el XMR |
+| 3 | El proxy bloqueaba nombres antiguos de métodos JSON (`getblockheadersrange`…) | proxy | lista ampliada; el proxy registra los métodos rechazados |
+| 4 | El maker contaba dos veces el XMR ya enviado (rechazaba swaps y retiraba su oferta con saldo suficiente) | maker | `pending_send_atomic` + prueba de regresión |
+| 5 | La recuperación del XMR fallaba en el segundo intento (*Wallet already exists*) | maker | reabre la wallet de recuperación existente |
+| 6 | `monero-wallet-rpc` tiene una sola wallet abierta: un barrido podía cruzarse con otras operaciones | maker | acceso serializado y reapertura de la wallet principal al arrancar |
+| 7 | Un barrido enviado que fallaba después se reintentaba para siempre | app y taker de prueba | se detecta la dirección vacía con salida y se da por hecho |
+| 8 | El taker de prueba guardaba el archivo solo en memoria y no reintentaba ante cortes de red | e2e | estado cifrado en disco, reintentos y `--resume` |
+
+### Lecciones
+
+- **El archivo de recuperación salvó los casos E1, E2, E3, E5 y E6.** En la primera corrida, sin archivo en disco, un corte de internet dejó XMR de prueba atrapado en direcciones compartidas (~0,07 XMR de stagenet). La app real ya obligaba a descargarlo; ahora el taker de prueba también lo hace.
+- **El riesgo principal (taker ausente antes de t0) se comportó como estaba diseñado:** en todos los casos sin XMR verificado (E4, E7, E9, E10) se reembolsó antes de t0.
+- **Monero condiciona la experiencia:** ~20 min de confirmaciones y ~20 min de bloqueo del cambio del maker tras cada envío, lo que limita cuántos swaps simultáneos puede atender un maker con pocas salidas.
+
+### Pendiente
+
+- Prueba manual con MetaMask en https://monerop2p.app/es/app/ (guía en `docs/PRUEBA-MANUAL.md`).

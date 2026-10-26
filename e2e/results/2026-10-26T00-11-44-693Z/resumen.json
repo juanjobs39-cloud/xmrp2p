@@ -1,0 +1,11 @@
+[
+ {
+  "id": "E10",
+  "title": "tx_key malformado",
+  "expect": "refund",
+  "outcome": "refund",
+  "ok": true,
+  "minutes": 36,
+  "recovery": "C:\\plataforma\\e2e\\.secrets\\recovery\\2026-10-26T00-11-44-693Z-E10.json"
+ }
+]
