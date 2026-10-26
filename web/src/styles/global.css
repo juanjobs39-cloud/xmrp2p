@@ -86,4 +86,5 @@ form.app small { font-weight: 400; color: var(--muted); }
 body.busy { cursor: progress; }
 body.busy .btn { opacity: 0.6; pointer-events: none; }
 #status { color: var(--muted); min-height: 1.5em; }
+#wallet-step { font-weight: 600; border-left: 4px solid var(--accent, currentColor); }
 @media (max-width: 40rem) { body { font-size: 1rem; } }

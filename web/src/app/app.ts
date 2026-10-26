@@ -7,8 +7,8 @@ import type { Address, Hex } from "viem";
 import { api, type MakerReply, type Offer } from "./api";
 import { isDeployed, MONERO, NETWORKS, POLICY } from "./config";
 import { decide, type Action, type XmrCheck } from "./decide";
-import { Evm } from "./evm";
-import { t, type Lang } from "./i18n";
+import { Evm, type WalletStep } from "./evm";
+import { t, type Key, type Lang } from "./i18n";
 import { decryptRecovery, encryptRecovery, recoveryFilename, type RecoveryFile } from "./recovery";
 
 interface PublicMessage {
@@ -232,7 +232,7 @@ export class SwapApp {
     if (Date.now() / 1000 > s.reply!.deposit_deadline) throw new Error(t(this.lang, "deposit_expired"));
     const net = NETWORKS[s.network]!;
     if (!isDeployed(net)) throw new Error(t(this.lang, "not_deployed"));
-    this.evm ??= new Evm(net);
+    this.evm ??= this.makeEvm(net);
     const account = await this.evm.connect();
     const amount = BigInt(s.reply!.usdt_atomic);
     if ((await this.evm.tokenBalance(account)) < amount) throw new Error(t(this.lang, "no_balance"));
@@ -275,7 +275,7 @@ export class SwapApp {
   private async tick(): Promise<void> {
     const s = this.need();
     const net = NETWORKS[s.network]!;
-    this.evm ??= new Evm(net);
+    this.evm ??= this.makeEvm(net);
     // Mensajes del maker (XMR bloqueado con su llave de transacción).
     if (s.room) {
       for (const m of await api.events(s.room.id, s.room.token, s.last_seq)) {
@@ -431,6 +431,38 @@ export class SwapApp {
   private show(id: string): void {
     for (const el of document.querySelectorAll<HTMLElement>("[data-step]")) el.hidden = el.id !== id;
     $(id).scrollIntoView({ block: "start" });
+  }
+
+  private makeEvm(net: ConstructorParameters<typeof Evm>[0]): Evm {
+    const evm = new Evm(net);
+    evm.onStep = (st) => this.walletStep(st);
+    return evm;
+  }
+
+  private stepTimer: ReturnType<typeof setInterval> | null = null;
+
+  /** Aviso "Paso n de total" con contador mientras MetaMask pide una firma o confirma una tx. */
+  private walletStep(st: WalletStep | null): void {
+    const el = $("wallet-step");
+    if (this.stepTimer) clearInterval(this.stepTimer);
+    this.stepTimer = null;
+    if (!st) {
+      el.hidden = true;
+      return;
+    }
+    const start = Date.now();
+    const what = t(this.lang, `step_${st.what}` as Key);
+    const render = () => {
+      const sec = Math.floor((Date.now() - start) / 1000);
+      const clock = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+      const head = t(this.lang, "step_of", { n: st.n, total: st.total, what });
+      const body = st.kind === "mining" ? t(this.lang, "step_mining") : t(this.lang, st.kind === "sign" ? "step_sign" : "step_send");
+      const more = st.n < st.total && st.kind !== "mining" ? ` ${t(this.lang, "step_more")}` : "";
+      el.textContent = `${head} — ${body}${more} (${clock})`;
+    };
+    render();
+    el.hidden = false;
+    this.stepTimer = setInterval(render, 1000);
   }
 
   private status(text: string): void {
