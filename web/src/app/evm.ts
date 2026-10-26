@@ -14,6 +14,7 @@ import {
   type PublicClient,
   type WalletClient,
 } from "viem";
+import { findProvider, withTimeout, type Eip1193 } from "./wallet-provider";
 import { ESCROW_ABI, FACTORY_ABI } from "./abi";
 import type { ChainView, Stage } from "./decide";
 
@@ -31,16 +32,18 @@ const TOKEN_ABI = parseAbi([
 
 const STAGES: Stage[] = ["UNINITIALIZED", "PENDING", "READY", "COMPLETED"];
 
-interface Eip1193 {
-  request(args: { method: string; params?: unknown[] }): Promise<unknown>;
-}
 
-export function injected(): Eip1193 | null {
-  return ((globalThis as unknown as { ethereum?: Eip1193 }).ethereum ?? null) as Eip1193 | null;
-}
 
 /** Lo que la wallet le está pidiendo al usuario, para mostrarlo en la página. */
-export type WalletStep = { kind: "sign" | "send" | "mining"; n: number; total: number; what: "permit" | "approve" | "deposit" | "ready" | "refund" };
+export type WalletStep = {
+  kind: "connect" | "network" | "sign" | "send" | "mining";
+  n: number;
+  total: number;
+  what: "connect" | "permit" | "approve" | "deposit" | "ready" | "refund";
+};
+
+/** Tiempo máximo esperando a la wallet para conectar o cambiar de red. */
+const WALLET_TIMEOUT_MS = 180_000;
 
 export class Evm {
   readonly pub: PublicClient;
@@ -54,7 +57,7 @@ export class Evm {
   }
 
   async connect(): Promise<Address> {
-    const provider = injected();
+    const provider: Eip1193 | null = await findProvider();
     if (!provider) throw new Error("No se encontró una wallet de navegador (MetaMask o compatible).");
     const chain = {
       id: this.net.chainId,
@@ -62,17 +65,26 @@ export class Evm {
       nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
       rpcUrls: { default: { http: [this.net.rpc] } },
     };
+    const late = `MetaMask no respondió en 3 minutos. Da clic en el ícono de MetaMask por si tiene una solicitud pendiente y vuelve a intentar.`;
     this.wallet = createWalletClient({ chain, transport: custom(provider) });
-    const [account] = await this.wallet.requestAddresses();
-    if (!account) throw new Error("La wallet no compartió ninguna cuenta.");
-    this.account = getAddress(account);
-    const current = Number(await provider.request({ method: "eth_chainId" }));
-    if (current !== this.net.chainId) {
-      try {
-        await this.wallet.switchChain({ id: this.net.chainId });
-      } catch {
-        await this.wallet.addChain({ chain });
+    try {
+      this.onStep?.({ kind: "connect", n: 1, total: 1, what: "connect" });
+      const [account] = await withTimeout(this.wallet.requestAddresses(), WALLET_TIMEOUT_MS, late);
+      if (!account) throw new Error("La wallet no compartió ninguna cuenta.");
+      this.account = getAddress(account);
+      const current = Number(await provider.request({ method: "eth_chainId" }));
+      if (current !== this.net.chainId) {
+        this.onStep?.({ kind: "network", n: 1, total: 1, what: "connect" });
+        try {
+          await withTimeout(this.wallet.switchChain({ id: this.net.chainId }), WALLET_TIMEOUT_MS, late);
+        } catch (e) {
+          // 4902: la wallet no conoce la red; cualquier otro error (rechazo, tiempo) se informa tal cual.
+          if ((e as { code?: number; cause?: { code?: number } }).code !== 4902 && (e as { cause?: { code?: number } }).cause?.code !== 4902) throw e;
+          await withTimeout(this.wallet.addChain({ chain }), WALLET_TIMEOUT_MS, late);
+        }
       }
+    } finally {
+      this.onStep?.(null);
     }
     return this.account;
   }

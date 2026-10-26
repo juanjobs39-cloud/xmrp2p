@@ -10,6 +10,7 @@ import { API_URL, isDeployed, selectedNetwork, validXmrAddress, type EvmNetwork 
 import { cryptoLib, xmrLib, type MakerWalletInfo } from "../app/libs";
 import type { RecoveryFile } from "../app/recovery";
 import { startLoading } from "../app/ui";
+import { findProvider } from "../app/wallet-provider";
 import { MakerChannel, type TakeRequest } from "./channel";
 import { ACTIVE, DEFAULT_CONFIG, nextStep, offerable, PICONERO, quote, rejectTake, type MakerConfig, type MakerSwap, type PublicMessage, type Step } from "./engine";
 import { hasVault, keys, kv, openVault, saveVault, wipe, type Vault } from "./store";
@@ -569,24 +570,8 @@ export class MakerApp {
     }
   }
 
-  /**
-   * Proveedor de MetaMask. Con varias extensiones de wallet instaladas, `window.ethereum` puede ser
-   * otra; por eso se pide la lista (EIP-6963) y se prefiere MetaMask por su identificador.
-   */
-  private async provider(): Promise<Eip1193 | null> {
-    const found: { info: { rdns: string; name: string }; provider: Eip1193 }[] = [];
-    const on = (e: Event) => found.push((e as CustomEvent).detail);
-    window.addEventListener("eip6963:announceProvider", on);
-    window.dispatchEvent(new Event("eip6963:requestProvider"));
-    await new Promise((r) => setTimeout(r, 300));
-    window.removeEventListener("eip6963:announceProvider", on);
-    const mm = found.find((p) => p.info?.rdns === "io.metamask") ?? found[0];
-    if (mm) console.info("[maker] wallet:", mm.info?.name, "de", found.map((p) => p.info?.name).join(", "));
-    return mm?.provider ?? (globalThis as { ethereum?: Eip1193 }).ethereum ?? null;
-  }
-
   private async metamask(): Promise<{ eth: Eip1193; from: Address }> {
-    const eth = await this.provider();
+    const eth = (await findProvider()) as Eip1193 | null;
     if (!eth) throw new Error(this.t("no_metamask"));
     const [from] = (await this.mm(eth.request({ method: "eth_requestAccounts" }), "mm_connect")) as Address[];
     const net = this.net;

@@ -470,7 +470,11 @@ export class SwapApp {
       const sec = Math.floor((Date.now() - start) / 1000);
       const clock = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
       const head = t(this.lang, "step_of", { n: st.n, total: st.total, what });
-      const body = st.kind === "mining" ? t(this.lang, "step_mining") : t(this.lang, st.kind === "sign" ? "step_sign" : "step_send");
+      const body =
+        st.kind === "mining" ? t(this.lang, "step_mining")
+        : st.kind === "connect" ? t(this.lang, "step_connect_body")
+        : st.kind === "network" ? t(this.lang, "step_network_body", { net: this.net.name })
+        : t(this.lang, st.kind === "sign" ? "step_sign" : "step_send");
       const more = st.n < st.total && st.kind !== "mining" ? ` ${t(this.lang, "step_more")}` : "";
       el.textContent = `${head} — ${body}${more} (${clock})`;
     };
