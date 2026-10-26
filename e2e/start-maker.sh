@@ -12,4 +12,9 @@ MONERO_WALLET_RPC_PASSWORD="$(cat "$S/rpc_maker.password")"
 MONERO_MAIN_WALLET_PASSWORD="$(cat "$S/wallet_maker.password")"
 export MONERO_WALLET_RPC_PASSWORD MONERO_MAIN_WALLET_PASSWORD
 export XMRP2P_TEST_FAULTS=1
-exec maker/.venv/Scripts/python -m xmrp2p_maker --config "$S/maker.toml" run
+# Si el daemon se cae (p. ej. un corte de red al arrancar), se reinicia solo.
+while true; do
+  maker/.venv/Scripts/python -m xmrp2p_maker --config "$S/maker.toml" run || true
+  echo "$(date '+%F %T') maker terminó; reinicio en 15 s"
+  sleep 15
+done

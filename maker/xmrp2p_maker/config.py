@@ -40,7 +40,7 @@ class Safety:
     # Nunca enviar `claim` a menos de este tiempo de t1: una tx fallida revelaría s_b.
     claim_cutoff_before_t1: int = 15 * 60
     # Si el taker no deposita en este tiempo, la negociación expira.
-    deposit_timeout: int = 15 * 60
+    deposit_timeout: int = 30 * 60
     xmr_confirmations: int = 10
 
 

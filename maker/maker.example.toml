@@ -41,5 +41,5 @@ max_concurrent = 3
 min_time_to_t0 = 2700        # el depósito debe dejar ≥ 45 min hasta t0
 min_claim_window = 3600      # t1 − t0 ≥ 1 h
 claim_cutoff_before_t1 = 900 # nunca enviar claim en los últimos 15 min antes de t1
-deposit_timeout = 900        # la negociación expira si no hay depósito en 15 min
+deposit_timeout = 1800       # la negociación expira si no hay depósito en 30 min (usuarios nuevos de MetaMask tardan)
 xmr_confirmations = 10

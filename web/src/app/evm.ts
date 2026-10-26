@@ -72,6 +72,17 @@ export class Evm {
     return this.account;
   }
 
+  /**
+   * Comisiones con margen amplio. MetaMask a veces fija maxFeePerGas justo en la comisión base y,
+   * si esta sube un poco antes de incluirse, la red rechaza la tx (hallazgo de la prueba manual).
+   * En Arbitrum solo se cobra la comisión base real: el margen no encarece la transacción.
+   */
+  private async fees(): Promise<{ maxFeePerGas: bigint; maxPriorityFeePerGas: bigint }> {
+    const block = await this.pub.getBlock();
+    const base = block.baseFeePerGas ?? (await this.pub.getGasPrice());
+    return { maxFeePerGas: base * 3n + 1_000_000n, maxPriorityFeePerGas: 0n };
+  }
+
   private need(): { wallet: WalletClient; account: Address } {
     if (!this.wallet || !this.account) throw new Error("Conecta tu wallet primero.");
     return { wallet: this.wallet, account: this.account };
@@ -130,16 +141,16 @@ export class Evm {
     let hash: Hex;
     if (sig) {
       hash = await wallet.writeContract({
-        account, chain: null, address: this.net.factory, abi: FACTORY_ABI, functionName: "newSwapWithPermit",
+        account, chain: null, ...(await this.fees()), address: this.net.factory, abi: FACTORY_ABI, functionName: "newSwapWithPermit",
         args: [...args, deadline, sig.v, sig.r, sig.s],
       });
     } else {
       const allowance = await this.pub.readContract({ address: this.net.token, abi: TOKEN_ABI, functionName: "allowance", args: [account, this.net.factory] });
       if (allowance < p.amount) {
-        const a = await wallet.writeContract({ account, chain: null, address: this.net.token, abi: TOKEN_ABI, functionName: "approve", args: [this.net.factory, p.amount] });
+        const a = await wallet.writeContract({ account, chain: null, ...(await this.fees()), address: this.net.token, abi: TOKEN_ABI, functionName: "approve", args: [this.net.factory, p.amount] });
         await this.pub.waitForTransactionReceipt({ hash: a });
       }
-      hash = await wallet.writeContract({ account, chain: null, address: this.net.factory, abi: FACTORY_ABI, functionName: "newSwap", args });
+      hash = await wallet.writeContract({ account, chain: null, ...(await this.fees()), address: this.net.factory, abi: FACTORY_ABI, functionName: "newSwap", args });
     }
     const receipt = await this.pub.waitForTransactionReceipt({ hash });
     if (receipt.status !== "success") throw new Error("El depósito revirtió.");
@@ -170,7 +181,7 @@ export class Evm {
 
   async setReady(escrow: Address): Promise<Hex> {
     const { wallet, account } = this.need();
-    const h = await wallet.writeContract({ account, chain: null, address: escrow, abi: ESCROW_ABI, functionName: "setReady" });
+    const h = await wallet.writeContract({ account, chain: null, ...(await this.fees()), address: escrow, abi: ESCROW_ABI, functionName: "setReady" });
     await this.pub.waitForTransactionReceipt({ hash: h });
     return h;
   }
@@ -179,7 +190,7 @@ export class Evm {
     const { wallet, account } = this.need();
     // Simular antes: una tx fallida revelaría el secreto del taker.
     await this.pub.simulateContract({ account, address: escrow, abi: ESCROW_ABI, functionName: "refund", args: [secret, to ?? account] });
-    const h = await wallet.writeContract({ account, chain: null, address: escrow, abi: ESCROW_ABI, functionName: "refund", args: [secret, to ?? account] });
+    const h = await wallet.writeContract({ account, chain: null, ...(await this.fees()), address: escrow, abi: ESCROW_ABI, functionName: "refund", args: [secret, to ?? account] });
     await this.pub.waitForTransactionReceipt({ hash: h });
     return h;
   }
