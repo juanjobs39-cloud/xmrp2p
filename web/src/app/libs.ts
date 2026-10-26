@@ -10,7 +10,12 @@ export type Crypto = {
   recoverWallet(own: string, cp: string, secret: string, net: string): string;
 };
 
-const vendor = (p: string) => new URL(`../../vendor/${p}`, location.href).href;
+// ?v= con la versión que fija el build (scripts/postbuild.mjs): debe coincidir con las claves del import map.
+const vendorVersion = () => document.querySelector('meta[name="xmrp2p-vendor-version"]')?.getAttribute("content");
+const vendor = (p: string) => {
+  const v = vendorVersion();
+  return new URL(`../../vendor/${p}${v ? `?v=${v}` : ""}`, location.href).href;
+};
 
 let crypto_: Crypto | null = null;
 export async function cryptoLib(): Promise<Crypto> {

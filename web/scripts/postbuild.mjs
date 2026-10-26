@@ -29,9 +29,16 @@ const files = await walk(dist);
 const local = (href) => href.startsWith("/") && !href.startsWith("//");
 const fileFor = (href) => join(dist, decodeURIComponent(href.split("?")[0]));
 
+// Versión de los archivos de /vendor/ (hash de su contenido). Se agrega como ?v= a sus URLs: /vendor/
+// se sirve con caché inmutable, y sin versión un navegador podía quedarse con un xmr.js viejo que ya
+// no coincide con el integrity del import map ("Failed to fetch dynamically imported module").
+const vendorFiles = ["vendor/crypto/xmrp2p_crypto.js", "vendor/crypto/xmrp2p_crypto_bg.wasm", "vendor/xmr/xmr.js", "vendor/xmr/monero.worker.js"];
+const vh = createHash("sha256");
+for (const f of vendorFiles) vh.update(await readFile(join(dist, f)));
+const vendorVersion = vh.digest("hex").slice(0, 12);
 const vendor = {
-  "/vendor/crypto/xmrp2p_crypto.js": await readFile(join(dist, "vendor/crypto/xmrp2p_crypto.js")),
-  "/vendor/xmr/xmr.js": await readFile(join(dist, "vendor/xmr/xmr.js")),
+  [`/vendor/crypto/xmrp2p_crypto.js?v=${vendorVersion}`]: await readFile(join(dist, "vendor/crypto/xmrp2p_crypto.js")),
+  [`/vendor/xmr/xmr.js?v=${vendorVersion}`]: await readFile(join(dist, "vendor/xmr/xmr.js")),
 };
 const wasmHash = sri(await readFile(join(dist, "vendor/crypto/xmrp2p_crypto_bg.wasm")));
 
@@ -60,7 +67,7 @@ for (const f of files.filter((p) => p.endsWith(".html"))) {
   if (html.includes('http-equiv="Content-Security-Policy"')) {
     const map = JSON.stringify({ imports: {}, integrity: Object.fromEntries(Object.entries(vendor).map(([k, v]) => [k, sri(v)])) });
     const tag = `<script type="importmap">${map}</script>`;
-    html = html.replace("<head>", `<head>${tag}<meta name="xmrp2p-wasm-integrity" content="${wasmHash}">`);
+    html = html.replace("<head>", `<head>${tag}<meta name="xmrp2p-wasm-integrity" content="${wasmHash}"><meta name="xmrp2p-vendor-version" content="${vendorVersion}">`);
     html = html.replace(/(script-src 'self' 'wasm-unsafe-eval')/, `$1 ${sha256b64(map)}`);
   }
   await writeFile(f, html);
@@ -99,4 +106,4 @@ for (const p of all) {
   lines.push(`${createHash("sha256").update(buf).digest("hex")}  ${relative(dist, p).split(sep).join("/")}`);
 }
 await writeFile(join(dist, "SHA256SUMS"), lines.join("\n") + "\n");
-console.log(`postbuild: SRI en ${pages} páginas, ${lines.length} archivos en SHA256SUMS, WASM ${wasmHash.slice(0, 20)}…`);
+console.log(`postbuild: vendor v=${vendorVersion}, SRI en ${pages} páginas, ${lines.length} archivos en SHA256SUMS, WASM ${wasmHash.slice(0, 20)}…`);
