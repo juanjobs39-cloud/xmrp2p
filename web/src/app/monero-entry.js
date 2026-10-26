@@ -174,3 +174,14 @@ export async function makerClose() {
     maker = null;
   }
 }
+
+/** Llaves de la wallet abierta (para guardar en el respaldo una wallet creada por error). */
+export async function makerKeys() {
+  return {
+    address: await maker.getPrimaryAddress(),
+    seed: await maker.getSeed(),
+    viewKey: await maker.getPrivateViewKey(),
+    spendKey: await maker.getPrivateSpendKey(),
+    restoreHeight: Number(await maker.getRestoreHeight()),
+  };
+}

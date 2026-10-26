@@ -19,6 +19,9 @@ export interface Vault {
   node: string;
   config: Omit<MakerConfig, "maxExposure"> & { maxExposure: string };
   swaps: MakerSwap[];
+  /** Wallets creadas por error al importar un respaldo (antes de la corrección del 26-oct). Se
+   *  guardan para que su XMR nunca se pierda. */
+  orphans?: { address: string; seed: string; viewKey: string; spendKey: string; restoreHeight: number; found_at: number }[];
 }
 
 const DB = "monerop2p-maker";

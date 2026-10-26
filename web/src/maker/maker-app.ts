@@ -189,14 +189,32 @@ export class MakerApp {
     this.pass = pass;
     if (file) await this.persist();
     this.status(this.t("opening_wallet"));
+    this.walletSavedAt = 0;
     const xmr = await xmrLib();
-    const data = file ? undefined : await kv.get<{ keysData: Uint8Array; cacheData: Uint8Array }>(keys(this.net.id).wallet);
-    try {
-      this.wallet = await xmr.makerOpen({ node: this.vault.node, network: this.net.monero.network, password: pass, ...(data ?? {}) });
-    } catch {
-      // Datos de la wallet ilegibles o de otra versión: se restaura desde la semilla.
-      this.wallet = await xmr.makerOpen({ node: this.vault.node, network: this.net.monero.network, password: pass, seed: this.vault.seed, restoreHeight: this.vault.restore_height });
+    const v = this.vault;
+    const fromSeed = () =>
+      xmr.makerOpen({ node: v.node, network: this.net.monero.network, password: pass, seed: v.seed, restoreHeight: v.restore_height });
+    // Datos guardados en este navegador (sincronización rápida). Se usan SOLO si son de la wallet del respaldo.
+    const data = await kv.get<{ keysData: Uint8Array; cacheData: Uint8Array }>(keys(this.net.id).wallet);
+    let info: Awaited<ReturnType<typeof fromSeed>> | null = null;
+    if (data) {
+      try {
+        info = await xmr.makerOpen({ node: v.node, network: this.net.monero.network, password: pass, ...data });
+      } catch {
+        info = null; // ilegibles o de otra versión
+      }
     }
+    if (info && info.seed !== v.seed) {
+      // Wallet creada por error al importar un respaldo: se guarda en el respaldo para no perder su XMR.
+      const k = await xmr.makerKeys();
+      v.orphans = [...(v.orphans ?? []).filter((o) => o.address !== k.address), { ...k, found_at: Date.now() }];
+      await this.persist();
+      this.banner(this.t("orphan_found", { addr: k.address }), "warn");
+      info = null;
+    }
+    // Siempre la wallet de la semilla del respaldo (antes, subir el archivo creaba una wallet nueva).
+    this.wallet = info ?? (await fromSeed());
+    if (!info) await kv.del(keys(this.net.id).wallet); // se vuelven a guardar los datos de la wallet correcta
     this.backupDone = true;
     this.status("");
     await this.enterPanel();
