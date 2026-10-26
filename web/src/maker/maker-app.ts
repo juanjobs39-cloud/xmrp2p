@@ -42,6 +42,7 @@ export class MakerApp {
   private releaseLock: (() => void) | null = null;
   private wakeLock: { release(): Promise<void> } | null = null;
   private backupDone = false;
+  private takeQueue: Promise<unknown> = Promise.resolve();
   private log: string[] = [];
 
   constructor(private lang: Lang) {}
@@ -215,7 +216,13 @@ export class MakerApp {
     const { MakerChain } = await import("./chain");
     this.chain = new MakerChain(NETWORKS[NET_ID]!, v.evm_key);
     this.channel = new MakerChannel(API_URL, this.chain.account, NET_ID);
-    this.channel.onTake = (m) => this.onTake(m);
+    // Las solicitudes se atienden de una en una: si llegan dos juntas, la segunda ve a la primera.
+    this.channel.onTake = (m) => {
+      const run = this.takeQueue.then(() => this.onTake(m));
+      this.takeQueue = run.catch(() => undefined);
+      return run;
+    };
+    this.channel.onExpired = (id) => void this.onExpired(id);
     this.channel.onState = (online, detail) => this.renderOnline(online, detail);
     $<HTMLInputElement>("mk-margin").value = String(this.cfg.marginBps / 100);
     $<HTMLInputElement>("mk-min").value = String(this.cfg.minUsdt);
@@ -438,8 +445,17 @@ export class MakerApp {
     await this.channel.publishOffer({ price: price.toFixed(6), min_usdt: String(this.cfg.minUsdt), max_usdt: String(maxUsdt), max_xmr: maxXmr.toFixed(6), ttl: OFFER_TTL });
   }
 
+  /** El backend dejó de esperar: el taker no recibió nuestras llaves y no puede depositar. Se descarta. */
+  private async onExpired(requestId: string): Promise<void> {
+    const s = this.vault?.swaps.find((x) => x.request_id === requestId && x.state === "NEGOTIATED" && !x.escrow);
+    if (!s) return;
+    await this.move(s, "EXPIRED", this.t("log_take_expired"));
+    void this.refreshOffer();
+  }
+
   /** Un taker pide un swap: se valida, se guarda y se responde (todo antes de 45 s). */
   private async onTake(m: TakeRequest): Promise<unknown> {
+    const started = Date.now();
     if (!this.offering) throw new Error("el maker está en pausa");
     if (m.network !== NET_ID) throw new Error("red no soportada por este maker");
     if (!this.price) throw new Error("el maker no tiene precio de referencia");
@@ -464,6 +480,7 @@ export class MakerApp {
       state: "NEGOTIATED",
       created_at: Date.now(),
       room_id: m.room_id,
+      request_id: m.request_id,
       usdt_atomic: q.usdtAtomic.toString(),
       xmr_atomic: q.xmrAtomic.toString(),
       price: q.price.toFixed(6),
@@ -482,7 +499,7 @@ export class MakerApp {
     };
     v.swaps.push(s);
     await this.persist(); // guardar las llaves ANTES de responder
-    this.note(this.t("log_take", { usdt: m.usdt, xmr: (Number(q.xmrAtomic) / 1e12).toFixed(6) }));
+    this.note(this.t("log_take", { usdt: m.usdt, xmr: (Number(q.xmrAtomic) / 1e12).toFixed(6), s: ((Date.now() - started) / 1000).toFixed(1) }));
     this.render();
     void this.refreshOffer();
     return {

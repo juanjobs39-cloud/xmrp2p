@@ -68,6 +68,12 @@ export class MakerInbox extends DurableObject<Env> {
     const result = await new Promise<{ ok: boolean; result?: unknown; error?: string }>((resolve) => {
       const timer = setTimeout(() => {
         this.pending.delete(requestId);
+        // Avisar al maker para que descarte esa negociación: el taker ya no la espera.
+        try {
+          ws.send(JSON.stringify({ type: "take_expired", request_id: requestId }));
+        } catch {
+          /* desconectado */
+        }
         resolve({ ok: false, error: "el maker no respondió a tiempo" });
       }, timeoutMs);
       this.pending.set(requestId, { resolve, timer });

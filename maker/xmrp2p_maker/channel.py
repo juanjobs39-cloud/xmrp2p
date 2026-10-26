@@ -49,6 +49,7 @@ class Channel:
         self.session = requests.Session()
         self._ws = None
         self._lock = threading.Lock()
+        self.on_expired: Callable[[str], None] | None = None
 
     # ------------------------------------------------------------------ libro de órdenes
 
@@ -123,6 +124,11 @@ class Channel:
                 ws.send(json.dumps({"type": "reply", "request_id": m["request_id"], "ok": True, "result": result}))
             except Exception as e:
                 ws.send(json.dumps({"type": "reply", "request_id": m["request_id"], "ok": False, "error": str(e)}))
+        elif m.get("type") == "take_expired" and self.on_expired and isinstance(m.get("request_id"), str):
+            try:
+                self.on_expired(m["request_id"])
+            except Exception as e:
+                log.warning("no se pudo descartar la solicitud vencida: %s", e)
         elif m.get("type") == "taker_message" and on_taker_message:
             on_taker_message(m)
         elif m.get("type") == "error":

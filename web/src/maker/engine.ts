@@ -83,6 +83,8 @@ export interface MakerSwap {
   note?: string;
   created_at: number;
   room_id?: string;
+  /** Id de la solicitud del backend (para descartarla si vence antes de responder). */
+  request_id?: string;
   usdt_atomic: string;
   xmr_atomic: string;
   price: string;

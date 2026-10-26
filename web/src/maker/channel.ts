@@ -28,6 +28,8 @@ export class MakerChannel {
     throw new Error("sin manejador");
   };
   onState: (online: boolean, detail?: string) => void = () => {};
+  /** El backend dejó de esperar la respuesta a esta solicitud (el taker recibió un error). */
+  onExpired: (requestId: string) => void = () => {};
 
   constructor(private api: string, private account: PrivateKeyAccount, private network: string) {}
 
@@ -116,6 +118,10 @@ export class MakerChannel {
     try {
       m = JSON.parse(raw);
     } catch {
+      return;
+    }
+    if (m.type === "take_expired" && typeof m.request_id === "string") {
+      this.onExpired(m.request_id);
       return;
     }
     if (m.type !== "take") return;

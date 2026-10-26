@@ -87,8 +87,15 @@ def start_channel(engine: Engine) -> None:
         if m.get("network") != cfg.evm_network:
             raise ValueError("red no soportada por este maker")
         reply = engine.take(Decimal(str(m["usdt"])), m["taker_message"])
-        engine.store.update(reply["swap_id"], room_id=m["room_id"])
+        engine.store.update(reply["swap_id"], room_id=m["room_id"], request_id=m.get("request_id"))
         return reply
+
+    def on_expired(request_id: str) -> None:
+        # El backend dejó de esperar la respuesta: el taker no recibió nuestras llaves y no puede
+        # depositar. Se descarta la negociación para no bloquear XMR hasta deposit_timeout.
+        for s in list(engine.store.active()):
+            if s.state == "NEGOTIATED" and s.get("request_id") == request_id:
+                engine.store.transition(s.id, "NEGOTIATED", "EXPIRED", "solicitud vencida en el backend")
 
     def refresh_offers() -> None:
         while True:
@@ -109,6 +116,7 @@ def start_channel(engine: Engine) -> None:
                     pass
             threading.Event().wait(cfg.offer_refresh_seconds)
 
+    ch.on_expired = on_expired
     threading.Thread(target=ch.serve, args=(on_take,), daemon=True, name="buzon").start()
     threading.Thread(target=refresh_offers, daemon=True, name="ofertas").start()
 

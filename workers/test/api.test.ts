@@ -185,7 +185,8 @@ describe("canal del swap (buzón del maker + sala)", () => {
 
     const p = req();
     const take = await inbox.next(); // la solicitud que expiró
-    void take;
+    // El buzón avisa al maker que esa solicitud venció, para que la descarte.
+    expect(await inbox.next()).toEqual({ type: "take_expired", request_id: take.request_id });
     const take2 = await inbox.next();
     inbox.ws.send(JSON.stringify({ type: "reply", request_id: take2.request_id, ok: false, error: "sin liquidez" }));
     const r = await p;
