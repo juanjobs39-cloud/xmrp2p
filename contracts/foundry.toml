@@ -17,6 +17,8 @@ remappings = [
   "forge-std/=lib/forge-std/src/",
 ]
 fs_permissions = [{ access = "read", path = "./test/vectors" }]
+# Halmos no soporta `vm.deployCode`: compilar los `new Contrato(...)` de las pruebas como CREATE normal.
+dynamic_test_linking = false
 
 [profile.default.fuzz]
 runs = 2_000
