@@ -14,7 +14,7 @@ MoneroP2P provides a web interface and open-source software to perform atomic sw
 
 ## Testing status
 
-The service only runs on test networks (testnet). Test tokens have no value. Do not use real funds.
+The service runs with real money on Arbitrum One (USDT) and Monero, with a maximum of 100 USDT per swap enforced by the contract. A practice mode on test networks (testnet) is also available; test tokens have no value. The contract has been verified with automated tools (Halmos, Aderyn, Slither) but has not had an external audit; you use the service at your own risk.
 
 ## Your responsibilities
 

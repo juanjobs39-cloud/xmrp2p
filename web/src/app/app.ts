@@ -330,6 +330,8 @@ export class SwapApp {
   private renderAction(a: Action, t0: number, t1: number, now: number): void {
     const btn = $<HTMLButtonElement>("btn-action");
     const msg = $("action-text");
+    const progress = $<HTMLProgressElement>("xmr-progress");
+    progress.hidden = true;
     const loading = btn.classList.contains("loading");
     if (!loading) btn.hidden = true;
     const label = (k: Key) => {
@@ -341,9 +343,21 @@ export class SwapApp {
     const mins = (x: number) => Math.max(0, Math.round((x - now) / 60));
     $("timeline").textContent = t(this.lang, "timeline", { t0: mins(t0), t1: mins(t1) });
     switch (a.kind) {
-      case "wait_xmr":
-        msg.textContent = `${t(this.lang, "wait_xmr")} (${a.reason}). ${t(this.lang, "refund_deadline", { m: mins(a.deadline) })}`;
+      case "wait_xmr": {
+        // Que quede claro: el XMR está BLOQUEADO (no en la wallet) y hay que confirmar al llegar a 10/10.
+        const chk = this.state?.xmr_check;
+        const expected = BigInt(this.state?.reply?.xmr_atomic ?? 0);
+        const n = Math.min(10, chk?.confirmations ?? 0);
+        const text = !this.state?.xmr_lock
+          ? t(this.lang, "lock_waiting")
+          : chk && BigInt(chk.received) < expected
+            ? t(this.lang, "lock_short")
+            : t(this.lang, "lock_confirming", { n, min: (10 - n) * 2 });
+        msg.textContent = `${text} ${t(this.lang, "refund_deadline", { m: mins(a.deadline) })}`;
+        progress.hidden = !this.state?.xmr_lock;
+        progress.value = n;
         break;
+      }
       case "set_ready":
         msg.textContent = t(this.lang, "xmr_ok");
         label("btn_ready");

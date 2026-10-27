@@ -6,7 +6,7 @@ description: "A maker provides XMR and earns a margin over the market price. Do 
 updated: 2026-10-26
 ---
 
-**Short answer:** a maker holds XMR and offers it for USDT, with a margin over the reference price. You can do it **from your browser with nothing to install** (the open tab works as your server), or **24/7 with your own server or computer**. Either way, nobody holds your funds. At this stage it only runs on testnet.
+**Short answer:** a maker holds XMR and offers it for USDT, with a margin over the reference price. You can do it **from your browser with nothing to install** (the open tab works as your server), or **24/7 with your own server or computer**. Either way, nobody holds your funds. It runs with real money on Arbitrum One (maximum 100 USDT per swap), and a testnet practice mode is also available.
 
 ## Two ways to be a maker
 

@@ -6,7 +6,7 @@ description: "Un maker aporta XMR y cobra un margen sobre el precio de mercado. 
 updated: 2026-10-26
 ---
 
-**Respuesta corta:** un maker es quien tiene XMR y lo ofrece a cambio de USDT, con un margen sobre el precio de referencia. Puedes serlo **desde tu navegador, sin instalar nada** (la pestaña abierta hace de servidor), o **24/7 con tu propio servidor o computadora**. En ambos casos nadie custodia tus fondos. En esta etapa solo funciona en testnet.
+**Respuesta corta:** un maker es quien tiene XMR y lo ofrece a cambio de USDT, con un margen sobre el precio de referencia. Puedes serlo **desde tu navegador, sin instalar nada** (la pestaña abierta hace de servidor), o **24/7 con tu propio servidor o computadora**. En ambos casos nadie custodia tus fondos. Funciona con dinero real en Arbitrum One (máximo 100 USDT por swap) y también hay modo de práctica en testnet.
 
 ## Dos formas de ser maker
 

@@ -1,0 +1,47 @@
+---
+/**
+ * Sellos de verificación del contrato. Cada uno enlaza a la evidencia pública: el informe
+ * (docs/AUDITORIA-GRATUITA.md) y las corridas del flujo «Auditoría» en GitHub Actions.
+ */
+import { SITE, type Lang } from "../site";
+
+interface Props {
+  lang: Lang;
+  compact?: boolean;
+}
+const { lang, compact = false } = Astro.props;
+const t = (es: string, en: string) => (lang === "es" ? es : en);
+const report = `${SITE.repo}/blob/main/docs/AUDITORIA-GRATUITA.md`;
+const runs = `${SITE.repo}/actions/workflows/auditoria.yml`;
+const contract = "https://repo.sourcify.dev/42161/0x88fc05Cb07C5b69fbed1F7B1c1F784Cd26e99535";
+---
+<div class={compact ? "seals compact" : "seals"}>
+  {!compact && <p class="seals-title">{t("Contrato verificado con", "Contract verified with")}</p>}
+  <ul>
+    <li>
+      <a href={report} rel="noopener" title={t("Verificación simbólica: 7/7 propiedades probadas para todas las entradas", "Symbolic verification: 7/7 properties proven for all inputs")}>
+        <span class="seal-mark" aria-hidden="true">✓</span><strong>Halmos</strong><small>7/7 {t("propiedades", "properties")}</small>
+      </a>
+    </li>
+    <li>
+      <a href={report} rel="noopener" title={t("Análisis estático de Cyfrin: 0 hallazgos altos", "Cyfrin static analysis: 0 high findings")}>
+        <span class="seal-mark" aria-hidden="true">✓</span><strong>Aderyn</strong><small>0 {t("altos", "high")}</small>
+      </a>
+    </li>
+    <li>
+      <a href={report} rel="noopener" title={t("Análisis estático de Trail of Bits: sin hallazgos medios ni altos", "Trail of Bits static analysis: no medium or high findings")}>
+        <span class="seal-mark" aria-hidden="true">✓</span><strong>Slither</strong><small>0 {t("medios/altos", "medium/high")}</small>
+      </a>
+    </li>
+    <li>
+      <a href={contract} rel="noopener" title={t("Código del contrato publicado y verificado (coincidencia exacta)", "Contract source published and verified (exact match)")}>
+        <span class="seal-mark" aria-hidden="true">✓</span><strong>Sourcify</strong><small>{t("código verificado", "verified source")}</small>
+      </a>
+    </li>
+  </ul>
+  {!compact && (
+    <p class="meta seals-note">
+      <a href={runs} rel="noopener">{t("Ver las corridas en GitHub", "See the runs on GitHub")}</a> · <a href={report} rel="noopener">{t("Informe completo", "Full report")}</a>
+    </p>
+  )}
+</div>

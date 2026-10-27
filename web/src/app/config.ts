@@ -4,7 +4,7 @@
  *
  * Redes:
  * - arbitrum_sepolia + Monero stagenet: práctica, sin valor.
- * - arbitrum_one + Monero mainnet: DINERO REAL (beta sin auditoría externa, tope 100 USDT por swap,
+ * - arbitrum_one + Monero mainnet: DINERO REAL (tope de 100 USDT por swap,
  *   también en el contrato). Solo se activa con PUBLIC_MAINNET=on y la fábrica desplegada.
  */
 const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
@@ -98,12 +98,12 @@ export function isDeployed(n: EvmNetwork): boolean {
 export const MAINNET_ON = env.PUBLIC_MAINNET === "on" && isDeployed(NETWORKS.arbitrum_one!);
 
 /**
- * Red elegida en la página: `?red=real` para dinero real (si está activo); si no, la de práctica.
- * Un swap guardado siempre usa la red con la que se creó.
+ * Red elegida en la página: dinero real por defecto (si está activo); `?red=prueba` para la red de
+ * práctica. Un swap guardado siempre usa la red con la que se creó.
  */
 export function selectedNetwork(search = typeof location === "undefined" ? "" : location.search): EvmNetwork {
-  const real = new URLSearchParams(search).get("red") === "real";
-  return real && MAINNET_ON ? NETWORKS.arbitrum_one! : NETWORKS.arbitrum_sepolia!;
+  const practica = new URLSearchParams(search).get("red") === "prueba";
+  return MAINNET_ON && !practica ? NETWORKS.arbitrum_one! : NETWORKS.arbitrum_sepolia!;
 }
 
 /** Valida una dirección de Monero estándar o subdirección para la red dada. */

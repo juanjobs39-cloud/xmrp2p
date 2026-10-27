@@ -15,7 +15,7 @@ const t = (es: string, en: string) => (lang === "es" ? es : en);
 ---
 {MAINNET_ON && (
   <nav class="netswitch" aria-label={t("Red", "Network")}>
-    <a href="?" class="net-test">{t("Práctica (testnet)", "Practice (testnet)")}</a>
-    <a href="?red=real" class="net-real">{t("Dinero real · beta", "Real money · beta")}</a>
+    <a href="?" class="net-real">{t("Dinero real", "Real money")}</a>
+    <a href="?red=prueba" class="net-test">{t("Práctica (testnet)", "Practice (testnet)")}</a>
   </nav>
 )}

@@ -14,7 +14,7 @@ MoneroP2P ofrece una interfaz web y software de código abierto para hacer atomi
 
 ## Estado de pruebas
 
-El servicio funciona solo en redes de prueba (testnet). Los tokens de prueba no tienen valor. No uses fondos reales.
+El servicio funciona con dinero real en Arbitrum One (USDT) y Monero, con un máximo de 100 USDT por swap que impone el contrato. También hay un modo de práctica en redes de prueba (testnet); los tokens de prueba no tienen valor. El contrato fue verificado con herramientas automáticas (Halmos, Aderyn, Slither) pero no tiene una auditoría externa; usas el servicio bajo tu propio riesgo.
 
 ## Tus responsabilidades
 

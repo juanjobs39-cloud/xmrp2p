@@ -2,6 +2,7 @@
 import Base from "../../layouts/Base.astro";
 import { guidePath, guides } from "../../lib/content";
 import { MAINNET_ON } from "../../app/config";
+import Verified from "../../components/Verified.astro";
 import { ROUTES, SITE, type Lang } from "../../site";
 
 export function getStaticPaths() {
@@ -30,7 +31,10 @@ const list = (await guides(lang)).slice(0, 6);
         )}
       </p>
       {MAINNET_ON ? (
-        <p class="notice danger">{t("Estado: beta con dinero real en Arbitrum One (máximo 100 USDT por swap, también en el contrato). El contrato todavía no tiene auditoría externa: úsalo bajo tu propio riesgo. También hay un modo de práctica en testnet.", "Status: real-money beta on Arbitrum One (maximum 100 USDT per swap, also enforced by the contract). The contract has no external audit yet: use at your own risk. A testnet practice mode is also available.")}</p>
+        <>
+          <p class="notice ok">{t("✅ En funcionamiento con dinero real en Arbitrum One + Monero. Probado de punta a punta con fondos reales (primer swap completado el 26 de octubre de 2026). Máximo 100 USDT por swap.", "✅ Live with real money on Arbitrum One + Monero. Tested end to end with real funds (first swap completed on October 26, 2026). Maximum 100 USDT per swap.")}</p>
+          <Verified lang={lang} />
+        </>
       ) : (
         <p class="notice warn">{t("Estado: pruebas en testnet, sin auditoría. No uses dinero real.", "Status: testnet trials, not audited. Do not use real money.")}</p>
       )}

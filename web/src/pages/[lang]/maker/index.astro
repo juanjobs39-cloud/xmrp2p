@@ -2,6 +2,7 @@
 import Base from "../../../layouts/Base.astro";
 import { ROUTES, SITE, type Lang } from "../../../site";
 import NetSwitch from "../../../components/NetSwitch.astro";
+import Verified from "../../../components/Verified.astro";
 
 export function getStaticPaths() {
   return [{ params: { lang: "es" } }, { params: { lang: "en" } }];
@@ -37,12 +38,13 @@ const csp = [
   )}
 >
   <main id="contenido" class="prose wide" data-lang={lang}>
-    <h1>{t("Ser maker desde el navegador", "Be a maker from your browser")} <span class="badge only-test">Testnet</span><span class="badge real only-real">{t("Dinero real · beta", "Real money · beta")}</span></h1>
+    <h1>{t("Ser maker desde el navegador", "Be a maker from your browser")} <span class="badge only-test">Testnet</span><span class="badge real only-real">{t("Dinero real", "Real money")}</span></h1>
     <NetSwitch lang={lang} />
     <p class="lead">{t(
       "Ofrece tu XMR y cobra USDT con tu margen. Esta pestaña hace de servidor mientras está abierta.",
       "Offer your XMR and get paid in USDT with your margin. This tab works as your server while it is open.",
     )}</p>
+    <Verified lang={lang} compact />
     <ul class="trust">
       <li><strong>{t("Sin custodia", "Non-custodial")}</strong> {t("Tu semilla y tus llaves se crean y se quedan en este navegador.", "Your seed and keys are created and stay in this browser.")}</li>
       <li><strong>{t("Cobras en tu MetaMask", "Paid to your MetaMask")}</strong> {t("El USDT va directo a tu dirección de cobro.", "USDT goes straight to your payout address.")}</li>
@@ -50,8 +52,8 @@ const csp = [
       <li><strong>{t("Respaldo obligatorio", "Backup required")}</strong> {t("Un archivo cifrado con tu contraseña.", "A file encrypted with your password.")}</li>
     </ul>
     <p class="notice danger only-real">{t(
-      "Dinero real (Arbitrum One + Monero). Beta: el contrato todavía no tiene auditoría externa; máximo 100 USDT por swap, también en el contrato. Tu maker de dinero real es independiente del de práctica: otra wallet, otro respaldo.",
-      "Real money (Arbitrum One + Monero). Beta: the contract has no external audit yet; maximum 100 USDT per swap, also enforced by the contract. Your real-money maker is separate from the practice one: another wallet, another backup.",
+      "Dinero real (Arbitrum One + Monero). Máximo 100 USDT por swap. Tu maker de dinero real es independiente del de práctica: otra wallet, otro respaldo.",
+      "Real money (Arbitrum One + Monero). Maximum 100 USDT per swap. Your real-money maker is separate from the practice one: another wallet, another backup.",
     )}</p>
     <p class="notice warn only-test">{t(
       "Versión de prueba: solo testnet (Arbitrum Sepolia + Monero stagenet). Deja esta pestaña abierta mientras ofreces; en el celular el navegador la duerme, así que usa una computadora. Si quieres estar 24/7, corre tu propio maker en tu PC o servidor.",

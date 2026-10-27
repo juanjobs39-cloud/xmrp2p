@@ -134,7 +134,7 @@ const slugify = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]
         <p class="notice warn">
           {t("Aviso: MoneroP2P cobra una comisión en cada swap completado (ver ", "Note: MoneroP2P charges a fee on every completed swap (see ")}
           <a href={ROUTES.faq[lang]}>{t("preguntas frecuentes", "FAQ")}</a>
-          {t("). El servicio está en fase de pruebas y solo funciona en testnet.", "). The service is in testing and only runs on testnet.")}
+          {t("). Funciona con dinero real en Arbitrum One, con un máximo de 100 USDT por swap.", "). It runs with real money on Arbitrum One, with a maximum of 100 USDT per swap.")}
         </p>
       )}
       {Content && <Content />}

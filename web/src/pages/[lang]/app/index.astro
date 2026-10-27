@@ -2,6 +2,7 @@
 import Base from "../../../layouts/Base.astro";
 import { ROUTES, SITE, type Lang } from "../../../site";
 import NetSwitch from "../../../components/NetSwitch.astro";
+import Verified from "../../../components/Verified.astro";
 
 export function getStaticPaths() {
   return [{ params: { lang: "es" } }, { params: { lang: "en" } }];
@@ -52,7 +53,7 @@ const softwareLd = {
   jsonLd={[softwareLd]}
 >
   <main id="contenido" class="prose" data-lang={lang}>
-    <h1>{t("Cambiar USDT por XMR", "Swap USDT for XMR")} <span class="badge only-test">Testnet</span><span class="badge real only-real">{t("Dinero real · beta", "Real money · beta")}</span></h1>
+    <h1>{t("Cambiar USDT por XMR", "Swap USDT for XMR")} <span class="badge only-test">Testnet</span><span class="badge real only-real">{t("Dinero real", "Real money")}</span></h1>
     <NetSwitch lang={lang} />
     <p class="notice warn only-test">
       {t(
@@ -62,8 +63,8 @@ const softwareLd = {
     </p>
     <p class="notice danger only-real">
       {t(
-        "Dinero real (Arbitrum One + Monero). Beta: el contrato todavía no tiene auditoría externa. Máximo 100 USDT por swap, también en el contrato. Úsalo bajo tu propio riesgo.",
-        "Real money (Arbitrum One + Monero). Beta: the contract has no external audit yet. Maximum 100 USDT per swap, also enforced by the contract. Use at your own risk.",
+        "Dinero real (Arbitrum One + Monero). Máximo 100 USDT por swap.",
+        "Real money (Arbitrum One + Monero). Maximum 100 USDT per swap.",
       )}
     </p>
     <ul class="trust">
@@ -72,6 +73,7 @@ const softwareLd = {
       <li><strong>{t("Código abierto", "Open source")}</strong> <a href={SITE.repo} rel="noopener">AGPL-3.0</a></li>
       <li><strong>{t("Comisión 0,5 %", "0.5% fee")}</strong> {t("La paga el maker al cobrar; tú solo pagas el gas.", "Paid by the maker on claim; you only pay gas.")}</li>
     </ul>
+    <Verified lang={lang} compact />
     <ol id="stepper" class="stepper" title={t("Etapas del swap", "Swap stages")}>
       <li data-stage="step-start">{t("Oferta", "Offer")}</li>
       <li data-stage="step-recovery">{t("Respaldo", "Backup")}</li>
@@ -138,13 +140,16 @@ const softwareLd = {
     <section id="step-progress" data-step hidden>
       <h2>{t("4. Progreso del swap", "4. Swap progress")}</h2>
       <p id="timeline" class="meta"></p>
-      <p id="action-text" aria-live="polite"></p>
+      <div class="lock-box">
+        <p id="action-text" aria-live="polite"></p>
+        <progress id="xmr-progress" max="10" value="0" hidden></progress>
+      </div>
       <button class="btn" id="btn-action" type="button" hidden></button>
       <ol class="meta">
-        <li>{t("El maker bloquea el XMR en una dirección compartida.", "The maker locks the XMR in a shared address.")}</li>
-        <li>{t("La app verifica el monto con la llave de la transacción.", "The app verifies the amount with the transaction key.")}</li>
-        <li>{t("Confirmas (setReady). El maker cobra y, al hacerlo, revela su secreto.", "You confirm (setReady). The maker claims and, by doing so, reveals their secret.")}</li>
-        <li>{t("La app combina ambos secretos y envía el XMR a tu dirección.", "The app combines both secrets and sends the XMR to your address.")}</li>
+        <li>{t("El maker bloquea el XMR en una dirección del swap (todavía no es tuyo).", "The maker locks the XMR at a swap address (not yours yet).")}</li>
+        <li>{t("La red de Monero lo confirma: hacen falta 10 confirmaciones (~20 min).", "The Monero network confirms it: 10 confirmations are needed (~20 min).")}</li>
+        <li>{t("Tú confirmas con el botón «Confirmar y recibir mi XMR». El maker cobra su USDT.", "You confirm with the «Confirm and receive my XMR» button. The maker claims their USDT.")}</li>
+        <li>{t("La app envía el XMR a tu dirección automáticamente.", "The app sends the XMR to your address automatically.")}</li>
       </ol>
     </section>
 

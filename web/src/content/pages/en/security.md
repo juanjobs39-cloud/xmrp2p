@@ -2,7 +2,7 @@
 key: security
 lang: en
 title: MoneroP2P security
-description: "Why nobody holds your funds, how refunds work, which risks exist and how to verify the code. Status: testnet, not audited."
+description: "Why nobody holds your funds, how refunds work, which risks exist and how to verify the code. Verified with Halmos, Aderyn and Slither."
 updated: 2026-10-24
 ---
 

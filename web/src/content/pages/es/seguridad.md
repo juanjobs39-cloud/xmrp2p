@@ -2,7 +2,7 @@
 key: security
 lang: es
 title: Seguridad de MoneroP2P
-description: "Por qué nadie custodia tus fondos, cómo funcionan los reembolsos, qué riesgos existen y cómo verificar el código. Estado: testnet, sin auditoría."
+description: "Por qué nadie custodia tus fondos, cómo funcionan los reembolsos, qué riesgos existen y cómo verificar el código. Verificado con Halmos, Aderyn y Slither."
 updated: 2026-10-24
 ---
 
