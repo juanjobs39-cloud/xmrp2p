@@ -1,11 +1,16 @@
 import { defineConfig } from "astro/config";
 import GithubSlugger from "github-slugger";
+import { loadEnv } from "vite";
 
-// Dominio definitivo: PUBLIC_SITE_URL (ver web/.env.example). Hasta tenerlo, un valor de ejemplo.
-const site = process.env.PUBLIC_SITE_URL ?? "https://xmrp2p.example";
+// Astro no carga .env en process.env al leer esta configuración: se carga aquí. Sin esto, el sitio
+// se generaba con el dominio de ejemplo en canonical, hreflang, sitemap y llms.txt.
+const env = { ...loadEnv(process.env.NODE_ENV ?? "production", process.cwd(), "PUBLIC_"), ...process.env };
+
+// Dominio definitivo: PUBLIC_SITE_URL (ver web/.env.example).
+const site = env.PUBLIC_SITE_URL ?? "https://monerop2p.app";
 
 // Reemplaza marcadores del contenido (p. ej. [EMAIL_CONTACTO]) por los valores configurados.
-const PLACEHOLDERS = { "[EMAIL_CONTACTO]": process.env.PUBLIC_CONTACT_EMAIL };
+const PLACEHOLDERS = { "[EMAIL_CONTACTO]": env.PUBLIC_CONTACT_EMAIL };
 function rehypePlaceholders() {
   let slugger;
   const text = (n) => (n.type === "text" ? n.value : (n.children ?? []).map(text).join(""));
