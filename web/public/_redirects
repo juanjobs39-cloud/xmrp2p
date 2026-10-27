@@ -1,0 +1,3 @@
+# Verificación de Google Search Console: Pages redirige los .html a la URL sin extensión y
+# Google exige respuesta directa, así que se sirve el mismo contenido sin redirigir.
+/google2117c9cebfcc77ed.html /google-site-verification.txt 200
