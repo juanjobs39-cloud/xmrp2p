@@ -6,6 +6,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SwapFactory} from "../../src/SwapFactory.sol";
 import {SwapEscrow} from "../../src/SwapEscrow.sol";
 import {MockUSDT} from "../mocks/MockUSDT.sol";
+import {Secp256k1} from "../../src/lib/Secp256k1.sol";
 
 /// @notice Propiedades verificadas con Halmos (ejecución simbólica): cada `check_` se prueba para
 ///         TODOS los valores posibles de sus parámetros, no para una muestra como en el fuzzing.
@@ -48,6 +49,21 @@ contract EscrowProps is Test {
         usdt.mint(TAKER, 10 * CAP);
         vm.prank(TAKER);
         usdt.approve(address(factory), type(uint256).max);
+    }
+
+    /// Halmos trata `ecrecover` como función desconocida (pero determinista). Se fija su valor en los dos
+    /// secretos de prueba: el mismo resultado que da la EVM real, comprobado en test/CrossVectors.t.sol y
+    /// en las pruebas unitarias. Para cualquier otro secreto sigue siendo desconocido (el caso más duro).
+    function _ecrecoverReal() internal pure {
+        _fijar(S_MAKER, C_MAKER);
+        _fijar(S_TAKER, C_TAKER);
+    }
+
+    function _fijar(bytes32 secret, bytes32 commitment) internal pure {
+        address q = ecrecover(
+            0, 27, bytes32(Secp256k1.GX), bytes32(mulmod(uint256(secret), Secp256k1.GX, Secp256k1.N))
+        );
+        vm.assume(q == address(uint160(uint256(commitment))));
     }
 
     function _swap(uint256 amount, bytes32 salt) internal returns (SwapEscrow) {
@@ -94,6 +110,7 @@ contract EscrowProps is Test {
 
     /// 4. En todo momento exactamente una parte puede cerrar el swap: nunca las dos, nunca ninguna.
     function check_unaSolaParteEnCadaMomento(uint64 dt, bool ready) public {
+        _ecrecoverReal();
         SwapEscrow a = _swap(10e6, bytes32("a"));
         SwapEscrow b = _swap(10e6, bytes32("b"));
         if (ready) {
@@ -113,6 +130,7 @@ contract EscrowProps is Test {
 
     /// 5. Al cobrar, todo cuadra: maker + comisión = monto; la comisión es 0,5 % y llega a FEE_TO.
     function check_cobroExacto(uint256 amount) public {
+        _ecrecoverReal();
         vm.assume(amount >= MIN && amount <= CAP);
         SwapEscrow e = _swap(amount, bytes32("p"));
         vm.prank(TAKER);
@@ -131,6 +149,7 @@ contract EscrowProps is Test {
 
     /// 6. Tras cobrar, nadie puede volver a cobrar ni reembolsar.
     function check_sinDobleCierre(uint64 dt, bytes32 secret) public {
+        _ecrecoverReal();
         SwapEscrow e = _swap(10e6, bytes32("d"));
         vm.prank(TAKER);
         e.setReady();
@@ -147,6 +166,7 @@ contract EscrowProps is Test {
     /// 0. Cordura: con el secreto correcto el maker SÍ cobra. Si falla, Halmos no está calculando
     ///    `ecrecover` (lo trata como función desconocida) y las propiedades que cobran son vacías.
     function check_cordura_cobroConSecretoValido() public {
+        _ecrecoverReal();
         SwapEscrow e = _swap(10e6, bytes32("s"));
         vm.prank(TAKER);
         e.setReady();
