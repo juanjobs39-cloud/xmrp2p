@@ -161,3 +161,4 @@ nav .nav-cta { display: inline-block; padding: 0.3rem 0.8rem; border-radius: 999
 nav .nav-cta.primary { background: var(--accent); color: var(--accent-fg); }
 /* Aviso de MetaMask del maker: fijo abajo para verse aunque el panel esté desplazado */
 #mk-mm:not([hidden]) { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); width: min(40rem, calc(100% - 2rem)); z-index: 50; margin: 0; box-shadow: 0 6px 24px rgb(0 0 0 / 0.25); }
+.import-cta { background: var(--card); border: 1px dashed var(--line); display: flex; flex-wrap: wrap; gap: 0.4rem 0.8rem; align-items: center; }

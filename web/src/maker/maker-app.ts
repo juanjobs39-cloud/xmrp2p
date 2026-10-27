@@ -79,7 +79,9 @@ export class MakerApp {
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible" && this.offering) void this.keepAwake();
     });
-    this.show((await hasVault(net.id)) ? "mk-unlock" : "mk-setup");
+    const saved = await hasVault(net.id);
+    this.show(saved ? "mk-unlock" : "mk-setup");
+    if (!saved) $("mk-btn-wipe").hidden = true;
   }
 
   private async singleTab(): Promise<boolean> {
@@ -124,6 +126,15 @@ export class MakerApp {
       await navigator.clipboard.writeText(this.wallet?.address ?? "");
       this.status(this.t("copied"));
     });
+    // Importar un respaldo en un navegador nuevo: el archivo pasa a ser obligatorio.
+    $("mk-btn-import").addEventListener("click", () => {
+      $<HTMLInputElement>("mk-unlock-file").required = true;
+      $("mk-unlock-hint").textContent = this.t("import_hint");
+      $("mk-btn-new").hidden = false;
+      $("mk-btn-wipe").hidden = true;
+      this.show("mk-unlock");
+    });
+    $("mk-btn-new").addEventListener("click", () => this.show("mk-setup"));
     for (const r of document.querySelectorAll<HTMLInputElement>('input[name="mk-mode"]')) {
       r.addEventListener("change", () => ($("mk-import").hidden = r.value !== "import" || !r.checked));
     }
@@ -187,7 +198,16 @@ export class MakerApp {
   private async unlock(): Promise<void> {
     const pass = $<HTMLInputElement>("mk-unlock-pass").value;
     const fileInput = $<HTMLInputElement>("mk-unlock-file");
-    const file = fileInput.files?.[0] ? (JSON.parse(await fileInput.files[0].text()) as RecoveryFile) : undefined;
+    let file: RecoveryFile | undefined;
+    if (fileInput.files?.[0]) {
+      try {
+        file = JSON.parse(await fileInput.files[0].text()) as RecoveryFile;
+      } catch {
+        throw new Error(this.t("bad_backup"));
+      }
+    } else if (!(await hasVault(this.net.id))) {
+      throw new Error(this.t("need_backup"));
+    }
     this.vault = await openVault(this.net.id, pass, file);
     this.pass = pass;
     if (file) await this.persist();

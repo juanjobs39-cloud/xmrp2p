@@ -2,21 +2,21 @@
 import Base from "../layouts/Base.astro";
 import { ROUTES } from "../site";
 ---
-<Base lang="es" title="Página no encontrada / Page not found" description="La página no existe. Enlaces a las secciones principales de xmrp2p." noindex>
+<Base lang="en" title="Page not found / Página no encontrada" description="This page does not exist. Links to the main sections of MoneroP2P." noindex>
   <main id="contenido" class="prose">
-    <h1>Página no encontrada</h1>
-    <p class="answer">La dirección no existe o cambió. Estas son las secciones principales:</p>
+    <h1>Page not found</h1>
+    <p class="answer">This address does not exist or has moved. These are the main sections:</p>
     <ul>
-      <li><a href={ROUTES.home.es}>Inicio</a> · <a href={ROUTES.app.es}>Abrir la app</a></li>
-      <li><a href={ROUTES.how.es}>Cómo funciona</a></li>
-      <li><a href={ROUTES.guides.es}>Guías</a></li>
-      <li><a href={ROUTES.faq.es}>Preguntas frecuentes</a></li>
-      <li><a href={ROUTES.security.es}>Seguridad</a></li>
+      <li><a href={ROUTES.home.en}>Home</a> · <a href={ROUTES.app.en}>Open the app</a> · <a href={ROUTES.makerApp.en}>Be a maker</a></li>
+      <li><a href={ROUTES.how.en}>How it works</a></li>
+      <li><a href={ROUTES.guides.en}>Guides</a></li>
+      <li><a href={ROUTES.faq.en}>FAQ</a></li>
+      <li><a href={ROUTES.security.en}>Security</a></li>
     </ul>
-    <h2 lang="en">Page not found</h2>
-    <ul lang="en">
-      <li><a href={ROUTES.home.en}>Home</a> · <a href={ROUTES.app.en}>Open the app</a></li>
-      <li><a href={ROUTES.how.en}>How it works</a> · <a href={ROUTES.guides.en}>Guides</a> · <a href={ROUTES.faq.en}>FAQ</a></li>
+    <h2 lang="es">Página no encontrada</h2>
+    <ul lang="es">
+      <li><a href={ROUTES.home.es}>Inicio</a> · <a href={ROUTES.app.es}>Abrir la app</a> · <a href={ROUTES.makerApp.es}>Ser maker</a></li>
+      <li><a href={ROUTES.how.es}>Cómo funciona</a> · <a href={ROUTES.guides.es}>Guías</a> · <a href={ROUTES.faq.es}>Preguntas frecuentes</a></li>
     </ul>
   </main>
 </Base>

@@ -1,22 +1,22 @@
 ---
-// Raíz: redirige a español (idioma por defecto) sin JavaScript.
+// Raíz: redirige a inglés (idioma por defecto) sin JavaScript.
 import { SITE } from "../site";
-const es = new URL("/es/", Astro.site).href;
+const en = new URL("/en/", Astro.site).href;
 ---
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{SITE.brand}</title>
-    <meta http-equiv="refresh" content="0; url=es/" />
-    <link rel="canonical" href={es} />
-    <link rel="alternate" hreflang="es" href={es} />
-    <link rel="alternate" hreflang="en" href={new URL("/en/", Astro.site).href} />
-    <link rel="alternate" hreflang="x-default" href={es} />
+    <meta http-equiv="refresh" content="0; url=en/" />
+    <link rel="canonical" href={en} />
+    <link rel="alternate" hreflang="en" href={en} />
+    <link rel="alternate" hreflang="es" href={new URL("/es/", Astro.site).href} />
+    <link rel="alternate" hreflang="x-default" href={en} />
     <meta name="robots" content="noindex" />
   </head>
   <body>
-    <p><a href="es/">Español</a> · <a href="en/">English</a></p>
+    <p><a href="en/">English</a> · <a href="es/">Español</a></p>
   </body>
 </html>

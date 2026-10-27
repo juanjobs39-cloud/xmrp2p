@@ -60,7 +60,7 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     {Object.entries(alternates).map(([l, href]) => <link rel="alternate" hreflang={l} href={new URL(href!, site).href} />)}
-    {alternates.es && <link rel="alternate" hreflang="x-default" href={new URL(alternates.es, site).href} />}
+    {(alternates.en ?? alternates.es) && <link rel="alternate" hreflang="x-default" href={new URL((alternates.en ?? alternates.es)!, site).href} />}
     {markdownAlternate && <link rel="alternate" type="text/markdown" href={markdownAlternate} />}
     {noindex && <meta name="robots" content="noindex" />}
     <meta property="og:type" content={ogType} />

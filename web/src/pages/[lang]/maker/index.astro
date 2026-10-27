@@ -62,6 +62,11 @@ const csp = [
     <p id="mk-mm" class="notice" hidden aria-live="polite"></p>
 
     <section id="mk-setup" data-mk hidden class="panel">
+      <p class="notice import-cta">
+        <strong>{t("¿Ya tienes un maker?", "Already have a maker?")}</strong>
+        {t("Si lo creaste en otro navegador o computadora, ábrelo con tu archivo de respaldo.", "If you created it in another browser or computer, open it with your backup file.")}
+        <button class="btn secondary small" id="mk-btn-import" type="button">{t("Importar mi respaldo", "Import my backup")}</button>
+      </p>
       <h2>{t("1. Crea tu maker", "1. Create your maker")}</h2>
       <form id="mk-form-setup" class="app">
         <fieldset class="choice">
@@ -91,11 +96,18 @@ const csp = [
     <section id="mk-unlock" data-mk hidden class="panel">
       <h2>{t("Abrir tu maker", "Open your maker")}</h2>
       <form id="mk-form-unlock" class="app">
-        <label>{t("Archivo de respaldo (opcional si es este navegador)", "Backup file (optional on this browser)")}<input id="mk-unlock-file" type="file" accept=".json,application/json" /></label>
+        <label>
+          {t("Archivo de respaldo", "Backup file")}
+          <input id="mk-unlock-file" type="file" accept=".json,application/json" />
+          <small id="mk-unlock-hint">{t("Opcional si tu maker ya está guardado en este navegador.", "Optional if your maker is already saved in this browser.")}</small>
+        </label>
         <label>{t("Contraseña", "Password")}<input id="mk-unlock-pass" type="password" required autocomplete="current-password" /></label>
         <button class="btn" type="submit">{t("Abrir mi maker", "Open my maker")}</button>
       </form>
-      <p><button class="btn secondary" id="mk-btn-wipe" type="button">{t("Borrar el maker de este navegador", "Delete the maker from this browser")}</button></p>
+      <p class="row wrap">
+        <button class="btn secondary" id="mk-btn-new" type="button" hidden>{t("← Crear un maker nuevo", "← Create a new maker")}</button>
+        <button class="btn secondary" id="mk-btn-wipe" type="button">{t("Borrar el maker de este navegador", "Delete the maker from this browser")}</button>
+      </p>
     </section>
 
     <section id="mk-backup" data-mk hidden class="panel">

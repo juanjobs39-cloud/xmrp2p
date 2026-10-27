@@ -24,7 +24,7 @@ export const GET: APIRoute = async ({ site }) => {
     (Object.entries(urls) as [Lang, string][]).map(([, path]) => {
       const alts = (Object.entries(urls) as [Lang, string][])
         .map(([l, p]) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${abs(p)}"/>`)
-        .concat(urls.es ? [`    <xhtml:link rel="alternate" hreflang="x-default" href="${abs(urls.es)}"/>`] : [])
+        .concat(urls.en ?? urls.es ? [`    <xhtml:link rel="alternate" hreflang="x-default" href="${abs((urls.en ?? urls.es)!)}"/>`] : [])
         .join("\n");
       return `  <url>\n    <loc>${abs(path)}</loc>\n${lastmod ? `    <lastmod>${lastmod.toISOString().slice(0, 10)}</lastmod>\n` : ""}${alts}\n  </url>`;
     }),
