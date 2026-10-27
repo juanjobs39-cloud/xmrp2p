@@ -1,6 +1,6 @@
 # web — sitio público y app del swap (Fases 5 y 6)
 
-> ⚠️ **Solo testnet, sin auditoría.**
+> **En producción** en [monerop2p.app](https://monerop2p.app): dinero real en Arbitrum One + Monero (máximo 100 USDT por swap) y modo práctica en testnet (`?red=prueba`). Contrato verificado con Halmos, Aderyn y Slither; sin auditoría externa todavía.
 
 **Qué hay aquí:** un sitio estático en Astro 5, en español (`/es/`, idioma por defecto) e inglés (`/en/`). Las páginas de contenido **no cargan JavaScript**. La app del swap vive solo en `/es/app/` y `/en/app/`.
 

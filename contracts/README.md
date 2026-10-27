@@ -1,6 +1,6 @@
 # contracts — escrow de atomic swaps USDT ↔ XMR (Fase 1)
 
-> ⚠️ **Sin auditoría. Solo testnet.** El script de despliegue se niega a correr en redes principales.
+> **Desplegado en Arbitrum One** ([`0x88fc05Cb07C5b69fbed1F7B1c1F784Cd26e99535`](https://arbiscan.io/address/0x88fc05Cb07C5b69fbed1F7B1c1F784Cd26e99535), verificado en Sourcify) con `MAX_AMOUNT` = 100 USDT por swap. Verificado con Halmos (7/7), Aderyn y Slither ([informe](../docs/AUDITORIA-GRATUITA.md)); sin auditoría externa todavía. El script de despliegue solo acepta Arbitrum One con `I_ACCEPT_MAINNET=yes`, USD₮0, tope ≤ 100 USDT y comisión ≤ 0,5 %; las demás redes principales siguen bloqueadas.
 
 **Qué es:** una fábrica (`SwapFactory`) que crea un escrow aislado (`SwapEscrow`, clon EIP-1167) por cada swap. El taker deposita USDT; el maker lo cobra revelando su secreto de Monero, o el taker lo recupera revelando el suyo. Sin administrador, sin pausa, sin actualizaciones.
 

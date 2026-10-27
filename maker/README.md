@@ -1,6 +1,6 @@
 # Maker 24/7 en tu propia PC o servidor
 
-> ⚠️ **Sin auditoría.** Por defecto solo testnet. El modo real (beta) exige Arbitrum One, un tope de 100 USDT por swap y `XMRP2P_ALLOW_MAINNET=1`: ver «Modo real (beta)».
+> Funciona en testnet y con **dinero real en Arbitrum One**. El modo real exige `evm_network = "arbitrum_one"`, un tope de 100 USDT por swap y `XMRP2P_ALLOW_MAINNET=1`: ver «Modo real». El contrato está verificado con Halmos, Aderyn y Slither; sin auditoría externa todavía.
 
 Un **maker** ofrece XMR a cambio de USDT y gana el margen que fija sobre el precio de referencia. Hay dos formas de serlo:
 
@@ -23,7 +23,7 @@ Guarda el estado de cada swap en SQLite y lo reanuda después de un reinicio. **
 **Índice:**
 1. Opción A: en tu PC (Windows, Linux o macOS)
 2. Opción B: en un servidor en la nube (Linux, 24/7)
-3. Modo real (beta)
+3. Modo real
 4. Seguridad
 5. Actualizar y respaldar
 6. Problemas comunes
@@ -210,7 +210,7 @@ La RPC de la wallet escucha solo en `127.0.0.1`. Nunca la expongas.
 
 ---
 
-## Modo real (beta)
+## Modo real
 
 > ⚠️ Dinero real **sin auditoría externa**. Arriesga solo lo que puedas perder.
 
@@ -261,7 +261,7 @@ Diferencias con testnet:
 - **La base SQLite contiene las mitades de llave de cada swap.** Sin ella no puedes recuperar el XMR si un taker reembolsa. Respáldala, cifrada.
 - **Contraseña de la RPC en la lista de procesos:** con `--rpc-login`, la contraseña se ve en `ps` para otros usuarios del mismo sistema. En un servidor solo tuyo no importa. Si lo compartes, usa `--config-file` con permisos 600.
 - **Nodo propio (recomendado):** un nodo público puede mentirte sobre la cadena. Con `monerod --stagenet` propio, cambia `--daemon-address` a `127.0.0.1:38081` y quita `--untrusted-daemon`.
-- **Mainnet solo en modo beta:** el daemon se niega a mainnet salvo con las tres condiciones de «Modo real (beta)».
+- **Mainnet solo en modo beta:** el daemon se niega a mainnet salvo con las tres condiciones de «Modo real».
 - **Si el servidor se cae a mitad de un swap:**
   - Si vuelve antes de `t1`, el daemon reanuda desde SQLite y cobra.
   - Si vuelve después de `t1`, el taker ya reembolsó y el daemon recupera tu XMR con el secreto que reveló el reembolso.

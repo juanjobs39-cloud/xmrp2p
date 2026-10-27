@@ -2,11 +2,11 @@
 key: risks
 lang: es
 title: Aviso de riesgos
-description: "Riesgos de usar MoneroP2P: volatilidad, transacciones irreversibles, congelación de USDT, software en pruebas, plazos y responsabilidad legal."
-updated: 2026-10-24
+description: "Riesgos de usar MoneroP2P: volatilidad, transacciones irreversibles, congelación de USDT, software sin auditoría externa, plazos y responsabilidad legal."
+updated: 2026-10-27
 ---
 
-**Respuesta corta:** las criptomonedas son volátiles, sus transacciones no se pueden revertir, el emisor de USDT puede congelar direcciones y este software está en pruebas sin auditoría. Úsalo solo si entiendes y aceptas estos riesgos, y nunca con dinero que no puedas perder.
+**Respuesta corta:** las criptomonedas son volátiles, sus transacciones no se pueden revertir, el emisor de USDT puede congelar direcciones y este software todavía no tiene auditoría externa (cada swap tiene un tope de 100 USDT). Úsalo solo si entiendes y aceptas estos riesgos, y nunca con dinero que no puedas perder.
 
 ## Riesgos principales
 
@@ -15,7 +15,7 @@ updated: 2026-10-24
 | **Volatilidad** | El precio de XMR y del USDT puede cambiar mientras el swap está en curso. |
 | **Irreversibilidad** | Una transacción confirmada no se puede deshacer. Un error de dirección es permanente. |
 | **Congelación de USDT** | Tether puede congelar direcciones. Si congela tu dirección o el contrato, los fondos pueden quedar bloqueados. |
-| **Software en pruebas** | El código no tiene auditoría externa y puede tener errores que causen pérdidas. |
+| **Sin auditoría externa todavía** | El contrato pasó la verificación automática (Halmos, Aderyn, Slither) pero no tiene auditoría externa y puede tener errores que causen pérdidas. Cada swap tiene un tope de 100 USDT. |
 | **Plazos del contrato** | Si no reembolsas antes de t0 cuando el XMR no llegó, el maker podría cobrar tu USDT. |
 | **Archivo de recuperación** | Si lo pierdes junto con el navegador, no podrás recuperar los fondos de un swap en curso. |
 | **Contrapartes** | Los makers son independientes. El contrato te protege, pero solo si actúas a tiempo. |

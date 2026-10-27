@@ -3,10 +3,10 @@ key: security
 lang: en
 title: MoneroP2P security
 description: "Why nobody holds your funds, how refunds work, which risks exist and how to verify the code. Verified with Halmos, Aderyn and Slither."
-updated: 2026-10-24
+updated: 2026-10-27
 ---
 
-**Short answer:** on MoneroP2P nobody holds funds. Your USDT is in a contract that only releases money under public rules, and the XMR is in an address nobody can move without both key halves. Even so, the software is experimental and **has not been audited yet**: use it on testnet only.
+**Short answer:** on MoneroP2P nobody holds funds. Your USDT is in a contract that only releases money under public rules, and the XMR is in an address nobody can move without both key halves. It runs with real money on Arbitrum One + Monero, with a **maximum of 100 USDT per swap enforced by the contract**. The contract is verified with Halmos, Aderyn and Slither and its source is published on Sourcify; it has not had an external audit yet, which is why each swap is capped.
 
 ## Why nobody holds your funds
 
@@ -28,7 +28,7 @@ updated: 2026-10-24
 1. **Deadlines.** If you do not refund in time when the XMR did not arrive, you can lose the USDT. The app warns you, but it must be open or you must come back with the file.
 2. **Recovery file.** Without it and its password you cannot claim the XMR or refund. We cannot recover it for you.
 3. **USDT freezes.** Tether can freeze addresses. Each swap uses a separate contract, but the risk exists.
-4. **Unaudited software.** It may have bugs. Before real money, the contract and the crypto core will get an external audit.
+4. **No external audit yet.** The contract passed automated verification (Halmos, Aderyn, Slither), but software can still have bugs. The 100 USDT cap per swap limits what a single swap can put at risk.
 5. **Privacy.** The Monero node proxy sees what your browser queries. You can use your own node.
 
 ## How we protect the app
@@ -40,7 +40,7 @@ updated: 2026-10-24
 
 ## Audits
 
-There is no external audit yet. The prepared scope is in [docs/AUDITORIA.md](https://github.com/juanjobs39-cloud/xmrp2p/blob/main/docs/AUDITORIA.md). Once it exists, we will publish the report here.
+The contract was verified with free, open tools: **Halmos** (symbolic verification, 7/7 properties proven for all inputs), **Aderyn** (0 high findings) and **Slither** (no medium or high findings). Its source is verified on **Sourcify** (exact match). Report: [docs/AUDITORIA-GRATUITA.md](https://github.com/juanjobs39-cloud/xmrp2p/blob/main/docs/AUDITORIA-GRATUITA.md). An external audit is still pending; the prepared scope is in [docs/AUDITORIA.md](https://github.com/juanjobs39-cloud/xmrp2p/blob/main/docs/AUDITORIA.md).
 
 ## Source code and reports
 

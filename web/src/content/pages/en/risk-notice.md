@@ -2,11 +2,11 @@
 key: risks
 lang: en
 title: Risk notice
-description: "Risks of using MoneroP2P: volatility, irreversible transactions, USDT freezes, software in testing, deadlines and legal responsibility."
-updated: 2026-10-24
+description: "Risks of using MoneroP2P: volatility, irreversible transactions, USDT freezes, no external audit yet, deadlines and legal responsibility."
+updated: 2026-10-27
 ---
 
-**Short answer:** cryptocurrencies are volatile, their transactions cannot be reversed, the USDT issuer can freeze addresses and this software is in testing without an audit. Use it only if you understand and accept these risks, and never with money you cannot afford to lose.
+**Short answer:** cryptocurrencies are volatile, their transactions cannot be reversed, the USDT issuer can freeze addresses and this software has no external audit yet (each swap is capped at 100 USDT). Use it only if you understand and accept these risks, and never with money you cannot afford to lose.
 
 ## Main risks
 
@@ -15,7 +15,7 @@ updated: 2026-10-24
 | **Volatility** | The price of XMR and USDT can change while the swap is in progress. |
 | **Irreversibility** | A confirmed transaction cannot be undone. A wrong address is permanent. |
 | **USDT freezes** | Tether can freeze addresses. If it freezes your address or the contract, funds can get stuck. |
-| **Software in testing** | The code has no external audit and may have bugs that cause losses. |
+| **No external audit yet** | The contract passed automated verification (Halmos, Aderyn, Slither) but has no external audit and may have bugs that cause losses. Each swap is capped at 100 USDT. |
 | **Contract deadlines** | If you do not refund before t0 when the XMR did not arrive, the maker could claim your USDT. |
 | **Recovery file** | If you lose it together with the browser, you cannot recover the funds of a swap in progress. |
 | **Counterparties** | Makers are independent. The contract protects you, but only if you act in time. |

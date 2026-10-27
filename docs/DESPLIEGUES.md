@@ -1,6 +1,6 @@
-# Registro de despliegues (solo testnet)
+# Registro de despliegues
 
-> Ningún despliegue en mainnet. Cada entrada indica red, fecha, direcciones y commit.
+> Testnet (Arbitrum Sepolia + Monero stagenet) y **dinero real en Arbitrum One** desde el 26-oct-2026 (ver la última sección). Cada entrada indica red, fecha, direcciones y commit.
 
 ## Backend en Cloudflare — 25-oct-2026
 
