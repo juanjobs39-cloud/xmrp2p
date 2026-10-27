@@ -72,7 +72,7 @@ const softwareLd = {
       <li><strong>{t("Código abierto", "Open source")}</strong> <a href={SITE.repo} rel="noopener">AGPL-3.0</a></li>
       <li><strong>{t("Comisión 0,5 %", "0.5% fee")}</strong> {t("La paga el maker al cobrar; tú solo pagas el gas.", "Paid by the maker on claim; you only pay gas.")}</li>
     </ul>
-    <ol id="stepper" class="stepper" aria-label={t("Etapas del swap", "Swap stages")}>
+    <ol id="stepper" class="stepper" title={t("Etapas del swap", "Swap stages")}>
       <li data-stage="step-start">{t("Oferta", "Offer")}</li>
       <li data-stage="step-recovery">{t("Respaldo", "Backup")}</li>
       <li data-stage="step-deposit">{t("Depósito", "Deposit")}</li>
@@ -92,9 +92,10 @@ const softwareLd = {
     <section id="step-start" data-step>
       <h2>{t("1. Elige oferta y monto", "1. Pick an offer and amount")}</h2>
       <form id="form-start" class="app">
-        <label>{t("Oferta", "Offer")}
+        <div class="field">
+          <label for="offer">{t("Oferta", "Offer")}</label>
           <span class="row"><select id="offer" required></select><button class="btn secondary small" id="btn-offers" type="button">{t("Actualizar", "Refresh")}</button></span>
-        </label>
+        </div>
         <label>{t("Monto en USDT", "Amount in USDT")}<input id="usdt" type="text" inputmode="decimal" required placeholder="100" /></label>
         <label>
           <span class="only-test">{t("Tu dirección de Monero (stagenet)", "Your Monero address (stagenet)")}</span><span class="only-real">{t("Tu dirección de Monero", "Your Monero address")}</span>

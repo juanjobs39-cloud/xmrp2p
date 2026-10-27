@@ -7,7 +7,8 @@ export default defineConfig(async () => {
     plugins: [
       cloudflareTest({
         wrangler: { configPath: "./wrangler.toml" },
-        miniflare: { bindings: { TEST_MIGRATIONS: migrations, TAKE_TIMEOUT_MS: "1500" } },
+        // Base fija para las pruebas (solo testnet), independiente de lo desplegado en wrangler.toml.
+        miniflare: { bindings: { TEST_MIGRATIONS: migrations, TAKE_TIMEOUT_MS: "1500", ACTIVE_NETWORKS: "arbitrum_sepolia", MONITOR_FACTORY: "" } },
       }),
     ],
     test: { setupFiles: ["./test/setup.ts"] },

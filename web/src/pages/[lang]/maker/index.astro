@@ -80,11 +80,11 @@ const csp = [
           </div>
           <small>{t("Usa una wallet solo para el maker, con lo que quieras ofrecer.", "Use a wallet only for the maker, with what you want to offer.")}</small>
         </fieldset>
-        <label>
-          {t("Dirección de cobro (USDT en Arbitrum)", "Payout address (USDT on Arbitrum)")}
+        <div class="field">
+          <label for="mk-payout">{t("Dirección de cobro (USDT en Arbitrum)", "Payout address (USDT on Arbitrum)")}</label>
           <span class="row"><input id="mk-payout" type="text" required spellcheck="false" autocomplete="off" placeholder="0x…" /><button class="btn secondary small" id="mk-btn-payout-mm" type="button">{t("Usar mi MetaMask", "Use my MetaMask")}</button></span>
           <small>{t("Aquí llega el USDT de cada swap.", "This is where each swap's USDT arrives.")}</small>
-        </label>
+        </div>
         <label>{t("Contraseña", "Password")}<input id="mk-pass" type="password" minlength="10" required autocomplete="new-password" />
           <small>{t("Cifra tu respaldo y tu wallet. Mínimo 10 caracteres. No la podemos recuperar.", "Encrypts your backup and wallet. At least 10 characters. We cannot recover it.")}</small></label>
         <label>{t("Repite la contraseña", "Repeat the password")}<input id="mk-pass2" type="password" minlength="10" required autocomplete="new-password" /></label>
@@ -176,9 +176,10 @@ const csp = [
       <details>
         <summary>{t("Respaldo y retiros", "Backup and withdrawals")}</summary>
         <p><button class="btn secondary" id="mk-btn-backup2" type="button">{t("Descargar respaldo actualizado", "Download updated backup")}</button></p>
-        <label class="app">{t("Retirar todo el XMR disponible a", "Withdraw all available XMR to")}
+        <div class="field app">
+          <label for="mk-withdraw-to">{t("Retirar todo el XMR disponible a", "Withdraw all available XMR to")}</label>
           <span class="row"><input id="mk-withdraw-to" type="text" spellcheck="false" autocomplete="off" placeholder="…" /><button class="btn secondary small" id="mk-btn-withdraw-xmr" type="button">{t("Retirar XMR", "Withdraw XMR")}</button></span>
-        </label>
+        </div>
         <p><button class="btn secondary small" id="mk-btn-withdraw-gas" type="button">{t("Devolver el gas sobrante a mi dirección de cobro", "Return leftover gas to my payout address")}</button></p>
       </details>
     </section>
