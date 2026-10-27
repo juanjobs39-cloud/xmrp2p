@@ -1,0 +1,75 @@
+name: Auditoría (herramientas gratuitas)
+
+# Análisis del contrato con herramientas abiertas, en Linux (Aderyn no publica binario para Windows).
+# No reemplaza una auditoría externa: es la revisión de la beta (docs/AUDITORIA.md).
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "contracts/src/**"
+      - "contracts/test/halmos/**"
+      - ".github/workflows/auditoria.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  aderyn:
+    name: Aderyn (análisis estático de Cyfrin)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+      - name: Instalar Aderyn v0.6.8 (release oficial)
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/Cyfrin/aderyn/releases/download/aderyn-v0.6.8/aderyn-installer.sh | sh
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - name: Analizar solo src/
+        working-directory: contracts
+        run: aderyn . --src src -o aderyn-report.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aderyn-report
+          path: contracts/aderyn-report.md
+
+  halmos:
+    name: Halmos (verificación simbólica)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install halmos
+      - name: Propiedades del escrow (test/halmos)
+        working-directory: contracts
+        run: halmos --contract EscrowProps --solver-timeout-assertion 0 2>&1 | tee halmos-report.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: halmos-report
+          path: contracts/halmos-report.txt
+
+  slither:
+    name: Slither (reporte completo)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install slither-analyzer==0.11.6
+      - run: slither contracts --filter-paths "lib|test|script" --checklist > slither-report.md || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: slither-report
+          path: slither-report.md

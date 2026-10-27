@@ -43,7 +43,9 @@ contract MaxAmountTest is Base {
     function test_permit_tambien_respeta_el_tope() public {
         vm.prank(taker);
         vm.expectRevert(SwapFactory.AmountTooHigh.selector);
-        factory.newSwapWithPermit(maker, commit(S_MAKER), commit(S_TAKER), D0, D1, CAP + 1, bytes32("c"), 0, 0, 0, 0);
+        factory.newSwapWithPermit(
+            maker, commit(S_MAKER), commit(S_TAKER), D0, D1, CAP + 1, bytes32("c"), 0, 0, 0, 0
+        );
     }
 
     function testFuzz_ningun_escrow_supera_el_tope(uint256 amount) public {
@@ -55,7 +57,9 @@ contract MaxAmountTest is Base {
             factory.newSwap(maker, commit(S_MAKER), commit(S_TAKER), D0, D1, amount, bytes32("f"));
             assertEq(usdt.balanceOf(taker), before); // no se movió nada
         } else {
-            SwapEscrow e = SwapEscrow(factory.newSwap(maker, commit(S_MAKER), commit(S_TAKER), D0, D1, amount, bytes32("f")));
+            SwapEscrow e = SwapEscrow(
+                factory.newSwap(maker, commit(S_MAKER), commit(S_TAKER), D0, D1, amount, bytes32("f"))
+            );
             assertLe(usdt.balanceOf(address(e)), CAP);
         }
     }

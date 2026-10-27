@@ -56,7 +56,10 @@ contract SwapFactory {
     }
 
     constructor(Config memory c) {
-        if (c.minAmount == 0 || c.maxAmount < c.minAmount || c.minDuration == 0 || c.maxDuration < c.minDuration) {
+        if (
+            c.minAmount == 0 || c.maxAmount < c.minAmount || c.minDuration == 0
+                || c.maxDuration < c.minDuration
+        ) {
             revert InvalidConfig();
         }
         // El constructor de SwapEscrow valida token, receptor y el tope de comisión.

@@ -10,8 +10,11 @@ contract HandlerSmokeTest is Test {
     function test_handlerEjerceCaminosReales() public {
         vm.warp(1_800_000_000);
         MockUSDT u = new MockUSDT(MockUSDT.Mode.FALSE_RETURN_TRON);
-        SwapFactory f =
-            new SwapFactory(SwapFactory.Config(IERC20(address(u)), 100, address(7), 1e6, type(uint256).max, 10 minutes, 2 days));
+        SwapFactory f = new SwapFactory(
+            SwapFactory.Config(
+                IERC20(address(u)), 100, address(7), 1e6, type(uint256).max, 10 minutes, 2 days
+            )
+        );
         Handler h = new Handler(u, f, address(7));
         h.create(5e6, 1 hours, 1 hours);
         h.ready(0);
