@@ -19,6 +19,8 @@ El dueño no tiene capital para la auditoría externa y decidió lanzar **una be
 - Fork contra USD₮0 real en verde.
 - Slither sin hallazgos nuevos.
 
+**Revisión con herramientas gratuitas (27-oct):** Halmos 7/7 propiedades probadas, Aderyn 0 altos y Slither sin medios ni altos. Detalle en [`docs/AUDITORIA-GRATUITA.md`](AUDITORIA-GRATUITA.md).
+
 **La auditoría externa sigue pendiente:** antes de subir el tope o abrir otras redes, completar la lista de abajo.
 
 ## Desplegar la fábrica en Arbitrum One (lo corre el dueño)
