@@ -143,4 +143,15 @@ contract EscrowProps is Test {
         (bool reembolso,) = address(e).call(abi.encodeCall(SwapEscrow.refund, (secret, TAKER)));
         assert(!otroCobro && !reembolso);
     }
+
+    /// 0. Cordura: con el secreto correcto el maker SÍ cobra. Si falla, Halmos no está calculando
+    ///    `ecrecover` (lo trata como función desconocida) y las propiedades que cobran son vacías.
+    function check_cordura_cobroConSecretoValido() public {
+        SwapEscrow e = _swap(10e6, bytes32("s"));
+        vm.prank(TAKER);
+        e.setReady();
+        vm.prank(MAKER);
+        (bool ok,) = address(e).call(abi.encodeCall(SwapEscrow.claim, (S_MAKER, MAKER)));
+        assert(ok);
+    }
 }
