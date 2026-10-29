@@ -180,3 +180,27 @@ nav .nav-cta.primary { background: var(--accent); color: var(--accent-fg); }
 /* Confirmaciones del XMR bloqueado */
 #xmr-progress { width: 100%; height: 0.7rem; accent-color: var(--accent); }
 .lock-box { border: 1px solid var(--line); border-radius: var(--radius); padding: 0.8rem 1rem; background: var(--card); }
+/* Vista simple tipo agregador (borrador) */
+.quick { margin: 1rem 0; }
+.quick-form { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 1.2rem 1.3rem; display: grid; gap: 0.7rem; box-shadow: 0 4px 18px rgb(0 0 0 / 0.06); }
+.quick-form label { font-weight: 700; color: var(--muted); font-size: 0.9rem; }
+.quick-row { display: flex; align-items: center; gap: 0.6rem; border: 1px solid var(--line); border-radius: 12px; padding: 0.4rem 0.8rem; background: var(--bg); }
+.quick-row input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 1.8rem; font-weight: 700; padding: 0.3rem 0; }
+.quick-row input:focus-visible { outline: none; }
+.quick-row:focus-within { border-color: var(--accent); }
+.quick-unit { font-weight: 700; text-align: right; }
+.quick-unit small { display: block; font-weight: 400; color: var(--muted); font-size: 0.8rem; }
+.quick-to { margin: 0; color: var(--muted); }
+.quick-to strong { color: var(--fg); }
+.quick-form .btn.big { width: 100%; }
+.quick-list { list-style: none; padding: 0; display: grid; gap: 0.6rem; }
+.quick-item { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.8rem 1rem; }
+.quick-item.best { border-color: var(--accent); }
+.quick-amount { font-size: 1.15rem; font-weight: 700; margin: 0.2rem 0; font-variant-numeric: tabular-nums; }
+.quick-item .meta { margin: 0; }
+.best-pill { background: #e3f6e8; color: #1d6b34; font-size: 0.75rem; }
+.best-pill::before { content: ""; margin: 0; }
+.trocador-frame { width: 100%; height: 640px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+@media (max-width: 40rem) { .quick-item { flex-direction: column; align-items: stretch; } .quick-row input { font-size: 1.4rem; } }
+/* Borrador: lo que no es la vista simple aparece al elegir una cotización */
+body:not(.chosen) .later { display: none !important; }

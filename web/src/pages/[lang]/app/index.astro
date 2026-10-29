@@ -15,6 +15,9 @@ const factoryReal = import.meta.env.PUBLIC_ARBITRUM_ONE_FACTORY ?? "";
 // (con el código de afiliado del dueño, si está configurado).
 const trocadorRef = import.meta.env.PUBLIC_TROCADOR_REF ?? "";
 const trocador = `https://trocador.app/${lang === "es" ? "es" : "en"}/${trocadorRef ? `?ref=${encodeURIComponent(trocadorRef)}` : ""}`;
+// Widget de Trocador (permite incrustarse: frame-ancestors *), con el código de afiliado si existe.
+const trocadorWidget = `https://trocador.app/widget/${trocadorRef ? `?ref=${encodeURIComponent(trocadorRef)}` : ""}`;
+const draftUi = import.meta.env.PUBLIC_DRAFT_UI === "on";
 
 // CSP estricta: solo código propio. 'wasm-unsafe-eval' es necesario para WebAssembly
 // (núcleo cripto y monero-ts); no habilita eval de JavaScript.
@@ -28,6 +31,7 @@ const csp = [
   `connect-src 'self' ${hosts.join(" ")} https: http://127.0.0.1:* http://localhost:*`,
   "img-src 'self' data:",
   "style-src 'self'",
+  "frame-src https://trocador.app",
   "object-src 'none'",
   "base-uri 'none'",
   "form-action 'none'",
@@ -59,33 +63,56 @@ const softwareLd = {
   <main id="contenido" class="prose" data-lang={lang}>
     <h1>{t("Cambiar USDT por XMR", "Swap USDT for XMR")} <span class="badge only-test">Testnet</span><span class="badge real only-real">{t("Dinero real", "Real money")}</span></h1>
     <NetSwitch lang={lang} />
-    <p class="notice warn only-test">
+    {draftUi && (
+      <section id="step-quick" class="quick">
+        <form id="form-quick" class="quick-form">
+          <label for="quick-usdt">{t("Envías", "You send")}</label>
+          <div class="quick-row">
+            <input id="quick-usdt" type="text" inputmode="decimal" autocomplete="off" placeholder="50" required />
+            <span class="quick-unit">USDT <small>Arbitrum One</small></span>
+          </div>
+          <p class="quick-to">{t("Recibes", "You get")} <strong>XMR</strong> <small>Monero</small></p>
+          <button class="btn big" type="submit">{t("Intercambiar", "Exchange")}</button>
+          <p class="meta">{t("Sin custodia · sin registro · máximo 100 USDT por swap", "Non-custodial · no sign-up · maximum 100 USDT per swap")}</p>
+        </form>
+        <div id="quick-results" hidden>
+          <h2 id="quick-title">{t("Cotizaciones", "Quotes")}</h2>
+          <ul id="quick-list" class="quick-list"></ul>
+        </div>
+        <div id="quick-trocador" hidden>
+          <p id="quick-trocador-why" class="notice"></p>
+          <iframe id="trocador-frame" class="trocador-frame" title="Trocador" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-top-navigation-by-user-activation" data-src={trocadorWidget}></iframe>
+          <p class="meta">{t("Cotizaciones de exchanges instantáneos de Trocador. El intercambio ocurre en el exchange que elijas, fuera de MoneroP2P.", "Quotes from instant exchanges via Trocador. The exchange happens at the provider you choose, outside MoneroP2P.")}</p>
+        </div>
+      </section>
+    )}
+    <p class:list={["notice warn only-test", { later: draftUi }]}>
       {t(
         "Modo práctica: Arbitrum Sepolia + Monero stagenet. Los fondos no tienen valor.",
         "Practice mode: Arbitrum Sepolia + Monero stagenet. Funds have no value.",
       )}
     </p>
-    <p class="notice danger only-real">
+    <p class:list={["notice danger only-real", { later: draftUi }]}>
       {t(
         "Dinero real (Arbitrum One + Monero). Máximo 100 USDT por swap.",
         "Real money (Arbitrum One + Monero). Maximum 100 USDT per swap.",
       )}
     </p>
-    <ul class="trust">
+    <ul class:list={["trust", { later: draftUi }]}>
       <li><strong>{t("Sin custodia", "Non-custodial")}</strong> {t("Tus llaves se generan y se quedan en tu navegador.", "Your keys are created and stay in your browser.")}</li>
       <li><strong>{t("Contrato público", "Public contract")}</strong> <a class="only-test" href={`https://sepolia.arbiscan.io/address/${factory}`} rel="noopener">{t("Ver en Arbiscan", "View on Arbiscan")}</a><a class="only-real" href={`https://arbiscan.io/address/${factoryReal}`} rel="noopener">{t("Ver en Arbiscan", "View on Arbiscan")}</a></li>
       <li><strong>{t("Código abierto", "Open source")}</strong> <a href={SITE.repo} rel="noopener">AGPL-3.0</a></li>
       <li><strong>{t("Comisión 0,5 %", "0.5% fee")}</strong> {t("La paga el maker al cobrar; tú solo pagas el gas.", "Paid by the maker on claim; you only pay gas.")}</li>
     </ul>
     <Verified lang={lang} compact />
-    <ol id="stepper" class="stepper" title={t("Etapas del swap", "Swap stages")}>
+    <ol id="stepper" class:list={["stepper", { later: draftUi }]} title={t("Etapas del swap", "Swap stages")}>
       <li data-stage="step-start">{t("Oferta", "Offer")}</li>
       <li data-stage="step-recovery">{t("Respaldo", "Backup")}</li>
       <li data-stage="step-deposit">{t("Depósito", "Deposit")}</li>
       <li data-stage="step-progress">{t("Seguimiento", "Progress")}</li>
       <li data-stage="done">{t("Listo", "Done")}</li>
     </ol>
-    <p class="notice danger">
+    <p class:list={["notice danger", { later: draftUi }]}>
       {t(
         "No cierres esta pestaña hasta terminar. Si se cierra, vuelve con tu archivo de recuperación: sin él no podrás reclamar el XMR ni reembolsar el USDT. Un swap tarda normalmente entre 30 y 60 minutos.",
         "Do not close this tab until it finishes. If it closes, come back with your recovery file: without it you cannot claim the XMR or refund the USDT. A swap normally takes 30 to 60 minutes.",
@@ -95,7 +122,8 @@ const softwareLd = {
     <p id="status" aria-live="polite"></p>
     <p id="wallet-step" class="notice" hidden aria-live="polite"></p>
 
-    <section id="step-start" data-step>
+
+    <section id="step-start" data-step hidden={draftUi}>
       <h2>{t("1. Elige oferta y monto", "1. Pick an offer and amount")}</h2>
       <form id="form-start" class="app">
         <div class="field">

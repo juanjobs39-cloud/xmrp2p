@@ -5,7 +5,8 @@
  */
 import type { Address, Hex } from "viem";
 import { api, type MakerReply, type Offer } from "./api";
-import { isDeployed, NETWORKS, POLICY, selectedNetwork, validXmrAddress, type EvmNetwork } from "./config";
+import { DRAFT_UI, isDeployed, NETWORKS, POLICY, selectedNetwork, validXmrAddress, type EvmNetwork } from "./config";
+import { availableRange, quotesFor } from "./quick";
 import { decide, type Action, type XmrCheck } from "./decide";
 import { Evm, type WalletStep } from "./evm";
 import { t, type Key, type Lang } from "./i18n";
@@ -106,6 +107,96 @@ export class SwapApp {
     }
     await this.loadOffers();
     this.applyDeepLink();
+    if (DRAFT_UI) this.mountQuick();
+  }
+
+  /** Ofertas vigentes (las usa la vista simple). */
+  private offers: Offer[] = [];
+
+  // ------------------------------------------------------------------ vista simple (borrador)
+
+  private mountQuick(): void {
+    const input = $<HTMLInputElement>("quick-usdt");
+    const pre = new URLSearchParams(location.search).get("usdt");
+    if (pre) input.value = pre;
+    $("form-quick").addEventListener("submit", (e) => {
+      e.preventDefault();
+      void this.guard(() => this.quickSearch(), (e as SubmitEvent).submitter, "loading_offers");
+    });
+  }
+
+  /** «Intercambiar»: cotizaciones de todos los makers para el monto, o Trocador si no hay. */
+  private async quickSearch(): Promise<void> {
+    const raw = $<HTMLInputElement>("quick-usdt").value.trim().replace(",", ".");
+    const usdt = Number(raw);
+    if (!/^\d+(\.\d{1,6})?$/.test(raw) || !(usdt > 0)) throw new Error(t(this.lang, "quick_bad"));
+    await this.loadOffers(); // ofertas frescas en cada búsqueda
+    $("banner").hidden = true;
+    const results = $("quick-results");
+    const list = $("quick-list");
+    const troc = $("quick-trocador");
+    results.hidden = true;
+    troc.hidden = true;
+    const cap = this.net.maxUsdt;
+    const rows = cap && usdt > cap ? [] : quotesFor(this.offers, usdt);
+    if (!rows.length) {
+      const range = availableRange(this.offers);
+      $("quick-trocador-why").textContent =
+        cap && usdt > cap
+          ? t(this.lang, "quick_over", { usdt: raw })
+          : t(this.lang, "quick_none", { usdt: raw, range: range ? t(this.lang, "quick_range", { min: range.min, max: range.max }) : "" });
+      const frame = $<HTMLIFrameElement>("trocador-frame");
+      if (!frame.src) frame.src = frame.dataset.src ?? "";
+      troc.hidden = false;
+      troc.scrollIntoView({ block: "start", behavior: "smooth" });
+      return;
+    }
+    $("quick-title").textContent =
+      rows.length === 1 ? t(this.lang, "quick_title_one", { usdt: raw }) : t(this.lang, "quick_title", { n: rows.length, usdt: raw });
+    list.replaceChildren(
+      ...rows.map((r, i) => {
+        const li = document.createElement("li");
+        li.className = i === 0 ? "quick-item best" : "quick-item";
+        const left = document.createElement("div");
+        const amount = document.createElement("p");
+        amount.className = "quick-amount";
+        amount.textContent = `${t(this.lang, "quick_you_get")} ${r.xmr.toFixed(6)} XMR`;
+        const meta = document.createElement("p");
+        meta.className = "meta";
+        meta.textContent = t(this.lang, "quick_maker", {
+          who: `${r.offer.maker.slice(0, 6)}…${r.offer.maker.slice(-4)}`,
+          price: Number(r.offer.price).toFixed(2),
+          min: r.offer.min_usdt,
+          max: r.offer.max_usdt,
+        });
+        left.append(amount, meta);
+        if (i === 0) {
+          const tag = document.createElement("span");
+          tag.className = "pill best-pill";
+          tag.textContent = t(this.lang, "quick_best");
+          left.prepend(tag);
+        }
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = i === 0 ? "btn" : "btn secondary";
+        btn.textContent = t(this.lang, "quick_choose");
+        btn.addEventListener("click", () => this.quickChoose(r.offer.id, raw));
+        li.append(left, btn);
+        return li;
+      }),
+    );
+    results.hidden = false;
+    results.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+
+  /** Elegir una cotización: pasa al formulario de siempre con la oferta y el monto puestos. */
+  private quickChoose(offerId: string, usdt: string): void {
+    $<HTMLSelectElement>("offer").value = offerId;
+    $<HTMLInputElement>("usdt").value = usdt;
+    $("step-quick").hidden = true;
+    document.body.classList.add("chosen");
+    this.show("step-start");
+    $<HTMLInputElement>("destination").focus();
   }
 
   /** De dónde llegó el usuario (p. ej. un agregador): ?ref=… en el enlace. */
@@ -145,6 +236,7 @@ export class SwapApp {
         opt.dataset.offer = JSON.stringify(o);
         sel.append(opt);
       }
+      this.offers = offers;
       if (offers.some((o) => o.id === keep)) sel.value = keep;
       if (!offers.length) {
         sel.append(new Option(t(this.lang, "no_offers"), ""));
@@ -423,6 +515,8 @@ export class SwapApp {
       file = JSON.parse(saved) as RecoveryFile;
     }
     this.state = await decryptRecovery<SwapState>(file, pass);
+    document.body.classList.add("chosen");
+    if (DRAFT_UI) $("step-quick").hidden = true;
     this.net = NETWORKS[this.state.network] ?? this.net;
     document.body.dataset.net = this.net.testnet ? "test" : "real";
     this.passphrase = pass;

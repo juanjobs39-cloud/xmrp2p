@@ -94,6 +94,9 @@ export function isDeployed(n: EvmNetwork): boolean {
   return n.factory !== ZERO && n.token !== ZERO;
 }
 
+/** Vista simple tipo agregador (borrador): solo en el build de beta.monerop2p.app. */
+export const DRAFT_UI = env.PUBLIC_DRAFT_UI === "on";
+
 /** ¿Está activo el modo con dinero real en este build? */
 export const MAINNET_ON = env.PUBLIC_MAINNET === "on" && isDeployed(NETWORKS.arbitrum_one!);
 
