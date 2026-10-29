@@ -30,15 +30,50 @@ export async function getOffer(env: Env, id: string): Promise<Offer | null> {
 }
 
 /** Cotización indicativa: la mejor oferta que admite el monto. La definitiva la da el maker al tomarla. */
-export async function bestQuote(env: Env, network: string, usdt: string) {
-  const amount = Number(usdt);
-  const offers = (await listOffers(env, network)).filter(
-    (o) => amount >= Number(o.min_usdt) && amount <= Number(o.max_usdt) && amount / Number(o.price) <= Number(o.max_xmr),
-  );
-  const best = offers[0];
-  if (!best) return null;
-  const xmr = Math.floor((amount / Number(best.price)) * 1e12) / 1e12;
-  return { network, usdt, offer_id: best.id, maker: best.maker, price: best.price, xmr: xmr.toFixed(12), indicative: true };
+/**
+ * Mejor oferta para un monto en USDT o en XMR (para agregadores como Trocador). Las ofertas vienen
+ * ordenadas por precio (USDT por XMR) de menor a mayor: la primera que cubre el monto es la mejor.
+ * Devuelve también los límites disponibles y el enlace para continuar el swap en la app.
+ */
+export async function bestQuote(env: Env, network: string, amount: { usdt?: string; xmr?: string }, ref?: string | null) {
+  const offers = await listOffers(env, network);
+  const limits = offers.length
+    ? { min_usdt: String(Math.min(...offers.map((o) => Number(o.min_usdt)))), max_usdt: String(Math.max(...offers.map((o) => Number(o.max_usdt)))) }
+    : null;
+  const fits = (o: Offer, usdt: number) => usdt >= Number(o.min_usdt) && usdt <= Number(o.max_usdt) && usdt / Number(o.price) <= Number(o.max_xmr);
+  let best: Offer | undefined;
+  let usdt = 0;
+  for (const o of offers) {
+    const u = amount.usdt !== undefined ? Number(amount.usdt) : Math.ceil(Number(amount.xmr) * Number(o.price) * 1e6) / 1e6;
+    if (fits(o, u)) {
+      best = o;
+      usdt = u;
+      break;
+    }
+  }
+  if (!best) return { quote: null, limits };
+  const xmr = Math.floor((usdt / Number(best.price)) * 1e12) / 1e12;
+  const site = env.SITE_URL ?? "https://monerop2p.app";
+  const q = new URLSearchParams({ usdt: String(usdt), offer: best.id });
+  if (network !== "arbitrum_one") q.set("red", "prueba");
+  if (ref && /^[a-zA-Z0-9_-]{1,32}$/.test(ref)) q.set("ref", ref);
+  return {
+    quote: {
+      network,
+      usdt: String(usdt),
+      xmr: xmr.toFixed(12),
+      price: best.price,
+      offer_id: best.id,
+      maker: best.maker,
+      expires_at: best.expires_at,
+      indicative: true,
+      // El comprador paga solo el gas de la red; la comisión de MoneroP2P (0,5 %) la paga el maker.
+      buyer_fee: "network gas only",
+      eta_minutes: 45,
+      app_url: `${site}/en/app/?${q.toString()}`,
+    },
+    limits,
+  };
 }
 
 export async function handleOffers(req: Request, env: Env, url: URL): Promise<Response> {

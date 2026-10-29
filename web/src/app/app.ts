@@ -105,6 +105,28 @@ export class SwapApp {
       });
     }
     await this.loadOffers();
+    this.applyDeepLink();
+  }
+
+  /** De dónde llegó el usuario (p. ej. un agregador): ?ref=… en el enlace. */
+  private ref: string | undefined;
+
+  /**
+   * Enlace profundo para agregadores: /app/?usdt=50&to=<dirección XMR>&offer=<id>&ref=<origen>.
+   * Solo llena el formulario: el usuario sigue revisando, descargando su respaldo y firmando.
+   */
+  private applyDeepLink(): void {
+    const sp = new URLSearchParams(location.search);
+    const usdt = sp.get("usdt");
+    const to = sp.get("to");
+    const offer = sp.get("offer");
+    const ref = sp.get("ref");
+    if (usdt && /^\d+(\.\d{1,6})?$/.test(usdt)) $<HTMLInputElement>("usdt").value = usdt;
+    if (to && validXmrAddress(to, this.net.monero)) $<HTMLInputElement>("destination").value = to;
+    const sel = $<HTMLSelectElement>("offer");
+    if (offer && [...sel.options].some((o) => o.value === offer)) sel.value = offer;
+    if (ref && /^[a-zA-Z0-9_-]{1,32}$/.test(ref)) this.ref = ref;
+    if (usdt || to) $<HTMLInputElement>("passphrase").focus();
   }
 
   private async loadOffers(): Promise<Offer[]> {
@@ -127,6 +149,7 @@ export class SwapApp {
       if (!offers.length) {
         sel.append(new Option(t(this.lang, "no_offers"), ""));
         this.banner(t(this.lang, "no_offers"), "warn");
+        $("trocador-alt").hidden = false;
       }
       return offers;
     } catch (e) {
@@ -151,7 +174,10 @@ export class SwapApp {
     if (!/^\d+(\.\d{1,6})?$/.test(usdt)) throw new Error(t(this.lang, "bad_amount"));
     const net = this.net;
     if (!validXmrAddress(destination, net.monero)) throw new Error(t(this.lang, net.testnet ? "bad_address" : "bad_address_main"));
-    if (net.maxUsdt && Number(usdt) > net.maxUsdt) throw new Error(t(this.lang, "over_cap", { max: net.maxUsdt }));
+    if (net.maxUsdt && Number(usdt) > net.maxUsdt) {
+      $("trocador-alt").hidden = false;
+      throw new Error(t(this.lang, "over_cap", { max: net.maxUsdt }));
+    }
     if (pass.length < 10) throw new Error(t(this.lang, "short_pass"));
     if (!node) throw new Error(t(this.lang, "need_node"));
     // Recargar las ofertas justo antes de pedir el swap: la elegida pudo vencer mientras se llenaba el formulario.
@@ -168,7 +194,7 @@ export class SwapApp {
     this.state = { v: 1, network: net.id, created_at: Date.now(), usdt, offer, destination, node, keys, recovery_saved: false, last_seq: 0 };
 
     this.status(t(this.lang, "asking_maker"));
-    const r = await api.createSwap(offer.id, usdt, keys.message);
+    const r = await api.createSwap(offer.id, usdt, keys.message, this.ref);
     const reply = r.maker_reply;
     // Verificar TODO lo que afirma el maker antes de mostrar el depósito.
     const makerMsg = JSON.stringify(reply.maker_message);

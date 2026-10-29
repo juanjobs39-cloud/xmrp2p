@@ -28,12 +28,17 @@ export const openapi = {
     },
     "/v1/quote": {
       get: {
-        summary: "Cotización indicativa con la mejor oferta",
+        summary: "Best quote for an amount in USDT or XMR, with available limits and a deep link to finish the swap in the app (for aggregators)",
         parameters: [
-          { name: "network", in: "query", required: true, schema: { type: "string" } },
-          { name: "usdt", in: "query", required: true, schema: { type: "string", example: "100" } },
+          { name: "network", in: "query", required: true, schema: { type: "string", enum: ["arbitrum_one", "arbitrum_sepolia"] } },
+          { name: "usdt", in: "query", required: false, description: "Amount to pay in USDT (use usdt or xmr)", schema: { type: "string", example: "50" } },
+          { name: "xmr", in: "query", required: false, description: "Amount to receive in XMR (use usdt or xmr)", schema: { type: "string", example: "0.08" } },
+          { name: "ref", in: "query", required: false, description: "Referrer id added to app_url (letters, digits, - and _, up to 32)", schema: { type: "string", example: "trocador" } },
         ],
-        responses: { "200": { description: "Cotización" }, "404": { description: "Sin ofertas para ese monto" } },
+        responses: {
+          "200": { description: "{ network, usdt, xmr, price, offer_id, maker, expires_at, buyer_fee, eta_minutes, app_url, limits: { min_usdt, max_usdt } }" },
+          "404": { description: "No offer covers that amount: { error, limits }" },
+        },
       },
     },
     "/v1/swaps": {

@@ -44,11 +44,11 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   offers: (network: string) => call<{ offers: Offer[] }>(`/v1/offers?network=${encodeURIComponent(network)}`).then((r) => r.offers),
-  createSwap: (offer_id: string, usdt: string, taker_message: unknown) =>
+  createSwap: (offer_id: string, usdt: string, taker_message: unknown, ref?: string) =>
     call<{ room_id: string; room_token: string; maker_reply: MakerReply }>("/v1/swaps", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ offer_id, usdt, taker_message }),
+      body: JSON.stringify({ offer_id, usdt, taker_message, ...(ref ? { ref } : {}) }),
     }),
   events: (room: string, token: string, after = 0) =>
     call<{ messages: RoomMessage[] }>(`/v1/swaps/${room}/events?after=${after}`, { headers: { "x-room-token": token } }).then((r) => r.messages),

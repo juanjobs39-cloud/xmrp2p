@@ -50,8 +50,11 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (p === "/v1/offers") return handleOffers(req, env, url);
   if (p === "/v1/quote" && req.method === "GET") {
     const network = requireNetwork(env, url.searchParams.get("network"));
-    const q = await bestQuote(env, network, decimal(url.searchParams.get("usdt"), "usdt"));
-    return q ? json(q) : json({ error: "no hay ofertas para ese monto" }, 404);
+    const sp = url.searchParams;
+    if (!sp.get("usdt") === !sp.get("xmr")) throw new HttpError(400, "indica usdt o xmr (uno de los dos)");
+    const amount = sp.get("usdt") ? { usdt: decimal(sp.get("usdt"), "usdt") } : { xmr: decimal(sp.get("xmr"), "xmr") };
+    const { quote, limits } = await bestQuote(env, network, amount, sp.get("ref"));
+    return quote ? json({ ...quote, limits }) : json({ error: "no hay ofertas para ese monto", limits }, 404);
   }
   if (p === "/v1/swaps" && req.method === "POST") return createSwap(req, env);
   const room = /^\/v1\/swaps\/([^/]+)\/(events|messages|ws)$/.exec(p);

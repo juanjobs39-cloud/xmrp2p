@@ -9,6 +9,8 @@ export interface Env {
   ALLOWED_ORIGINS: string;
   MAX_OFFER_TTL: string;
   TAKE_TIMEOUT_MS: string;
+  /** Sitio público (para el enlace a la app en /v1/quote). */
+  SITE_URL?: string;
 }
 
 /** Límite de tamaño de cualquier cuerpo JSON (el mensaje con la DLEQ pesa ~114 KB). */

@@ -61,6 +61,21 @@ describe("libro de órdenes", () => {
     expect(q.xmr).toBe("0.400000000000");
     expect((await get("/v1/quote?network=arbitrum_sepolia&usdt=999999")).status).toBe(404);
 
+    // Para agregadores: cotización por XMR, límites y enlace a la app con referido.
+    const qx = (await (await get("/v1/quote?network=arbitrum_sepolia&xmr=0.2&ref=trocador")).json()) as Record<string, unknown>;
+    expect(qx.usdt).toBe("50");
+    expect(qx.xmr).toBe("0.200000000000");
+    expect(qx.limits).toMatchObject({ min_usdt: expect.any(String), max_usdt: expect.any(String) });
+    const app = new URL(String(qx.app_url));
+    expect(app.pathname).toBe("/en/app/");
+    expect(app.searchParams.get("usdt")).toBe("50");
+    expect(app.searchParams.get("offer")).toBe(body.id);
+    expect(app.searchParams.get("ref")).toBe("trocador");
+    expect(app.searchParams.get("red")).toBe("prueba");
+    const none = await get("/v1/quote?network=arbitrum_sepolia&usdt=999999");
+    expect(((await none.json()) as { limits: unknown }).limits).toBeTruthy();
+    expect((await get("/v1/quote?network=arbitrum_sepolia&usdt=10&xmr=1")).status).toBe(400);
+
     const del = await signed(m, "DELETE", "/v1/offers", { network: "arbitrum_sepolia" });
     expect(del.status).toBe(200);
     const after = (await (await get("/v1/offers?network=arbitrum_sepolia")).json()) as { offers: { id: string }[] };

@@ -14,6 +14,9 @@ export async function createSwap(req: Request, env: Env): Promise<Response> {
   const usdt = decimal(data.usdt, "usdt");
   if (!data.taker_message || typeof data.taker_message !== "object") throw new HttpError(400, "falta taker_message");
 
+  // Origen del usuario (agregador o sitio que lo envió), solo para estadísticas. Nunca datos personales.
+  const ref = typeof (data as { ref?: unknown }).ref === "string" && /^[a-zA-Z0-9_-]{1,32}$/.test((data as { ref: string }).ref) ? (data as { ref: string }).ref : null;
+  if (ref) console.log(JSON.stringify({ event: "swap_ref", ref }));
   const offer = await getOffer(env, data.offer_id);
   if (!offer) throw new HttpError(404, "la oferta no existe o expiró");
   requireNetwork(env, offer.network);

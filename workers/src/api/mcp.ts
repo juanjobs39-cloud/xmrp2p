@@ -65,8 +65,8 @@ async function callTool(env: Env, name: string, args: Record<string, unknown>) {
     } catch {
       return { isError: true, content: [{ type: "text", text: "usdt inválido" }] };
     }
-    const q = await bestQuote(env, network, usdt);
-    return q ? text(q) : { isError: true, content: [{ type: "text", text: "No hay ofertas para ese monto" }] };
+    const { quote, limits } = await bestQuote(env, network, { usdt });
+    return quote ? text({ ...quote, limits }) : { isError: true, content: [{ type: "text", text: `No hay ofertas para ese monto. Límites: ${JSON.stringify(limits)}` }] };
   }
   throw new HttpError(404, "herramienta desconocida");
 }

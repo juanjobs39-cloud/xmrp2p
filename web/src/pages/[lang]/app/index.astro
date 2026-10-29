@@ -11,6 +11,10 @@ const lang = Astro.params.lang as Lang;
 const t = (es: string, en: string) => (lang === "es" ? es : en);
 const factory = import.meta.env.PUBLIC_ARBITRUM_SEPOLIA_FACTORY ?? "";
 const factoryReal = import.meta.env.PUBLIC_ARBITRUM_ONE_FACTORY ?? "";
+// Alternativa cuando no hay ofertas o el monto supera el tope: exchanges instantáneos vía Trocador
+// (con el código de afiliado del dueño, si está configurado).
+const trocadorRef = import.meta.env.PUBLIC_TROCADOR_REF ?? "";
+const trocador = `https://trocador.app/${lang === "es" ? "es" : "en"}/${trocadorRef ? `?ref=${encodeURIComponent(trocadorRef)}` : ""}`;
 
 // CSP estricta: solo código propio. 'wasm-unsafe-eval' es necesario para WebAssembly
 // (núcleo cripto y monero-ts); no habilita eval de JavaScript.
@@ -116,6 +120,11 @@ const softwareLd = {
         </label>
         <button class="btn" type="submit">{t("Pedir el swap", "Request the swap")}</button>
       </form>
+      <p id="trocador-alt" class="notice" hidden>
+        {t("¿No hay ofertas o necesitas más de 100 USDT?", "No offers, or need more than 100 USDT?")}
+        <a href={trocador} rel="noopener sponsored" target="_blank">{t("Compara exchanges instantáneos en Trocador →", "Compare instant exchanges on Trocador →")}</a>
+      </p>
+      <p class="meta">{t("¿Más de 100 USDT?", "More than 100 USDT?")} <a href={trocador} rel="noopener sponsored" target="_blank">{t("Compara exchanges instantáneos en Trocador", "Compare instant exchanges on Trocador")}</a></p>
     </section>
 
     <section id="step-recovery" data-step hidden>
