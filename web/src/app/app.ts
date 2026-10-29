@@ -145,8 +145,11 @@ export class SwapApp {
         cap && usdt > cap
           ? t(this.lang, "quick_over", { usdt: raw })
           : t(this.lang, "quick_none", { usdt: raw, range: range ? t(this.lang, "quick_range", { min: range.min, max: range.max }) : "" });
+      // El widget llega con USDT (Arbitrum) → XMR y el monto ya puestos.
       const frame = $<HTMLIFrameElement>("trocador-frame");
-      if (!frame.src) frame.src = frame.dataset.src ?? "";
+      const url = new URL(frame.dataset.src ?? "https://trocador.app/widget/");
+      url.searchParams.set("amount_from", raw);
+      if (frame.src !== url.href) frame.src = url.href;
       troc.hidden = false;
       troc.scrollIntoView({ block: "start", behavior: "smooth" });
       return;

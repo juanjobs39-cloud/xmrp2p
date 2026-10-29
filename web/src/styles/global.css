@@ -200,7 +200,7 @@ nav .nav-cta.primary { background: var(--accent); color: var(--accent-fg); }
 .quick-item .meta { margin: 0; }
 .best-pill { background: #e3f6e8; color: #1d6b34; font-size: 0.75rem; }
 .best-pill::before { content: ""; margin: 0; }
-.trocador-frame { width: 100%; height: 640px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.trocador-frame { width: 100%; height: 470px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
 @media (max-width: 40rem) { .quick-item { flex-direction: column; align-items: stretch; } .quick-row input { font-size: 1.4rem; } }
 /* Borrador: lo que no es la vista simple aparece al elegir una cotización */
 body:not(.chosen) .later { display: none !important; }
