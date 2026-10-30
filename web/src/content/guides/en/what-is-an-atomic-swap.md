@@ -38,7 +38,7 @@ When the seller claims the USDT, their half is published on-chain; the buyer use
 
 - **Deadlines.** Atomic swaps are safe if each party acts in time. On MoneroP2P, if the XMR is not verified before deadline t0, you must refund.
 - **Your recovery file.** If you close the browser, you need it to finish or refund.
-- **The software.** Safety depends on the code being correct; MoneroP2P is not audited yet.
+- **The software.** Safety depends on the code being correct; MoneroP2P's contract is verified with automated tools but has no external audit yet.
 
 ## A bit of history
 

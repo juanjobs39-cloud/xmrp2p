@@ -1,4 +1,5 @@
-export type Lang = "es" | "en";
+import type { Lang } from "../site";
+export type { Lang };
 
 const S = {
   es: {
@@ -181,6 +182,12 @@ const S = {
 
 export type Key = keyof (typeof S)["es"];
 
+/** Otros idiomas: src/app/i18n/<idioma>.json (lo que falte se muestra en inglés). */
+const EXTRA = Object.fromEntries(
+  Object.entries(import.meta.glob("./i18n/*.json", { eager: true, import: "default" })).map(([p, d]) => [p.slice(7, -5), d]),
+) as Partial<Record<Lang, Partial<Record<Key, string>>>>;
+
 export function t(lang: Lang, key: Key, vars: Record<string, string | number> = {}): string {
-  return S[lang][key].replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ""));
+  const text = lang === "es" || lang === "en" ? S[lang][key] : (EXTRA[lang]?.[key] ?? S.en[key]);
+  return text.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ""));
 }

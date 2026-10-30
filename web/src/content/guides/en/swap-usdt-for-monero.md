@@ -13,7 +13,7 @@ howto:
   totalTime: PT1H
   steps:
     - name: Prepare your Monero wallet
-      text: Create a Monero wallet and copy your receiving address. In the test version it must be a stagenet address.
+      text: Create a Monero wallet and copy your receiving address. In practice mode it must be a stagenet address.
     - name: Open the app and pick an offer
       text: Pick a maker's offer, enter the USDT amount and your Monero address.
     - name: Set a password and download the recovery file
@@ -28,7 +28,7 @@ howto:
 
 **Short answer:** open the app, pick an offer, enter your Monero address, download your recovery file, deposit the USDT from your wallet and wait. The app verifies the XMR, asks you to confirm and finally sends the XMR to your address. If something fails, it asks you to refund the USDT. The whole process usually takes 30 to 60 minutes.
 
-> Right now MoneroP2P only runs on **testnet** (Arbitrum Sepolia and Monero stagenet). The steps are the same as the real version will have.
+> MoneroP2P runs with real money on **Arbitrum One + Monero** (maximum 100 USDT per swap) and has a practice mode on **testnet** (Arbitrum Sepolia and Monero stagenet). The steps are the same in both.
 
 ## Before you start
 

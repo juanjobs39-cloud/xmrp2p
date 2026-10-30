@@ -1,5 +1,6 @@
 /** Textos de la página del maker (español e inglés). */
-export type Lang = "es" | "en";
+import type { Lang } from "../site";
+export type { Lang };
 
 const es = {
   not_ready: "El backend o el contrato no están configurados: el maker no puede operar todavía.",
@@ -163,4 +164,11 @@ const en: Record<MKey, string> = {
   log_connected: "Connected: receiving requests.",
 };
 
-export const T: Record<Lang, Record<MKey, string>> = { es, en };
+/** Otros idiomas: src/maker/i18n/<idioma>.json (lo que falte se muestra en inglés). */
+const EXTRA = Object.fromEntries(
+  Object.entries(import.meta.glob("./i18n/*.json", { eager: true, import: "default" })).map(([p, d]) => [p.slice(7, -5), { ...en, ...(d as object) }]),
+) as Partial<Record<Lang, Record<MKey, string>>>;
+
+export const T = new Proxy({ es, en } as Record<Lang, Record<MKey, string>>, {
+  get: (base, lang: string) => base[lang as Lang] ?? EXTRA[lang as Lang] ?? en,
+});

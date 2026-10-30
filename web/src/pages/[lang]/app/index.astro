@@ -1,20 +1,21 @@
 ---
+import { makeT } from "../../../i18n/ui";
 import Base from "../../../layouts/Base.astro";
-import { ROUTES, SITE, type Lang } from "../../../site";
+import { LANGS, ROUTES, SITE, type Lang } from "../../../site";
 import NetSwitch from "../../../components/NetSwitch.astro";
 import Verified from "../../../components/Verified.astro";
 
 export function getStaticPaths() {
-  return [{ params: { lang: "es" } }, { params: { lang: "en" } }];
+  return LANGS.map((lang) => ({ params: { lang } }));
 }
 const lang = Astro.params.lang as Lang;
-const t = (es: string, en: string) => (lang === "es" ? es : en);
+const t = makeT(lang);
 const factory = import.meta.env.PUBLIC_ARBITRUM_SEPOLIA_FACTORY ?? "";
 const factoryReal = import.meta.env.PUBLIC_ARBITRUM_ONE_FACTORY ?? "";
 // Alternativa cuando no hay ofertas o el monto supera el tope: exchanges instantáneos vía Trocador
 // (con el código de afiliado del dueño, si está configurado).
 const trocadorRef = import.meta.env.PUBLIC_TROCADOR_REF ?? "";
-const trocador = `https://trocador.app/${lang === "es" ? "es" : "en"}/${trocadorRef ? `?ref=${encodeURIComponent(trocadorRef)}` : ""}`;
+const trocador = `https://trocador.app/${["es", "pt", "ru", "fr", "de", "it"].includes(lang) ? lang : "en"}/${trocadorRef ? `?ref=${encodeURIComponent(trocadorRef)}` : ""}`;
 // Widget de Trocador (permite incrustarse: frame-ancestors *), con el código de afiliado si existe.
 // Llega con USDT (Arbitrum) → XMR preseleccionados; la app agrega amount_from con el monto.
 const trocadorWidget = `https://trocador.app/widget/?ticker_from=usdt&network_from=Arbitrum&ticker_to=xmr&network_to=Mainnet${trocadorRef ? `&ref=${encodeURIComponent(trocadorRef)}` : ""}`;
@@ -80,7 +81,7 @@ const softwareLd = {
           <p id="quick-why" class="notice" hidden></p>
           <h2 id="quick-title">{t("Cotizaciones", "Quotes")}</h2>
           <ul id="quick-list" class="quick-list"></ul>
-          <p id="quick-troc-note" class="meta" hidden>{t("Exchanges instantáneos vía Trocador: el intercambio lo hace el exchange que elijas, no MoneroP2P. Por exigencia de esos exchanges, al crear el intercambio guardamos tu IP, idioma y navegador ligados a su ID, para responder solicitudes legales que nos reenvíe Trocador. Los swaps con makers de MoneroP2P no guardan estos datos.", "Instant exchanges via Trocador: the exchange you choose does the swap, not MoneroP2P. Those exchanges require that, when you create the exchange, we keep your IP, language and browser linked to its ID, to answer legal requests forwarded by Trocador. Swaps with MoneroP2P makers don't store this data.")} <a href={`/${lang}/${lang === "es" ? "privacidad" : "privacy"}/`}>{t("Privacidad", "Privacy")}</a></p>
+          <p id="quick-troc-note" class="meta" hidden>{t("Exchanges instantáneos vía Trocador: el intercambio lo hace el exchange que elijas, no MoneroP2P. Por exigencia de esos exchanges, al crear el intercambio guardamos tu IP, idioma y navegador ligados a su ID, para responder solicitudes legales que nos reenvíe Trocador. Los swaps con makers de MoneroP2P no guardan estos datos.", "Instant exchanges via Trocador: the exchange you choose does the swap, not MoneroP2P. Those exchanges require that, when you create the exchange, we keep your IP, language and browser linked to its ID, to answer legal requests forwarded by Trocador. Swaps with MoneroP2P makers don't store this data.")} <a href={ROUTES.privacy[lang]}>{t("Privacidad", "Privacy")}</a></p>
         </div>
         <div id="quick-troc-pay" hidden>
           <h2>{t("Intercambio vía Trocador", "Exchange via Trocador")}</h2>
@@ -229,7 +230,7 @@ const softwareLd = {
 
 <script>
   import { SwapApp } from "../../../app/app";
-  const lang = (document.querySelector("main")?.dataset.lang ?? "es") as "es" | "en";
+  const lang = (document.querySelector("main")?.dataset.lang ?? "en") as Lang;
   const app = new SwapApp(lang);
   void app.mount();
   document.getElementById("link-restore")?.addEventListener("click", () => {

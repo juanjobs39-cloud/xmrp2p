@@ -1,14 +1,15 @@
 ---
+import { makeT } from "../../../i18n/ui";
 import Base from "../../../layouts/Base.astro";
-import { ROUTES, SITE, type Lang } from "../../../site";
+import { LANGS, ROUTES, SITE, type Lang } from "../../../site";
 import NetSwitch from "../../../components/NetSwitch.astro";
 import Verified from "../../../components/Verified.astro";
 
 export function getStaticPaths() {
-  return [{ params: { lang: "es" } }, { params: { lang: "en" } }];
+  return LANGS.map((lang) => ({ params: { lang } }));
 }
 const lang = Astro.params.lang as Lang;
-const t = (es: string, en: string) => (lang === "es" ? es : en);
+const t = makeT(lang);
 
 // Misma CSP estricta que la app del taker, más el WebSocket del buzón del maker.
 const hosts = [SITE.apiUrl, import.meta.env.PUBLIC_ARBITRUM_SEPOLIA_RPC ?? "https://sepolia-rollup.arbitrum.io/rpc", import.meta.env.PUBLIC_MONERO_NODE ?? ""]
@@ -191,6 +192,6 @@ const csp = [
 
 <script>
   import { MakerApp } from "../../../maker/maker-app";
-  const lang = (document.querySelector("main")?.dataset.lang ?? "es") as "es" | "en";
+  const lang = (document.querySelector("main")?.dataset.lang ?? "en") as Lang;
   void new MakerApp(lang).mount();
 </script>

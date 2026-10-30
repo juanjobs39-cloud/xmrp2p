@@ -38,7 +38,7 @@ Cuando el vendedor cobra el USDT, su mitad queda publicada en la cadena; el comp
 
 - **Los plazos.** Los atomic swaps son seguros si cada parte actúa a tiempo. En MoneroP2P, si el XMR no se verifica antes del plazo t0, debes reembolsar.
 - **Tu archivo de recuperación.** Si cierras el navegador, lo necesitas para terminar o reembolsar.
-- **El software.** La seguridad depende de que el código sea correcto; MoneroP2P aún no tiene auditoría.
+- **El software.** La seguridad depende de que el código sea correcto; el contrato de MoneroP2P está verificado con herramientas automáticas, pero aún no tiene auditoría externa.
 
 ## Un poco de historia
 

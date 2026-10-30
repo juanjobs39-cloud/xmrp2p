@@ -1,6 +1,6 @@
 ---
 // Raíz: redirige a inglés (idioma por defecto) sin JavaScript.
-import { SITE } from "../site";
+import { LANG_INFO, LANGS, SITE } from "../site";
 const en = new URL("/en/", Astro.site).href;
 ---
 <!doctype html>
@@ -11,12 +11,11 @@ const en = new URL("/en/", Astro.site).href;
     <title>{SITE.brand}</title>
     <meta http-equiv="refresh" content="0; url=en/" />
     <link rel="canonical" href={en} />
-    <link rel="alternate" hreflang="en" href={en} />
-    <link rel="alternate" hreflang="es" href={new URL("/es/", Astro.site).href} />
+    {LANGS.map((l) => <link rel="alternate" hreflang={l} href={new URL(`/${l}/`, Astro.site).href} />)}
     <link rel="alternate" hreflang="x-default" href={en} />
     <meta name="robots" content="noindex" />
   </head>
   <body>
-    <p><a href="en/">English</a> · <a href="es/">Español</a></p>
+    <ul>{LANGS.map((l) => <li><a href={`${l}/`} lang={l}>{LANG_INFO[l].name}</a></li>)}</ul>
   </body>
 </html>

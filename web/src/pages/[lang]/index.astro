@@ -1,15 +1,16 @@
 ---
+import { makeT } from "../../i18n/ui";
 import Base from "../../layouts/Base.astro";
 import { guidePath, guides } from "../../lib/content";
 import { MAINNET_ON } from "../../app/config";
 import Verified from "../../components/Verified.astro";
-import { ROUTES, SITE, type Lang } from "../../site";
+import { LANGS, ROUTES, SITE, type Lang } from "../../site";
 
 export function getStaticPaths() {
-  return [{ params: { lang: "es" } }, { params: { lang: "en" } }];
+  return LANGS.map((lang) => ({ params: { lang } }));
 }
 const lang = Astro.params.lang as Lang;
-const t = (es: string, en: string) => (lang === "es" ? es : en);
+const t = makeT(lang);
 const list = (await guides(lang)).slice(0, 6);
 ---
 <Base

@@ -30,8 +30,7 @@ Same value, different network. USDT on Tron cannot be sent directly to an Ethere
 
 ## Which one does MoneroP2P use?
 
-- **Now:** Arbitrum Sepolia (testnet), with a test token.
-- **Planned:** Arbitrum, whose USDT (USD₮0) lets you authorize the deposit with a signature, with no extra approval transaction.
+- **Now:** Arbitrum One, whose USDT (USD₮0) lets you authorize the deposit with a signature, with no extra approval transaction. Practice mode uses Arbitrum Sepolia (testnet).
 - **Under evaluation:** Tron. The contract already compiles for Tron but still needs testing on its testnet; Tron has quirks (for example, its USDT returns an unexpected value on transfer) that the contract already handles.
 
 ## How to choose

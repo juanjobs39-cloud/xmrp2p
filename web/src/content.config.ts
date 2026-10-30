@@ -1,7 +1,7 @@
 import { defineCollection, z } from "astro:content";
 import { file, glob } from "astro/loaders";
 
-const lang = z.enum(["es", "en"]);
+const lang = z.enum(["es", "en", "pt", "ru", "uk", "zh", "ja", "ko", "hi", "fa"]);
 
 /** Páginas institucionales y de producto. `key` las une entre idiomas (ver src/site.ts → ROUTES). */
 const pages = defineCollection({
@@ -17,7 +17,8 @@ const pages = defineCollection({
 
 /** Guías. Misma `key` en ambos idiomas; `slug` propio de cada idioma. */
 const guides = defineCollection({
-  loader: glob({ pattern: "**/*.md", base: "./src/content/guides" }),
+  // El id es la ruta del archivo (es/comparacion), no el slug: varios idiomas comparten slug.
+  loader: glob({ pattern: "**/*.md", base: "./src/content/guides", generateId: ({ entry }) => entry.replace(/\.md$/, "") }),
   schema: z.object({
     key: z.string(),
     lang,

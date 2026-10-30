@@ -21,7 +21,7 @@ howto:
       text: In the Receive section, copy your address. To try MoneroP2P use a stagenet wallet.
 ---
 
-**Short answer:** download a Monero wallet from its official site, create a new wallet, write the seed phrase on paper and copy your address from "Receive". To try MoneroP2P you need a **stagenet** wallet (Monero's test network), which some desktop wallets let you choose.
+**Short answer:** download a Monero wallet from its official site, create a new wallet, write the seed phrase on paper and copy your address from "Receive". For MoneroP2P's practice mode you need a **stagenet** wallet (Monero's test network), which some desktop wallets let you choose.
 
 ## Well-known options
 
@@ -46,7 +46,7 @@ howto:
 
 - In Monero GUI or Feather, choose **stagenet** when creating the wallet (in settings or at startup).
 - Stagenet XMR has no value; you get it from stagenet faucets.
-- The MoneroP2P app rejects non-stagenet addresses while we are testing.
+- In practice mode, the MoneroP2P app only accepts stagenet addresses.
 
 ## Good practices
 

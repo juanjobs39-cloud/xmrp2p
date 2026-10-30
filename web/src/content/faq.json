@@ -3,46 +3,740 @@
     "id": "es",
     "lang": "es",
     "items": [
-      { "q": "¿Qué es MoneroP2P?", "a": "Es una plataforma P2P de código abierto para cambiar USDT por Monero (XMR) mediante atomic swaps que corren en tu navegador. Nadie custodia tus fondos: un contrato retiene el USDT y solo lo libera al maker cuando tú ya puedes tomar el XMR." },
-      { "q": "¿Necesito crear una cuenta o verificar mi identidad?", "a": "No. No hay cuentas. Necesitas una wallet de navegador con USDT, una dirección de Monero y una contraseña para tu archivo de recuperación." },
-      { "q": "¿Puedo usarlo con dinero real?", "a": "Sí. Funciona con dinero real en Arbitrum One (USDT) y Monero, con un máximo de 100 USDT por swap que impone el propio contrato. El contrato está verificado con Halmos, Aderyn y Slither y su código está publicado en Sourcify. También hay un modo de práctica en testnet." },
-      { "q": "¿Cuánto cobra MoneroP2P?", "a": "El contrato cobra un porcentaje del USDT cuando el swap se completa. El porcentaje se fija al desplegar el contrato y tiene un tope de 1 % escrito en el código que nadie puede cambiar. Los reembolsos no pagan comisión. Además pagas el gas de la red del USDT y la comisión de red de Monero." },
-      { "q": "¿Quién fija el precio?", "a": "Cada maker publica su precio en USDT por XMR. El daemon del maker lo calcula a partir de varias fuentes públicas más su margen. La app te muestra la cantidad exacta de XMR antes de depositar." },
-      { "q": "¿Cuánto tarda un swap?", "a": "Normalmente entre 30 y 60 minutos, sobre todo por las confirmaciones de la red de Monero que la app espera antes de pedirte confirmar." },
-      { "q": "¿Qué pasa si el maker no envía el XMR?", "a": "No confirmas y reembolsas tu USDT antes del plazo t0. La app te lo pide automáticamente si el XMR no está verificado cuando se acerca ese plazo." },
-      { "q": "¿Qué pasa si cierro la pestaña?", "a": "Vuelve a la app, pulsa Reanudar y usa tu archivo de recuperación con tu contraseña. Hazlo pronto: si el XMR no llegó, debes reembolsar antes de t0." },
-      { "q": "¿Qué es el archivo de recuperación?", "a": "Un archivo cifrado con tu contraseña que contiene tu mitad de la llave del swap. Con él puedes terminar el swap, reclamar el XMR o reembolsar el USDT desde cualquier navegador. Sin él y sin el navegador original no se pueden recuperar los fondos de un swap en curso." },
-      { "q": "¿Qué son t0 y t1?", "a": "Son los dos plazos del contrato. Antes de t0 puedes confirmar o reembolsar. Después de confirmar, o entre t0 y t1, el maker puede cobrar. Desde t1 puedes reembolsar si el maker no cobró." },
-      { "q": "¿Pueden congelar mis fondos?", "a": "Tether, el emisor de USDT, puede congelar direcciones. Cada swap usa un contrato separado para que una congelación no afecte a los demás, pero el riesgo existe. El XMR no puede ser congelado por un emisor." },
-      { "q": "¿Qué redes de USDT soporta?", "a": "USDT en Arbitrum One (USD₮0). El modo de práctica usa Arbitrum Sepolia. Se evalúa Tron, cuyo contrato ya compila pero falta probarlo." },
-      { "q": "¿Necesito ETH además de USDT?", "a": "Sí, un poco de la moneda de la red (ETH en Arbitrum) para pagar el gas del depósito, la confirmación y un posible reembolso." },
-      { "q": "¿Mis llaves pasan por sus servidores?", "a": "No. Las llaves se generan en tu navegador. El backend solo reenvía mensajes públicos del protocolo y rechaza cualquier mensaje que contenga una llave privada completa." },
-      { "q": "¿El código es abierto?", "a": "Sí, bajo licencia AGPL-3.0, en github.com/juanjobs39-cloud/xmrp2p. Publicamos sumas SHA-256 de cada archivo del sitio para que puedas verificar que la app corresponde al código." },
-      { "q": "¿Puedo ser maker?", "a": "Sí. Necesitas XMR, un equipo encendido que corra el daemon del maker, monero-wallet-rpc y una cuenta con gas en la red del USDT. Las instrucciones están en la página Conviértete en maker." },
-      { "q": "¿Esto es legal en mi país?", "a": "Depende de tu país. Eres responsable de cumplir sus leyes, incluidas las fiscales. No damos asesoría legal." }
+      {
+        "q": "¿Qué es MoneroP2P?",
+        "a": "Es una plataforma P2P de código abierto para cambiar USDT por Monero (XMR) mediante atomic swaps que corren en tu navegador. Nadie custodia tus fondos: un contrato retiene el USDT y solo lo libera al maker cuando tú ya puedes tomar el XMR."
+      },
+      {
+        "q": "¿Necesito crear una cuenta o verificar mi identidad?",
+        "a": "No. No hay cuentas. Necesitas una wallet de navegador con USDT, una dirección de Monero y una contraseña para tu archivo de recuperación."
+      },
+      {
+        "q": "¿Puedo usarlo con dinero real?",
+        "a": "Sí. Funciona con dinero real en Arbitrum One (USDT) y Monero, con un máximo de 100 USDT por swap que impone el propio contrato. El contrato está verificado con Halmos, Aderyn y Slither y su código está publicado en Sourcify. También hay un modo de práctica en testnet."
+      },
+      {
+        "q": "¿Cuánto cobra MoneroP2P?",
+        "a": "El contrato cobra un porcentaje del USDT cuando el swap se completa. El porcentaje se fija al desplegar el contrato y tiene un tope de 1 % escrito en el código que nadie puede cambiar. Los reembolsos no pagan comisión. Además pagas el gas de la red del USDT y la comisión de red de Monero."
+      },
+      {
+        "q": "¿Quién fija el precio?",
+        "a": "Cada maker publica su precio en USDT por XMR. El daemon del maker lo calcula a partir de varias fuentes públicas más su margen. La app te muestra la cantidad exacta de XMR antes de depositar."
+      },
+      {
+        "q": "¿Cuánto tarda un swap?",
+        "a": "Normalmente entre 30 y 60 minutos, sobre todo por las confirmaciones de la red de Monero que la app espera antes de pedirte confirmar."
+      },
+      {
+        "q": "¿Qué pasa si el maker no envía el XMR?",
+        "a": "No confirmas y reembolsas tu USDT antes del plazo t0. La app te lo pide automáticamente si el XMR no está verificado cuando se acerca ese plazo."
+      },
+      {
+        "q": "¿Qué pasa si cierro la pestaña?",
+        "a": "Vuelve a la app, pulsa Reanudar y usa tu archivo de recuperación con tu contraseña. Hazlo pronto: si el XMR no llegó, debes reembolsar antes de t0."
+      },
+      {
+        "q": "¿Qué es el archivo de recuperación?",
+        "a": "Un archivo cifrado con tu contraseña que contiene tu mitad de la llave del swap. Con él puedes terminar el swap, reclamar el XMR o reembolsar el USDT desde cualquier navegador. Sin él y sin el navegador original no se pueden recuperar los fondos de un swap en curso."
+      },
+      {
+        "q": "¿Qué son t0 y t1?",
+        "a": "Son los dos plazos del contrato. Antes de t0 puedes confirmar o reembolsar. Después de confirmar, o entre t0 y t1, el maker puede cobrar. Desde t1 puedes reembolsar si el maker no cobró."
+      },
+      {
+        "q": "¿Pueden congelar mis fondos?",
+        "a": "Tether, el emisor de USDT, puede congelar direcciones. Cada swap usa un contrato separado para que una congelación no afecte a los demás, pero el riesgo existe. El XMR no puede ser congelado por un emisor."
+      },
+      {
+        "q": "¿Qué redes de USDT soporta?",
+        "a": "USDT en Arbitrum One (USD₮0). El modo de práctica usa Arbitrum Sepolia. Se evalúa Tron, cuyo contrato ya compila pero falta probarlo."
+      },
+      {
+        "q": "¿Necesito ETH además de USDT?",
+        "a": "Sí, un poco de la moneda de la red (ETH en Arbitrum) para pagar el gas del depósito, la confirmación y un posible reembolso."
+      },
+      {
+        "q": "¿Mis llaves pasan por sus servidores?",
+        "a": "No. Las llaves se generan en tu navegador. El backend solo reenvía mensajes públicos del protocolo y rechaza cualquier mensaje que contenga una llave privada completa."
+      },
+      {
+        "q": "¿El código es abierto?",
+        "a": "Sí, bajo licencia AGPL-3.0, en github.com/juanjobs39-cloud/xmrp2p. Publicamos sumas SHA-256 de cada archivo del sitio para que puedas verificar que la app corresponde al código."
+      },
+      {
+        "q": "¿Puedo ser maker?",
+        "a": "Sí. Necesitas XMR, un equipo encendido que corra el daemon del maker, monero-wallet-rpc y una cuenta con gas en la red del USDT. Las instrucciones están en la página Conviértete en maker."
+      },
+      {
+        "q": "¿Esto es legal en mi país?",
+        "a": "Depende de tu país. Eres responsable de cumplir sus leyes, incluidas las fiscales. No damos asesoría legal."
+      }
     ]
   },
   {
     "id": "en",
     "lang": "en",
     "items": [
-      { "q": "What is MoneroP2P?", "a": "An open-source P2P platform to swap USDT for Monero (XMR) through atomic swaps that run in your browser. Nobody holds your funds: a contract holds the USDT and only releases it to the maker once you can take the XMR." },
-      { "q": "Do I need an account or identity verification?", "a": "No. There are no accounts. You need a browser wallet with USDT, a Monero address and a password for your recovery file." },
-      { "q": "Can I use it with real money?", "a": "Yes. It runs with real money on Arbitrum One (USDT) and Monero, with a maximum of 100 USDT per swap enforced by the contract itself. The contract is verified with Halmos, Aderyn and Slither and its source is published on Sourcify. A testnet practice mode is also available." },
-      { "q": "How much does MoneroP2P charge?", "a": "The contract charges a percentage of the USDT when the swap completes. The percentage is set when the contract is deployed and capped at 1% in the code, which nobody can change. Refunds pay no fee. You also pay gas on the USDT network and the Monero network fee." },
-      { "q": "Who sets the price?", "a": "Each maker publishes their price in USDT per XMR. The maker daemon computes it from several public sources plus their margin. The app shows the exact XMR amount before you deposit." },
-      { "q": "How long does a swap take?", "a": "Usually 30 to 60 minutes, mostly because of the Monero network confirmations the app waits for before asking you to confirm." },
-      { "q": "What if the maker does not send the XMR?", "a": "You do not confirm and you refund your USDT before deadline t0. The app asks you to automatically if the XMR is not verified as that deadline approaches." },
-      { "q": "What if I close the tab?", "a": "Reopen the app, click Resume and use your recovery file with your password. Do it soon: if the XMR did not arrive, you must refund before t0." },
-      { "q": "What is the recovery file?", "a": "A password-encrypted file holding your half of the swap key. With it you can finish the swap, claim the XMR or refund the USDT from any browser. Without it and without the original browser, the funds of a swap in progress cannot be recovered." },
-      { "q": "What are t0 and t1?", "a": "The contract's two deadlines. Before t0 you can confirm or refund. After you confirm, or between t0 and t1, the maker can claim. From t1 you can refund if the maker did not claim." },
-      { "q": "Can my funds be frozen?", "a": "Tether, the USDT issuer, can freeze addresses. Each swap uses a separate contract so one freeze does not affect others, but the risk exists. XMR cannot be frozen by an issuer." },
-      { "q": "Which USDT networks are supported?", "a": "USDT on Arbitrum One (USD₮0). The practice mode uses Arbitrum Sepolia. Tron is under evaluation; its contract already compiles but still needs testing." },
-      { "q": "Do I need ETH besides USDT?", "a": "Yes, a little of the network's coin (ETH on Arbitrum) to pay gas for the deposit, the confirmation and a possible refund." },
-      { "q": "Do my keys go through your servers?", "a": "No. Keys are generated in your browser. The backend only relays public protocol messages and rejects any message containing a full private key." },
-      { "q": "Is the code open source?", "a": "Yes, under the AGPL-3.0 license, at github.com/juanjobs39-cloud/xmrp2p. We publish SHA-256 sums of every site file so you can verify the app matches the code." },
-      { "q": "Can I become a maker?", "a": "Yes. You need XMR, an always-on machine running the maker daemon, monero-wallet-rpc and an account with gas on the USDT network. Instructions are on the Become a maker page." },
-      { "q": "Is this legal in my country?", "a": "It depends on your country. You are responsible for complying with its laws, including tax rules. We do not give legal advice." }
+      {
+        "q": "What is MoneroP2P?",
+        "a": "An open-source P2P platform to swap USDT for Monero (XMR) through atomic swaps that run in your browser. Nobody holds your funds: a contract holds the USDT and only releases it to the maker once you can take the XMR."
+      },
+      {
+        "q": "Do I need an account or identity verification?",
+        "a": "No. There are no accounts. You need a browser wallet with USDT, a Monero address and a password for your recovery file."
+      },
+      {
+        "q": "Can I use it with real money?",
+        "a": "Yes. It runs with real money on Arbitrum One (USDT) and Monero, with a maximum of 100 USDT per swap enforced by the contract itself. The contract is verified with Halmos, Aderyn and Slither and its source is published on Sourcify. A testnet practice mode is also available."
+      },
+      {
+        "q": "How much does MoneroP2P charge?",
+        "a": "The contract charges a percentage of the USDT when the swap completes. The percentage is set when the contract is deployed and capped at 1% in the code, which nobody can change. Refunds pay no fee. You also pay gas on the USDT network and the Monero network fee."
+      },
+      {
+        "q": "Who sets the price?",
+        "a": "Each maker publishes their price in USDT per XMR. The maker daemon computes it from several public sources plus their margin. The app shows the exact XMR amount before you deposit."
+      },
+      {
+        "q": "How long does a swap take?",
+        "a": "Usually 30 to 60 minutes, mostly because of the Monero network confirmations the app waits for before asking you to confirm."
+      },
+      {
+        "q": "What if the maker does not send the XMR?",
+        "a": "You do not confirm and you refund your USDT before deadline t0. The app asks you to automatically if the XMR is not verified as that deadline approaches."
+      },
+      {
+        "q": "What if I close the tab?",
+        "a": "Reopen the app, click Resume and use your recovery file with your password. Do it soon: if the XMR did not arrive, you must refund before t0."
+      },
+      {
+        "q": "What is the recovery file?",
+        "a": "A password-encrypted file holding your half of the swap key. With it you can finish the swap, claim the XMR or refund the USDT from any browser. Without it and without the original browser, the funds of a swap in progress cannot be recovered."
+      },
+      {
+        "q": "What are t0 and t1?",
+        "a": "The contract's two deadlines. Before t0 you can confirm or refund. After you confirm, or between t0 and t1, the maker can claim. From t1 you can refund if the maker did not claim."
+      },
+      {
+        "q": "Can my funds be frozen?",
+        "a": "Tether, the USDT issuer, can freeze addresses. Each swap uses a separate contract so one freeze does not affect others, but the risk exists. XMR cannot be frozen by an issuer."
+      },
+      {
+        "q": "Which USDT networks are supported?",
+        "a": "USDT on Arbitrum One (USD₮0). The practice mode uses Arbitrum Sepolia. Tron is under evaluation; its contract already compiles but still needs testing."
+      },
+      {
+        "q": "Do I need ETH besides USDT?",
+        "a": "Yes, a little of the network's coin (ETH on Arbitrum) to pay gas for the deposit, the confirmation and a possible refund."
+      },
+      {
+        "q": "Do my keys go through your servers?",
+        "a": "No. Keys are generated in your browser. The backend only relays public protocol messages and rejects any message containing a full private key."
+      },
+      {
+        "q": "Is the code open source?",
+        "a": "Yes, under the AGPL-3.0 license, at github.com/juanjobs39-cloud/xmrp2p. We publish SHA-256 sums of every site file so you can verify the app matches the code."
+      },
+      {
+        "q": "Can I become a maker?",
+        "a": "Yes. You need XMR, an always-on machine running the maker daemon, monero-wallet-rpc and an account with gas on the USDT network. Instructions are on the Become a maker page."
+      },
+      {
+        "q": "Is this legal in my country?",
+        "a": "It depends on your country. You are responsible for complying with its laws, including tax rules. We do not give legal advice."
+      }
+    ]
+  },
+  {
+    "id": "pt",
+    "lang": "pt",
+    "items": [
+      {
+        "q": "O que é o MoneroP2P?",
+        "a": "Uma plataforma P2P de código aberto para trocar USDT por Monero (XMR) com atomic swaps que rodam no seu navegador. Ninguém guarda seus fundos: um contrato guarda o USDT e só o libera para o maker quando você já pode pegar o XMR."
+      },
+      {
+        "q": "Preciso de conta ou de verificação de identidade?",
+        "a": "Não. Não existem contas. Você precisa de uma carteira de navegador com USDT, um endereço Monero e uma senha para seu arquivo de recuperação."
+      },
+      {
+        "q": "Posso usar com dinheiro real?",
+        "a": "Sim. Funciona com dinheiro real na Arbitrum One (USDT) e Monero, com máximo de 100 USDT por swap imposto pelo próprio contrato. O contrato foi verificado com Halmos, Aderyn e Slither e seu código está publicado no Sourcify. Também há um modo de prática em testnet."
+      },
+      {
+        "q": "Quanto o MoneroP2P cobra?",
+        "a": "O contrato cobra uma porcentagem do USDT quando o swap é concluído. A porcentagem é definida quando o contrato é implantado e tem teto de 1% no código, que ninguém pode mudar. Reembolsos não pagam taxa. Você também paga o gas da rede do USDT e a taxa da rede Monero."
+      },
+      {
+        "q": "Quem define o preço?",
+        "a": "Cada maker publica seu preço em USDT por XMR. O programa do maker o calcula a partir de várias fontes públicas mais a margem dele. O app mostra o valor exato de XMR antes de você depositar."
+      },
+      {
+        "q": "Quanto tempo leva um swap?",
+        "a": "Normalmente de 30 a 60 minutos, principalmente por causa das confirmações da rede Monero que o app espera antes de pedir sua confirmação."
+      },
+      {
+        "q": "E se o maker não enviar o XMR?",
+        "a": "Você não confirma e reembolsa seu USDT antes do prazo t0. O app pede isso automaticamente se o XMR não for verificado quando esse prazo se aproximar."
+      },
+      {
+        "q": "E se eu fechar a aba?",
+        "a": "Abra o app de novo, clique em Retomar e use seu arquivo de recuperação com sua senha. Faça isso logo: se o XMR não chegou, você precisa reembolsar antes de t0."
+      },
+      {
+        "q": "O que é o arquivo de recuperação?",
+        "a": "Um arquivo criptografado com senha que guarda a sua metade da chave do swap. Com ele você conclui o swap, recebe o XMR ou reembolsa o USDT em qualquer navegador. Sem ele e sem o navegador original, os fundos de um swap em andamento não podem ser recuperados."
+      },
+      {
+        "q": "O que são t0 e t1?",
+        "a": "Os dois prazos do contrato. Antes de t0 você pode confirmar ou reembolsar. Depois que você confirma, ou entre t0 e t1, o maker pode resgatar. A partir de t1 você pode reembolsar se o maker não resgatou."
+      },
+      {
+        "q": "Meus fundos podem ser congelados?",
+        "a": "A Tether, emissora do USDT, pode congelar endereços. Cada swap usa um contrato separado para que um congelamento não afete os outros, mas o risco existe. O XMR não pode ser congelado por um emissor."
+      },
+      {
+        "q": "Quais redes de USDT são suportadas?",
+        "a": "USDT na Arbitrum One (USD₮0). O modo de prática usa a Arbitrum Sepolia. A Tron está em avaliação; o contrato para ela já compila, mas ainda precisa de testes."
+      },
+      {
+        "q": "Preciso de ETH além do USDT?",
+        "a": "Sim, um pouco da moeda da rede (ETH na Arbitrum) para pagar o gas do depósito, da confirmação e de um possível reembolso."
+      },
+      {
+        "q": "Minhas chaves passam pelos seus servidores?",
+        "a": "Não. As chaves são geradas no seu navegador. O backend só repassa mensagens públicas do protocolo e rejeita qualquer mensagem que contenha uma chave privada completa."
+      },
+      {
+        "q": "O código é aberto?",
+        "a": "Sim, sob a licença AGPL-3.0, em github.com/juanjobs39-cloud/xmrp2p. Publicamos as somas SHA-256 de cada arquivo do site para você verificar que o app corresponde ao código."
+      },
+      {
+        "q": "Posso virar maker?",
+        "a": "Sim. Você precisa de XMR, uma máquina sempre ligada rodando o programa do maker, o monero-wallet-rpc e uma conta com gas na rede do USDT. As instruções estão na página Seja maker."
+      },
+      {
+        "q": "Isso é legal no meu país?",
+        "a": "Depende do seu país. Você é responsável por cumprir as leis dele, incluindo as regras fiscais. Não damos aconselhamento jurídico."
+      }
+    ]
+  },
+  {
+    "id": "ru",
+    "lang": "ru",
+    "items": [
+      {
+        "q": "Что такое MoneroP2P?",
+        "a": "P2P-платформа с открытым кодом для обмена USDT на Monero (XMR) атомарными свопами, которые выполняются в вашем браузере. Никто не хранит ваши средства: контракт держит USDT и отдаёт их мейкеру, только когда вы уже можете забрать XMR."
+      },
+      {
+        "q": "Нужен ли аккаунт или проверка личности?",
+        "a": "Нет. Аккаунтов нет. Нужны браузерный кошелёк с USDT, адрес Monero и пароль для файла восстановления."
+      },
+      {
+        "q": "Можно ли пользоваться с реальными деньгами?",
+        "a": "Да. Сервис работает с реальными деньгами в Arbitrum One (USDT) и Monero, с лимитом 100 USDT за своп, который задан в самом контракте. Контракт проверен Halmos, Aderyn и Slither, его код опубликован в Sourcify. Также есть режим практики в testnet."
+      },
+      {
+        "q": "Сколько берёт MoneroP2P?",
+        "a": "Контракт берёт процент от USDT, когда своп завершается. Процент задаётся при развёртывании контракта и ограничен в коде потолком 1%, который никто не может изменить. При возврате комиссия не берётся. Кроме того, вы платите газ в сети USDT и комиссию сети Monero."
+      },
+      {
+        "q": "Кто устанавливает цену?",
+        "a": "Каждый мейкер публикует свою цену в USDT за XMR. Программа мейкера рассчитывает её по нескольким публичным источникам и добавляет его маржу. Приложение показывает точное количество XMR до того, как вы внесёте депозит."
+      },
+      {
+        "q": "Сколько длится своп?",
+        "a": "Обычно от 30 до 60 минут — в основном из-за подтверждений сети Monero, которые приложение ждёт, прежде чем попросить ваше подтверждение."
+      },
+      {
+        "q": "Что если мейкер не отправит XMR?",
+        "a": "Вы не подтверждаете и возвращаете USDT до срока t0. Приложение само попросит об этом, если XMR не будут проверены к приближению срока."
+      },
+      {
+        "q": "Что если я закрою вкладку?",
+        "a": "Снова откройте приложение, нажмите «Продолжить» и используйте файл восстановления с паролем. Сделайте это поскорее: если XMR не пришли, вернуть средства нужно до t0."
+      },
+      {
+        "q": "Что такое файл восстановления?",
+        "a": "Зашифрованный паролем файл с вашей половиной ключа свопа. С ним можно завершить своп, получить XMR или вернуть USDT из любого браузера. Без него и без исходного браузера средства незавершённого свопа восстановить нельзя."
+      },
+      {
+        "q": "Что такое t0 и t1?",
+        "a": "Два срока контракта. До t0 вы можете подтвердить или сделать возврат. После вашего подтверждения или между t0 и t1 мейкер может забрать оплату. Начиная с t1 вы можете сделать возврат, если мейкер ничего не забрал."
+      },
+      {
+        "q": "Могут ли мои средства заморозить?",
+        "a": "Tether, эмитент USDT, может замораживать адреса. Каждый своп использует отдельный контракт, чтобы одна заморозка не затрагивала другие, но риск существует. XMR эмитент заморозить не может."
+      },
+      {
+        "q": "Какие сети USDT поддерживаются?",
+        "a": "USDT в Arbitrum One (USD₮0). Режим практики использует Arbitrum Sepolia. Tron находится на оценке: контракт для него уже компилируется, но ещё требует тестов."
+      },
+      {
+        "q": "Нужен ли ETH помимо USDT?",
+        "a": "Да, немного монеты сети (ETH в Arbitrum), чтобы оплатить газ за депозит, подтверждение и возможный возврат."
+      },
+      {
+        "q": "Проходят ли мои ключи через ваши серверы?",
+        "a": "Нет. Ключи создаются в вашем браузере. Сервер только пересылает публичные сообщения протокола и отклоняет любое сообщение, содержащее полный приватный ключ."
+      },
+      {
+        "q": "Код открыт?",
+        "a": "Да, под лицензией AGPL-3.0, на github.com/juanjobs39-cloud/xmrp2p. Мы публикуем суммы SHA-256 для каждого файла сайта, чтобы вы могли проверить, что приложение соответствует коду."
+      },
+      {
+        "q": "Могу ли я стать мейкером?",
+        "a": "Да. Нужны XMR, постоянно включённая машина с программой мейкера, monero-wallet-rpc и аккаунт с газом в сети USDT. Инструкции — на странице «Стать мейкером»."
+      },
+      {
+        "q": "Это законно в моей стране?",
+        "a": "Зависит от страны. Вы сами отвечаете за соблюдение её законов, включая налоговые правила. Мы не даём юридических консультаций."
+      }
+    ]
+  },
+  {
+    "id": "uk",
+    "lang": "uk",
+    "items": [
+      {
+        "q": "Що таке MoneroP2P?",
+        "a": "P2P-платформа з відкритим кодом для обміну USDT на Monero (XMR) атомарними свопами, які виконуються у вашому браузері. Ніхто не зберігає ваші кошти: контракт тримає USDT і віддає їх мейкеру лише тоді, коли ви вже можете забрати XMR."
+      },
+      {
+        "q": "Чи потрібен акаунт або перевірка особи?",
+        "a": "Ні. Акаунтів немає. Потрібні браузерний гаманець з USDT, адреса Monero та пароль для файлу відновлення."
+      },
+      {
+        "q": "Чи можна користуватися з реальними грошима?",
+        "a": "Так. Сервіс працює з реальними грошима в Arbitrum One (USDT) і Monero, з лімітом 100 USDT за своп, закладеним у самому контракті. Контракт перевірено Halmos, Aderyn і Slither, його код опубліковано в Sourcify. Також є режим практики в testnet."
+      },
+      {
+        "q": "Скільки бере MoneroP2P?",
+        "a": "Контракт бере відсоток від USDT, коли своп завершується. Відсоток задається під час розгортання контракту й обмежений у коді стелею 1%, яку ніхто не може змінити. За повернення комісія не береться. Крім того, ви сплачуєте газ у мережі USDT і комісію мережі Monero."
+      },
+      {
+        "q": "Хто встановлює ціну?",
+        "a": "Кожен мейкер публікує свою ціну в USDT за XMR. Програма мейкера розраховує її за кількома публічними джерелами й додає його маржу. Застосунок показує точну кількість XMR до того, як ви внесете депозит."
+      },
+      {
+        "q": "Скільки триває своп?",
+        "a": "Зазвичай від 30 до 60 хвилин — переважно через підтвердження мережі Monero, на які застосунок чекає, перш ніж попросити ваше підтвердження."
+      },
+      {
+        "q": "Що як мейкер не надішле XMR?",
+        "a": "Ви не підтверджуєте й повертаєте USDT до строку t0. Застосунок сам попросить про це, якщо XMR не буде перевірено до наближення строку."
+      },
+      {
+        "q": "Що як я закрию вкладку?",
+        "a": "Знову відкрийте застосунок, натисніть «Продовжити» й використайте файл відновлення з паролем. Зробіть це якнайшвидше: якщо XMR не надійшли, повернути кошти потрібно до t0."
+      },
+      {
+        "q": "Що таке файл відновлення?",
+        "a": "Зашифрований паролем файл із вашою половиною ключа свопу. З ним можна завершити своп, отримати XMR або повернути USDT з будь-якого браузера. Без нього й без початкового браузера кошти незавершеного свопу відновити неможливо."
+      },
+      {
+        "q": "Що таке t0 і t1?",
+        "a": "Два строки контракту. До t0 ви можете підтвердити або зробити повернення. Після вашого підтвердження або між t0 і t1 мейкер може забрати оплату. Починаючи з t1 ви можете зробити повернення, якщо мейкер нічого не забрав."
+      },
+      {
+        "q": "Чи можуть мої кошти заморозити?",
+        "a": "Tether, емітент USDT, може заморожувати адреси. Кожен своп використовує окремий контракт, щоб одне заморожування не зачіпало інші, але ризик існує. XMR емітент заморозити не може."
+      },
+      {
+        "q": "Які мережі USDT підтримуються?",
+        "a": "USDT в Arbitrum One (USD₮0). Режим практики використовує Arbitrum Sepolia. Tron перебуває на оцінці: контракт для нього вже компілюється, але ще потребує тестів."
+      },
+      {
+        "q": "Чи потрібен ETH, окрім USDT?",
+        "a": "Так, трохи монети мережі (ETH в Arbitrum), щоб сплатити газ за депозит, підтвердження й можливе повернення."
+      },
+      {
+        "q": "Чи проходять мої ключі через ваші сервери?",
+        "a": "Ні. Ключі створюються у вашому браузері. Сервер лише пересилає публічні повідомлення протоколу й відхиляє будь-яке повідомлення, що містить повний приватний ключ."
+      },
+      {
+        "q": "Код відкритий?",
+        "a": "Так, за ліцензією AGPL-3.0, на github.com/juanjobs39-cloud/xmrp2p. Ми публікуємо суми SHA-256 для кожного файлу сайту, щоб ви могли перевірити, що застосунок відповідає коду."
+      },
+      {
+        "q": "Чи можу я стати мейкером?",
+        "a": "Так. Потрібні XMR, постійно ввімкнена машина з програмою мейкера, monero-wallet-rpc і акаунт із газом у мережі USDT. Інструкції — на сторінці «Станьте мейкером»."
+      },
+      {
+        "q": "Чи це законно в моїй країні?",
+        "a": "Залежить від країни. Ви самі відповідаєте за дотримання її законів, зокрема податкових правил. Ми не надаємо юридичних консультацій."
+      }
+    ]
+  },
+  {
+    "id": "zh",
+    "lang": "zh",
+    "items": [
+      {
+        "q": "MoneroP2P 是什么？",
+        "a": "一个开源 P2P 平台，通过在你浏览器中运行的原子交换把 USDT 兑换为门罗币（XMR）。没有人托管你的资金：合约保管 USDT，只有在你已能取走 XMR 时才放给做市方。"
+      },
+      {
+        "q": "需要账户或身份验证吗？",
+        "a": "不需要。这里没有账户。你需要一个装有 USDT 的浏览器钱包、一个门罗币地址，以及恢复文件的密码。"
+      },
+      {
+        "q": "可以用真实资金吗？",
+        "a": "可以。平台在 Arbitrum One（USDT）和门罗币上使用真实资金运行，合约本身限制每笔兑换最多 100 USDT。合约已通过 Halmos、Aderyn 和 Slither 验证，源码已在 Sourcify 公开。另有测试网练习模式。"
+      },
+      {
+        "q": "MoneroP2P 收多少费用？",
+        "a": "兑换完成时，合约按 USDT 的一定比例收费。比例在合约部署时设定，代码中上限为 1%，任何人都无法更改。退款不收费。你还需支付 USDT 网络的 Gas 和门罗币网络手续费。"
+      },
+      {
+        "q": "价格由谁决定？",
+        "a": "每个做市方以每 XMR 多少 USDT 公布价格。做市程序根据多个公开数据源计算价格并加上其差价。应用会在你存入前显示确切的 XMR 数量。"
+      },
+      {
+        "q": "一次兑换需要多久？",
+        "a": "通常 30 到 60 分钟，主要是因为应用要等待门罗币网络的确认，然后才请你确认。"
+      },
+      {
+        "q": "如果做市方不发送 XMR 怎么办？",
+        "a": "你不要确认，并在期限 t0 之前退回 USDT。如果临近期限仍未核验到 XMR，应用会自动提示你。"
+      },
+      {
+        "q": "如果我关闭了标签页怎么办？",
+        "a": "重新打开应用，点击「继续」，用恢复文件和密码恢复。请尽快操作：如果 XMR 没有到账，你必须在 t0 之前退款。"
+      },
+      {
+        "q": "恢复文件是什么？",
+        "a": "一个用密码加密的文件，包含你那一半兑换密钥。有了它，你可以在任何浏览器中完成兑换、领取 XMR 或退回 USDT。如果既没有它也没有原来的浏览器，进行中兑换的资金将无法找回。"
+      },
+      {
+        "q": "t0 和 t1 是什么？",
+        "a": "合约的两个期限。t0 之前你可以确认或退款。你确认之后，或在 t0 与 t1 之间，做市方可以领取。从 t1 起，如果做市方没有领取，你可以退款。"
+      },
+      {
+        "q": "我的资金会被冻结吗？",
+        "a": "USDT 发行方 Tether 可以冻结地址。每笔兑换使用独立合约，因此一次冻结不会影响其他兑换，但风险仍然存在。XMR 不会被发行方冻结。"
+      },
+      {
+        "q": "支持哪些 USDT 网络？",
+        "a": "Arbitrum One 上的 USDT（USD₮0）。练习模式使用 Arbitrum Sepolia。Tron 正在评估中；其合约已能编译，但仍需测试。"
+      },
+      {
+        "q": "除了 USDT 还需要 ETH 吗？",
+        "a": "需要，一点该网络的币（Arbitrum 上的 ETH），用于支付存入、确认以及可能的退款所需的 Gas。"
+      },
+      {
+        "q": "我的密钥会经过你们的服务器吗？",
+        "a": "不会。密钥在你的浏览器中生成。服务器只转发公开的协议消息，并拒绝任何包含完整私钥的消息。"
+      },
+      {
+        "q": "代码开源吗？",
+        "a": "开源，采用 AGPL-3.0 许可证，地址为 github.com/juanjobs39-cloud/xmrp2p。我们公布网站每个文件的 SHA-256 校验和，方便你验证应用与代码一致。"
+      },
+      {
+        "q": "我可以成为做市方吗？",
+        "a": "可以。你需要 XMR、一台常开并运行做市程序的机器、monero-wallet-rpc，以及一个在 USDT 网络上有 Gas 的账户。说明见「成为做市方」页面。"
+      },
+      {
+        "q": "这在我的国家合法吗？",
+        "a": "取决于你所在的国家。你需自行遵守当地法律，包括税务规定。我们不提供法律建议。"
+      }
+    ]
+  },
+  {
+    "id": "ja",
+    "lang": "ja",
+    "items": [
+      {
+        "q": "MoneroP2Pとは何ですか？",
+        "a": "ブラウザで動くアトミックスワップでUSDTをMonero（XMR）に交換する、オープンソースのP2Pプラットフォームです。誰も資金を預かりません。コントラクトがUSDTを保持し、あなたがXMRを受け取れる状態になって初めてメイカーに渡します。"
+      },
+      {
+        "q": "アカウントや本人確認は必要ですか？",
+        "a": "いいえ。アカウントはありません。必要なのは、USDTの入ったブラウザウォレット、Moneroアドレス、復元ファイル用のパスワードです。"
+      },
+      {
+        "q": "実際の資金で使えますか？",
+        "a": "はい。Arbitrum One（USDT）とMoneroで実際の資金を使って稼働しており、1回のスワップはコントラクト自体によって最大100 USDTに制限されています。コントラクトはHalmos、Aderyn、Slitherで検証され、ソースはSourcifyで公開されています。テストネットの練習モードもあります。"
+      },
+      {
+        "q": "MoneroP2Pの手数料はいくらですか？",
+        "a": "スワップが完了したとき、コントラクトがUSDTの一定割合を手数料として受け取ります。割合はコントラクトのデプロイ時に決まり、コード上で1%が上限で、誰も変更できません。返金には手数料がかかりません。ほかにUSDTネットワークのガス代とMoneroネットワークの手数料がかかります。"
+      },
+      {
+        "q": "価格は誰が決めますか？",
+        "a": "各メイカーが1 XMRあたりのUSDT価格を公開します。メイカーのプログラムが複数の公開データから価格を計算し、利ざやを上乗せします。アプリは入金前に正確なXMRの量を表示します。"
+      },
+      {
+        "q": "スワップにはどれくらいかかりますか？",
+        "a": "通常30〜60分です。主に、アプリが確認を求める前にMoneroネットワークの承認を待つためです。"
+      },
+      {
+        "q": "メイカーがXMRを送らなかったら？",
+        "a": "確認せず、期限t0までにUSDTを返金します。期限が近づいてもXMRが検証できない場合、アプリが自動で案内します。"
+      },
+      {
+        "q": "タブを閉じてしまったら？",
+        "a": "アプリをもう一度開き、「再開」を押して、復元ファイルとパスワードを使ってください。早めに行ってください。XMRが届いていない場合は、t0までに返金する必要があります。"
+      },
+      {
+        "q": "復元ファイルとは何ですか？",
+        "a": "スワップの鍵のうちあなたの半分が入った、パスワードで暗号化されたファイルです。これがあれば、どのブラウザからでもスワップを完了し、XMRを受け取り、USDTを返金できます。これも元のブラウザもない場合、進行中のスワップの資金は取り戻せません。"
+      },
+      {
+        "q": "t0とt1とは？",
+        "a": "コントラクトの2つの期限です。t0より前は、確認または返金ができます。あなたが確認した後、またはt0からt1の間は、メイカーが受け取れます。t1以降は、メイカーが受け取っていなければ返金できます。"
+      },
+      {
+        "q": "資金が凍結されることはありますか？",
+        "a": "USDTの発行元であるTetherはアドレスを凍結できます。スワップごとに別のコントラクトを使うので、1つの凍結がほかに影響することはありませんが、リスクはあります。XMRは発行元によって凍結されることはありません。"
+      },
+      {
+        "q": "対応しているUSDTのネットワークは？",
+        "a": "Arbitrum One上のUSDT（USD₮0）です。練習モードではArbitrum Sepoliaを使います。Tronは検討中で、コントラクトはすでにコンパイルできますが、まだテストが必要です。"
+      },
+      {
+        "q": "USDTのほかにETHも必要ですか？",
+        "a": "はい。入金、確認、場合によっては返金のガス代として、ネットワークのコイン（Arbitrum上のETH）が少し必要です。"
+      },
+      {
+        "q": "鍵はサーバーを経由しますか？",
+        "a": "いいえ。鍵はブラウザ内で作成されます。サーバーはプロトコルの公開メッセージを中継するだけで、完全な秘密鍵を含むメッセージはすべて拒否します。"
+      },
+      {
+        "q": "コードはオープンソースですか？",
+        "a": "はい。AGPL-3.0ライセンスで、github.com/juanjobs39-cloud/xmrp2p にあります。サイトの全ファイルのSHA-256ハッシュを公開しているので、アプリがコードと一致することを確認できます。"
+      },
+      {
+        "q": "メイカーになれますか？",
+        "a": "はい。XMR、メイカープログラムを動かす常時稼働のマシン、monero-wallet-rpc、そしてUSDTネットワークでガスを持つアカウントが必要です。手順は「メイカーになる」ページにあります。"
+      },
+      {
+        "q": "私の国で合法ですか？",
+        "a": "国によります。税務ルールを含め、その国の法律を守る責任はあなたにあります。私たちは法的助言を提供しません。"
+      }
+    ]
+  },
+  {
+    "id": "ko",
+    "lang": "ko",
+    "items": [
+      {
+        "q": "MoneroP2P는 무엇인가요?",
+        "a": "브라우저에서 실행되는 아토믹 스왑으로 USDT를 모네로(XMR)로 바꾸는 오픈 소스 P2P 플랫폼입니다. 아무도 자금을 보관하지 않습니다. 컨트랙트가 USDT를 보관하다가 여러분이 XMR을 가져갈 수 있을 때에만 메이커에게 넘깁니다."
+      },
+      {
+        "q": "계정이나 신원 확인이 필요한가요?",
+        "a": "아니요. 계정이 없습니다. USDT가 든 브라우저 지갑, 모네로 주소, 복구 파일용 비밀번호만 있으면 됩니다."
+      },
+      {
+        "q": "실제 자금으로 쓸 수 있나요?",
+        "a": "네. Arbitrum One(USDT)과 모네로에서 실제 자금으로 운영되며, 컨트랙트 자체가 스왑 1회당 최대 100 USDT로 제한합니다. 컨트랙트는 Halmos, Aderyn, Slither로 검증되었고 소스는 Sourcify에 공개되어 있습니다. 테스트넷 연습 모드도 있습니다."
+      },
+      {
+        "q": "MoneroP2P 수수료는 얼마인가요?",
+        "a": "스왑이 완료되면 컨트랙트가 USDT의 일정 비율을 수수료로 받습니다. 비율은 컨트랙트 배포 때 정해지며 코드상 상한이 1%이고 누구도 바꿀 수 없습니다. 환불에는 수수료가 없습니다. 이 밖에 USDT 네트워크의 가스비와 모네로 네트워크 수수료가 듭니다."
+      },
+      {
+        "q": "가격은 누가 정하나요?",
+        "a": "각 메이커가 XMR당 USDT 가격을 공개합니다. 메이커 프로그램이 여러 공개 시세를 바탕으로 계산하고 마진을 더합니다. 앱은 입금 전에 정확한 XMR 수량을 보여 줍니다."
+      },
+      {
+        "q": "스왑은 얼마나 걸리나요?",
+        "a": "보통 30~60분입니다. 주로 앱이 여러분에게 확인을 요청하기 전에 모네로 네트워크 컨펌을 기다리기 때문입니다."
+      },
+      {
+        "q": "메이커가 XMR을 보내지 않으면요?",
+        "a": "확인하지 말고 기한 t0 전에 USDT를 환불받으세요. 기한이 다가오는데 XMR이 검증되지 않으면 앱이 자동으로 안내합니다."
+      },
+      {
+        "q": "탭을 닫으면 어떻게 되나요?",
+        "a": "앱을 다시 열고 «이어 하기»를 누른 뒤 복구 파일과 비밀번호를 쓰세요. 서두르세요. XMR이 오지 않았다면 t0 전에 환불해야 합니다."
+      },
+      {
+        "q": "복구 파일이 무엇인가요?",
+        "a": "스왑 키의 여러분 쪽 절반이 들어 있는, 비밀번호로 암호화된 파일입니다. 이 파일로 어느 브라우저에서든 스왑을 마치고, XMR을 받고, USDT를 환불받을 수 있습니다. 이 파일도 원래 브라우저도 없으면 진행 중인 스왑의 자금은 되찾을 수 없습니다."
+      },
+      {
+        "q": "t0과 t1은 무엇인가요?",
+        "a": "컨트랙트의 두 기한입니다. t0 전에는 확인하거나 환불할 수 있습니다. 여러분이 확인한 뒤, 또는 t0과 t1 사이에는 메이커가 수령할 수 있습니다. t1부터는 메이커가 수령하지 않았다면 환불할 수 있습니다."
+      },
+      {
+        "q": "자금이 동결될 수 있나요?",
+        "a": "USDT 발행사인 테더는 주소를 동결할 수 있습니다. 스왑마다 별도의 컨트랙트를 쓰므로 하나가 동결돼도 다른 스왑에는 영향이 없지만, 위험은 존재합니다. XMR은 발행사가 동결할 수 없습니다."
+      },
+      {
+        "q": "어떤 USDT 네트워크를 지원하나요?",
+        "a": "Arbitrum One의 USDT(USD₮0)입니다. 연습 모드는 Arbitrum Sepolia를 씁니다. 트론은 검토 중이며, 컨트랙트는 이미 컴파일되지만 아직 테스트가 필요합니다."
+      },
+      {
+        "q": "USDT 말고 ETH도 필요한가요?",
+        "a": "네. 입금, 확인, 혹시 모를 환불에 쓸 가스비로 네트워크 코인(Arbitrum의 ETH)이 조금 필요합니다."
+      },
+      {
+        "q": "제 키가 서버를 거치나요?",
+        "a": "아니요. 키는 브라우저에서 만들어집니다. 서버는 프로토콜의 공개 메시지만 전달하며, 완전한 개인 키가 담긴 메시지는 모두 거부합니다."
+      },
+      {
+        "q": "코드는 오픈 소스인가요?",
+        "a": "네. AGPL-3.0 라이선스로 github.com/juanjobs39-cloud/xmrp2p에 있습니다. 사이트의 모든 파일에 대한 SHA-256 해시를 공개하므로 앱이 코드와 일치하는지 확인할 수 있습니다."
+      },
+      {
+        "q": "제가 메이커가 될 수 있나요?",
+        "a": "네. XMR, 메이커 프로그램을 돌릴 항상 켜진 컴퓨터, monero-wallet-rpc, 그리고 USDT 네트워크에 가스가 있는 계정이 필요합니다. 방법은 «메이커 되기» 페이지에 있습니다."
+      },
+      {
+        "q": "제 나라에서 합법인가요?",
+        "a": "나라마다 다릅니다. 세법을 포함해 그 나라의 법을 지킬 책임은 여러분에게 있습니다. 저희는 법률 자문을 하지 않습니다."
+      }
+    ]
+  },
+  {
+    "id": "hi",
+    "lang": "hi",
+    "items": [
+      {
+        "q": "MoneroP2P क्या है?",
+        "a": "एक ओपन-सोर्स P2P प्लेटफ़ॉर्म, जो आपके ब्राउज़र में चलने वाले एटॉमिक स्वैप से USDT को मोनेरो (XMR) में बदलता है. आपके फ़ंड कोई नहीं रखता: एक कॉन्ट्रैक्ट USDT रखता है और मेकर को तभी देता है जब आप XMR ले सकें."
+      },
+      {
+        "q": "क्या मुझे खाता या पहचान सत्यापन चाहिए?",
+        "a": "नहीं. कोई खाता नहीं होता. आपको USDT वाला ब्राउज़र वॉलेट, एक मोनेरो पता और अपनी रिकवरी फ़ाइल के लिए पासवर्ड चाहिए."
+      },
+      {
+        "q": "क्या मैं इसे असली पैसों से इस्तेमाल कर सकता हूँ?",
+        "a": "हाँ. यह Arbitrum One (USDT) और मोनेरो पर असली पैसों से चलता है, और कॉन्ट्रैक्ट ख़ुद हर स्वैप को अधिकतम 100 USDT तक सीमित करता है. कॉन्ट्रैक्ट Halmos, Aderyn और Slither से सत्यापित है और उसका सोर्स Sourcify पर प्रकाशित है. टेस्टनेट पर अभ्यास मोड भी है."
+      },
+      {
+        "q": "MoneroP2P कितना शुल्क लेता है?",
+        "a": "स्वैप पूरा होने पर कॉन्ट्रैक्ट USDT का एक प्रतिशत लेता है. प्रतिशत कॉन्ट्रैक्ट डिप्लॉय करते समय तय होता है और कोड में 1% तक सीमित है, जिसे कोई नहीं बदल सकता. रिफ़ंड पर कोई शुल्क नहीं. इसके अलावा आप USDT नेटवर्क की गैस और मोनेरो नेटवर्क शुल्क चुकाते हैं."
+      },
+      {
+        "q": "कीमत कौन तय करता है?",
+        "a": "हर मेकर XMR के बदले USDT में अपनी कीमत प्रकाशित करता है. मेकर का प्रोग्राम कई सार्वजनिक स्रोतों से कीमत निकालता है और उसमें अपना मार्जिन जोड़ता है. जमा करने से पहले ऐप XMR की ठीक-ठीक मात्रा दिखाता है."
+      },
+      {
+        "q": "एक स्वैप में कितना समय लगता है?",
+        "a": "आमतौर पर 30 से 60 मिनट, ज़्यादातर मोनेरो नेटवर्क के उन कन्फ़र्मेशन की वजह से जिनका इंतज़ार ऐप आपसे पुष्टि माँगने से पहले करता है."
+      },
+      {
+        "q": "अगर मेकर XMR न भेजे तो?",
+        "a": "आप पुष्टि नहीं करते और समय-सीमा t0 से पहले अपना USDT वापस लेते हैं. अगर समय-सीमा पास आने तक XMR सत्यापित न हो, तो ऐप अपने आप आपसे यह करने को कहता है."
+      },
+      {
+        "q": "अगर मैं टैब बंद कर दूँ तो?",
+        "a": "ऐप फिर खोलें, «फिर शुरू करें» दबाएँ और अपनी रिकवरी फ़ाइल और पासवर्ड इस्तेमाल करें. जल्दी करें: अगर XMR नहीं आया, तो आपको t0 से पहले रिफ़ंड करना होगा."
+      },
+      {
+        "q": "रिकवरी फ़ाइल क्या है?",
+        "a": "पासवर्ड से एन्क्रिप्ट की गई एक फ़ाइल, जिसमें स्वैप की कुंजी का आपका आधा हिस्सा होता है. इससे आप किसी भी ब्राउज़र से स्वैप पूरा कर सकते हैं, XMR क्लेम कर सकते हैं या USDT वापस ले सकते हैं. इसके और मूल ब्राउज़र दोनों के बिना, चल रहे स्वैप के फ़ंड वापस नहीं मिल सकते."
+      },
+      {
+        "q": "t0 और t1 क्या हैं?",
+        "a": "कॉन्ट्रैक्ट की दो समय-सीमाएँ. t0 से पहले आप पुष्टि या रिफ़ंड कर सकते हैं. आपकी पुष्टि के बाद, या t0 और t1 के बीच, मेकर क्लेम कर सकता है. t1 से, अगर मेकर ने क्लेम नहीं किया, तो आप रिफ़ंड कर सकते हैं."
+      },
+      {
+        "q": "क्या मेरे फ़ंड फ़्रीज़ हो सकते हैं?",
+        "a": "USDT जारी करने वाली Tether पते फ़्रीज़ कर सकती है. हर स्वैप अलग कॉन्ट्रैक्ट इस्तेमाल करता है ताकि एक फ़्रीज़ दूसरों पर असर न डाले, लेकिन जोखिम है. XMR को कोई जारीकर्ता फ़्रीज़ नहीं कर सकता."
+      },
+      {
+        "q": "कौन-से USDT नेटवर्क समर्थित हैं?",
+        "a": "Arbitrum One पर USDT (USD₮0). अभ्यास मोड Arbitrum Sepolia इस्तेमाल करता है. Tron पर विचार चल रहा है; उसका कॉन्ट्रैक्ट कंपाइल हो जाता है, पर अभी टेस्टिंग बाक़ी है."
+      },
+      {
+        "q": "क्या USDT के अलावा ETH भी चाहिए?",
+        "a": "हाँ, नेटवर्क का थोड़ा कॉइन (Arbitrum पर ETH), ताकि जमा, पुष्टि और संभावित रिफ़ंड की गैस चुकाई जा सके."
+      },
+      {
+        "q": "क्या मेरी कुंजियाँ आपके सर्वरों से गुज़रती हैं?",
+        "a": "नहीं. कुंजियाँ आपके ब्राउज़र में बनती हैं. सर्वर सिर्फ़ प्रोटोकॉल के सार्वजनिक संदेश आगे भेजता है और पूरी निजी कुंजी वाले किसी भी संदेश को ठुकरा देता है."
+      },
+      {
+        "q": "क्या कोड ओपन सोर्स है?",
+        "a": "हाँ, AGPL-3.0 लाइसेंस के तहत, github.com/juanjobs39-cloud/xmrp2p पर. हम साइट की हर फ़ाइल का SHA-256 प्रकाशित करते हैं ताकि आप जाँच सकें कि ऐप कोड से मेल खाता है."
+      },
+      {
+        "q": "क्या मैं मेकर बन सकता हूँ?",
+        "a": "हाँ. आपको XMR, मेकर प्रोग्राम चलाने वाली हमेशा चालू मशीन, monero-wallet-rpc और USDT नेटवर्क पर गैस वाला एक खाता चाहिए. निर्देश «मेकर बनें» पेज पर हैं."
+      },
+      {
+        "q": "क्या यह मेरे देश में क़ानूनी है?",
+        "a": "यह आपके देश पर निर्भर है. टैक्स नियमों समेत वहाँ के कानूनों का पालन करना आपकी ज़िम्मेदारी है. हम क़ानूनी सलाह नहीं देते."
+      }
+    ]
+  },
+  {
+    "id": "fa",
+    "lang": "fa",
+    "items": [
+      {
+        "q": "MoneroP2P چیست؟",
+        "a": "یک پلتفرم P2P متن‌باز برای تبدیل USDT به مونرو (XMR) با سواپ‌های اتمی که در مرورگر شما اجرا می‌شوند. هیچ‌کس دارایی شما را نگه نمی‌دارد: یک قرارداد USDT را نگه می‌دارد و فقط زمانی آن را به میکر می‌دهد که شما بتوانید XMR را بردارید."
+      },
+      {
+        "q": "به حساب کاربری یا احراز هویت نیاز دارم؟",
+        "a": "خیر. حساب کاربری وجود ندارد. به یک کیف پول مرورگری با USDT، یک آدرس مونرو و یک رمز برای فایل بازیابی نیاز دارید."
+      },
+      {
+        "q": "می‌توانم با پول واقعی استفاده کنم؟",
+        "a": "بله. این سرویس با پول واقعی روی Arbitrum One (USDT) و مونرو کار می‌کند و خود قرارداد هر سواپ را به حداکثر ۱۰۰ USDT محدود می‌کند. قرارداد با Halmos، Aderyn و Slither راستی‌آزمایی شده و کد منبع آن در Sourcify منتشر شده است. حالت تمرین روی تست‌نت هم وجود دارد."
+      },
+      {
+        "q": "MoneroP2P چقدر کارمزد می‌گیرد؟",
+        "a": "وقتی سواپ کامل می‌شود، قرارداد درصدی از USDT را برمی‌دارد. این درصد هنگام استقرار قرارداد تعیین می‌شود و در کد سقف ۱٪ دارد که هیچ‌کس نمی‌تواند تغییرش دهد. بازپرداخت کارمزد ندارد. همچنین گس شبکه USDT و کارمزد شبکه مونرو را می‌پردازید."
+      },
+      {
+        "q": "قیمت را چه کسی تعیین می‌کند؟",
+        "a": "هر میکر قیمت خود را به USDT برای هر XMR اعلام می‌کند. برنامه میکر آن را از چند منبع عمومی محاسبه می‌کند و حاشیه سودش را اضافه می‌کند. برنامه پیش از واریز، مقدار دقیق XMR را نشان می‌دهد."
+      },
+      {
+        "q": "هر سواپ چقدر طول می‌کشد؟",
+        "a": "معمولاً ۳۰ تا ۶۰ دقیقه، بیشتر به خاطر تأییدهای شبکه مونرو که برنامه پیش از درخواست تأیید از شما منتظرشان می‌ماند."
+      },
+      {
+        "q": "اگر میکر XMR را نفرستد چه می‌شود؟",
+        "a": "تأیید نمی‌کنید و پیش از مهلت t0 USDT خود را بازپس می‌گیرید. اگر با نزدیک شدن مهلت XMR بررسی نشده باشد، برنامه به‌طور خودکار این را از شما می‌خواهد."
+      },
+      {
+        "q": "اگر زبانه را ببندم چه می‌شود؟",
+        "a": "برنامه را دوباره باز کنید، «ادامه» را بزنید و از فایل بازیابی و رمزتان استفاده کنید. زود این کار را بکنید: اگر XMR نرسیده باشد، باید پیش از t0 بازپرداخت کنید."
+      },
+      {
+        "q": "فایل بازیابی چیست؟",
+        "a": "فایلی رمزگذاری‌شده با رمز که نیمه شما از کلید سواپ را در خود دارد. با آن می‌توانید از هر مرورگری سواپ را تمام کنید، XMR را دریافت کنید یا USDT را بازپس بگیرید. بدون آن و بدون مرورگر اصلی، دارایی سواپ در جریان قابل بازیابی نیست."
+      },
+      {
+        "q": "t0 و t1 چه هستند؟",
+        "a": "دو مهلت قرارداد. پیش از t0 می‌توانید تأیید یا بازپرداخت کنید. پس از تأیید شما، یا بین t0 و t1، میکر می‌تواند برداشت کند. از t1 به بعد، اگر میکر برداشت نکرده باشد، می‌توانید بازپرداخت کنید."
+      },
+      {
+        "q": "آیا دارایی من ممکن است مسدود شود؟",
+        "a": "Tether، صادرکننده USDT، می‌تواند آدرس‌ها را مسدود کند. هر سواپ از قرارداد جداگانه‌ای استفاده می‌کند تا مسدود شدن یکی بر بقیه اثر نگذارد، اما ریسک وجود دارد. XMR را هیچ صادرکننده‌ای نمی‌تواند مسدود کند."
+      },
+      {
+        "q": "کدام شبکه‌های USDT پشتیبانی می‌شوند؟",
+        "a": "USDT روی Arbitrum One (USD₮0). حالت تمرین از Arbitrum Sepolia استفاده می‌کند. ترون در دست بررسی است؛ قرارداد آن کامپایل می‌شود اما هنوز به آزمایش نیاز دارد."
+      },
+      {
+        "q": "علاوه بر USDT به ETH هم نیاز دارم؟",
+        "a": "بله، کمی از رمزارز شبکه (ETH روی Arbitrum) برای پرداخت گس واریز، تأیید و بازپرداخت احتمالی."
+      },
+      {
+        "q": "آیا کلیدهای من از سرورهای شما عبور می‌کنند؟",
+        "a": "خیر. کلیدها در مرورگر شما ساخته می‌شوند. سرور فقط پیام‌های عمومی پروتکل را جابه‌جا می‌کند و هر پیامی را که کلید خصوصی کامل داشته باشد رد می‌کند."
+      },
+      {
+        "q": "آیا کد متن‌باز است؟",
+        "a": "بله، با مجوز AGPL-3.0، در github.com/juanjobs39-cloud/xmrp2p. ما هش SHA-256 همه فایل‌های سایت را منتشر می‌کنیم تا بتوانید مطمئن شوید برنامه با کد یکی است."
+      },
+      {
+        "q": "می‌توانم میکر شوم؟",
+        "a": "بله. به XMR، دستگاهی همیشه روشن که برنامه میکر را اجرا کند، monero-wallet-rpc و حسابی با گس روی شبکه USDT نیاز دارید. دستورالعمل‌ها در صفحه «میکر شوید» آمده است."
+      },
+      {
+        "q": "آیا این کار در کشور من قانونی است؟",
+        "a": "به کشورتان بستگی دارد. رعایت قوانین آن، از جمله قوانین مالیاتی، بر عهده خودتان است. ما مشاوره حقوقی نمی‌دهیم."
+      }
     ]
   }
 ]

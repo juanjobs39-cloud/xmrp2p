@@ -6,7 +6,7 @@ description: "Qué es MoneroP2P, quién lo hace, en qué estado está y cómo se
 updated: 2026-10-24
 ---
 
-**Respuesta corta:** MoneroP2P es un proyecto de código abierto para cambiar USDT por Monero sin intermediarios, mediante atomic swaps que corren en el navegador. Está en fase de pruebas en testnet y todavía no tiene auditoría.
+**Respuesta corta:** MoneroP2P es un proyecto de código abierto para cambiar USDT por Monero sin intermediarios, mediante atomic swaps que corren en el navegador. Funciona con dinero real en Arbitrum One + Monero (máximo 100 USDT por swap); el contrato está verificado con Halmos, Aderyn y Slither y todavía no tiene auditoría externa.
 
 ## Qué hacemos
 
@@ -19,8 +19,9 @@ El contrato cobra una comisión porcentual cuando un swap se completa. El porcen
 ## Estado
 
 - Contrato, núcleo criptográfico, daemon del maker, backend y app: implementados y probados en entornos de prueba.
-- Pendiente: pruebas completas en testnet con Monero stagenet y auditoría externa.
-- No hay versión para dinero real.
+- Con dinero real desde octubre de 2026 (máximo 100 USDT por swap), con un modo de práctica en testnet.
+- Contrato verificado con Halmos, Aderyn y Slither y publicado en Sourcify.
+- Pendiente: una auditoría externa.
 
 ## Inspiración
 

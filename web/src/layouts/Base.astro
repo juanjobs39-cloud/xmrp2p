@@ -1,6 +1,7 @@
 ---
+import { makeT } from "../i18n/ui";
 import "../styles/global.css";
-import { NAV, ROUTES, SITE, type Lang } from "../site";
+import { LANG_INFO, LANGS, NAV, ROUTES, SITE, type Lang } from "../site";
 
 export interface Props {
   lang: Lang;
@@ -25,9 +26,8 @@ const path = Astro.url.pathname;
 const canonical = new URL(path, site).href;
 const alternates: Partial<Record<Lang, string>> = Astro.props.alternates ?? (route ? ROUTES[route] : {});
 const fullTitle = route === "home" ? title : `${title} · ${SITE.brand}`;
-const other: Lang = lang === "es" ? "en" : "es";
-const otherHref = alternates[other];
-const t = (es: string, en: string) => (lang === "es" ? es : en);
+const others = LANGS.filter((l) => l !== lang && alternates[l]);
+const t = makeT(lang);
 
 const org = {
   "@context": "https://schema.org",
@@ -41,7 +41,7 @@ const website = {
   "@type": "WebSite",
   name: SITE.brand,
   url: site.href,
-  inLanguage: ["es", "en"],
+  inLanguage: LANGS,
 };
 const crumbs = breadcrumbs && {
   "@context": "https://schema.org",
@@ -51,7 +51,7 @@ const crumbs = breadcrumbs && {
 const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
 ---
 <!doctype html>
-<html lang={lang}>
+<html lang={lang} dir={LANG_INFO[lang].rtl ? "rtl" : "ltr"}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -68,7 +68,8 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content={SITE.brand} />
-    <meta property="og:locale" content={lang === "es" ? "es_419" : "en_US"} />
+    <meta property="og:locale" content={LANG_INFO[lang].og} />
+    {others.map((l) => <meta property="og:locale:alternate" content={LANG_INFO[l].og} />)}
     <meta property="og:image" content={new URL("/og.png", site).href} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
@@ -85,13 +86,22 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
         <nav aria-label={t("Principal", "Main")}>
           <ul>
             {NAV.map((n) => (
-              <li><a href={ROUTES[n.key][lang]} aria-current={path === ROUTES[n.key][lang] ? "page" : undefined}>{n[lang]}</a></li>
+              <li><a href={ROUTES[n.key][lang]} aria-current={path === ROUTES[n.key][lang] ? "page" : undefined}>{t(n.es, n.en)}</a></li>
             ))}
             <li><a class="nav-cta" href={ROUTES.makerApp[lang]} aria-current={path === ROUTES.makerApp[lang] ? "page" : undefined}>{t("Ser maker", "Be a maker")}</a></li>
             <li><a class="nav-cta primary" href={ROUTES.app[lang]} aria-current={path === ROUTES.app[lang] ? "page" : undefined}>{t("Abrir la app", "Open the app")}</a></li>
           </ul>
         </nav>
-        {otherHref && <a class="lang" href={otherHref} hreflang={other} lang={other}>{other === "en" ? "English" : "Español"}</a>}
+        {others.length > 0 && (
+          <details class="lang">
+            <summary aria-label={t("Idioma", "Language")}>🌐 {LANG_INFO[lang].name}</summary>
+            <ul>
+              {others.map((l) => (
+                <li><a href={alternates[l]} hreflang={l} lang={l} dir={LANG_INFO[l].rtl ? "rtl" : "ltr"}>{LANG_INFO[l].name}</a></li>
+              ))}
+            </ul>
+          </details>
+        )}
       </div>
     </header>
     {breadcrumbs && (

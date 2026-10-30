@@ -6,7 +6,7 @@ description: "What MoneroP2P is, its current status and how it is funded (a fee 
 updated: 2026-10-24
 ---
 
-**Short answer:** MoneroP2P is an open-source project to swap USDT for Monero without intermediaries, using atomic swaps that run in the browser. It is in testnet trials and has not been audited yet.
+**Short answer:** MoneroP2P is an open-source project to swap USDT for Monero without intermediaries, using atomic swaps that run in the browser. It runs with real money on Arbitrum One + Monero (maximum 100 USDT per swap); the contract is verified with Halmos, Aderyn and Slither and has no external audit yet.
 
 ## What we build
 
@@ -18,9 +18,9 @@ The contract charges a percentage fee when a swap completes. The percentage is f
 
 ## Status
 
-- Contract, crypto core, maker daemon, backend and app: implemented and tested in test environments.
-- Pending: full testnet runs with Monero stagenet and an external audit.
-- There is no version for real money.
+- Live with real money since October 2026 (maximum 100 USDT per swap), with a testnet practice mode.
+- Contract verified with Halmos, Aderyn and Slither and published on Sourcify.
+- Pending: an external audit.
 
 ## Credits
 

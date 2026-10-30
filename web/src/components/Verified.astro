@@ -1,4 +1,5 @@
 ---
+import { makeT } from "../i18n/ui";
 /**
  * Sellos de verificación del contrato. Cada uno enlaza a la evidencia pública: el informe
  * (docs/AUDITORIA-GRATUITA.md) y las corridas del flujo «Auditoría» en GitHub Actions.
@@ -10,7 +11,7 @@ interface Props {
   compact?: boolean;
 }
 const { lang, compact = false } = Astro.props;
-const t = (es: string, en: string) => (lang === "es" ? es : en);
+const t = makeT(lang);
 const report = `${SITE.repo}/blob/main/docs/AUDITORIA-GRATUITA.md`;
 const runs = `${SITE.repo}/actions/workflows/auditoria.yml`;
 const contract = "https://repo.sourcify.dev/42161/0x88fc05Cb07C5b69fbed1F7B1c1F784Cd26e99535";

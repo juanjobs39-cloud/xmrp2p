@@ -1,5 +1,5 @@
 import { getCollection, type CollectionEntry } from "astro:content";
-import { ROUTES, type Lang } from "../site";
+import { LANG_INFO, ROUTES, type Lang } from "../site";
 
 export type Guide = CollectionEntry<"guides">;
 
@@ -18,7 +18,7 @@ export async function guideAlternates(key: string): Promise<Partial<Record<Lang,
 }
 
 export const fmtDate = (d: Date, lang: Lang) =>
-  d.toLocaleDateString(lang === "es" ? "es-419" : "en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
+  d.toLocaleDateString(LANG_INFO[lang].locale, { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
 
 /** Markdown → texto plano aproximado (para llms-full.txt). */
 export function plain(md: string): string {

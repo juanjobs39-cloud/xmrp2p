@@ -1,4 +1,5 @@
 ---
+import { makeT } from "../i18n/ui";
 /**
  * Selector Testnet / Dinero real. Solo aparece si el build tiene el modo real activo
  * (PUBLIC_MAINNET=on y fábrica de Arbitrum One configurada). La página marca la red activa con
@@ -11,7 +12,7 @@ interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
-const t = (es: string, en: string) => (lang === "es" ? es : en);
+const t = makeT(lang);
 ---
 {MAINNET_ON && (
   <nav class="netswitch" aria-label={t("Red", "Network")}>

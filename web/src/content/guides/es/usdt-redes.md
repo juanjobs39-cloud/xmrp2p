@@ -30,8 +30,7 @@ Sí en valor, no en red. Un USDT en Tron no se puede enviar directamente a una d
 
 ## ¿Cuál usa MoneroP2P?
 
-- **Ahora:** Arbitrum Sepolia (testnet), con un token de prueba.
-- **Previsto:** Arbitrum, cuyo USDT (USD₮0) permite autorizar el depósito con una firma, sin transacción extra de aprobación.
+- **Ahora:** Arbitrum One, cuyo USDT (USD₮0) permite autorizar el depósito con una firma, sin transacción extra de aprobación. El modo de práctica usa Arbitrum Sepolia (testnet).
 - **En evaluación:** Tron. El contrato ya compila para Tron, pero falta probarlo en su testnet; Tron tiene particularidades (por ejemplo, su USDT devuelve un valor inesperado al transferir) que el contrato ya contempla.
 
 ## Cómo elegir

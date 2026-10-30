@@ -1,4 +1,5 @@
 ---
+import { makeT } from "../i18n/ui";
 /**
  * Genera todas las páginas de contenido (sin JavaScript): institucionales, guías, índice de
  * guías, preguntas frecuentes y glosario, en español e inglés.
@@ -6,7 +7,7 @@
 import { getCollection, render } from "astro:content";
 import Base from "../layouts/Base.astro";
 import { fmtDate, guideAlternates, guidePath, guides } from "../lib/content";
-import { ROUTES, SITE, type Lang } from "../site";
+import { LANGS, ROUTES, SITE, type Lang } from "../site";
 
 export async function getStaticPaths() {
   const out = [];
@@ -18,16 +19,20 @@ export async function getStaticPaths() {
   for (const g of await getCollection("guides")) {
     out.push({ params: { path: strip(guidePath(g)) }, props: { kind: "guide", lang: g.data.lang, entry: g } });
   }
-  for (const lang of ["es", "en"] as Lang[]) {
+  const faqLangs = new Set((await getCollection("faq")).map((f) => f.data.lang));
+  const glossaryLangs = new Set((await getCollection("glossary")).map((f) => f.data.lang));
+  const guideLangs = new Set((await getCollection("guides")).map((g) => g.data.lang));
+  for (const lang of LANGS) {
+    if (!guideLangs.has(lang)) continue;
     out.push({ params: { path: strip(ROUTES.guides[lang]) }, props: { kind: "guides", lang } });
-    out.push({ params: { path: strip(ROUTES.faq[lang]) }, props: { kind: "faq", lang } });
-    out.push({ params: { path: strip(ROUTES.glossary[lang]) }, props: { kind: "glossary", lang } });
+    if (faqLangs.has(lang)) out.push({ params: { path: strip(ROUTES.faq[lang]) }, props: { kind: "faq", lang } });
+    if (glossaryLangs.has(lang)) out.push({ params: { path: strip(ROUTES.glossary[lang]) }, props: { kind: "glossary", lang } });
   }
   return out;
 }
 
 const { kind, lang, entry } = Astro.props as { kind: string; lang: Lang; entry?: any };
-const t = (es: string, en: string) => (lang === "es" ? es : en);
+const t = makeT(lang);
 const home = { name: t("Inicio", "Home"), href: ROUTES.home[lang] };
 const guidesCrumb = { name: t("Guías", "Guides"), href: ROUTES.guides[lang] };
 
@@ -124,6 +129,14 @@ if (kind === "page") {
   });
 }
 const slugify = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+// Anclas: el slug latino si sirve; si queda vacío o repetido (chino, ruso, persa…), uno numerado.
+const usedIds = new Set<string>();
+const anchor = (text: string, i: number, prefix: string) => {
+  let id = slugify(text);
+  if (id.length < 3 || usedIds.has(id)) id = `${prefix}-${i + 1}`;
+  usedIds.add(id);
+  return id;
+};
 ---
 <Base {lang} {title} {description} {route} {alternates} {breadcrumbs} {jsonLd} ogType={kind === "guide" ? "article" : "website"} markdownAlternate={mdAlt}>
   <main id="contenido" class="prose">
@@ -152,9 +165,9 @@ const slugify = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]
       {kind === "faq" && (
         <>
           <p class="answer">{t("Estas son las preguntas que más recibimos, con la respuesta primero.", "These are the questions we get most, answer first.")}</p>
-          {faqItems.map((f) => (
+          {faqItems.map((f, i) => (
             <section>
-              <h2 id={slugify(f.q)}>{f.q}</h2>
+              <h2 id={anchor(f.q, i, "q")}>{f.q}</h2>
               <p>{f.a}</p>
             </section>
           ))}
@@ -164,7 +177,7 @@ const slugify = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]
       {kind === "glossary" && (
         <>
           <p class="answer">{t("Definiciones cortas de los términos que usamos en el sitio y en la app.", "Short definitions of the terms used across the site and the app.")}</p>
-          <dl>{glossaryItems.map((g) => <><dt id={slugify(g.term)}>{g.term}</dt><dd>{g.def}</dd></>)}</dl>
+          <dl>{glossaryItems.map((g, i) => <><dt id={anchor(g.term, i, "t")}>{g.term}</dt><dd>{g.def}</dd></>)}</dl>
         </>
       )}
 
