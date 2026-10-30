@@ -42,7 +42,6 @@
   "You send": "आप भेजते हैं",
   "You get": "आपको मिलता है",
   "Exchange": "बदलें",
-  "Non-custodial · no sign-up · maximum 100 USDT per swap": "नॉन-कस्टोडियल · बिना साइन-अप · हर स्वैप में अधिकतम 100 USDT",
   "Quotes": "कोटेशन",
   "Instant exchanges via Trocador: the exchange you choose does the swap, not MoneroP2P. Those exchanges require that, when you create the exchange, we keep your IP, language and browser linked to its ID, to answer legal requests forwarded by Trocador. Swaps with MoneroP2P makers don't store this data.": "Trocador के ज़रिए इंस्टेंट एक्सचेंज: स्वैप आपका चुना हुआ एक्सचेंज करता है, MoneroP2P नहीं. ये एक्सचेंज माँगते हैं कि एक्सचेंज बनाते समय हम आपका IP, भाषा और ब्राउज़र उसकी ID से जोड़कर रखें, ताकि Trocador से आए कानूनी अनुरोधों का जवाब दिया जा सके. MoneroP2P मेकरों के साथ स्वैप में यह डेटा नहीं रखा जाता.",
   "Exchange via Trocador": "Trocador के ज़रिए एक्सचेंज",
@@ -227,5 +226,7 @@
   "Withdraw all available XMR to": "सारा उपलब्ध XMR यहाँ निकालें:",
   "Withdraw XMR": "XMR निकालें",
   "Return leftover gas to my payout address": "बची हुई गैस मेरे भुगतान पते पर लौटाएँ",
-  "The maker needs JavaScript.": "मेकर को JavaScript चाहिए."
+  "The maker needs JavaScript.": "मेकर को JavaScript चाहिए.",
+  "Non-custodial · no sign-up · up to 100 USDT per swap with MoneroP2P makers": "नॉन-कस्टोडियल · बिना साइन-अप · MoneroP2P मेकरों के साथ हर स्वैप में 100 USDT तक",
+  "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.": "100 USDT से ज़्यादा? कोई भी राशि डालें: बड़ी राशियों के लिए हम Trocador के ज़रिए इंस्टेंट एक्सचेंज दिखाते हैं."
 }

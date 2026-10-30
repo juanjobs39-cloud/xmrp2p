@@ -42,7 +42,6 @@
   "You send": "شما می‌فرستید",
   "You get": "شما دریافت می‌کنید",
   "Exchange": "تبدیل",
-  "Non-custodial · no sign-up · maximum 100 USDT per swap": "بدون امانت‌داری · بدون ثبت‌نام · حداکثر ۱۰۰ USDT در هر سواپ",
   "Quotes": "پیشنهادهای قیمت",
   "Instant exchanges via Trocador: the exchange you choose does the swap, not MoneroP2P. Those exchanges require that, when you create the exchange, we keep your IP, language and browser linked to its ID, to answer legal requests forwarded by Trocador. Swaps with MoneroP2P makers don't store this data.": "صرافی‌های فوری از طریق Trocador: تبدیل را صرافی‌ای که انتخاب می‌کنید انجام می‌دهد، نه MoneroP2P. این صرافی‌ها الزام می‌کنند که هنگام ایجاد تبدیل، IP، زبان و مرورگر شما را همراه با شناسه آن نگه داریم تا بتوانیم به درخواست‌های قانونی‌ای که Trocador ارسال می‌کند پاسخ دهیم. سواپ با میکرهای MoneroP2P این داده‌ها را ذخیره نمی‌کند.",
   "Exchange via Trocador": "تبدیل از طریق Trocador",
@@ -227,5 +226,7 @@
   "Withdraw all available XMR to": "برداشت همه XMR موجود به",
   "Withdraw XMR": "برداشت XMR",
   "Return leftover gas to my payout address": "بازگرداندن گس باقی‌مانده به آدرس دریافت من",
-  "The maker needs JavaScript.": "میکر به جاوااسکریپت نیاز دارد."
+  "The maker needs JavaScript.": "میکر به جاوااسکریپت نیاز دارد.",
+  "Non-custodial · no sign-up · up to 100 USDT per swap with MoneroP2P makers": "بدون امانت‌داری · بدون ثبت‌نام · با میکرهای MoneroP2P تا ۱۰۰ USDT در هر سواپ",
+  "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.": "بیش از ۱۰۰ USDT؟ هر مقداری را وارد کنید: برای مقادیر بیشتر، صرافی‌های فوری از طریق Trocador را نشان می‌دهیم."
 }

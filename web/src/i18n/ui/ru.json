@@ -42,7 +42,6 @@
   "You send": "Вы отправляете",
   "You get": "Вы получаете",
   "Exchange": "Обменять",
-  "Non-custodial · no sign-up · maximum 100 USDT per swap": "Без хранения средств · без регистрации · максимум 100 USDT за своп",
   "Quotes": "Котировки",
   "Instant exchanges via Trocador: the exchange you choose does the swap, not MoneroP2P. Those exchanges require that, when you create the exchange, we keep your IP, language and browser linked to its ID, to answer legal requests forwarded by Trocador. Swaps with MoneroP2P makers don't store this data.": "Мгновенные обменники через Trocador: обмен проводит выбранный вами обменник, а не MoneroP2P. Эти обменники требуют, чтобы при создании обмена мы сохраняли ваш IP, язык и браузер, привязанные к его ID, для ответа на юридические запросы, которые пересылает Trocador. Свопы с мейкерами MoneroP2P эти данные не сохраняют.",
   "Exchange via Trocador": "Обмен через Trocador",
@@ -227,5 +226,7 @@
   "Withdraw all available XMR to": "Вывести все доступные XMR на",
   "Withdraw XMR": "Вывести XMR",
   "Return leftover gas to my payout address": "Вернуть остаток газа на мой адрес для выплат",
-  "The maker needs JavaScript.": "Мейкеру нужен JavaScript."
+  "The maker needs JavaScript.": "Мейкеру нужен JavaScript.",
+  "Non-custodial · no sign-up · up to 100 USDT per swap with MoneroP2P makers": "Без хранения средств · без регистрации · до 100 USDT за своп с мейкерами MoneroP2P",
+  "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.": "Больше 100 USDT? Введите любую сумму: для больших сумм мы покажем мгновенные обменники через Trocador."
 }

@@ -42,7 +42,6 @@
   "You send": "보내는 금액",
   "You get": "받는 금액",
   "Exchange": "교환하기",
-  "Non-custodial · no sign-up · maximum 100 USDT per swap": "비수탁 · 가입 불필요 · 스왑 1회당 최대 100 USDT",
   "Quotes": "견적",
   "Instant exchanges via Trocador: the exchange you choose does the swap, not MoneroP2P. Those exchanges require that, when you create the exchange, we keep your IP, language and browser linked to its ID, to answer legal requests forwarded by Trocador. Swaps with MoneroP2P makers don't store this data.": "Trocador를 통한 즉시 교환소: 교환은 MoneroP2P가 아니라 여러분이 고른 교환소가 진행합니다. 이 교환소들은 교환을 만들 때, Trocador가 전달하는 법적 요청에 응하기 위해 해당 ID에 연결된 여러분의 IP, 언어, 브라우저 정보를 저희가 보관하도록 요구합니다. MoneroP2P 메이커와의 스왑은 이 데이터를 저장하지 않습니다.",
   "Exchange via Trocador": "Trocador를 통한 교환",
@@ -227,5 +226,7 @@
   "Withdraw all available XMR to": "사용 가능한 XMR 전부 출금할 주소:",
   "Withdraw XMR": "XMR 출금",
   "Return leftover gas to my payout address": "남은 가스를 지급 주소로 돌려받기",
-  "The maker needs JavaScript.": "메이커에는 자바스크립트가 필요합니다."
+  "The maker needs JavaScript.": "메이커에는 자바스크립트가 필요합니다.",
+  "Non-custodial · no sign-up · up to 100 USDT per swap with MoneroP2P makers": "비수탁 · 가입 불필요 · MoneroP2P 메이커와는 스왑 1회당 최대 100 USDT",
+  "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.": "100 USDT가 넘나요? 원하는 금액을 입력하세요. 더 큰 금액에는 Trocador를 통한 즉시 교환소를 보여 드립니다."
 }

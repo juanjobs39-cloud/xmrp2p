@@ -220,3 +220,4 @@ body:not(.chosen) .later { display: none !important; }
 .news-list { list-style: none; padding: 0; display: grid; gap: 1rem; }
 .news-list li { display: grid; gap: 0.2rem; border-block-end: 1px solid var(--line); padding-block-end: 1rem; }
 .news-list time { color: var(--muted); font-size: 0.9rem; }
+.quick-more { margin: 0; font-size: 0.92rem; padding: 0.55rem 0.8rem; border-radius: 10px; background: var(--bg); border: 1px dashed var(--line); }

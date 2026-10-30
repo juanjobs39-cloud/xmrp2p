@@ -370,7 +370,8 @@ export class SwapApp {
       if (offers.some((o) => o.id === keep)) sel.value = keep;
       if (!offers.length) {
         sel.append(new Option(t(this.lang, "no_offers"), ""));
-        this.banner(t(this.lang, "no_offers"), "warn");
+        // En la vista simple no se avisa al cargar: al buscar, si no hay makers, se muestran otras opciones.
+        if (!DRAFT_UI || document.body.classList.contains("chosen")) this.banner(t(this.lang, "no_offers"), "warn");
         $("trocador-alt").hidden = false;
       }
       return offers;

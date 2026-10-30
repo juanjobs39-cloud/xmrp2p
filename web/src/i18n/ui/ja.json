@@ -42,7 +42,6 @@
   "You send": "支払う",
   "You get": "受け取る",
   "Exchange": "交換する",
-  "Non-custodial · no sign-up · maximum 100 USDT per swap": "ノンカストディアル・登録不要・1回最大100 USDT",
   "Quotes": "見積もり",
   "Instant exchanges via Trocador: the exchange you choose does the swap, not MoneroP2P. Those exchanges require that, when you create the exchange, we keep your IP, language and browser linked to its ID, to answer legal requests forwarded by Trocador. Swaps with MoneroP2P makers don't store this data.": "Trocador経由のインスタント交換所：交換を行うのはあなたが選んだ交換所で、MoneroP2Pではありません。これらの交換所は、交換を作成する際に、Trocadorから転送される法的要請に応じるため、そのIDに紐づけてあなたのIP・言語・ブラウザ情報を保存するよう求めています。MoneroP2Pのメイカーとのスワップでは、これらのデータは保存されません。",
   "Exchange via Trocador": "Trocador経由の交換",
@@ -227,5 +226,7 @@
   "Withdraw all available XMR to": "利用可能なXMRをすべて出金する先：",
   "Withdraw XMR": "XMRを出金",
   "Return leftover gas to my payout address": "残りのガスを受取アドレスに戻す",
-  "The maker needs JavaScript.": "メイカーにはJavaScriptが必要です。"
+  "The maker needs JavaScript.": "メイカーにはJavaScriptが必要です。",
+  "Non-custodial · no sign-up · up to 100 USDT per swap with MoneroP2P makers": "ノンカストディアル・登録不要・MoneroP2Pのメイカーとは1回最大100 USDT",
+  "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.": "100 USDTを超えますか？好きな金額を入力してください。大きな金額にはTrocador経由のインスタント交換所を表示します。"
 }
