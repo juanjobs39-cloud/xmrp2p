@@ -6,6 +6,7 @@ import { runMonitor, type MonitorEnv } from "./monitor";
 import { openapi } from "./openapi";
 import { referencePrice } from "./price";
 import { createSwap, roomRequest } from "./swaps";
+import { handleTrocador, isTrocadorWebhook, purgeTrocador, trocadorWebhook } from "./trocador";
 
 export { MakerInbox } from "../do/MakerInbox";
 export { SwapRoom } from "../do/SwapRoom";
@@ -40,6 +41,9 @@ async function route(req: Request, env: Env): Promise<Response> {
     const nets = [...activeNetworks(env)];
     return json({ ok: true, networks: nets, testnet_only: !nets.some((n) => MAINNET_NETWORKS.has(n)) });
   }
+
+  // Webhook de Trocador: lo llama su servidor, sin límite por IP ni bloqueo por región (va con clave).
+  if (isTrocadorWebhook(req, url)) return trocadorWebhook(req, env);
 
   const country = blockedRegion(req, env);
   if (country) throw new HttpError(451, `el servicio no está disponible en tu región (${country})`);
@@ -78,6 +82,10 @@ async function route(req: Request, env: Env): Promise<Response> {
     const inbox = env.MAKER_INBOX.get(env.MAKER_INBOX.idFromName(maker));
     return inbox.fetch(`https://inbox/connect${viaTicket ? `?ticket=${encodeURIComponent(ticket!)}` : ""}`, { headers });
   }
+  if (p.startsWith("/v1/trocador/")) {
+    const r = await handleTrocador(req, env, url);
+    if (r) return r;
+  }
   if (p === "/mcp") return handleMcp(req, env);
   throw new HttpError(404, "ruta no encontrada");
 }
@@ -102,5 +110,6 @@ export default {
   // Monitoreo de la fábrica con dinero real (cron en wrangler.toml).
   async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
     ctx.waitUntil(runMonitor(env as MonitorEnv).then((r) => console.log("monitor", JSON.stringify(r))));
+    ctx.waitUntil(purgeTrocador(env).then((n) => n && console.log("trocador purge", n)));
   },
 } satisfies ExportedHandler<Env>;

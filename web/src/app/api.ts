@@ -26,6 +26,34 @@ export interface MakerReply {
   min_duration1: number;
 }
 
+export interface TrocadorQuote {
+  provider: string;
+  amount_to: string;
+  kycrating: string;
+  fixed: boolean;
+  spread?: string;
+  eta?: number;
+}
+
+export interface TrocadorRates {
+  rate_id: string;
+  usdt: string;
+  quotes: TrocadorQuote[];
+  created_at: number;
+}
+
+export interface TrocadorTrade {
+  trade_id: string;
+  provider: string;
+  status: string;
+  amount_from: string;
+  amount_to: string;
+  address_provider: string;
+  address_provider_memo: string;
+  id_provider: string;
+  fixed: boolean;
+}
+
 export interface RoomMessage {
   seq: number;
   at: number;
@@ -50,6 +78,10 @@ export const api = {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ offer_id, usdt, taker_message, ...(ref ? { ref } : {}) }),
     }),
+  trocadorRates: (usdt: string) => call<TrocadorRates>(`/v1/trocador/rates?usdt=${encodeURIComponent(usdt)}`),
+  trocadorCreate: (body: { rate_id: string; provider: string; fixed: boolean; usdt: string; address: string; refund?: string }) =>
+    call<TrocadorTrade>("/v1/trocador/trades", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
+  trocadorTrade: (id: string) => call<TrocadorTrade>(`/v1/trocador/trades/${encodeURIComponent(id)}`),
   events: (room: string, token: string, after = 0) =>
     call<{ messages: RoomMessage[] }>(`/v1/swaps/${room}/events?after=${after}`, { headers: { "x-room-token": token } }).then((r) => r.messages),
   message: (room: string, token: string, event: string, data: unknown) =>

@@ -77,10 +77,30 @@ const softwareLd = {
           <p class="meta">{t("Sin custodia · sin registro · máximo 100 USDT por swap", "Non-custodial · no sign-up · maximum 100 USDT per swap")}</p>
         </form>
         <div id="quick-results" hidden>
+          <p id="quick-why" class="notice" hidden></p>
           <h2 id="quick-title">{t("Cotizaciones", "Quotes")}</h2>
           <ul id="quick-list" class="quick-list"></ul>
+          <p id="quick-troc-note" class="meta" hidden>{t("Exchanges instantáneos vía Trocador: el intercambio lo hace el exchange que elijas, no MoneroP2P. Por exigencia de esos exchanges, al crear el intercambio guardamos tu IP, idioma y navegador ligados a su ID, para responder solicitudes legales que nos reenvíe Trocador. Los swaps con makers de MoneroP2P no guardan estos datos.", "Instant exchanges via Trocador: the exchange you choose does the swap, not MoneroP2P. Those exchanges require that, when you create the exchange, we keep your IP, language and browser linked to its ID, to answer legal requests forwarded by Trocador. Swaps with MoneroP2P makers don't store this data.")} <a href={`/${lang}/${lang === "es" ? "privacidad" : "privacy"}/`}>{t("Privacidad", "Privacy")}</a></p>
         </div>
-        <div id="quick-trocador" hidden>
+        <div id="quick-troc-pay" hidden>
+          <h2>{t("Intercambio vía Trocador", "Exchange via Trocador")}</h2>
+          <p id="troc-chosen" class="meta"></p>
+          <form id="form-troc" class="quick-form">
+            <label for="troc-address">{t("Tu dirección de Monero (ahí recibes el XMR)", "Your Monero address (where you get the XMR)")}</label>
+            <input id="troc-address" type="text" autocomplete="off" spellcheck="false" required />
+            <label for="troc-refund">{t("Dirección de reembolso de USDT en Arbitrum One (opcional)", "USDT refund address on Arbitrum One (optional)")}</label>
+            <input id="troc-refund" type="text" autocomplete="off" spellcheck="false" placeholder="0x…" />
+            <button class="btn big" type="submit">{t("Crear intercambio", "Create exchange")}</button>
+          </form>
+          <div id="troc-deposit" class="quick-form" hidden>
+            <p>{t("Envía exactamente", "Send exactly")} <strong><span id="troc-amount"></span> USDT</strong> <Fragment set:html={t("en la red <strong>Arbitrum One</strong> a esta dirección:", "on the <strong>Arbitrum One</strong> network to this address:")} /></p>
+            <p class="troc-addr"><code id="troc-addr"></code></p>
+            <button id="troc-copy" class="btn secondary" type="button">{t("Copiar dirección", "Copy address")}</button>
+            <p>{t("Estado:", "Status:")} <strong id="troc-status"></strong></p>
+            <p class="meta">{t("Exchange:", "Exchange:")} <span id="troc-provider"></span> · ID <code id="troc-id"></code><br />{t("Guarda el ID. Si algo falla, escribe al soporte de Trocador (@TrocadorSupportBot en Telegram o support@trocador.app) con ese ID. El estado se actualiza solo cada minuto.", "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes every minute.")}</p>
+          </div>
+        </div>
+        <div id="quick-trocador" class="only-real" hidden>
           <p id="quick-trocador-why" class="notice"></p>
           <iframe id="trocador-frame" class="trocador-frame" title="Trocador" referrerpolicy="no-referrer" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-top-navigation-by-user-activation" data-src={trocadorWidget}></iframe>
           <p class="meta">{t("Cotizaciones de exchanges instantáneos de Trocador. El intercambio ocurre en el exchange que elijas, fuera de MoneroP2P.", "Quotes from instant exchanges via Trocador. The exchange happens at the provider you choose, outside MoneroP2P.")}</p>
@@ -149,11 +169,11 @@ const softwareLd = {
         </label>
         <button class="btn" type="submit">{t("Pedir el swap", "Request the swap")}</button>
       </form>
-      <p id="trocador-alt" class="notice" hidden>
+      <p id="trocador-alt" class="notice only-real" hidden>
         {t("¿No hay ofertas o necesitas más de 100 USDT?", "No offers, or need more than 100 USDT?")}
         <a href={trocador} rel="noopener sponsored" target="_blank">{t("Compara exchanges instantáneos en Trocador →", "Compare instant exchanges on Trocador →")}</a>
       </p>
-      <p class="meta">{t("¿Más de 100 USDT?", "More than 100 USDT?")} <a href={trocador} rel="noopener sponsored" target="_blank">{t("Compara exchanges instantáneos en Trocador", "Compare instant exchanges on Trocador")}</a></p>
+      <p class="meta only-real">{t("¿Más de 100 USDT?", "More than 100 USDT?")} <a href={trocador} rel="noopener sponsored" target="_blank">{t("Compara exchanges instantáneos en Trocador", "Compare instant exchanges on Trocador")}</a></p>
     </section>
 
     <section id="step-recovery" data-step hidden>

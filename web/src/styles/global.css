@@ -204,3 +204,6 @@ nav .nav-cta.primary { background: var(--accent); color: var(--accent-fg); }
 @media (max-width: 40rem) { .quick-item { flex-direction: column; align-items: stretch; } .quick-row input { font-size: 1.4rem; } }
 /* Borrador: lo que no es la vista simple aparece al elegir una cotización */
 body:not(.chosen) .later { display: none !important; }
+.troc-addr code { display: block; word-break: break-all; font-size: 0.95rem; padding: 0.6rem 0.8rem; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; }
+#form-troc input { font: inherit; padding: 0.6rem 0.8rem; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); }
+#troc-deposit[hidden], #form-troc[hidden] { display: none; }

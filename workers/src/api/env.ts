@@ -11,6 +11,15 @@ export interface Env {
   TAKE_TIMEOUT_MS: string;
   /** Sitio público (para el enlace a la app en /v1/quote). */
   SITE_URL?: string;
+  /** URL pública de esta API (para el webhook de Trocador). */
+  API_URL?: string;
+  /** Intercambios por Trocador: llave (secreto), clave del webhook (secreto) y ajustes. */
+  TROCADOR_API_KEY?: string;
+  TROCADOR_WEBHOOK_KEY?: string;
+  TROCADOR_MIN_KYC?: string;
+  TROCADOR_MARKUP?: string;
+  TROCADOR_RETENTION_DAYS?: string;
+  TROCADOR_LIMITER?: RateLimit;
 }
 
 /** Límite de tamaño de cualquier cuerpo JSON (el mensaje con la DLEQ pesa ~114 KB). */

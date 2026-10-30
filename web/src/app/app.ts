@@ -7,6 +7,7 @@ import type { Address, Hex } from "viem";
 import { api, type MakerReply, type Offer } from "./api";
 import { DRAFT_UI, isDeployed, NETWORKS, POLICY, selectedNetwork, validXmrAddress, type EvmNetwork } from "./config";
 import { availableRange, quotesFor } from "./quick";
+import type { TrocadorQuote, TrocadorRates, TrocadorTrade } from "./api";
 import { decide, type Action, type XmrCheck } from "./decide";
 import { Evm, type WalletStep } from "./evm";
 import { t, type Key, type Lang } from "./i18n";
@@ -105,9 +106,10 @@ export class SwapApp {
         }
       });
     }
+    // La vista simple se conecta antes de cargar ofertas: un clic temprano no debe recargar la página.
+    if (DRAFT_UI) this.mountQuick();
     await this.loadOffers();
     this.applyDeepLink();
-    if (DRAFT_UI) this.mountQuick();
   }
 
   /** Ofertas vigentes (las usa la vista simple). */
@@ -123,6 +125,120 @@ export class SwapApp {
       e.preventDefault();
       void this.guard(() => this.quickSearch(), (e as SubmitEvent).submitter, "loading_offers");
     });
+    $("form-troc").addEventListener("submit", (e) => {
+      e.preventDefault();
+      void this.guard(() => this.trocCreate(), (e as SubmitEvent).submitter);
+    });
+    $("troc-copy").addEventListener("click", () => void navigator.clipboard?.writeText($("troc-addr").textContent ?? ""));
+  }
+
+  // ------------------------------------------------------------------ Trocador (API)
+
+  private trocRates: TrocadorRates | null = null;
+  private trocPick: TrocadorQuote | null = null;
+  private trocTimer: ReturnType<typeof setInterval> | null = null;
+
+  /** Muestra las cotizaciones de Trocador en la lista. Devuelve false si no hay (se usa el widget). */
+  private async trocadorList(raw: string, why: string): Promise<boolean> {
+    let rates: TrocadorRates;
+    try {
+      rates = await api.trocadorRates(raw);
+    } catch {
+      return false; // API apagada o caída: queda el widget
+    }
+    if (!rates.quotes.length) return false;
+    this.trocRates = rates;
+    $("quick-why").textContent = why;
+    $("quick-why").hidden = false;
+    $("quick-troc-note").hidden = false;
+    $("quick-title").textContent = t(this.lang, "troc_title", { n: rates.quotes.length, usdt: raw });
+    $("quick-list").replaceChildren(
+      ...rates.quotes.map((q, i) => {
+        const li = document.createElement("li");
+        li.className = i === 0 ? "quick-item best" : "quick-item";
+        const left = document.createElement("div");
+        const amount = document.createElement("p");
+        amount.className = "quick-amount";
+        amount.textContent = `${t(this.lang, "quick_you_get")} ${Number(q.amount_to).toFixed(6)} XMR`;
+        const meta = document.createElement("p");
+        meta.className = "meta";
+        meta.textContent = t(this.lang, "troc_meta", { provider: q.provider, kyc: q.kycrating, kind: t(this.lang, q.fixed ? "troc_fixed" : "troc_float") });
+        left.append(amount, meta);
+        if (i === 0) {
+          const tag = document.createElement("span");
+          tag.className = "pill best-pill";
+          tag.textContent = t(this.lang, "quick_best");
+          left.prepend(tag);
+        }
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = i === 0 ? "btn" : "btn secondary";
+        btn.textContent = t(this.lang, "quick_choose");
+        btn.addEventListener("click", () => this.trocChoose(q));
+        li.append(left, btn);
+        return li;
+      }),
+    );
+    $("quick-results").hidden = false;
+    $("quick-results").scrollIntoView({ block: "start", behavior: "smooth" });
+    return true;
+  }
+
+  private trocChoose(q: TrocadorQuote): void {
+    const rates = this.trocRates;
+    if (!rates || Date.now() - rates.created_at > 10 * 60_000) {
+      this.banner(t(this.lang, "troc_expired"), "warn");
+      return;
+    }
+    this.trocPick = q;
+    $("troc-chosen").textContent = t(this.lang, "troc_chosen", {
+      provider: q.provider,
+      usdt: rates.usdt,
+      xmr: Number(q.amount_to).toFixed(6),
+      kind: t(this.lang, q.fixed ? "troc_fixed" : "troc_float"),
+    });
+    $("quick-results").hidden = true;
+    $("form-troc").hidden = false;
+    $("troc-deposit").hidden = true;
+    $("quick-troc-pay").hidden = false;
+    $("quick-troc-pay").scrollIntoView({ block: "start", behavior: "smooth" });
+    $<HTMLInputElement>("troc-address").focus();
+  }
+
+  /** Crea el intercambio (una petición a Trocador) y muestra a dónde depositar. */
+  private async trocCreate(): Promise<void> {
+    const rates = this.trocRates;
+    const q = this.trocPick;
+    if (!rates || !q || Date.now() - rates.created_at > 10 * 60_000) throw new Error(t(this.lang, "troc_expired"));
+    const address = $<HTMLInputElement>("troc-address").value.trim();
+    const refund = $<HTMLInputElement>("troc-refund").value.trim();
+    if (!validXmrAddress(address, this.net.monero)) throw new Error(t(this.lang, "bad_address_main"));
+    if (refund && !/^0x[0-9a-fA-F]{40}$/.test(refund)) throw new Error(t(this.lang, "troc_bad_refund"));
+    const trade = await api.trocadorCreate({ rate_id: rates.rate_id, provider: q.provider, fixed: q.fixed, usdt: rates.usdt, address, ...(refund ? { refund } : {}) });
+    this.trocRates = null; // la cotización ya se usó
+    $("form-troc").hidden = true;
+    $("troc-amount").textContent = trade.amount_from || rates.usdt;
+    $("troc-addr").textContent = trade.address_provider;
+    $("troc-provider").textContent = trade.provider;
+    $("troc-id").textContent = trade.trade_id;
+    $("troc-deposit").hidden = false;
+    this.trocStatus(trade);
+    // Nuestro servidor guarda el estado que manda el webhook de Trocador: consultarlo no les cuesta peticiones.
+    if (this.trocTimer) clearInterval(this.trocTimer);
+    this.trocTimer = setInterval(() => {
+      api.trocadorTrade(trade.trade_id).then((tr) => this.trocStatus(tr), () => {});
+    }, 60_000);
+  }
+
+  private trocStatus(trade: TrocadorTrade): void {
+    const s = (trade.status || "new").toLowerCase();
+    const key = `troc_status_${s}`;
+    const label = t(this.lang, key as Key);
+    $("troc-status").textContent = label && label !== key ? label : trade.status;
+    if (["finished", "failed", "refunded", "expired", "halted"].includes(s) && this.trocTimer) {
+      clearInterval(this.trocTimer);
+      this.trocTimer = null;
+    }
   }
 
   /** «Intercambiar»: cotizaciones de todos los makers para el monto, o Trocador si no hay. */
@@ -137,14 +253,25 @@ export class SwapApp {
     const troc = $("quick-trocador");
     results.hidden = true;
     troc.hidden = true;
+    $("quick-troc-pay").hidden = true;
+    $("quick-why").hidden = true;
+    $("quick-troc-note").hidden = true;
     const cap = this.net.maxUsdt;
     const rows = cap && usdt > cap ? [] : quotesFor(this.offers, usdt);
     if (!rows.length) {
       const range = availableRange(this.offers);
-      $("quick-trocador-why").textContent =
+      // Modo práctica: sin Trocador (solo opera con dinero real).
+      if (this.net.testnet) {
+        this.banner(t(this.lang, "quick_none_test", { usdt: raw, range: range ? t(this.lang, "quick_range", { min: range.min, max: range.max }) : "" }), "warn");
+        return;
+      }
+      const why =
         cap && usdt > cap
           ? t(this.lang, "quick_over", { usdt: raw })
           : t(this.lang, "quick_none", { usdt: raw, range: range ? t(this.lang, "quick_range", { min: range.min, max: range.max }) : "" });
+      // Solo se consulta a Trocador cuando ningún maker cubre el monto (lo acordado con ellos).
+      if (await this.trocadorList(raw, why)) return;
+      $("quick-trocador-why").textContent = why;
       // El widget llega con USDT (Arbitrum) → XMR y el monto ya puestos.
       const frame = $<HTMLIFrameElement>("trocador-frame");
       const url = new URL(frame.dataset.src ?? "https://trocador.app/widget/");
