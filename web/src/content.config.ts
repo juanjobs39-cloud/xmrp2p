@@ -39,6 +39,20 @@ const guides = defineCollection({
   }),
 });
 
+/** Novedades (solo español e inglés). Misma `key` en ambos idiomas; `slug` propio de cada idioma. */
+const news = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/news", generateId: ({ entry }) => entry.replace(/\.md$/, "") }),
+  schema: z.object({
+    key: z.string(),
+    lang: z.enum(["es", "en"]),
+    slug: z.string(),
+    title: z.string(),
+    description: z.string().max(170),
+    published: z.coerce.date(),
+    updated: z.coerce.date().optional(),
+  }),
+});
+
 const faq = defineCollection({
   loader: file("./src/content/faq.json"),
   schema: z.object({ lang, items: z.array(z.object({ q: z.string(), a: z.string() })).min(15) }),
@@ -49,4 +63,4 @@ const glossary = defineCollection({
   schema: z.object({ lang, items: z.array(z.object({ term: z.string(), def: z.string() })) }),
 });
 
-export const collections = { pages, guides, faq, glossary };
+export const collections = { pages, guides, news, faq, glossary };

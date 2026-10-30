@@ -2,6 +2,7 @@
 import { makeT } from "../i18n/ui";
 import "../styles/global.css";
 import { LANG_INFO, LANGS, NAV, ROUTES, SITE, type Lang } from "../site";
+import { newsIndex } from "../lib/content";
 
 export interface Props {
   lang: Lang;
@@ -126,6 +127,7 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
           <li><a href={ROUTES.privacy[lang]}>{t("Privacidad", "Privacy")}</a></li>
           <li><a href={ROUTES.risks[lang]}>{t("Aviso de riesgos", "Risk notice")}</a></li>
           <li><a href={ROUTES.glossary[lang]}>{t("Glosario", "Glossary")}</a></li>
+          <li><a href={newsIndex(lang)}>{t("Novedades", "News")}</a></li>
           <li><a href={SITE.repo} rel="noopener">{t("Código fuente (AGPL-3.0)", "Source code (AGPL-3.0)")}</a></li>
         </ul>
         <p>{t("Nadie custodia tus fondos: ni nosotros ni los makers.", "Nobody holds your funds: not us, not the makers.")}</p>

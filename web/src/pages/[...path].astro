@@ -6,7 +6,7 @@ import { makeT } from "../i18n/ui";
  */
 import { getCollection, render } from "astro:content";
 import Base from "../layouts/Base.astro";
-import { fmtDate, guideAlternates, guidePath, guides } from "../lib/content";
+import { fmtDate, guideAlternates, guidePath, guides, newsAlternates, newsIndex, newsList, newsPath } from "../lib/content";
 import { LANGS, ROUTES, SITE, type Lang } from "../site";
 
 export async function getStaticPaths() {
@@ -28,6 +28,10 @@ export async function getStaticPaths() {
     if (faqLangs.has(lang)) out.push({ params: { path: strip(ROUTES.faq[lang]) }, props: { kind: "faq", lang } });
     if (glossaryLangs.has(lang)) out.push({ params: { path: strip(ROUTES.glossary[lang]) }, props: { kind: "glossary", lang } });
   }
+  for (const n of await getCollection("news")) {
+    out.push({ params: { path: strip(newsPath(n)) }, props: { kind: "post", lang: n.data.lang, entry: n } });
+  }
+  for (const lang of ["es", "en"] as Lang[]) out.push({ params: { path: strip(newsIndex(lang)) }, props: { kind: "news", lang } });
   return out;
 }
 
@@ -49,6 +53,9 @@ let list: Awaited<ReturnType<typeof guides>> = [];
 let faqItems: { q: string; a: string }[] = [];
 let glossaryItems: { term: string; def: string }[] = [];
 let mdAlt: string | undefined;
+let posts: Awaited<ReturnType<typeof newsList>> = [];
+let published: Date | undefined;
+const newsCrumb = { name: t("Novedades", "News"), href: newsIndex(lang) };
 
 if (kind === "page") {
   ({ title, description, updated } = entry.data);
@@ -87,6 +94,34 @@ if (kind === "page") {
       step: g.howto.steps.map((s: { name: string; text: string }, i: number) => ({ "@type": "HowToStep", position: i + 1, name: s.name, text: s.text })),
     });
   }
+} else if (kind === "post") {
+  const n = entry.data;
+  ({ title, description, published } = n);
+  updated = n.updated;
+  alternates = await newsAlternates(n.key);
+  breadcrumbs = [home, newsCrumb, { name: title, href: newsPath(entry) }];
+  ({ Content } = await render(entry));
+  jsonLd.push({
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: title,
+    description,
+    inLanguage: lang,
+    datePublished: n.published.toISOString(),
+    dateModified: (n.updated ?? n.published).toISOString(),
+    mainEntityOfPage: new URL(newsPath(entry), Astro.site).href,
+    author: { "@type": "Organization", name: SITE.brand },
+    publisher: { "@type": "Organization", name: SITE.brand },
+  });
+} else if (kind === "news") {
+  title = t("Novedades de MoneroP2P", "MoneroP2P news");
+  description = t(
+    "Lanzamientos, cambios y avances de MoneroP2P: redes nuevas, verificaciones del contrato y funciones de la app.",
+    "MoneroP2P launches, changes and progress: new networks, contract verifications and app features.",
+  );
+  alternates = { es: newsIndex("es"), en: newsIndex("en") };
+  breadcrumbs = [home, newsCrumb];
+  posts = await newsList(lang === "es" ? "es" : "en");
 } else if (kind === "guides") {
   route = "guides";
   title = t("Guías sobre USDT, Monero y atomic swaps", "Guides on USDT, Monero and atomic swaps");
@@ -142,7 +177,8 @@ const anchor = (text: string, i: number, prefix: string) => {
   <main id="contenido" class="prose">
     <article>
       <h1>{title}</h1>
-      {updated && <p class="meta">{t("Última actualización", "Last updated")}: <time datetime={updated.toISOString().slice(0, 10)}>{fmtDate(updated, lang)}</time></p>}
+      {published && <p class="meta">{t("Publicado", "Published")}: <time datetime={published.toISOString().slice(0, 10)}>{fmtDate(published, lang)}</time></p>}
+      {updated && !published && <p class="meta">{t("Última actualización", "Last updated")}: <time datetime={updated.toISOString().slice(0, 10)}>{fmtDate(updated, lang)}</time></p>}
       {kind === "guide" && (
         <p class="notice warn">
           {t("Aviso: MoneroP2P cobra una comisión en cada swap completado (ver ", "Note: MoneroP2P charges a fee on every completed swap (see ")}
@@ -151,6 +187,20 @@ const anchor = (text: string, i: number, prefix: string) => {
         </p>
       )}
       {Content && <Content />}
+
+      {kind === "news" && (
+        <>
+          <p class="answer">{t("Lo que cambia en MoneroP2P, contado con fechas y datos verificables.", "What changes on MoneroP2P, told with dates and verifiable facts.")}</p>
+          <ul class="news-list">{posts.map((n) => (
+            <li>
+              <time datetime={n.data.published.toISOString().slice(0, 10)}>{fmtDate(n.data.published, lang)}</time>
+              <a href={newsPath(n)}><strong>{n.data.title}</strong></a>
+              <span>{n.data.description}</span>
+            </li>
+          ))}</ul>
+        </>
+      )}
+      {kind === "post" && <p class="meta"><a href={newsIndex(lang)}>{t("← Todas las novedades", "← All news")}</a></p>}
 
       {kind === "guides" && (
         <>
