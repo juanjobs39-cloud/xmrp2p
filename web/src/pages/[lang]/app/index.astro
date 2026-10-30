@@ -18,7 +18,7 @@ const trocador = `https://trocador.app/${lang === "es" ? "es" : "en"}/${trocador
 // Widget de Trocador (permite incrustarse: frame-ancestors *), con el código de afiliado si existe.
 // Llega con USDT (Arbitrum) → XMR preseleccionados; la app agrega amount_from con el monto.
 const trocadorWidget = `https://trocador.app/widget/?ticker_from=usdt&network_from=Arbitrum&ticker_to=xmr&network_to=Mainnet${trocadorRef ? `&ref=${encodeURIComponent(trocadorRef)}` : ""}`;
-const draftUi = import.meta.env.PUBLIC_DRAFT_UI === "on";
+const draftUi = import.meta.env.PUBLIC_DRAFT_UI !== "off";
 
 // CSP estricta: solo código propio. 'wasm-unsafe-eval' es necesario para WebAssembly
 // (núcleo cripto y monero-ts); no habilita eval de JavaScript.

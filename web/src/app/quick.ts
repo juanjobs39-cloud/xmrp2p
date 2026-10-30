@@ -1,5 +1,5 @@
 /**
- * Vista simple tipo agregador (borrador, PUBLIC_DRAFT_UI=on): el usuario escribe cuánto USDT envía,
+ * Vista simple tipo agregador (predeterminada; PUBLIC_DRAFT_UI=off la apaga): el usuario escribe cuánto USDT envía,
  * pulsa «Intercambiar» y ve las cotizaciones de todos los makers. Si no hay ninguna (o el monto
  * supera el tope), se muestra el widget de Trocador dentro de la misma página.
  * Las cuentas son puras para poder probarlas.
