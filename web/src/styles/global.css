@@ -44,7 +44,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .wrap { max-width: var(--max); margin: 0 auto; padding: 0 1rem; }
 header.site { border-bottom: 1px solid var(--line); }
 header.site .wrap { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; align-items: center; justify-content: space-between; padding-block: 0.8rem; }
-.brand { font-weight: 700; font-size: 1.2rem; color: var(--fg); text-decoration: none; }
+.brand { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.2rem; color: var(--fg); text-decoration: none; }
 nav ul { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; list-style: none; margin: 0; padding: 0; }
 nav a { color: var(--fg); text-decoration: none; }
 nav a[aria-current="page"] { color: var(--accent); font-weight: 600; }
@@ -221,3 +221,24 @@ body:not(.chosen) .later { display: none !important; }
 .news-list li { display: grid; gap: 0.2rem; border-block-end: 1px solid var(--line); padding-block-end: 1rem; }
 .news-list time { color: var(--muted); font-size: 0.9rem; }
 .quick-more { margin: 0; font-size: 0.92rem; padding: 0.55rem 0.8rem; border-radius: 10px; background: var(--bg); border: 1px dashed var(--line); }
+.quick-coin { font: inherit; font-weight: 700; max-width: 12rem; padding: 0.4rem 0.5rem; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--fg); }
+#quick-more[hidden] { display: none; }
+.coin-pick { position: relative; }
+.coin-btn { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; width: 100%; font: inherit; padding: 0.55rem 0.8rem; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--fg); cursor: pointer; text-align: start; }
+.coin-btn:hover, .coin-btn[aria-expanded="true"] { border-color: var(--accent); }
+.coin-btn small { color: var(--muted); margin-inline-start: 0.3rem; }
+.coin-panel { position: absolute; z-index: 30; inset-inline: 0; top: calc(100% + 0.3rem); background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 24px rgb(0 0 0 / 0.15); padding: 0.6rem; }
+.coin-panel[hidden], #coin-hint[hidden] { display: none; }
+#coin-search { width: 100%; font: inherit; padding: 0.5rem 0.7rem; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); }
+#coin-hint { margin: 0.4rem 0 0; }
+.coin-list { list-style: none; margin: 0.3rem 0 0; padding: 0; max-height: 18rem; overflow-y: auto; }
+.coin-list .meta { padding: 0.5rem; }
+.coin-opt { display: flex; gap: 0.6rem; align-items: baseline; width: 100%; text-align: start; padding: 0.45rem 0.5rem; border: 0; border-radius: 8px; background: transparent; color: var(--fg); font: inherit; cursor: pointer; }
+.coin-opt:hover, .coin-opt:focus-visible { background: var(--bg); }
+.coin-opt span { color: var(--muted); font-size: 0.9rem; }
+.coin-ico { display: inline-block; vertical-align: middle; border-radius: 50%; flex: none; object-fit: contain; }
+.coin-ico-txt { width: var(--s, 22px); height: var(--s, 22px); line-height: var(--s, 22px); text-align: center; font-size: 0.75rem; font-weight: 700; background: var(--line); color: var(--fg); }
+.coin-sel, .unit-top { display: inline-flex; align-items: center; gap: 0.45rem; }
+.quick-unit .unit-top { justify-content: flex-end; }
+.coin-opt { align-items: center; }
+.prov-logo { vertical-align: middle; border-radius: 4px; margin-inline-end: 0.4rem; }

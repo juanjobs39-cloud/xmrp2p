@@ -228,5 +228,12 @@
   "Return leftover gas to my payout address": "남은 가스를 지급 주소로 돌려받기",
   "The maker needs JavaScript.": "메이커에는 자바스크립트가 필요합니다.",
   "Non-custodial · no sign-up · up to 100 USDT per swap with MoneroP2P makers": "비수탁 · 가입 불필요 · MoneroP2P 메이커와는 스왑 1회당 최대 100 USDT",
-  "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.": "100 USDT가 넘나요? 원하는 금액을 입력하세요. 더 큰 금액에는 Trocador를 통한 즉시 교환소를 보여 드립니다."
+  "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.": "100 USDT가 넘나요? 원하는 금액을 입력하세요. 더 큰 금액에는 Trocador를 통한 즉시 교환소를 보여 드립니다.",
+  "Coin you send": "보내는 코인",
+  "Search a coin or network": "코인 또는 네트워크 검색",
+  "Popular. Type to search 2,500+ coins.": "인기 코인. 입력하면 2,500개 이상의 코인에서 검색합니다.",
+  "No coin matches.": "일치하는 코인이 없습니다.",
+  "Network:": "네트워크:",
+  "Also include this memo or tag (required):": "이 메모 또는 태그도 반드시 입력하세요:",
+  "News": "소식"
 }

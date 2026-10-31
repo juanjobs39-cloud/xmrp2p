@@ -65,14 +65,14 @@
   "quick_none": "No momento não há makers do MoneroP2P para {usdt} USDT{range}. Veja exchanges instantâneas via Trocador:",
   "quick_range": " (há ofertas de {min} a {max} USDT)",
   "quick_over": "O MoneroP2P permite até 100 USDT por swap. Para {usdt} USDT, veja exchanges instantâneas via Trocador:",
-  "quick_bad": "Digite um valor válido em USDT.",
-  "troc_title": "{n} exchanges instantâneas via Trocador para {usdt} USDT",
+  "quick_bad": "Digite um valor válido.",
+  "troc_title": "{n} exchanges instantâneas via Trocador para {usdt} {coin}",
   "troc_meta": "{provider} · KYC {kyc} · {kind}",
   "troc_fixed": "taxa fixa",
   "troc_float": "taxa variável",
   "troc_expired": "As cotações expiraram. Toque em «Trocar» para atualizá-las.",
-  "troc_chosen": "{provider}: você envia {usdt} USDT e recebe ≈ {xmr} XMR ({kind}).",
-  "troc_bad_refund": "O endereço de reembolso deve ser 0x… na Arbitrum One (ou deixe em branco).",
+  "troc_chosen": "{provider}: você envia {usdt} {coin} e recebe ≈ {xmr} XMR ({kind}).",
+  "troc_bad_refund": "O endereço de reembolso não é válido para {coin} (ou deixe em branco).",
   "troc_status_new": "Criada",
   "troc_status_waiting": "Aguardando seu depósito",
   "troc_status_confirming": "Confirmando seu depósito",
@@ -84,5 +84,7 @@
   "troc_status_refunded": "Reembolsada",
   "bad_address_main": "O endereço Monero não parece válido (começa com 4 ou 8 e tem 95 caracteres).",
   "over_cap": "O máximo por swap é {max} USDT.",
-  "confirm_real": "Você vai depositar {usdt} USDT reais no contrato do swap. Se algo falhar, o app orienta você a reembolsar. Continuar?"
+  "confirm_real": "Você vai depositar {usdt} USDT reais no contrato do swap. Se algo falhar, o app orienta você a reembolsar. Continuar?",
+  "quick_other": "Com {coin}, a troca é feita por uma exchange instantânea via Trocador (ela guarda os fundos durante a troca). Para um swap sem custódia com makers do MoneroP2P, use USDT na Arbitrum One.",
+  "troc_refund_label": "Endereço de reembolso de {coin} (opcional)"
 }

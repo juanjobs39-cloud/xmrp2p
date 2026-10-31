@@ -65,14 +65,14 @@
   "quick_none": "現在、{usdt} USDTに対応するMoneroP2Pのメイカーはいません{range}。Trocador経由のインスタント交換所はこちら：",
   "quick_range": "（{min}〜{max} USDTのオファーがあります）",
   "quick_over": "MoneroP2Pは1回のスワップが最大100 USDTです。{usdt} USDTなら、Trocador経由のインスタント交換所はこちら：",
-  "quick_bad": "正しいUSDTの金額を入力してください。",
-  "troc_title": "{usdt} USDTに対応するTrocador経由のインスタント交換所：{n}件",
+  "quick_bad": "正しい金額を入力してください。",
+  "troc_title": "{usdt} {coin}に対応するTrocador経由のインスタント交換所：{n}件",
   "troc_meta": "{provider} · KYC {kyc} · {kind}",
   "troc_fixed": "固定レート",
   "troc_float": "変動レート",
   "troc_expired": "見積もりの有効期限が切れました。「交換する」を押して更新してください。",
-  "troc_chosen": "{provider}：{usdt} USDTを支払い、約{xmr} XMRを受け取ります（{kind}）。",
-  "troc_bad_refund": "返金アドレスはArbitrum Oneの0x…アドレスにしてください（空欄でも可）。",
+  "troc_chosen": "{provider}：{usdt} {coin}を支払い、約{xmr} XMRを受け取ります（{kind}）。",
+  "troc_bad_refund": "返金アドレスが{coin}に対して正しくありません（空欄でも可）。",
   "troc_status_new": "作成済み",
   "troc_status_waiting": "入金を待っています",
   "troc_status_confirming": "入金を確認しています",
@@ -84,5 +84,7 @@
   "troc_status_refunded": "返金済み",
   "bad_address_main": "Moneroアドレスとして正しくないようです（4または8で始まる95文字）。",
   "over_cap": "1回のスワップは最大{max} USDTです。",
-  "confirm_real": "実際の{usdt} USDTをスワップのコントラクトに入金しようとしています。問題があれば、アプリが返金を案内します。続けますか？"
+  "confirm_real": "実際の{usdt} USDTをスワップのコントラクトに入金しようとしています。問題があれば、アプリが返金を案内します。続けますか？",
+  "quick_other": "{coin}の場合、交換はTrocador経由のインスタント交換所が行います（交換中は資金を預かります）。MoneroP2Pのメイカーとのノンカストディアルなスワップには、Arbitrum One上のUSDTを使ってください。",
+  "troc_refund_label": "{coin}の返金アドレス（任意）"
 }

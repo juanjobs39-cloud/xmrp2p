@@ -65,14 +65,14 @@
   "quick_none": "Сейчас нет мейкеров MoneroP2P для {usdt} USDT{range}. Вот мгновенные обменники через Trocador:",
   "quick_range": " (есть предложения от {min} до {max} USDT)",
   "quick_over": "MoneroP2P позволяет до 100 USDT за своп. Для {usdt} USDT вот мгновенные обменники через Trocador:",
-  "quick_bad": "Введите корректную сумму в USDT.",
-  "troc_title": "Мгновенных обменников через Trocador для {usdt} USDT: {n}",
+  "quick_bad": "Введите корректную сумму.",
+  "troc_title": "Мгновенных обменников через Trocador для {usdt} {coin}: {n}",
   "troc_meta": "{provider} · KYC {kyc} · {kind}",
   "troc_fixed": "фиксированный курс",
   "troc_float": "плавающий курс",
   "troc_expired": "Котировки устарели. Нажмите «Обменять», чтобы обновить их.",
-  "troc_chosen": "{provider}: вы отправляете {usdt} USDT и получаете ≈ {xmr} XMR ({kind}).",
-  "troc_bad_refund": "Адрес возврата должен быть 0x… в Arbitrum One (или оставьте поле пустым).",
+  "troc_chosen": "{provider}: вы отправляете {usdt} {coin} и получаете ≈ {xmr} XMR ({kind}).",
+  "troc_bad_refund": "Адрес возврата не подходит для {coin} (или оставьте поле пустым).",
   "troc_status_new": "Создан",
   "troc_status_waiting": "Ждём ваш депозит",
   "troc_status_confirming": "Подтверждаем ваш депозит",
@@ -84,5 +84,7 @@
   "troc_status_refunded": "Возвращён",
   "bad_address_main": "Адрес Monero выглядит неверным (начинается с 4 или 8, 95 символов).",
   "over_cap": "Максимум за своп — {max} USDT.",
-  "confirm_real": "Вы собираетесь внести {usdt} реальных USDT в контракт свопа. Если что-то пойдёт не так, приложение подскажет, как вернуть средства. Продолжить?"
+  "confirm_real": "Вы собираетесь внести {usdt} реальных USDT в контракт свопа. Если что-то пойдёт не так, приложение подскажет, как вернуть средства. Продолжить?",
+  "quick_other": "С {coin} обмен проводит мгновенный обменник через Trocador (он держит средства во время обмена). Для свопа без хранения средств с мейкерами MoneroP2P используйте USDT в Arbitrum One.",
+  "troc_refund_label": "Адрес возврата {coin} (необязательно)"
 }

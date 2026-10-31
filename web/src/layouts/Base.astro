@@ -83,7 +83,7 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
     <a class="skip" href="#contenido">{t("Saltar al contenido", "Skip to content")}</a>
     <header class="site">
       <div class="wrap">
-        <a class="brand" href={ROUTES.home[lang]}>{SITE.brand}</a>
+        <a class="brand" href={ROUTES.home[lang]}><img src="/favicon.svg" alt="" width="30" height="30" />{SITE.brand}</a>
         <nav aria-label={t("Principal", "Main")}>
           <ul>
             {NAV.map((n) => (

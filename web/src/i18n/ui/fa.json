@@ -228,5 +228,12 @@
   "Return leftover gas to my payout address": "بازگرداندن گس باقی‌مانده به آدرس دریافت من",
   "The maker needs JavaScript.": "میکر به جاوااسکریپت نیاز دارد.",
   "Non-custodial · no sign-up · up to 100 USDT per swap with MoneroP2P makers": "بدون امانت‌داری · بدون ثبت‌نام · با میکرهای MoneroP2P تا ۱۰۰ USDT در هر سواپ",
-  "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.": "بیش از ۱۰۰ USDT؟ هر مقداری را وارد کنید: برای مقادیر بیشتر، صرافی‌های فوری از طریق Trocador را نشان می‌دهیم."
+  "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.": "بیش از ۱۰۰ USDT؟ هر مقداری را وارد کنید: برای مقادیر بیشتر، صرافی‌های فوری از طریق Trocador را نشان می‌دهیم.",
+  "Coin you send": "رمزارزی که می‌فرستید",
+  "Search a coin or network": "جست‌وجوی رمزارز یا شبکه",
+  "Popular. Type to search 2,500+ coins.": "محبوب‌ها. برای جست‌وجو بین بیش از ۲۵۰۰ رمزارز تایپ کنید.",
+  "No coin matches.": "رمزارزی پیدا نشد.",
+  "Network:": "شبکه:",
+  "Also include this memo or tag (required):": "این memo یا tag را هم حتماً وارد کنید:",
+  "News": "تازه‌ها"
 }

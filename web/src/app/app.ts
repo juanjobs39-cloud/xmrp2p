@@ -5,8 +5,10 @@
  */
 import type { Address, Hex } from "viem";
 import { api, type MakerReply, type Offer } from "./api";
-import { DRAFT_UI, isDeployed, NETWORKS, POLICY, selectedNetwork, validXmrAddress, type EvmNetwork } from "./config";
+import { API_URL, DRAFT_UI, isDeployed, NETWORKS, POLICY, selectedNetwork, validXmrAddress, type EvmNetwork } from "./config";
 import { availableRange, quotesFor } from "./quick";
+import { coinById, coinId, DEFAULT_COIN, iconEl, networkName, type Coin } from "./coins";
+import { mountCoinPicker } from "./coin-picker";
 import type { TrocadorQuote, TrocadorRates, TrocadorTrade } from "./api";
 import { decide, type Action, type XmrCheck } from "./decide";
 import { Evm, type WalletStep } from "./evm";
@@ -130,6 +132,16 @@ export class SwapApp {
       void this.guard(() => this.trocCreate(), (e as SubmitEvent).submitter);
     });
     $("troc-copy").addEventListener("click", () => void navigator.clipboard?.writeText($("troc-addr").textContent ?? ""));
+    const pick = (c: Coin) => {
+      this.quickCoin = c;
+      $("coin-ticker").textContent = $("unit-ticker").textContent = c.ticker.toUpperCase();
+      $("coin-icon").replaceChildren(iconEl(c.ticker, c.img, API_URL));
+      $("unit-icon").replaceChildren(iconEl(c.ticker, c.img, API_URL, 26));
+      $("coin-name").textContent = $("unit-net").textContent = networkName(c);
+      $("quick-more").hidden = this.net.testnet || coinId(c) !== DEFAULT_COIN;
+    };
+    mountCoinPicker(pick);
+    pick(coinById(new URLSearchParams(location.search).get("coin") ?? DEFAULT_COIN));
   }
 
   // ------------------------------------------------------------------ Trocador (API)
@@ -139,10 +151,15 @@ export class SwapApp {
   private trocTimer: ReturnType<typeof setInterval> | null = null;
 
   /** Muestra las cotizaciones de Trocador en la lista. Devuelve false si no hay (se usa el widget). */
-  private async trocadorList(raw: string, why: string): Promise<boolean> {
+  private trocCoin: Coin = coinById(DEFAULT_COIN);
+  /** Moneda elegida en la vista simple (USDT en Arbitrum por defecto). */
+  private quickCoin: Coin = coinById(DEFAULT_COIN);
+
+  private async trocadorList(raw: string, why: string, coin: Coin): Promise<boolean> {
     let rates: TrocadorRates;
     try {
-      rates = await api.trocadorRates(raw);
+      rates = await api.trocadorRates(raw, coin.ticker, coin.network);
+      this.trocCoin = coin;
     } catch {
       return false; // API apagada o caída: queda el widget
     }
@@ -151,7 +168,7 @@ export class SwapApp {
     $("quick-why").textContent = why;
     $("quick-why").hidden = false;
     $("quick-troc-note").hidden = false;
-    $("quick-title").textContent = t(this.lang, "troc_title", { n: rates.quotes.length, usdt: raw });
+    $("quick-title").textContent = t(this.lang, "troc_title", { n: rates.quotes.length, usdt: raw, coin: coin.label });
     $("quick-list").replaceChildren(
       ...rates.quotes.map((q, i) => {
         const li = document.createElement("li");
@@ -163,6 +180,16 @@ export class SwapApp {
         const meta = document.createElement("p");
         meta.className = "meta";
         meta.textContent = t(this.lang, "troc_meta", { provider: q.provider, kyc: q.kycrating, kind: t(this.lang, q.fixed ? "troc_fixed" : "troc_float") });
+        if (q.logo) {
+          const logo = document.createElement("img");
+          logo.className = "prov-logo";
+          logo.src = `${API_URL}/v1/trocador/img?u=${encodeURIComponent(q.logo)}`;
+          logo.alt = "";
+          logo.width = logo.height = 18;
+          logo.loading = "lazy";
+          logo.addEventListener("error", () => logo.replaceWith(iconEl(q.provider, undefined, "", 18)), { once: true });
+          meta.prepend(logo);
+        }
         left.append(amount, meta);
         if (i === 0) {
           const tag = document.createElement("span");
@@ -194,12 +221,15 @@ export class SwapApp {
     $("troc-chosen").textContent = t(this.lang, "troc_chosen", {
       provider: q.provider,
       usdt: rates.usdt,
+      coin: this.trocCoin.label,
       xmr: Number(q.amount_to).toFixed(6),
       kind: t(this.lang, q.fixed ? "troc_fixed" : "troc_float"),
     });
     $("quick-results").hidden = true;
     $("form-troc").hidden = false;
     $("troc-deposit").hidden = true;
+    $("troc-refund-label").textContent = t(this.lang, "troc_refund_label", { coin: this.trocCoin.label });
+    $<HTMLInputElement>("troc-refund").placeholder = this.trocCoin.evm ? "0x…" : "";
     $("quick-troc-pay").hidden = false;
     $("quick-troc-pay").scrollIntoView({ block: "start", behavior: "smooth" });
     $<HTMLInputElement>("troc-address").focus();
@@ -213,11 +243,27 @@ export class SwapApp {
     const address = $<HTMLInputElement>("troc-address").value.trim();
     const refund = $<HTMLInputElement>("troc-refund").value.trim();
     if (!validXmrAddress(address, this.net.monero)) throw new Error(t(this.lang, "bad_address_main"));
-    if (refund && !/^0x[0-9a-fA-F]{40}$/.test(refund)) throw new Error(t(this.lang, "troc_bad_refund"));
-    const trade = await api.trocadorCreate({ rate_id: rates.rate_id, provider: q.provider, fixed: q.fixed, usdt: rates.usdt, address, ...(refund ? { refund } : {}) });
+    const coin = this.trocCoin;
+    if (refund && (refund.startsWith("0x") ? !/^0x[0-9a-fA-F]{40}$/.test(refund) : !/^[A-Za-z0-9:_.-]{10,128}$/.test(refund)))
+      throw new Error(t(this.lang, "troc_bad_refund", { coin: coin.label }));
+    const trade = await api.trocadorCreate({
+      rate_id: rates.rate_id,
+      provider: q.provider,
+      fixed: q.fixed,
+      amount: rates.usdt,
+      ticker: coin.ticker,
+      network: coin.network,
+      address,
+      ...(refund ? { refund } : {}),
+    });
     this.trocRates = null; // la cotización ya se usó
     $("form-troc").hidden = true;
     $("troc-amount").textContent = trade.amount_from || rates.usdt;
+    $("troc-ticker").textContent = coin.ticker.toUpperCase();
+    $("troc-net").textContent = networkName(coin);
+    const memo = trade.address_provider_memo && trade.address_provider_memo !== "0" ? trade.address_provider_memo : "";
+    $("troc-memo").textContent = memo;
+    $("troc-memo-box").hidden = !memo;
     $("troc-addr").textContent = trade.address_provider;
     $("troc-provider").textContent = trade.provider;
     $("troc-id").textContent = trade.trade_id;
@@ -245,8 +291,10 @@ export class SwapApp {
   private async quickSearch(): Promise<void> {
     const raw = $<HTMLInputElement>("quick-usdt").value.trim().replace(",", ".");
     const usdt = Number(raw);
-    if (!/^\d+(\.\d{1,6})?$/.test(raw) || !(usdt > 0)) throw new Error(t(this.lang, "quick_bad"));
-    await this.loadOffers(); // ofertas frescas en cada búsqueda
+    if (!/^\d+(\.\d{1,8})?$/.test(raw) || !(usdt > 0)) throw new Error(t(this.lang, "quick_bad"));
+    const coin = this.net.testnet ? coinById(DEFAULT_COIN) : this.quickCoin;
+    const viaMakers = coinId(coin) === DEFAULT_COIN;
+    if (viaMakers) await this.loadOffers(); // ofertas frescas en cada búsqueda
     $("banner").hidden = true;
     const results = $("quick-results");
     const list = $("quick-list");
@@ -257,6 +305,11 @@ export class SwapApp {
     $("quick-why").hidden = true;
     $("quick-troc-note").hidden = true;
     const cap = this.net.maxUsdt;
+    // Otra moneda: no hay makers, directo a los exchanges instantáneos de Trocador.
+    if (!viaMakers) {
+      if (await this.trocadorList(raw, t(this.lang, "quick_other", { coin: coin.label }), coin)) return;
+      throw new Error(t(this.lang, "backend_error"));
+    }
     const rows = cap && usdt > cap ? [] : quotesFor(this.offers, usdt);
     if (!rows.length) {
       const range = availableRange(this.offers);
@@ -270,7 +323,7 @@ export class SwapApp {
           ? t(this.lang, "quick_over", { usdt: raw })
           : t(this.lang, "quick_none", { usdt: raw, range: range ? t(this.lang, "quick_range", { min: range.min, max: range.max }) : "" });
       // Solo se consulta a Trocador cuando ningún maker cubre el monto (lo acordado con ellos).
-      if (await this.trocadorList(raw, why)) return;
+      if (await this.trocadorList(raw, why, coin)) return;
       $("quick-trocador-why").textContent = why;
       // El widget llega con USDT (Arbitrum) → XMR y el monto ya puestos.
       const frame = $<HTMLIFrameElement>("trocador-frame");

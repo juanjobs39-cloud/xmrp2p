@@ -31,7 +31,7 @@ const csp = [
   "script-src 'self' 'wasm-unsafe-eval'",
   "worker-src 'self' blob:",
   `connect-src 'self' ${hosts.join(" ")} https: http://127.0.0.1:* http://localhost:*`,
-  "img-src 'self' data:",
+  `img-src 'self' data: ${SITE.apiUrl ? new URL(SITE.apiUrl).origin : ""}`,
   "style-src 'self'",
   "frame-src https://trocador.app",
   "object-src 'none'",
@@ -69,14 +69,26 @@ const softwareLd = {
       <section id="step-quick" class="quick">
         <form id="form-quick" class="quick-form">
           <label for="quick-usdt">{t("Envías", "You send")}</label>
+          <div class="coin-pick only-real">
+            <button type="button" id="coin-btn" class="coin-btn" aria-expanded="false" aria-controls="coin-panel" aria-label={t("Moneda que envías", "Coin you send")}>
+              <span class="coin-sel"><span id="coin-icon"><img class="coin-ico" src="/coins/usdt.svg" alt="" width="22" height="22" /></span><strong id="coin-ticker">USDT</strong> <small id="coin-name">Arbitrum One</small></span>
+              <span aria-hidden="true">▾</span>
+            </button>
+            <div id="coin-panel" class="coin-panel" hidden>
+              <input id="coin-search" type="search" autocomplete="off" spellcheck="false" placeholder={t("Busca una moneda o red", "Search a coin or network")} aria-label={t("Busca una moneda o red", "Search a coin or network")} />
+              <p id="coin-hint" class="meta">{t("Populares. Escribe para buscar entre más de 2 500 monedas.", "Popular. Type to search 2,500+ coins.")}</p>
+              <ul id="coin-list" class="coin-list" data-none={t("Ninguna moneda coincide.", "No coin matches.")}></ul>
+            </div>
+          </div>
           <div class="quick-row">
             <input id="quick-usdt" type="text" inputmode="decimal" autocomplete="off" placeholder="50" required />
-            <span class="quick-unit">USDT <small>Arbitrum One</small></span>
+            <span class="quick-unit only-test">USDT <small>Arbitrum Sepolia</small></span>
+            <span class="quick-unit only-real"><span class="unit-top"><span id="unit-icon"><img class="coin-ico" src="/coins/usdt.svg" alt="" width="26" height="26" /></span><span id="unit-ticker">USDT</span></span> <small id="unit-net">Arbitrum One</small></span>
           </div>
-          <p class="quick-to">{t("Recibes", "You get")} <strong>XMR</strong> <small>Monero</small></p>
+          <p class="quick-to">{t("Recibes", "You get")} <img class="coin-ico" src="/coins/xmr.svg" alt="" width="20" height="20" /> <strong>XMR</strong> <small>Monero</small></p>
           <button class="btn big" type="submit">{t("Intercambiar", "Exchange")}</button>
           <p class="meta">{t("Sin custodia · sin registro · hasta 100 USDT por swap con makers de MoneroP2P", "Non-custodial · no sign-up · up to 100 USDT per swap with MoneroP2P makers")}</p>
-          <p class="quick-more only-real">{t("¿Más de 100 USDT? Escribe el monto que quieras: para montos mayores te mostramos exchanges instantáneos vía Trocador.", "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.")}</p>
+          <p id="quick-more" class="quick-more only-real">{t("¿Más de 100 USDT? Escribe el monto que quieras: para montos mayores te mostramos exchanges instantáneos vía Trocador.", "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.")}</p>
         </form>
         <div id="quick-results" hidden>
           <p id="quick-why" class="notice" hidden></p>
@@ -90,13 +102,17 @@ const softwareLd = {
           <form id="form-troc" class="quick-form">
             <label for="troc-address">{t("Tu dirección de Monero (ahí recibes el XMR)", "Your Monero address (where you get the XMR)")}</label>
             <input id="troc-address" type="text" autocomplete="off" spellcheck="false" required />
-            <label for="troc-refund">{t("Dirección de reembolso de USDT en Arbitrum One (opcional)", "USDT refund address on Arbitrum One (optional)")}</label>
+            <label for="troc-refund" id="troc-refund-label">{t("Dirección de reembolso de USDT en Arbitrum One (opcional)", "USDT refund address on Arbitrum One (optional)")}</label>
             <input id="troc-refund" type="text" autocomplete="off" spellcheck="false" placeholder="0x…" />
             <button class="btn big" type="submit">{t("Crear intercambio", "Create exchange")}</button>
           </form>
           <div id="troc-deposit" class="quick-form" hidden>
-            <p>{t("Envía exactamente", "Send exactly")} <strong><span id="troc-amount"></span> USDT</strong> <Fragment set:html={t("en la red <strong>Arbitrum One</strong> a esta dirección:", "on the <strong>Arbitrum One</strong> network to this address:")} /></p>
+            <p>{t("Envía exactamente", "Send exactly")} <strong><span id="troc-amount"></span> <span id="troc-ticker">USDT</span></strong> · {t("Red:", "Network:")} <strong id="troc-net">Arbitrum One</strong></p>
             <p class="troc-addr"><code id="troc-addr"></code></p>
+            <div id="troc-memo-box" hidden>
+              <p><strong>{t("Incluye también este memo o tag (obligatorio):", "Also include this memo or tag (required):")}</strong></p>
+              <p class="troc-addr"><code id="troc-memo"></code></p>
+            </div>
             <button id="troc-copy" class="btn secondary" type="button">{t("Copiar dirección", "Copy address")}</button>
             <p>{t("Estado:", "Status:")} <strong id="troc-status"></strong></p>
             <p class="meta">{t("Exchange:", "Exchange:")} <span id="troc-provider"></span> · ID <code id="troc-id"></code><br />{t("Guarda el ID. Si algo falla, escribe al soporte de Trocador (@TrocadorSupportBot en Telegram o support@trocador.app) con ese ID. El estado se actualiza solo cada minuto.", "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes every minute.")}</p>

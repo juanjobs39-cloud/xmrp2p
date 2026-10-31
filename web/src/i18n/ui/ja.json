@@ -228,5 +228,12 @@
   "Return leftover gas to my payout address": "残りのガスを受取アドレスに戻す",
   "The maker needs JavaScript.": "メイカーにはJavaScriptが必要です。",
   "Non-custodial · no sign-up · up to 100 USDT per swap with MoneroP2P makers": "ノンカストディアル・登録不要・MoneroP2Pのメイカーとは1回最大100 USDT",
-  "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.": "100 USDTを超えますか？好きな金額を入力してください。大きな金額にはTrocador経由のインスタント交換所を表示します。"
+  "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.": "100 USDTを超えますか？好きな金額を入力してください。大きな金額にはTrocador経由のインスタント交換所を表示します。",
+  "Coin you send": "支払う通貨",
+  "Search a coin or network": "通貨またはネットワークを検索",
+  "Popular. Type to search 2,500+ coins.": "人気の通貨。入力すると2,500種類以上から検索できます。",
+  "No coin matches.": "一致する通貨がありません。",
+  "Network:": "ネットワーク：",
+  "Also include this memo or tag (required):": "このメモまたはタグも必ず入力してください：",
+  "News": "お知らせ"
 }

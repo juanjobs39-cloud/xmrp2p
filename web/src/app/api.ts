@@ -28,6 +28,7 @@ export interface MakerReply {
 
 export interface TrocadorQuote {
   provider: string;
+  logo?: string;
   amount_to: string;
   kycrating: string;
   fixed: boolean;
@@ -37,13 +38,28 @@ export interface TrocadorQuote {
 
 export interface TrocadorRates {
   rate_id: string;
+  /** Monto enviado, en la moneda elegida. */
   usdt: string;
+  ticker: string;
+  network: string;
   quotes: TrocadorQuote[];
   created_at: number;
 }
 
+export interface TrocadorCoin {
+  ticker: string;
+  network: string;
+  name: string;
+  memo: boolean;
+  min: number;
+  max: number;
+  img: string;
+}
+
 export interface TrocadorTrade {
   trade_id: string;
+  ticker_from: string;
+  network_from: string;
   provider: string;
   status: string;
   amount_from: string;
@@ -78,8 +94,10 @@ export const api = {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ offer_id, usdt, taker_message, ...(ref ? { ref } : {}) }),
     }),
-  trocadorRates: (usdt: string) => call<TrocadorRates>(`/v1/trocador/rates?usdt=${encodeURIComponent(usdt)}`),
-  trocadorCreate: (body: { rate_id: string; provider: string; fixed: boolean; usdt: string; address: string; refund?: string }) =>
+  trocadorCoins: () => call<TrocadorCoin[]>("/v1/trocador/coins?v=2"),
+  trocadorRates: (amount: string, ticker: string, network: string) =>
+    call<TrocadorRates>(`/v1/trocador/rates?amount=${encodeURIComponent(amount)}&ticker=${encodeURIComponent(ticker)}&network=${encodeURIComponent(network)}`),
+  trocadorCreate: (body: { rate_id: string; provider: string; fixed: boolean; amount: string; ticker: string; network: string; address: string; refund?: string }) =>
     call<TrocadorTrade>("/v1/trocador/trades", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
   trocadorTrade: (id: string) => call<TrocadorTrade>(`/v1/trocador/trades/${encodeURIComponent(id)}`),
   events: (room: string, token: string, after = 0) =>

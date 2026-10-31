@@ -65,14 +65,14 @@
   "quick_none": "目前没有可兑换 {usdt} USDT 的 MoneroP2P 做市方{range}。以下是通过 Trocador 的即时兑换平台：",
   "quick_range": "（现有报价范围为 {min} 至 {max} USDT）",
   "quick_over": "MoneroP2P 每笔兑换最多 100 USDT。对于 {usdt} USDT，以下是通过 Trocador 的即时兑换平台：",
-  "quick_bad": "请输入有效的 USDT 金额。",
-  "troc_title": "{usdt} USDT 共有 {n} 个通过 Trocador 的即时兑换平台",
+  "quick_bad": "请输入有效的金额。",
+  "troc_title": "{usdt} {coin} 共有 {n} 个通过 Trocador 的即时兑换平台",
   "troc_meta": "{provider} · KYC {kyc} · {kind}",
   "troc_fixed": "固定汇率",
   "troc_float": "浮动汇率",
   "troc_expired": "报价已过期。请点击「兑换」刷新。",
-  "troc_chosen": "{provider}：你支付 {usdt} USDT，约得到 {xmr} XMR（{kind}）。",
-  "troc_bad_refund": "退款地址必须是 Arbitrum One 上的 0x… 地址（或留空）。",
+  "troc_chosen": "{provider}：你支付 {usdt} {coin}，约得到 {xmr} XMR（{kind}）。",
+  "troc_bad_refund": "该退款地址不适用于 {coin}（或留空）。",
   "troc_status_new": "已创建",
   "troc_status_waiting": "等待你的存入",
   "troc_status_confirming": "正在确认你的存入",
@@ -84,5 +84,7 @@
   "troc_status_refunded": "已退款",
   "bad_address_main": "该门罗币地址看起来无效（以 4 或 8 开头，共 95 个字符）。",
   "over_cap": "每笔兑换最多 {max} USDT。",
-  "confirm_real": "你即将把 {usdt} 真实 USDT 存入兑换合约。如果出现问题，应用会引导你退款。继续吗？"
+  "confirm_real": "你即将把 {usdt} 真实 USDT 存入兑换合约。如果出现问题，应用会引导你退款。继续吗？",
+  "quick_other": "使用 {coin} 时，兑换由通过 Trocador 的即时兑换平台完成（兑换期间由其保管资金）。如需与 MoneroP2P 做市方进行非托管兑换，请使用 Arbitrum One 上的 USDT。",
+  "troc_refund_label": "{coin} 退款地址（可选）"
 }

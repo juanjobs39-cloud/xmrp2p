@@ -65,14 +65,14 @@
   "quick_none": "در حال حاضر میکری از MoneroP2P برای {usdt} USDT نیست{range}. این‌ها صرافی‌های فوری از طریق Trocador هستند:",
   "quick_range": " (پیشنهادها از {min} تا {max} USDT هستند)",
   "quick_over": "MoneroP2P حداکثر ۱۰۰ USDT در هر سواپ را مجاز می‌داند. برای {usdt} USDT، این‌ها صرافی‌های فوری از طریق Trocador هستند:",
-  "quick_bad": "مقدار معتبری به USDT وارد کنید.",
-  "troc_title": "{n} صرافی فوری از طریق Trocador برای {usdt} USDT",
+  "quick_bad": "مقدار معتبری وارد کنید.",
+  "troc_title": "{n} صرافی فوری از طریق Trocador برای {usdt} {coin}",
   "troc_meta": "{provider} · KYC {kyc} · {kind}",
   "troc_fixed": "نرخ ثابت",
   "troc_float": "نرخ شناور",
   "troc_expired": "پیشنهادهای قیمت منقضی شدند. برای به‌روزرسانی، «تبدیل» را بزنید.",
-  "troc_chosen": "{provider}: {usdt} USDT می‌فرستید و حدود {xmr} XMR دریافت می‌کنید ({kind}).",
-  "troc_bad_refund": "آدرس بازپرداخت باید یک آدرس 0x… روی Arbitrum One باشد (یا خالی بگذارید).",
+  "troc_chosen": "{provider}: {usdt} {coin} می‌فرستید و حدود {xmr} XMR دریافت می‌کنید ({kind}).",
+  "troc_bad_refund": "آدرس بازپرداخت برای {coin} معتبر نیست (یا خالی بگذارید).",
   "troc_status_new": "ایجاد شد",
   "troc_status_waiting": "در انتظار واریز شما",
   "troc_status_confirming": "در حال تأیید واریز شما",
@@ -84,5 +84,7 @@
   "troc_status_refunded": "بازپرداخت شد",
   "bad_address_main": "این آدرس مونرو معتبر به نظر نمی‌رسد (با 4 یا 8 شروع می‌شود و 95 نویسه دارد).",
   "over_cap": "حداکثر هر سواپ {max} USDT است.",
-  "confirm_real": "در حال واریز {usdt} USDT واقعی به قرارداد سواپ هستید. اگر مشکلی پیش بیاید، برنامه شما را برای بازپرداخت راهنمایی می‌کند. ادامه می‌دهید؟"
+  "confirm_real": "در حال واریز {usdt} USDT واقعی به قرارداد سواپ هستید. اگر مشکلی پیش بیاید، برنامه شما را برای بازپرداخت راهنمایی می‌کند. ادامه می‌دهید؟",
+  "quick_other": "با {coin}، تبدیل را یک صرافی فوری از طریق Trocador انجام می‌دهد (در طول تبدیل دارایی نزد آن است). برای سواپ بدون امانت‌داری با میکرهای MoneroP2P، از USDT روی Arbitrum One استفاده کنید.",
+  "troc_refund_label": "آدرس بازپرداخت {coin} (اختیاری)"
 }

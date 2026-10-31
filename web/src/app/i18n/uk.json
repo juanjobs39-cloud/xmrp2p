@@ -65,14 +65,14 @@
   "quick_none": "Зараз немає мейкерів MoneroP2P для {usdt} USDT{range}. Ось миттєві обмінники через Trocador:",
   "quick_range": " (є пропозиції від {min} до {max} USDT)",
   "quick_over": "MoneroP2P дозволяє до 100 USDT за своп. Для {usdt} USDT ось миттєві обмінники через Trocador:",
-  "quick_bad": "Введіть коректну суму в USDT.",
-  "troc_title": "Миттєвих обмінників через Trocador для {usdt} USDT: {n}",
+  "quick_bad": "Введіть коректну суму.",
+  "troc_title": "Миттєвих обмінників через Trocador для {usdt} {coin}: {n}",
   "troc_meta": "{provider} · KYC {kyc} · {kind}",
   "troc_fixed": "фіксований курс",
   "troc_float": "плаваючий курс",
   "troc_expired": "Котирування застаріли. Натисніть «Обміняти», щоб оновити їх.",
-  "troc_chosen": "{provider}: ви надсилаєте {usdt} USDT і отримуєте ≈ {xmr} XMR ({kind}).",
-  "troc_bad_refund": "Адреса повернення має бути 0x… в Arbitrum One (або залиште поле порожнім).",
+  "troc_chosen": "{provider}: ви надсилаєте {usdt} {coin} і отримуєте ≈ {xmr} XMR ({kind}).",
+  "troc_bad_refund": "Адреса повернення не підходить для {coin} (або залиште поле порожнім).",
   "troc_status_new": "Створено",
   "troc_status_waiting": "Чекаємо на ваш депозит",
   "troc_status_confirming": "Підтверджуємо ваш депозит",
@@ -84,5 +84,7 @@
   "troc_status_refunded": "Повернено",
   "bad_address_main": "Адреса Monero виглядає неправильною (починається з 4 або 8, 95 символів).",
   "over_cap": "Максимум за своп — {max} USDT.",
-  "confirm_real": "Ви збираєтеся внести {usdt} реальних USDT у контракт свопу. Якщо щось піде не так, застосунок підкаже, як повернути кошти. Продовжити?"
+  "confirm_real": "Ви збираєтеся внести {usdt} реальних USDT у контракт свопу. Якщо щось піде не так, застосунок підкаже, як повернути кошти. Продовжити?",
+  "quick_other": "З {coin} обмін проводить миттєвий обмінник через Trocador (він тримає кошти під час обміну). Для свопу без зберігання коштів із мейкерами MoneroP2P використовуйте USDT в Arbitrum One.",
+  "troc_refund_label": "Адреса повернення {coin} (необов’язково)"
 }

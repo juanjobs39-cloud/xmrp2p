@@ -65,14 +65,14 @@
   "quick_none": "अभी {usdt} USDT के लिए MoneroP2P मेकर नहीं हैं{range}. Trocador के ज़रिए ये इंस्टेंट एक्सचेंज हैं:",
   "quick_range": " ({min} से {max} USDT तक के ऑफ़र हैं)",
   "quick_over": "MoneroP2P हर स्वैप में 100 USDT तक की अनुमति देता है. {usdt} USDT के लिए Trocador के ज़रिए ये इंस्टेंट एक्सचेंज हैं:",
-  "quick_bad": "USDT की सही राशि डालें.",
-  "troc_title": "{usdt} USDT के लिए Trocador के ज़रिए {n} इंस्टेंट एक्सचेंज",
+  "quick_bad": "सही राशि डालें.",
+  "troc_title": "{usdt} {coin} के लिए Trocador के ज़रिए {n} इंस्टेंट एक्सचेंज",
   "troc_meta": "{provider} · KYC {kyc} · {kind}",
   "troc_fixed": "फ़िक्स्ड दर",
   "troc_float": "फ़्लोटिंग दर",
   "troc_expired": "कोटेशन की समय-सीमा ख़त्म हो गई. उन्हें ताज़ा करने के लिए «बदलें» दबाएँ.",
-  "troc_chosen": "{provider}: आप {usdt} USDT भेजते हैं और ≈ {xmr} XMR पाते हैं ({kind}).",
-  "troc_bad_refund": "रिफ़ंड पता Arbitrum One पर 0x… होना चाहिए (या ख़ाली छोड़ दें).",
+  "troc_chosen": "{provider}: आप {usdt} {coin} भेजते हैं और ≈ {xmr} XMR पाते हैं ({kind}).",
+  "troc_bad_refund": "रिफ़ंड पता {coin} के लिए सही नहीं है (या ख़ाली छोड़ दें).",
   "troc_status_new": "बनाया गया",
   "troc_status_waiting": "आपके जमा का इंतज़ार",
   "troc_status_confirming": "आपके जमा की पुष्टि हो रही है",
@@ -84,5 +84,7 @@
   "troc_status_refunded": "रिफ़ंड हो गया",
   "bad_address_main": "यह मोनेरो पता सही नहीं लगता (4 या 8 से शुरू, 95 अक्षर).",
   "over_cap": "हर स्वैप में अधिकतम {max} USDT.",
-  "confirm_real": "आप स्वैप कॉन्ट्रैक्ट में {usdt} असली USDT जमा करने वाले हैं. कुछ गड़बड़ हो तो ऐप आपको रिफ़ंड का रास्ता बताएगा. जारी रखें?"
+  "confirm_real": "आप स्वैप कॉन्ट्रैक्ट में {usdt} असली USDT जमा करने वाले हैं. कुछ गड़बड़ हो तो ऐप आपको रिफ़ंड का रास्ता बताएगा. जारी रखें?",
+  "quick_other": "{coin} के साथ बदलाव Trocador के ज़रिए एक इंस्टेंट एक्सचेंज करता है (बदलाव के दौरान फ़ंड उसके पास रहते हैं). MoneroP2P मेकरों के साथ बिना कस्टडी वाले स्वैप के लिए Arbitrum One पर USDT इस्तेमाल करें.",
+  "troc_refund_label": "{coin} रिफ़ंड पता (वैकल्पिक)"
 }

@@ -228,5 +228,12 @@
   "Return leftover gas to my payout address": "बची हुई गैस मेरे भुगतान पते पर लौटाएँ",
   "The maker needs JavaScript.": "मेकर को JavaScript चाहिए.",
   "Non-custodial · no sign-up · up to 100 USDT per swap with MoneroP2P makers": "नॉन-कस्टोडियल · बिना साइन-अप · MoneroP2P मेकरों के साथ हर स्वैप में 100 USDT तक",
-  "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.": "100 USDT से ज़्यादा? कोई भी राशि डालें: बड़ी राशियों के लिए हम Trocador के ज़रिए इंस्टेंट एक्सचेंज दिखाते हैं."
+  "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.": "100 USDT से ज़्यादा? कोई भी राशि डालें: बड़ी राशियों के लिए हम Trocador के ज़रिए इंस्टेंट एक्सचेंज दिखाते हैं.",
+  "Coin you send": "आप कौन-सा कॉइन भेजते हैं",
+  "Search a coin or network": "कॉइन या नेटवर्क खोजें",
+  "Popular. Type to search 2,500+ coins.": "लोकप्रिय. 2,500 से ज़्यादा कॉइन में खोजने के लिए लिखें.",
+  "No coin matches.": "कोई कॉइन नहीं मिला.",
+  "Network:": "नेटवर्क:",
+  "Also include this memo or tag (required):": "यह memo या tag भी ज़रूर डालें:",
+  "News": "ख़बरें"
 }

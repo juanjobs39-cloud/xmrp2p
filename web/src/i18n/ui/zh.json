@@ -228,5 +228,12 @@
   "Return leftover gas to my payout address": "把剩余 Gas 退回我的收款地址",
   "The maker needs JavaScript.": "做市方页面需要 JavaScript。",
   "Non-custodial · no sign-up · up to 100 USDT per swap with MoneroP2P makers": "非托管 · 无需注册 · 与 MoneroP2P 做市方兑换每笔最多 100 USDT",
-  "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.": "超过 100 USDT？输入任意金额即可：更大金额我们会为你显示通过 Trocador 的即时兑换平台。"
+  "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.": "超过 100 USDT？输入任意金额即可：更大金额我们会为你显示通过 Trocador 的即时兑换平台。",
+  "Coin you send": "你支付的币种",
+  "Search a coin or network": "搜索币种或网络",
+  "Popular. Type to search 2,500+ coins.": "热门币种。输入即可在 2500 多种币中搜索。",
+  "No coin matches.": "没有匹配的币种。",
+  "Network:": "网络：",
+  "Also include this memo or tag (required):": "还必须填写此 memo 或 tag：",
+  "News": "动态"
 }

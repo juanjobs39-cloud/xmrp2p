@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#e2591b"/><path d="M14 40V22l18 16 18-16v18" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <g transform="translate(5 0) scale(2.7)">
+    <circle cx="10" cy="10" r="10" fill="#fff"/>
+    <path d="M10.002 0C4.47713 0 0 4.42485 0 9.88032C0 10.9706 0.177312 12.0211 0.507757 13H3.49788V4.68748L10.002 11.1099L16.5021 4.68748V13H19.4922C19.8227 12.0171 20 10.9706 20 9.88032C20.004 4.42485 15.5269 0 10.002 0Z" fill="#FF6600"/>
+    <path d="M8.42574 12.8093L5.43847 10V15.2434H1C2.85007 18.0966 6.18953 20 10 20C13.8105 20 17.1499 18.0966 19 15.2434H14.5615V10L11.5743 12.8093L10 14.2897L8.42574 12.8093Z" fill="#5E5E5E"/>
+  </g>
+  <rect x="9" y="43" width="46" height="20" rx="7" fill="#1b1b1b" stroke="#fff" stroke-width="2"/>
+  <text x="32" y="58.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="15.5" font-weight="700" fill="#fff" letter-spacing="0.5">P2P</text>
+</svg>
