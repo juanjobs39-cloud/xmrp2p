@@ -75,7 +75,7 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml" />
     <meta name="theme-color" content="#e2591b" />
     {ld.map((o) => <script type="application/ld+json" set:html={JSON.stringify(o)} />)}
   </head>
@@ -83,7 +83,7 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
     <a class="skip" href="#contenido">{t("Saltar al contenido", "Skip to content")}</a>
     <header class="site">
       <div class="wrap">
-        <a class="brand" href={ROUTES.home[lang]}><img src="/favicon.svg" alt="" width="30" height="30" />{SITE.brand}</a>
+        <a class="brand" href={ROUTES.home[lang]}>{SITE.brand}</a>
         <nav aria-label={t("Principal", "Main")}>
           <ul>
             {NAV.map((n) => (
