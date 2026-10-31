@@ -71,7 +71,7 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
     <meta property="og:site_name" content={SITE.brand} />
     <meta property="og:locale" content={LANG_INFO[lang].og} />
     {others.map((l) => <meta property="og:locale:alternate" content={LANG_INFO[l].og} />)}
-    <meta property="og:image" content={new URL("/og.png", site).href} />
+    <meta property="og:image" content={new URL("/og.png?v=2", site).href} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />

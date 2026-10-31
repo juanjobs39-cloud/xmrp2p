@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#161616"/>
+      <stop offset="1" stop-color="#2b1709"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.22" cy="0.45" r="0.45">
+      <stop offset="0" stop-color="#ff6600" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#ff6600" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Logo de Monero con la etiqueta P2P -->
+  <g transform="translate(95 130) scale(14)">
+    <circle cx="10" cy="10" r="10" fill="#fff"/>
+    <path d="M10.002 0C4.47713 0 0 4.42485 0 9.88032C0 10.9706 0.177312 12.0211 0.507757 13H3.49788V4.68748L10.002 11.1099L16.5021 4.68748V13H19.4922C19.8227 12.0171 20 10.9706 20 9.88032C20.004 4.42485 15.5269 0 10.002 0Z" fill="#FF6600"/>
+    <path d="M8.42574 12.8093L5.43847 10V15.2434H1C2.85007 18.0966 6.18953 20 10 20C13.8105 20 17.1499 18.0966 19 15.2434H14.5615V10L11.5743 12.8093L10 14.2897L8.42574 12.8093Z" fill="#5E5E5E"/>
+  </g>
+  <rect x="140" y="370" width="190" height="78" rx="22" fill="#1b1b1b" stroke="#fff" stroke-width="6"/>
+  <text x="235" y="427" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="700" fill="#fff" letter-spacing="2">P2P</text>
+
+  <!-- Texto -->
+  <text x="500" y="230" font-family="Arial, Helvetica, sans-serif" font-size="86" font-weight="700" fill="#fff">MoneroP2P</text>
+  <text x="502" y="300" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="700" fill="#ff7a1a">Swap USDT &amp; crypto for Monero</text>
+  <text x="502" y="362" font-family="Arial, Helvetica, sans-serif" font-size="30" fill="#d8d8d8">Non-custodial atomic swaps for USDT.</text>
+  <text x="502" y="404" font-family="Arial, Helvetica, sans-serif" font-size="30" fill="#d8d8d8">Any other crypto via instant exchanges.</text>
+  <text x="502" y="446" font-family="Arial, Helvetica, sans-serif" font-size="30" fill="#d8d8d8">No account · Open source · 10 languages.</text>
+  <rect x="502" y="490" width="300" height="56" rx="28" fill="#ff6600"/>
+  <text x="652" y="527" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" fill="#fff">monerop2p.app</text>
+</svg>
