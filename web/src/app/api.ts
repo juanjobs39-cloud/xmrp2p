@@ -42,6 +42,8 @@ export interface TrocadorRates {
   usdt: string;
   ticker: string;
   network: string;
+  /** buy: moneda → XMR. sell: XMR → moneda. */
+  side?: "buy" | "sell";
   quotes: TrocadorQuote[];
   created_at: number;
 }
@@ -95,9 +97,22 @@ export const api = {
       body: JSON.stringify({ offer_id, usdt, taker_message, ...(ref ? { ref } : {}) }),
     }),
   trocadorCoins: () => call<TrocadorCoin[]>("/v1/trocador/coins?v=2"),
-  trocadorRates: (amount: string, ticker: string, network: string) =>
-    call<TrocadorRates>(`/v1/trocador/rates?amount=${encodeURIComponent(amount)}&ticker=${encodeURIComponent(ticker)}&network=${encodeURIComponent(network)}`),
-  trocadorCreate: (body: { rate_id: string; provider: string; fixed: boolean; amount: string; ticker: string; network: string; address: string; refund?: string }) =>
+  trocadorRates: (amount: string, ticker: string, network: string, side: "buy" | "sell" = "buy") =>
+    call<TrocadorRates>(
+      `/v1/trocador/rates?side=${side}&amount=${encodeURIComponent(amount)}&ticker=${encodeURIComponent(ticker)}&network=${encodeURIComponent(network)}`,
+    ),
+  trocadorCreate: (body: {
+    rate_id: string;
+    provider: string;
+    fixed: boolean;
+    amount: string;
+    ticker: string;
+    network: string;
+    side?: "buy" | "sell";
+    address: string;
+    address_memo?: string;
+    refund?: string;
+  }) =>
     call<TrocadorTrade>("/v1/trocador/trades", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
   trocadorTrade: (id: string) => call<TrocadorTrade>(`/v1/trocador/trades/${encodeURIComponent(id)}`),
   events: (room: string, token: string, after = 0) =>

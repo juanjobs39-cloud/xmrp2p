@@ -235,5 +235,8 @@
   "No coin matches.": "رمزارزی پیدا نشد.",
   "Network:": "شبکه:",
   "Also include this memo or tag (required):": "این memo یا tag را هم حتماً وارد کنید:",
-  "News": "تازه‌ها"
+  "News": "تازه‌ها",
+  "Swap direction: sell XMR": "تغییر جهت: فروش XMR",
+  "Swap direction": "تغییر جهت",
+  "Memo or tag (required for this coin)": "Memo یا tag (برای این رمزارز الزامی است)"
 }

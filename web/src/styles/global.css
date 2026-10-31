@@ -242,3 +242,8 @@ body:not(.chosen) .later { display: none !important; }
 .quick-unit .unit-top { justify-content: flex-end; }
 .coin-opt { align-items: center; }
 .prov-logo { vertical-align: middle; border-radius: 4px; margin-inline-end: 0.4rem; }
+.quick-flip { justify-self: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--fg); font-size: 1.3rem; line-height: 1; cursor: pointer; }
+.quick-flip:hover, .quick-flip.on { border-color: var(--accent); color: var(--accent); }
+#quick-get-coin[hidden], #quick-get-xmr[hidden], #quick-note[hidden], #troc-dest-memo-box[hidden] { display: none; }
+#troc-dest-memo-box { display: grid; gap: 0.4rem; }
+#troc-dest-memo { font: inherit; padding: 0.6rem 0.8rem; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); }

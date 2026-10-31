@@ -12,8 +12,18 @@
 import { clientIp, decimal, Env, HttpError, json, readJson, sha256Hex } from "./env";
 
 const API = "https://api.trocador.app";
-/** Siempre se recibe XMR. */
-const TO = { ticker_to: "xmr", network_to: "Mainnet" } as const;
+/** Monero en Trocador. */
+const XMR = { ticker: "xmr", network: "Mainnet" } as const;
+
+/** buy: moneda → XMR (lo de siempre). sell: XMR → moneda. */
+export type Side = "buy" | "sell";
+const sideOf = (v: unknown): Side => (v === "sell" ? "sell" : "buy");
+
+/** Par de Trocador según la dirección del cambio. */
+function pair(side: Side, coin: { ticker: string; network: string }): Record<string, string> {
+  const [from, to] = side === "buy" ? [coin, XMR] : [XMR, coin];
+  return { ticker_from: from.ticker, network_from: from.network, ticker_to: to.ticker, network_to: to.network };
+}
 
 /** Moneda que acepta Trocador (de su método coins). */
 export interface CoinInfo {
@@ -55,14 +65,14 @@ export async function coinList(env: Env): Promise<CoinInfo[]> {
 }
 
 /** Moneda pedida; sin moneda, USDT en Arbitrum (lo de siempre, sin consultar la lista). */
-async function coinFrom(env: Env, ticker: unknown, network: unknown): Promise<{ ticker: string; network: string }> {
+async function coinFrom(env: Env, ticker: unknown, network: unknown): Promise<{ ticker: string; network: string; memo: boolean }> {
   const t = typeof ticker === "string" && ticker ? ticker : "usdt";
   const n = typeof network === "string" && network ? network : "Arbitrum";
-  if (t === "usdt" && n === "Arbitrum") return { ticker: t, network: n };
+  if (t === "usdt" && n === "Arbitrum") return { ticker: t, network: n, memo: false };
   if (!/^[A-Za-z0-9._-]{1,20}$/.test(t) || !/^[A-Za-z0-9 ._()-]{1,40}$/.test(n)) throw new HttpError(400, "moneda no disponible");
   const c = (await coinList(env)).find((x) => x.ticker === t && x.network === n);
   if (!c) throw new HttpError(400, "moneda no disponible");
-  return { ticker: c.ticker, network: c.network };
+  return { ticker: c.ticker, network: c.network, memo: c.memo };
 }
 
 const RATE_CACHE_S = 120;
@@ -87,6 +97,8 @@ export interface TrocadorRates {
   usdt: string;
   ticker: string;
   network: string;
+  /** buy: se envía la moneda y se recibe XMR. sell: se envía XMR y se recibe la moneda. */
+  side: Side;
   quotes: TrocadorQuote[];
   created_at: number;
 }
@@ -149,18 +161,17 @@ async function rates(req: Request, env: Env, url: URL): Promise<Response> {
   const usdt = decimal(sp.get("amount") ?? sp.get("usdt"), "amount");
   if (Number(usdt) > 100_000_000) throw new HttpError(400, "amount inválido");
   const coin = await coinFrom(env, sp.get("ticker"), sp.get("network"));
+  const side = sideOf(sp.get("side"));
   apiKey(env);
   const cache = caches.default;
-  // Caché por usuario y monto: el ID de cotización no se comparte entre personas.
+  // Caché por usuario, dirección y monto: el ID de cotización no se comparte entre personas.
   const who = (await sha256Hex(clientIp(req))).slice(0, 16);
-  const key = new Request(`https://cache.monerop2p.internal/trocador/rates?c=${coin.ticker}.${coin.network}&a=${Number(usdt)}&u=${who}`);
+  const key = new Request(`https://cache.monerop2p.internal/trocador/rates?s=${side}&c=${coin.ticker}.${coin.network}&a=${Number(usdt)}&u=${who}`);
   const hit = await cache.match(key);
   if (hit) return new Response(hit.body, hit);
   await limitTrocador(env, req);
   const body = await trocador(env, "new_rate", {
-    ticker_from: coin.ticker,
-    network_from: coin.network,
-    ...TO,
+    ...pair(side, coin),
     amount_from: usdt,
     min_kycrating: env.TROCADOR_MIN_KYC || "B",
     markup: env.TROCADOR_MARKUP || "0",
@@ -170,6 +181,7 @@ async function rates(req: Request, env: Env, url: URL): Promise<Response> {
     usdt,
     ticker: coin.ticker,
     network: coin.network,
+    side,
     quotes: parseQuotes(body.quotes),
     created_at: Date.now(),
   };
@@ -187,7 +199,9 @@ interface TradeBody {
   amount?: unknown;
   ticker?: unknown;
   network?: unknown;
+  side?: unknown;
   address?: unknown;
+  address_memo?: unknown;
   refund?: unknown;
 }
 
@@ -201,6 +215,8 @@ function publicTrade(t: Record<string, unknown>) {
     trade_id: String(t.trade_id ?? ""),
     ticker_from: str(t.ticker_from),
     network_from: str(t.network_from),
+    ticker_to: str(t.ticker_to),
+    network_to: str(t.network_to),
     provider: str(t.provider),
     status: str(t.status) || "new",
     amount_from: str(t.amount_from),
@@ -222,21 +238,34 @@ async function createTrade(req: Request, env: Env): Promise<Response> {
   const refund = str(data.refund, 130).trim();
   const usdt = decimal(data.amount ?? data.usdt, "amount");
   const coin = await coinFrom(env, data.ticker, data.network);
+  const side = sideOf(data.side);
+  const memo = str(data.address_memo, 100).trim();
   if (!/^[A-Za-z0-9_-]{4,100}$/.test(rateId)) throw new HttpError(400, "rate_id inválido");
   if (!/^[\w .()-]{1,60}$/.test(provider)) throw new HttpError(400, "provider inválido");
-  if (!XMR_MAIN.test(address)) throw new HttpError(400, "dirección de Monero inválida");
-  if (refund && (refund.startsWith("0x") ? !EVM.test(refund) : !/^[A-Za-z0-9:_.-]{10,128}$/.test(refund))) throw new HttpError(400, "dirección de reembolso inválida");
+  // Dirección donde el usuario recibe: XMR al comprar, la otra moneda al vender. El reembolso es de lo que envía.
+  const coinAddr = (a: string) => (a.startsWith("0x") ? EVM.test(a) : /^[A-Za-z0-9:_.-]{10,128}$/.test(a));
+  if (side === "buy") {
+    if (!XMR_MAIN.test(address)) throw new HttpError(400, "dirección de Monero inválida");
+    if (refund && !coinAddr(refund)) throw new HttpError(400, "dirección de reembolso inválida");
+  } else {
+    if (XMR_MAIN.test(address) || !coinAddr(address)) throw new HttpError(400, "dirección de destino inválida");
+    if (refund && !XMR_MAIN.test(refund)) throw new HttpError(400, "el reembolso debe ser una dirección de Monero");
+    if (coin.memo && !/^[A-Za-z0-9 _.:-]{1,100}$/.test(memo)) throw new HttpError(400, "esta moneda necesita memo o tag");
+  }
   await limitTrocador(env, req);
+  if (side === "sell") {
+    // Una sola consulta extra, solo al crear: que la dirección sirva para esa moneda y red.
+    const v = await trocador(env, "validateaddress", { ticker: coin.ticker, network: coin.network, address });
+    if (!truthy(v.result)) throw new HttpError(400, "la dirección no es válida para esa moneda y red");
+  }
 
   const site = env.API_URL || "https://api.monerop2p.app";
   const params: Record<string, string> = {
     id: rateId,
-    ticker_from: coin.ticker,
-    network_from: coin.network,
-    ...TO,
+    ...pair(side, coin),
     amount_from: usdt,
     address,
-    address_memo: "0",
+    address_memo: side === "sell" && coin.memo ? memo : "0",
     provider,
     fixed: truthy(data.fixed) ? "True" : "False",
     min_kycrating: env.TROCADOR_MIN_KYC || "B",

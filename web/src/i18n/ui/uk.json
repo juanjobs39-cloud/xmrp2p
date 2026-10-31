@@ -235,5 +235,8 @@
   "No coin matches.": "Нічого не знайдено.",
   "Network:": "Мережа:",
   "Also include this memo or tag (required):": "Обов’язково вкажіть також цей memo або тег:",
-  "News": "Новини"
+  "News": "Новини",
+  "Swap direction: sell XMR": "Змінити напрямок: продати XMR",
+  "Swap direction": "Змінити напрямок",
+  "Memo or tag (required for this coin)": "Memo або тег (обов’язково для цієї монети)"
 }

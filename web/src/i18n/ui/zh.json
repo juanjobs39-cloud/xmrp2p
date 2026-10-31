@@ -235,5 +235,8 @@
   "No coin matches.": "没有匹配的币种。",
   "Network:": "网络：",
   "Also include this memo or tag (required):": "还必须填写此 memo 或 tag：",
-  "News": "动态"
+  "News": "动态",
+  "Swap direction: sell XMR": "切换方向：出售 XMR",
+  "Swap direction": "切换方向",
+  "Memo or tag (required for this coin)": "Memo 或 tag（此币种必填）"
 }

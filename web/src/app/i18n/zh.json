@@ -86,5 +86,11 @@
   "over_cap": "每笔兑换最多 {max} USDT。",
   "confirm_real": "你即将把 {usdt} 真实 USDT 存入兑换合约。如果出现问题，应用会引导你退款。继续吗？",
   "quick_other": "使用 {coin} 时，兑换由通过 Trocador 的即时兑换平台完成（兑换期间由其保管资金）。如需与 MoneroP2P 做市方进行非托管兑换，请使用 Arbitrum One 上的 USDT。",
-  "troc_refund_label": "{coin} 退款地址（可选）"
+  "troc_refund_label": "{coin} 退款地址（可选）",
+  "sell_why": "用 XMR 换 {coin} 由通过 Trocador 的即时兑换平台完成（兑换期间由其保管资金）。",
+  "troc_chosen_sell": "{provider}：你支付 {amount} XMR，约得到 {get} {coin}（{kind}）。",
+  "troc_dest_label": "你的 {coin} 地址（在这里收款）",
+  "troc_refund_xmr": "门罗币退款地址（可选）",
+  "troc_bad_dest": "该地址看起来不适用于 {coin}。",
+  "troc_need_memo": "此币种的收款地址需要填写 memo 或 tag。"
 }

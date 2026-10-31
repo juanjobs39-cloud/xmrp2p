@@ -81,7 +81,7 @@ export function mountCoinPicker(onPick: (c: Coin) => void): void {
       (cs) => {
         full = [
           ...COINS,
-          ...cs.filter((c) => !POPULAR.has(coinId(c))).map((c) => ({ ticker: c.ticker, network: c.network, label: `${c.ticker.toUpperCase()} · ${c.name}`, img: c.img || undefined })),
+          ...cs.filter((c) => !POPULAR.has(coinId(c))).map((c) => ({ ticker: c.ticker, network: c.network, label: `${c.ticker.toUpperCase()} · ${c.name}`, img: c.img || undefined, memo: c.memo })),
         ];
         if (!panel.hidden && search.value) render(search.value);
       },

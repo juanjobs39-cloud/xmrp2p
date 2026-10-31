@@ -235,5 +235,8 @@
   "No coin matches.": "일치하는 코인이 없습니다.",
   "Network:": "네트워크:",
   "Also include this memo or tag (required):": "이 메모 또는 태그도 반드시 입력하세요:",
-  "News": "소식"
+  "News": "소식",
+  "Swap direction: sell XMR": "방향 바꾸기: XMR 팔기",
+  "Swap direction": "방향 바꾸기",
+  "Memo or tag (required for this coin)": "메모 또는 태그(이 코인은 필수)"
 }

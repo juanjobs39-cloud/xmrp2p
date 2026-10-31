@@ -86,5 +86,11 @@
   "over_cap": "스왑 1회당 최대 {max} USDT입니다.",
   "confirm_real": "실제 {usdt} USDT를 스왑 컨트랙트에 입금하려고 합니다. 문제가 생기면 앱이 환불을 안내합니다. 계속할까요?",
   "quick_other": "{coin}로는 Trocador를 통한 즉시 교환소가 교환을 진행합니다(교환 중에는 교환소가 자금을 보관합니다). MoneroP2P 메이커와의 비수탁 스왑을 원하면 Arbitrum One의 USDT를 쓰세요.",
-  "troc_refund_label": "{coin} 환불 주소(선택)"
+  "troc_refund_label": "{coin} 환불 주소(선택)",
+  "sell_why": "XMR를 {coin}로 파는 교환은 Trocador를 통한 즉시 교환소가 진행합니다(교환 중에는 교환소가 자금을 보관합니다).",
+  "troc_chosen_sell": "{provider}: {amount} XMR을 보내고 약 {get} {coin}를 받습니다({kind}).",
+  "troc_dest_label": "내 {coin} 주소(받을 곳)",
+  "troc_refund_xmr": "모네로 환불 주소(선택)",
+  "troc_bad_dest": "{coin} 주소로 올바르지 않은 것 같습니다.",
+  "troc_need_memo": "이 코인은 받는 주소에 메모 또는 태그가 필요합니다."
 }

@@ -235,5 +235,8 @@
   "No coin matches.": "一致する通貨がありません。",
   "Network:": "ネットワーク：",
   "Also include this memo or tag (required):": "このメモまたはタグも必ず入力してください：",
-  "News": "お知らせ"
+  "News": "お知らせ",
+  "Swap direction: sell XMR": "向きを入れ替え：XMRを売る",
+  "Swap direction": "向きを入れ替え",
+  "Memo or tag (required for this coin)": "メモまたはタグ（この通貨では必須）"
 }

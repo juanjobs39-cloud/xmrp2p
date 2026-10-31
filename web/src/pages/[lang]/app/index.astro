@@ -69,7 +69,7 @@ const softwareLd = {
       <section id="step-quick" class="quick">
         <form id="form-quick" class="quick-form">
           <label for="quick-usdt">{t("Envías", "You send")}</label>
-          <div class="coin-pick only-real">
+          <div id="slot-send"><div class="coin-pick only-real">
             <button type="button" id="coin-btn" class="coin-btn" aria-expanded="false" aria-controls="coin-panel" aria-label={t("Moneda que envías", "Coin you send")}>
               <span class="coin-sel"><span id="coin-icon"><img class="coin-ico" src="/coins/usdt.svg" alt="" width="22" height="22" /></span><strong id="coin-ticker">USDT</strong> <small id="coin-name">Arbitrum One</small></span>
               <span aria-hidden="true">▾</span>
@@ -79,15 +79,20 @@ const softwareLd = {
               <p id="coin-hint" class="meta">{t("Populares. Escribe para buscar entre más de 2 500 monedas.", "Popular. Type to search 2,500+ coins.")}</p>
               <ul id="coin-list" class="coin-list" data-none={t("Ninguna moneda coincide.", "No coin matches.")}></ul>
             </div>
-          </div>
+          </div></div>
           <div class="quick-row">
             <input id="quick-usdt" type="text" inputmode="decimal" autocomplete="off" placeholder="50" required />
             <span class="quick-unit only-test">USDT <small>Arbitrum Sepolia</small></span>
             <span class="quick-unit only-real"><span class="unit-top"><span id="unit-icon"><img class="coin-ico" src="/coins/usdt.svg" alt="" width="26" height="26" /></span><span id="unit-ticker">USDT</span></span> <small id="unit-net">Arbitrum One</small></span>
           </div>
-          <p class="quick-to">{t("Recibes", "You get")} <img class="coin-ico" src="/coins/xmr.svg" alt="" width="20" height="20" /> <strong>XMR</strong> <small>Monero</small></p>
+          <button type="button" id="quick-flip" class="quick-flip only-real" aria-label={t("Invertir: vender XMR", "Swap direction: sell XMR")} title={t("Invertir dirección", "Swap direction")}>⇅</button>
+          <p class="quick-to" id="quick-get-xmr">{t("Recibes", "You get")} <img class="coin-ico" src="/coins/xmr.svg" alt="" width="20" height="20" /> <strong>XMR</strong> <small>Monero</small></p>
+          <div id="quick-get-coin" hidden>
+            <p class="quick-to">{t("Recibes", "You get")}</p>
+            <div id="slot-get"></div>
+          </div>
           <button class="btn big" type="submit">{t("Intercambiar", "Exchange")}</button>
-          <p class="meta">{t("Sin custodia · sin registro · hasta 100 USDT por swap con makers de MoneroP2P", "Non-custodial · no sign-up · up to 100 USDT per swap with MoneroP2P makers")}</p>
+          <p class="meta" id="quick-note">{t("Sin custodia · sin registro · hasta 100 USDT por swap con makers de MoneroP2P", "Non-custodial · no sign-up · up to 100 USDT per swap with MoneroP2P makers")}</p>
           <p id="quick-more" class="quick-more only-real">{t("¿Más de 100 USDT? Escribe el monto que quieras: para montos mayores te mostramos exchanges instantáneos vía Trocador.", "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.")}</p>
         </form>
         <div id="quick-results" hidden>
@@ -100,8 +105,12 @@ const softwareLd = {
           <h2>{t("Intercambio vía Trocador", "Exchange via Trocador")}</h2>
           <p id="troc-chosen" class="meta"></p>
           <form id="form-troc" class="quick-form">
-            <label for="troc-address">{t("Tu dirección de Monero (ahí recibes el XMR)", "Your Monero address (where you get the XMR)")}</label>
+            <label for="troc-address" id="troc-address-label">{t("Tu dirección de Monero (ahí recibes el XMR)", "Your Monero address (where you get the XMR)")}</label>
             <input id="troc-address" type="text" autocomplete="off" spellcheck="false" required />
+            <div id="troc-dest-memo-box" hidden>
+              <label for="troc-dest-memo">{t("Memo o tag (obligatorio para esta moneda)", "Memo or tag (required for this coin)")}</label>
+              <input id="troc-dest-memo" type="text" autocomplete="off" spellcheck="false" />
+            </div>
             <label for="troc-refund" id="troc-refund-label">{t("Dirección de reembolso de USDT en Arbitrum One (opcional)", "USDT refund address on Arbitrum One (optional)")}</label>
             <input id="troc-refund" type="text" autocomplete="off" spellcheck="false" placeholder="0x…" />
             <button class="btn big" type="submit">{t("Crear intercambio", "Create exchange")}</button>

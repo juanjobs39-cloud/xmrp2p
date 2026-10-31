@@ -12,6 +12,8 @@ export interface Coin {
   evm?: boolean;
   /** URL del ícono en el sitio de origen (monedas que no son populares). */
   img?: string;
+  /** La red pide memo/tag en la dirección de destino (al vender XMR por esta moneda). */
+  memo?: boolean;
 }
 
 export const COINS: Coin[] = [

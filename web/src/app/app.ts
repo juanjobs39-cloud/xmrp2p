@@ -56,6 +56,12 @@ const STORAGE_KEY = "xmrp2p:swap";
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const hex32 = () => `0x${[...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, "0")).join("")}` as Hex;
 
+/** Monto con hasta 6 decimales y sin ceros de más (para montos de otras monedas). */
+function fmtAmount(v: string | number): string {
+  const n = Number(v);
+  return Number.isFinite(n) ? n.toLocaleString("en-US", { maximumFractionDigits: 6, useGrouping: false }) : String(v);
+}
+
 export class SwapApp {
   private state: SwapState | null = null;
   private passphrase = "";
@@ -132,16 +138,49 @@ export class SwapApp {
       void this.guard(() => this.trocCreate(), (e as SubmitEvent).submitter);
     });
     $("troc-copy").addEventListener("click", () => void navigator.clipboard?.writeText($("troc-addr").textContent ?? ""));
+    this.xmrAddressLabel = $("troc-address-label").textContent ?? "";
+    this.coinRefundLabel = $("troc-refund-label").textContent ?? "";
     const pick = (c: Coin) => {
       this.quickCoin = c;
-      $("coin-ticker").textContent = $("unit-ticker").textContent = c.ticker.toUpperCase();
+      $("coin-ticker").textContent = c.ticker.toUpperCase();
       $("coin-icon").replaceChildren(iconEl(c.ticker, c.img, API_URL));
-      $("unit-icon").replaceChildren(iconEl(c.ticker, c.img, API_URL, 26));
-      $("coin-name").textContent = $("unit-net").textContent = networkName(c);
-      $("quick-more").hidden = this.net.testnet || coinId(c) !== DEFAULT_COIN;
+      $("coin-name").textContent = networkName(c);
+      this.syncSide();
     };
     mountCoinPicker(pick);
-    pick(coinById(new URLSearchParams(location.search).get("coin") ?? DEFAULT_COIN));
+    $("quick-flip").addEventListener("click", () => this.setSide(this.side === "buy" ? "sell" : "buy"));
+    const sp = new URLSearchParams(location.search);
+    pick(coinById(sp.get("coin") ?? DEFAULT_COIN));
+    if (sp.get("side") === "sell" && !this.net.testnet) this.setSide("sell");
+  }
+
+  /** Dirección del cambio en la vista simple: comprar XMR (por defecto) o vender XMR (solo vía Trocador). */
+  private side: "buy" | "sell" = "buy";
+  private xmrAddressLabel = "";
+  private coinRefundLabel = "";
+
+  private setSide(side: "buy" | "sell"): void {
+    this.side = this.net.testnet ? "buy" : side;
+    // El selector de moneda va en «Envías» al comprar y en «Recibes» al vender.
+    $(this.side === "buy" ? "slot-send" : "slot-get").append(document.querySelector(".coin-pick")!);
+    $("quick-results").hidden = true;
+    $("quick-troc-pay").hidden = true;
+    $<HTMLInputElement>("quick-usdt").placeholder = this.side === "buy" ? "50" : "0.5";
+    this.syncSide();
+  }
+
+  /** Unidad junto al monto y textos según la dirección y la moneda elegida. */
+  private syncSide(): void {
+    const sell = this.side === "sell";
+    const c = this.quickCoin;
+    $("unit-ticker").textContent = sell ? "XMR" : c.ticker.toUpperCase();
+    $("unit-icon").replaceChildren(iconEl(sell ? "xmr" : c.ticker, sell ? undefined : c.img, API_URL, 26));
+    $("unit-net").textContent = sell ? "Monero" : networkName(c);
+    $("quick-get-xmr").hidden = sell;
+    $("quick-get-coin").hidden = !sell;
+    $("quick-note").hidden = sell;
+    $("quick-more").hidden = sell || this.net.testnet || coinId(c) !== DEFAULT_COIN;
+    $("quick-flip").classList.toggle("on", sell);
   }
 
   // ------------------------------------------------------------------ Trocador (API)
@@ -155,10 +194,10 @@ export class SwapApp {
   /** Moneda elegida en la vista simple (USDT en Arbitrum por defecto). */
   private quickCoin: Coin = coinById(DEFAULT_COIN);
 
-  private async trocadorList(raw: string, why: string, coin: Coin): Promise<boolean> {
+  private async trocadorList(raw: string, why: string, coin: Coin, side: "buy" | "sell" = "buy"): Promise<boolean> {
     let rates: TrocadorRates;
     try {
-      rates = await api.trocadorRates(raw, coin.ticker, coin.network);
+      rates = await api.trocadorRates(raw, coin.ticker, coin.network, side);
       this.trocCoin = coin;
     } catch {
       return false; // API apagada o caída: queda el widget
@@ -168,7 +207,7 @@ export class SwapApp {
     $("quick-why").textContent = why;
     $("quick-why").hidden = false;
     $("quick-troc-note").hidden = false;
-    $("quick-title").textContent = t(this.lang, "troc_title", { n: rates.quotes.length, usdt: raw, coin: coin.label });
+    $("quick-title").textContent = t(this.lang, "troc_title", { n: rates.quotes.length, usdt: raw, coin: side === "sell" ? "XMR" : coin.label });
     $("quick-list").replaceChildren(
       ...rates.quotes.map((q, i) => {
         const li = document.createElement("li");
@@ -176,7 +215,10 @@ export class SwapApp {
         const left = document.createElement("div");
         const amount = document.createElement("p");
         amount.className = "quick-amount";
-        amount.textContent = `${t(this.lang, "quick_you_get")} ${Number(q.amount_to).toFixed(6)} XMR`;
+        amount.textContent =
+          side === "sell"
+            ? `${t(this.lang, "quick_you_get")} ${fmtAmount(q.amount_to)} ${coin.ticker.toUpperCase()}`
+            : `${t(this.lang, "quick_you_get")} ${Number(q.amount_to).toFixed(6)} XMR`;
         const meta = document.createElement("p");
         meta.className = "meta";
         // Tiempo estimado que manda Trocador para ese exchange (minutos).
@@ -220,18 +262,20 @@ export class SwapApp {
       return;
     }
     this.trocPick = q;
-    $("troc-chosen").textContent = t(this.lang, "troc_chosen", {
-      provider: q.provider,
-      usdt: rates.usdt,
-      coin: this.trocCoin.label,
-      xmr: Number(q.amount_to).toFixed(6),
-      kind: t(this.lang, q.fixed ? "troc_fixed" : "troc_float"),
-    });
+    const sell = rates.side === "sell";
+    const kind = t(this.lang, q.fixed ? "troc_fixed" : "troc_float");
+    $("troc-chosen").textContent = sell
+      ? t(this.lang, "troc_chosen_sell", { provider: q.provider, amount: rates.usdt, get: fmtAmount(q.amount_to), coin: this.trocCoin.label, kind })
+      : t(this.lang, "troc_chosen", { provider: q.provider, usdt: rates.usdt, coin: this.trocCoin.label, xmr: Number(q.amount_to).toFixed(6), kind });
+    // Al vender: la dirección es de la moneda que recibes, el reembolso es en XMR y algunas redes piden memo.
+    $("troc-address-label").textContent = sell ? t(this.lang, "troc_dest_label", { coin: this.trocCoin.label }) : this.xmrAddressLabel;
+    $("troc-dest-memo-box").hidden = !(sell && this.trocCoin.memo);
+    $<HTMLInputElement>("troc-dest-memo").required = !!(sell && this.trocCoin.memo);
     $("quick-results").hidden = true;
     $("form-troc").hidden = false;
     $("troc-deposit").hidden = true;
-    $("troc-refund-label").textContent = t(this.lang, "troc_refund_label", { coin: this.trocCoin.label });
-    $<HTMLInputElement>("troc-refund").placeholder = this.trocCoin.evm ? "0x…" : "";
+    $("troc-refund-label").textContent = sell ? t(this.lang, "troc_refund_xmr") : t(this.lang, "troc_refund_label", { coin: this.trocCoin.label });
+    $<HTMLInputElement>("troc-refund").placeholder = !sell && this.trocCoin.evm ? "0x…" : "";
     $("quick-troc-pay").hidden = false;
     $("quick-troc-pay").scrollIntoView({ block: "start", behavior: "smooth" });
     $<HTMLInputElement>("troc-address").focus();
@@ -244,10 +288,18 @@ export class SwapApp {
     if (!rates || !q || Date.now() - rates.created_at > 10 * 60_000) throw new Error(t(this.lang, "troc_expired"));
     const address = $<HTMLInputElement>("troc-address").value.trim();
     const refund = $<HTMLInputElement>("troc-refund").value.trim();
-    if (!validXmrAddress(address, this.net.monero)) throw new Error(t(this.lang, "bad_address_main"));
     const coin = this.trocCoin;
-    if (refund && (refund.startsWith("0x") ? !/^0x[0-9a-fA-F]{40}$/.test(refund) : !/^[A-Za-z0-9:_.-]{10,128}$/.test(refund)))
-      throw new Error(t(this.lang, "troc_bad_refund", { coin: coin.label }));
+    const sell = rates.side === "sell";
+    const coinAddr = (a: string) => (a.startsWith("0x") ? /^0x[0-9a-fA-F]{40}$/.test(a) : /^[A-Za-z0-9:_.-]{10,128}$/.test(a));
+    const memo = sell && coin.memo ? $<HTMLInputElement>("troc-dest-memo").value.trim() : "";
+    if (sell) {
+      if (validXmrAddress(address, this.net.monero) || !coinAddr(address)) throw new Error(t(this.lang, "troc_bad_dest", { coin: coin.label }));
+      if (coin.memo && !memo) throw new Error(t(this.lang, "troc_need_memo"));
+      if (refund && !validXmrAddress(refund, this.net.monero)) throw new Error(t(this.lang, "bad_address_main"));
+    } else {
+      if (!validXmrAddress(address, this.net.monero)) throw new Error(t(this.lang, "bad_address_main"));
+      if (refund && !coinAddr(refund)) throw new Error(t(this.lang, "troc_bad_refund", { coin: coin.label }));
+    }
     const trade = await api.trocadorCreate({
       rate_id: rates.rate_id,
       provider: q.provider,
@@ -255,17 +307,20 @@ export class SwapApp {
       amount: rates.usdt,
       ticker: coin.ticker,
       network: coin.network,
+      side: sell ? "sell" : "buy",
       address,
+      ...(memo ? { address_memo: memo } : {}),
       ...(refund ? { refund } : {}),
     });
     this.trocRates = null; // la cotización ya se usó
     $("form-troc").hidden = true;
     $("troc-amount").textContent = trade.amount_from || rates.usdt;
-    $("troc-ticker").textContent = coin.ticker.toUpperCase();
-    $("troc-net").textContent = networkName(coin);
-    const memo = trade.address_provider_memo && trade.address_provider_memo !== "0" ? trade.address_provider_memo : "";
-    $("troc-memo").textContent = memo;
-    $("troc-memo-box").hidden = !memo;
+    // Lo que el usuario deposita: la moneda al comprar XMR, o XMR al venderlo.
+    $("troc-ticker").textContent = sell ? "XMR" : coin.ticker.toUpperCase();
+    $("troc-net").textContent = sell ? "Monero" : networkName(coin);
+    const depositMemo = trade.address_provider_memo && trade.address_provider_memo !== "0" ? trade.address_provider_memo : "";
+    $("troc-memo").textContent = depositMemo;
+    $("troc-memo-box").hidden = !depositMemo;
     $("troc-addr").textContent = trade.address_provider;
     $("troc-provider").textContent = trade.provider;
     $("troc-id").textContent = trade.trade_id;
@@ -295,6 +350,14 @@ export class SwapApp {
     const usdt = Number(raw);
     if (!/^\d+(\.\d{1,8})?$/.test(raw) || !(usdt > 0)) throw new Error(t(this.lang, "quick_bad"));
     const coin = this.net.testnet ? coinById(DEFAULT_COIN) : this.quickCoin;
+    // Vender XMR: solo exchanges instantáneos de Trocador (los makers solo venden XMR).
+    if (this.side === "sell" && !this.net.testnet) {
+      $("banner").hidden = true;
+      $("quick-troc-pay").hidden = true;
+      $("quick-trocador").hidden = true;
+      if (await this.trocadorList(raw, t(this.lang, "sell_why", { coin: coin.label }), coin, "sell")) return;
+      throw new Error(t(this.lang, "backend_error"));
+    }
     const viaMakers = coinId(coin) === DEFAULT_COIN;
     if (viaMakers) await this.loadOffers(); // ofertas frescas en cada búsqueda
     $("banner").hidden = true;

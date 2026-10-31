@@ -24,6 +24,7 @@ function mockTrocador() {
         { name: "Tether (TON)", ticker: "usdt", network: "TON", memo: true, minimum: 5, maximum: 100000 },
         { name: "Monero", ticker: "xmr", network: "Mainnet", memo: false, minimum: 0.01, maximum: 3000 },
       ]);
+    if (u.pathname === "/validateaddress") return Response.json({ result: u.searchParams.get("address") !== "bc1qbadaddress000000" });
     if (u.pathname === "/new_rate") return Response.json({ trade_id: "rateBTC", quotes: { quotes: [{ provider: "P", amount_to: "1.5", kycrating: "A", fixed: "False" }] } });
     if (u.pathname === "/new_trade")
       return Response.json({ trade_id: "trBTC", ticker_from: "btc", network_from: "Mainnet", provider: "P", status: "waiting", amount_from: "0.01", amount_to: "1.5", address_provider: "bc1qdeposit", fixed: "False" });
@@ -88,5 +89,53 @@ describe("Trocador con otras monedas", () => {
     expect(await r.json()).toMatchObject({ trade_id: "trBTC", ticker_from: "btc", network_from: "Mainnet", address_provider: "bc1qdeposit" });
     const p = seen.find((u) => u.pathname === "/new_trade")!.searchParams;
     expect([p.get("ticker_from"), p.get("network_from"), p.get("refund")]).toEqual(["btc", "Mainnet", "bc1qrefundaddress0000000000"]);
+  });
+});
+
+describe("Vender XMR (XMR → otra moneda)", () => {
+  afterEach(() => vi.restoreAllMocks());
+  const sell = (body: object) =>
+    call("/v1/trocador/trades", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ rate_id: "rateXMR", provider: "P", fixed: false, amount: "0.5", side: "sell", ...body }),
+    });
+
+  it("cotiza XMR → BTC invirtiendo el par", async () => {
+    const seen = mockTrocador();
+    const r = (await (await call("/v1/trocador/rates?side=sell&amount=0.5&ticker=btc&network=Mainnet")).json()) as Record<string, unknown>;
+    expect(r).toMatchObject({ side: "sell", ticker: "btc", network: "Mainnet", usdt: "0.5" });
+    const q = seen.find((u) => u.pathname === "/new_rate")!.searchParams;
+    expect([q.get("ticker_from"), q.get("network_from"), q.get("ticker_to"), q.get("network_to"), q.get("amount_from")]).toEqual(["xmr", "Mainnet", "btc", "Mainnet", "0.5"]);
+  });
+
+  it("crea la venta con la dirección BTC, la valida con Trocador y acepta reembolso en XMR", async () => {
+    const seen = mockTrocador();
+    const r = await sell({ ticker: "btc", network: "Mainnet", address: "bc1qdestinationaddress0000", refund: XMR });
+    expect(r.status).toBe(200);
+    expect(seen.some((u) => u.pathname === "/validateaddress")).toBe(true);
+    const p = seen.find((u) => u.pathname === "/new_trade")!.searchParams;
+    expect([p.get("ticker_from"), p.get("ticker_to"), p.get("network_to"), p.get("address"), p.get("refund"), p.get("address_memo")]).toEqual([
+      "xmr",
+      "btc",
+      "Mainnet",
+      "bc1qdestinationaddress0000",
+      XMR,
+      "0",
+    ]);
+  });
+
+  it("rechaza destino XMR, reembolso que no es XMR y direcciones que Trocador no valida", async () => {
+    mockTrocador();
+    expect((await sell({ ticker: "btc", network: "Mainnet", address: XMR })).status).toBe(400);
+    expect((await sell({ ticker: "btc", network: "Mainnet", address: "bc1qdestinationaddress0000", refund: "bc1qrefund000000000000" })).status).toBe(400);
+    expect((await sell({ ticker: "btc", network: "Mainnet", address: "bc1qbadaddress000000" })).status).toBe(400);
+  });
+
+  it("exige memo cuando la moneda lo pide y lo pasa a Trocador", async () => {
+    const seen = mockTrocador();
+    expect((await sell({ ticker: "usdt", network: "TON", address: "UQtonaddress000000000000" })).status).toBe(400);
+    expect((await sell({ ticker: "usdt", network: "TON", address: "UQtonaddress000000000000", address_memo: "123456" })).status).toBe(200);
+    expect(seen.find((u) => u.pathname === "/new_trade")!.searchParams.get("address_memo")).toBe("123456");
   });
 });

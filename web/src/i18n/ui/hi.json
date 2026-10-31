@@ -235,5 +235,8 @@
   "No coin matches.": "कोई कॉइन नहीं मिला.",
   "Network:": "नेटवर्क:",
   "Also include this memo or tag (required):": "यह memo या tag भी ज़रूर डालें:",
-  "News": "ख़बरें"
+  "News": "ख़बरें",
+  "Swap direction: sell XMR": "दिशा बदलें: XMR बेचें",
+  "Swap direction": "दिशा बदलें",
+  "Memo or tag (required for this coin)": "Memo या tag (इस कॉइन के लिए ज़रूरी)"
 }

@@ -86,5 +86,11 @@
   "over_cap": "O máximo por swap é {max} USDT.",
   "confirm_real": "Você vai depositar {usdt} USDT reais no contrato do swap. Se algo falhar, o app orienta você a reembolsar. Continuar?",
   "quick_other": "Com {coin}, a troca é feita por uma exchange instantânea via Trocador (ela guarda os fundos durante a troca). Para um swap sem custódia com makers do MoneroP2P, use USDT na Arbitrum One.",
-  "troc_refund_label": "Endereço de reembolso de {coin} (opcional)"
+  "troc_refund_label": "Endereço de reembolso de {coin} (opcional)",
+  "sell_why": "Vender XMR por {coin} é feito por uma exchange instantânea via Trocador (ela guarda os fundos durante a troca).",
+  "troc_chosen_sell": "{provider}: você envia {amount} XMR e recebe ≈ {get} {coin} ({kind}).",
+  "troc_dest_label": "Seu endereço de {coin} (onde você recebe)",
+  "troc_refund_xmr": "Endereço de reembolso de Monero (opcional)",
+  "troc_bad_dest": "O endereço não parece válido para {coin}.",
+  "troc_need_memo": "Esta moeda precisa de memo ou tag no endereço de destino."
 }

@@ -86,5 +86,11 @@
   "over_cap": "1回のスワップは最大{max} USDTです。",
   "confirm_real": "実際の{usdt} USDTをスワップのコントラクトに入金しようとしています。問題があれば、アプリが返金を案内します。続けますか？",
   "quick_other": "{coin}の場合、交換はTrocador経由のインスタント交換所が行います（交換中は資金を預かります）。MoneroP2Pのメイカーとのノンカストディアルなスワップには、Arbitrum One上のUSDTを使ってください。",
-  "troc_refund_label": "{coin}の返金アドレス（任意）"
+  "troc_refund_label": "{coin}の返金アドレス（任意）",
+  "sell_why": "XMRを{coin}に売る交換は、Trocador経由のインスタント交換所が行います（交換中は資金を預かります）。",
+  "troc_chosen_sell": "{provider}：{amount} XMRを支払い、約{get} {coin}を受け取ります（{kind}）。",
+  "troc_dest_label": "あなたの{coin}アドレス（受取先）",
+  "troc_refund_xmr": "Moneroの返金アドレス（任意）",
+  "troc_bad_dest": "{coin}のアドレスとして正しくないようです。",
+  "troc_need_memo": "この通貨では、受取アドレスにメモまたはタグが必要です。"
 }

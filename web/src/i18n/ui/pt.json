@@ -235,5 +235,8 @@
   "No coin matches.": "Nenhuma moeda encontrada.",
   "Network:": "Rede:",
   "Also include this memo or tag (required):": "Inclua também este memo ou tag (obrigatório):",
-  "News": "Novidades"
+  "News": "Novidades",
+  "Swap direction: sell XMR": "Inverter: vender XMR",
+  "Swap direction": "Inverter direção",
+  "Memo or tag (required for this coin)": "Memo ou tag (obrigatório para esta moeda)"
 }
