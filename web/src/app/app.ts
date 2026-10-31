@@ -179,7 +179,9 @@ export class SwapApp {
         amount.textContent = `${t(this.lang, "quick_you_get")} ${Number(q.amount_to).toFixed(6)} XMR`;
         const meta = document.createElement("p");
         meta.className = "meta";
-        meta.textContent = t(this.lang, "troc_meta", { provider: q.provider, kyc: q.kycrating, kind: t(this.lang, q.fixed ? "troc_fixed" : "troc_float") });
+        // Tiempo estimado que manda Trocador para ese exchange (minutos).
+        const eta = q.eta && q.eta > 0 ? ` · ~${Math.round(q.eta)} min` : "";
+        meta.textContent = t(this.lang, "troc_meta", { provider: q.provider, kyc: q.kycrating, kind: t(this.lang, q.fixed ? "troc_fixed" : "troc_float") }) + eta;
         if (q.logo) {
           const logo = document.createElement("img");
           logo.className = "prov-logo";
