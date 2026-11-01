@@ -50,6 +50,8 @@ const news = defineCollection({
     description: z.string().max(170),
     published: z.coerce.date(),
     updated: z.coerce.date().optional(),
+    /** Preguntas frecuentes de la entrada: se publican también como datos estructurados (FAQPage). */
+    faq: z.array(z.object({ q: z.string(), a: z.string() })).default([]),
   }),
 });
 

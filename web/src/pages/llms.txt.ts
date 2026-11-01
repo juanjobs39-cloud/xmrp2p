@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
-import { guidePath, guides } from "../lib/content";
+import { guidePath, guides, newsList, newsPath } from "../lib/content";
 import { ROUTES, SITE } from "../site";
 
 /** /llms.txt según la propuesta de llmstxt.org: resumen del sitio y páginas clave (inglés primero). */
@@ -14,6 +14,8 @@ export const GET: APIRoute = async ({ site }) => {
   const keys = ["how", "security", "maker", "faq", "glossary", "risks"];
   const es = await guides("es");
   const en = await guides("en");
+  const newsEn = await newsList("en");
+  const newsEs = await newsList("es");
   const body = `# ${SITE.brand}
 
 > ${SITE.brand} is a non-custodial peer-to-peer platform to swap USDT for Monero (XMR) through atomic swaps that run in the user's browser. Nobody holds funds: a smart contract locks the USDT and only releases it to the seller (maker) when the maker reveals the secret that lets the buyer take the XMR; if anything fails, the buyer gets the USDT back. Live with real money on Arbitrum One + Monero, maximum 100 USDT per swap. Tested end to end with real funds (first swap completed on October 26, 2026).
@@ -27,6 +29,9 @@ Key facts:
 - Timing: a swap takes about 30–45 minutes (10 Monero confirmations). The buyer confirms once the locked XMR is verified; if not, they refund.
 - Makers: anyone can be a maker from the browser (no install) or with a self-hosted 24/7 daemon. Offers disappear automatically when a maker goes offline.
 - No account, no KYC, no custody. Open source (AGPL-3.0): ${SITE.repo}
+- Any crypto ↔ XMR: besides the non-custodial USDT atomic swaps, the app shows quotes from instant exchanges via Trocador to swap Bitcoin (BTC, Lightning), ETH, USDT on other networks, SOL, LTC and 2,500+ other coins for Monero, and to sell XMR for any of them (⇅ button). Only exchanges with KYC rating A or B are shown. These swaps are custodial during the exchange.
+- Deep links: BTC → XMR ${abs("/en/app/?coin=btc%7CMainnet")} · XMR → BTC ${abs("/en/app/?side=sell&coin=btc%7CMainnet")}
+- 10 languages: English, Spanish, Portuguese, Russian, Ukrainian, Chinese, Japanese, Korean, Hindi and Persian.
 
 ## Main pages (English)
 
@@ -47,6 +52,14 @@ ${en.map((g) => `- [${g.data.title}](${abs(guidePath(g))}): ${g.data.description
 ## Guías (español)
 
 ${es.map((g) => `- [${g.data.title}](${abs(guidePath(g))}): ${g.data.description} Markdown: ${abs(guidePath(g).replace(/\/$/, ".md"))}`).join("\n")}
+
+## News (English)
+
+${newsEn.map((n) => `- [${n.data.title}](${abs(newsPath(n))}): ${n.data.description}`).join("\n")}
+
+## Novedades (español)
+
+${newsEs.map((n) => `- [${n.data.title}](${abs(newsPath(n))}): ${n.data.description}`).join("\n")}
 
 ## API
 

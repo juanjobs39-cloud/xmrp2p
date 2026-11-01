@@ -113,6 +113,14 @@ if (kind === "page") {
     author: { "@type": "Organization", name: SITE.brand },
     publisher: { "@type": "Organization", name: SITE.brand },
   });
+  if (n.faq.length) {
+    jsonLd.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      inLanguage: lang,
+      mainEntity: n.faq.map((f: { q: string; a: string }) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+    });
+  }
 } else if (kind === "news") {
   title = t("Novedades de MoneroP2P", "MoneroP2P news");
   description = t(
