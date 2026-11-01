@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
-import { guidePath, newsIndex, newsPath } from "../lib/content";
+import { NEWS_LANGS, guidePath, newsIndex, newsPath } from "../lib/content";
 import { ROUTES, type Lang } from "../site";
 
 /** sitemap.xml con hreflang (xhtml:link) para cada par de páginas equivalentes. */
@@ -27,7 +27,7 @@ export const GET: APIRoute = async ({ site }) => {
     if (!e.lastmod || d > e.lastmod) e.lastmod = d;
     newsByKey.set(n.data.key, e);
   }
-  groups.push(...newsByKey.values(), { urls: { es: newsIndex("es"), en: newsIndex("en") } });
+  groups.push(...newsByKey.values(), { urls: Object.fromEntries(NEWS_LANGS.map((l) => [l, newsIndex(l)])) });
 
   const entries = groups.flatMap(({ urls, lastmod }) =>
     (Object.entries(urls) as [Lang, string][]).map(([, path]) => {

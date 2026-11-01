@@ -39,12 +39,12 @@ const guides = defineCollection({
   }),
 });
 
-/** Novedades (solo español e inglés). Misma `key` en ambos idiomas; `slug` propio de cada idioma. */
+/** Novedades (español, inglés, portugués y ruso). Misma `key` en ambos idiomas; `slug` propio de cada idioma. */
 const news = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./src/content/news", generateId: ({ entry }) => entry.replace(/\.md$/, "") }),
   schema: z.object({
     key: z.string(),
-    lang: z.enum(["es", "en"]),
+    lang: z.enum(["es", "en", "pt", "ru"]),
     slug: z.string(),
     title: z.string(),
     description: z.string().max(170),

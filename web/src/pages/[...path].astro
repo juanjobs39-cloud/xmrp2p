@@ -6,7 +6,7 @@ import { makeT } from "../i18n/ui";
  */
 import { getCollection, render } from "astro:content";
 import Base from "../layouts/Base.astro";
-import { fmtDate, guideAlternates, guidePath, guides, newsAlternates, newsIndex, newsList, newsPath } from "../lib/content";
+import { NEWS_LANGS, fmtDate, guideAlternates, guidePath, guides, newsAlternates, newsIndex, newsLang, newsList, newsPath } from "../lib/content";
 import { LANGS, ROUTES, SITE, type Lang } from "../site";
 
 export async function getStaticPaths() {
@@ -31,7 +31,7 @@ export async function getStaticPaths() {
   for (const n of await getCollection("news")) {
     out.push({ params: { path: strip(newsPath(n)) }, props: { kind: "post", lang: n.data.lang, entry: n } });
   }
-  for (const lang of ["es", "en"] as Lang[]) out.push({ params: { path: strip(newsIndex(lang)) }, props: { kind: "news", lang } });
+  for (const lang of NEWS_LANGS) out.push({ params: { path: strip(newsIndex(lang)) }, props: { kind: "news", lang } });
   return out;
 }
 
@@ -127,9 +127,9 @@ if (kind === "page") {
     "Lanzamientos, cambios y avances de MoneroP2P: redes nuevas, verificaciones del contrato y funciones de la app.",
     "MoneroP2P launches, changes and progress: new networks, contract verifications and app features.",
   );
-  alternates = { es: newsIndex("es"), en: newsIndex("en") };
+  alternates = Object.fromEntries(NEWS_LANGS.map((l) => [l, newsIndex(l)]));
   breadcrumbs = [home, newsCrumb];
-  posts = await newsList(lang === "es" ? "es" : "en");
+  posts = await newsList(newsLang(lang));
 } else if (kind === "guides") {
   route = "guides";
   title = t("Guías sobre USDT, Monero y atomic swaps", "Guides on USDT, Monero and atomic swaps");

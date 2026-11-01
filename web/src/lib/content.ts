@@ -19,14 +19,20 @@ export async function guideAlternates(key: string): Promise<Partial<Record<Lang,
 
 export type News = CollectionEntry<"news">;
 
-/** Las novedades existen solo en español e inglés; los demás idiomas enlazan a las de inglés. */
-export const newsIndex = (lang: Lang): string => (lang === "es" ? "/es/novedades/" : "/en/news/");
+/** Idiomas con novedades propias; los demás enlazan a las de inglés. */
+export const NEWS_LANGS = ["es", "en", "pt", "ru"] as const;
+export type NewsLang = (typeof NEWS_LANGS)[number];
+export const newsLang = (lang: Lang): NewsLang => ((NEWS_LANGS as readonly string[]).includes(lang) ? (lang as NewsLang) : "en");
+export const newsIndex = (lang: Lang): string => {
+  const l = newsLang(lang);
+  return l === "es" ? "/es/novedades/" : `/${l}/news/`;
+};
 
 export function newsPath(n: News): string {
   return `${newsIndex(n.data.lang)}${n.data.slug}/`;
 }
 
-export async function newsList(lang: "es" | "en"): Promise<News[]> {
+export async function newsList(lang: NewsLang): Promise<News[]> {
   return (await getCollection("news", (n) => n.data.lang === lang)).sort((a, b) => b.data.published.getTime() - a.data.published.getTime());
 }
 
