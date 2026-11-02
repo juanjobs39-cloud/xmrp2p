@@ -87,7 +87,8 @@ export function depositRequired(o: Pick<Order, "xmr_pico" | "fee_pico">): bigint
 /** Agrega un evento a la sala de la orden (chat y línea de tiempo). */
 export async function roomEvent(env: P2PEnv, orderId: string, from: "system" | "buyer" | "seller" | "admin" | "arbiter", body: Record<string, unknown>) {
   const room = env.P2P_ORDER_ROOM.get(env.P2P_ORDER_ROOM.idFromName(orderId));
-  await room.fetch("https://room/append", { method: "POST", headers: { "x-from": from }, body: JSON.stringify(body) });
+  const r = await room.fetch("https://room/append", { method: "POST", headers: { "x-from": from }, body: JSON.stringify(body) });
+  if (!r.ok) throw new HttpError(r.status, await r.text());
 }
 
 /** Cambia el estado solo si sigue en uno de los esperados (evita carreras entre peticiones). */

@@ -145,7 +145,8 @@ export class EscrowDriver {
     const arbIdx = lastIndex(msgs, (m) => m.from === "arbiter" && m.body.data.step === "export");
     const arb = msgs[arbIdx];
     if (!arb?.body.data.n) return { kind: "info", text: "waiting_arbiter" };
-    if (st.spentFor === arb.body.data.n) {
+    const posted = msgs.some((m) => m.from === me && m.body.data.step === "spend" && m.body.data.for === arb.body.data.n);
+    if (st.spentFor === arb.body.data.n && posted) {
       const rej = lastIndex(msgs, (m) => m.from === "arbiter" && m.body.data.step === "rejected");
       return rej > arbIdx && rejected ? { kind: "rejected", reason: String(rejected.reason) } : { kind: "info", text: "waiting_signature" };
     }

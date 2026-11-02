@@ -12,6 +12,8 @@ interface Message {
 
 const MAX_MESSAGES = 1000;
 const MAX_BYTES = 9000;
+/** Los mensajes del protocolo multisig (transacciones armadas) pesan más que el chat. */
+const MAX_PROTOCOL_BYTES = 120_000;
 
 /**
  * Sala de una orden P2P Fiat: chat cifrado (el servidor solo ve texto cifrado), cambios de estado y
@@ -29,7 +31,8 @@ export class P2POrderRoom extends DurableObject<Env> {
       case "/append": {
         const from = req.headers.get("x-from") as From;
         const raw = await req.text();
-        if (raw.length > MAX_BYTES) return new Response("mensaje demasiado grande", { status: 413 });
+        const max = raw.startsWith('{"type":"protocol"') ? MAX_PROTOCOL_BYTES : MAX_BYTES;
+        if (raw.length > max) return new Response("mensaje demasiado grande", { status: 413 });
         const seq = ((await this.ctx.storage.get<number>("seq")) ?? 0) + 1;
         if (seq > MAX_MESSAGES) return new Response("la orden alcanzó el máximo de mensajes", { status: 429 });
         const msg: Message = { seq, at: Date.now(), from, body: JSON.parse(raw) as Record<string, unknown> };
