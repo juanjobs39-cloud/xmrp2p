@@ -32,6 +32,13 @@ const STATE_SECRET = crypto.randomUUID() + crypto.randomUUID();
 const s = JSON.parse(readFileSync(walletFile, "utf8"));
 const funding = await moneroTs.createWalletFull({ networkType: NET, password: "x", seed: s.seed, restoreHeight: s.restoreHeight, server: { uri: NODE } });
 await funding.sync();
+// Espera a que el XMR de prueba esté desbloqueado (10 confirmaciones desde que llegó).
+for (let i = 0; Number(await funding.getUnlockedBalance()) < 0.012e12; i++) {
+  if (i > 60) throw new Error("la wallet de prueba no tiene XMR desbloqueado suficiente");
+  if (i % 5 === 0) log("esperando XMR desbloqueado… saldo:", Number(await funding.getBalance()) / 1e12, "desbloqueado:", Number(await funding.getUnlockedBalance()) / 1e12);
+  await sleep(60_000);
+  await funding.sync();
+}
 log("wallet de prueba:", Number(await funding.getUnlockedBalance()) / 1e12, "XMR disponibles");
 const feeWallet = await moneroTs.createWalletFull({ networkType: NET, password: "x", server: { uri: NODE } });
 const buyerReceive = await moneroTs.createWalletFull({ networkType: NET, password: "x", server: { uri: NODE } });
@@ -137,9 +144,9 @@ try {
   await sw.sync();
   for (let i = 0; ; i++) {
     await arbiter.tick(); // publica su información de salidas
-    const exp = (await proto()).findLast((m) => m.from === "arbiter" && m.body.data.step === "export")?.body.data.hex;
+    var exp = (await proto()).findLast((m) => m.from === "arbiter" && m.body.data.step === "export")?.body.data;
     if (exp) {
-      await importInfo(sw, [exp]);
+      await importInfo(sw, [exp.hex]);
       break;
     }
     if (i > 10) throw new Error("el árbitro no publicó su información");
@@ -151,7 +158,7 @@ try {
     { address: await buyerReceive.getPrimaryAddress(), amount: BigInt(full.order.xmr_pico) },
     { address: FEE, amount: BigInt(full.order.fee_pico) },
   ]);
-  await send("seller", { step: "spend", hex });
+  await send("seller", { step: "spend", hex, for: exp.n });
   for (let i = 0; (await getOrder()).status !== "released"; i++) {
     if (i > 10) throw new Error("el árbitro no firmó el pago");
     await arbiter.tick();

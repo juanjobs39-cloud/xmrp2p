@@ -47,7 +47,18 @@ export class Arbiter {
 
   async init() {
     this.key = await stateKey(this.cfg.stateSecret);
+    /** Wallets conectadas que siguen abiertas entre pasadas: id → { wallet, exportN }. */
+    this.live = new Map();
     return this;
+  }
+
+  /** Cierra las wallets de órdenes que ya no tienen tarea. */
+  async closeIdle(active) {
+    for (const [id, l] of this.live) {
+      if (active.has(id)) continue;
+      this.live.delete(id);
+      await l.wallet.close().catch(() => {});
+    }
   }
 
   /** Una pasada por todas las tareas. Devuelve cuántas tareas siguen pendientes. */
@@ -64,6 +75,7 @@ export class Arbiter {
         this.log(`orden ${t.order_id} (${t.task}):`, e?.message ?? e);
       }
     }
+    await this.closeIdle(new Set(tasks.filter((t) => t.task !== "setup_escrow").map((t) => t.order_id)));
     return tasks.length;
   }
 
@@ -87,13 +99,34 @@ export class Arbiter {
     return sealed ? open(this.key, id, typeof sealed === "string" ? sealed : JSON.stringify(sealed)) : null;
   }
 
+  /**
+   * Guarda solo las llaves (unos KB: incluyen el estado del multisig) y la altura de inicio.
+   * La caché de una wallet sincronizada pesa decenas de MB (hashes de toda la cadena), así que no se guarda:
+   * la wallet conectada se queda abierta en memoria (`this.live`) y, si el proceso reinicia, se vuelve a escanear.
+   */
   async saveState(id, state, wallet) {
-    if (wallet) {
-      const [keys, cache] = await wallet.getData();
-      state.keys = b64(keys);
-      state.cache = cache ? b64(cache) : null;
-    }
+    if (wallet) state.keys = b64((await wallet.getData())[0]);
+    delete state.cache;
     await this.cfg.api.putState(id, await seal(this.key, id, state));
+  }
+
+  /** Wallet conectada de la orden, abierta una sola vez y reutilizada entre pasadas. */
+  async liveWallet(id, state) {
+    let l = this.live.get(id);
+    if (!l) {
+      const { wallet } = await this.openWallet(id, state, true);
+      if (state.restoreHeight) await wallet.setRestoreHeight(state.restoreHeight);
+      l = { wallet, exportN: null };
+      this.live.set(id, l);
+    }
+    return l;
+  }
+
+  /** Publica la información de salidas del árbitro; `n` identifica esta exportación (sus datos de firma viven en memoria). */
+  async postExport(id, l) {
+    const n = crypto.randomUUID();
+    await this.cfg.api.post(id, "message", { data: { step: "export", n, hex: await exportInfo(l.wallet) } });
+    l.exportN = n;
   }
 
   async openWallet(id, state, withNode) {
@@ -176,26 +209,22 @@ export class Arbiter {
     const id = t.order_id;
     const state = await this.loadState(id);
     if (!state?.done) throw new Error("no hay wallet de escrow para esta orden");
-    const { wallet } = await this.openWallet(id, state, true);
-    try {
-      await wallet.sync();
-      const txs = await wallet.getTxs({ isIncoming: true });
-      if (!txs.length) return;
-      if (t.status === "awaiting_deposit") {
-        await this.cfg.api.post(id, "deposit", { txid: txs[0].getHash() });
-        this.log(`orden ${id}: depósito visto ${txs[0].getHash().slice(0, 10)}…`);
-      }
-      const confirmed = txs.every((tx) => (tx.getNumConfirmations() ?? 0) >= MIN_CONFIRMATIONS);
-      if (confirmed) {
-        const total = txs.reduce((a, tx) => a + BigInt(tx.getIncomingAmount() ?? 0n), 0n);
-        await this.cfg.api.post(id, "confirmed", { amount_xmr: fromPico(total) });
-        // La otra parte necesita esta información para poder armar la transacción de salida.
-        await this.cfg.api.post(id, "message", { data: { step: "export", hex: await exportInfo(wallet) } });
-        this.log(`orden ${id}: ${fromPico(total)} XMR confirmados`);
-      }
-      await this.saveState(id, state, wallet);
-    } finally {
-      await wallet.close();
+    const l = await this.liveWallet(id, state);
+    const wallet = l.wallet;
+    await wallet.sync();
+    const txs = await wallet.getTxs({ isIncoming: true });
+    if (!txs.length) return;
+    if (t.status === "awaiting_deposit") {
+      await this.cfg.api.post(id, "deposit", { txid: txs[0].getHash() });
+      this.log(`orden ${id}: depósito visto ${txs[0].getHash().slice(0, 10)}…`);
+    }
+    const confirmed = txs.every((tx) => (tx.getNumConfirmations() ?? 0) >= MIN_CONFIRMATIONS);
+    if (confirmed) {
+      const total = txs.reduce((a, tx) => a + BigInt(tx.getIncomingAmount() ?? 0n), 0n);
+      await this.cfg.api.post(id, "confirmed", { amount_xmr: fromPico(total) });
+      // La otra parte necesita esta información para poder armar la transacción de salida.
+      await this.postExport(id, l);
+      this.log(`orden ${id}: ${fromPico(total)} XMR confirmados`);
     }
   }
 
@@ -213,17 +242,17 @@ export class Arbiter {
     const msgs = await this.protocol(id);
     const theirExport = msgs.findLast((m) => m.from === role && m.body.data.step === "export")?.body.data.hex;
     const spendMsg = msgs.findLast((m) => m.from === role && m.body.data.step === "spend");
-    const { wallet } = await this.openWallet(id, state, true);
-    try {
+    const l = await this.liveWallet(id, state);
+    const wallet = l.wallet;
+    {
       await wallet.sync();
-      if (!state.exportedAt || !msgs.some((m) => m.from === "arbiter" && m.body.data.step === "export")) {
-        await this.cfg.api.post(id, "message", { data: { step: "export", hex: await exportInfo(wallet) } });
-        state.exportedAt = Date.now();
+      // Los datos de firma de una exportación solo existen en la memoria de esta wallet: si no hay una
+      // exportación de esta sesión (p. ej. el proceso reinició), se publica otra y quien cobra rearma el pago.
+      if (!l.exportN || !msgs.some((m) => m.from === "arbiter" && m.body.data.step === "export" && m.body.data.n === l.exportN)) {
+        await this.postExport(id, l);
+        return;
       }
-      if (!theirExport || !spendMsg) {
-        await this.saveState(id, state, wallet);
-        return; // esperando la transacción de quien cobra
-      }
+      if (!theirExport || !spendMsg || spendMsg.body.data.for !== l.exportN) return; // esperando la transacción armada con la última exportación
       const hex = spendMsg.body.data.hex;
       const tag = await sha(hex);
       if (state.rejected?.includes(tag)) return;
@@ -240,9 +269,6 @@ export class Arbiter {
       const txids = await signAndSubmit(wallet, hex);
       await this.cfg.api.post(id, "payout", { txid: txids[0] });
       this.log(`orden ${id}: ${t.task} enviado ${txids[0].slice(0, 10)}…`);
-      await this.saveState(id, state, wallet);
-    } finally {
-      await wallet.close();
     }
   }
 }

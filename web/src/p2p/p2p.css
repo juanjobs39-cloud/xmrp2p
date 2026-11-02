@@ -1,0 +1,62 @@
+:root { --p2p-buy: #0f7b4f; --p2p-sell: #c0392b; --p2p-soft: rgb(127 127 127 / 0.08); }
+@media (prefers-color-scheme: dark) { :root { --p2p-buy: #2ecc8a; --p2p-sell: #ff6b5b; } }
+
+.p2p-nav { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; margin: 1rem 0 1.4rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--line); }
+.p2p-nav a { text-decoration: none; font-weight: 600; color: var(--muted); }
+.p2p-nav a[aria-current="page"] { color: var(--accent); }
+
+.p2p-tabs { display: flex; gap: 0.4rem; margin-bottom: 1rem; }
+.p2p-tab { flex: 1; max-width: 12rem; padding: 0.6rem 1rem; border: 1px solid var(--line); border-radius: var(--radius); background: transparent; color: var(--fg); font-weight: 700; font-size: 1rem; cursor: pointer; }
+.p2p-tab.on.buy { background: var(--p2p-buy); border-color: var(--p2p-buy); color: #fff; }
+.p2p-tab.on.sell { background: var(--p2p-sell); border-color: var(--p2p-sell); color: #fff; }
+
+.p2p-filters, .p2p-grid { display: grid; gap: 0.6rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); align-items: end; }
+.p2p-filters input, .p2p-filters select, .p2p-form input, .p2p-form select, .p2p-form textarea, .p2p-take input, .p2p-take select, .p2p-box input, .p2p-chat textarea, .p2p-appeal textarea { width: 100%; box-sizing: border-box; }
+.p2p-market { color: var(--muted); margin: 0.8rem 0; }
+
+.p2p-list { display: grid; gap: 0.7rem; }
+.p2p-ad-main { display: grid; gap: 0.6rem 1rem; grid-template-columns: 2fr 1.2fr 1.6fr 2fr auto; align-items: center; }
+@media (max-width: 760px) { .p2p-ad-main { grid-template-columns: 1fr 1fr; } }
+.p2p-price { font-size: 1.35rem; font-weight: 700; }
+.p2p-price small { font-size: 0.8rem; font-weight: 400; color: var(--muted); }
+.p2p-user small { color: var(--muted); }
+.p2p-online { color: var(--p2p-buy); margin-inline-start: 0.3rem; font-size: 0.7rem; }
+.p2p-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.p2p-tag { display: inline-block; font-size: 0.82rem; padding: 0.15rem 0.5rem; border-radius: 6px; background: var(--p2p-soft); border: 1px solid var(--line); color: var(--fg); }
+.p2p-tag.rev { border-color: var(--warn-fg); }
+.btn-tag { cursor: pointer; font: inherit; font-size: 0.85rem; }
+.p2p-terms { margin: 0.5rem 0 0; color: var(--muted); }
+.p2p-take { margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed var(--line); display: grid; gap: 0.5rem; max-width: 34rem; }
+
+.btn.buy { background: var(--p2p-buy); color: #fff; }
+.btn.sell { background: var(--p2p-sell); color: #fff; }
+.buy { color: var(--p2p-buy); }
+.sell { color: var(--p2p-sell); }
+.badge.ok { background: #e3f6e8; color: #1d4d2c; }
+
+.p2p-form, .p2p-box { display: grid; gap: 0.7rem; max-width: 46rem; margin-bottom: 1rem; }
+.p2p-chosen { padding: 0.5rem 0.7rem; border: 1px solid var(--line); border-radius: var(--radius); margin: 0.4rem 0; }
+
+.p2p-orow { display: grid; grid-template-columns: 5rem 1fr auto auto; gap: 1rem; align-items: center; text-decoration: none; color: var(--fg); }
+@media (max-width: 600px) { .p2p-orow { grid-template-columns: 1fr 1fr; } }
+
+.p2p-dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.3rem 1rem; margin: 0.8rem 0; }
+.p2p-dl dt { color: var(--muted); }
+.p2p-dl dd { margin: 0; }
+.p2p-timer { font-weight: 700; font-variant-numeric: tabular-nums; }
+.p2p-steps { display: flex; flex-wrap: wrap; gap: 0.3rem; list-style: none; padding: 0; margin: 1rem 0; counter-reset: s; }
+.p2p-steps li { counter-increment: s; padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px solid var(--line); font-size: 0.85rem; color: var(--muted); }
+.p2p-steps li::before { content: counter(s) ". "; }
+.p2p-steps li.done { background: var(--p2p-soft); color: var(--fg); }
+.p2p-steps li.now { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.p2p-addr { word-break: break-all; font-size: 0.85rem; }
+.p2p-deposit, .p2p-pay { margin: 0.8rem 0; }
+.p2p-pay pre { white-space: pre-wrap; word-break: break-word; background: var(--p2p-soft); padding: 0.6rem; border-radius: 6px; }
+
+.p2p-chat { margin-top: 1rem; display: grid; gap: 0.5rem; }
+.p2p-chat-log { max-height: 22rem; overflow-y: auto; display: grid; gap: 0.4rem; padding: 0.3rem; }
+.p2p-msg { max-width: 80%; padding: 0.4rem 0.7rem; border-radius: 10px; background: var(--p2p-soft); white-space: pre-wrap; word-break: break-word; }
+.p2p-msg.mine { justify-self: end; background: rgb(183 65 14 / 0.12); }
+.p2p-msg.admin { border: 1px solid var(--warn-fg); }
+.p2p-msg small { display: block; color: var(--muted); font-size: 0.75rem; }
+.p2p-sys { margin: 0; font-size: 0.82rem; color: var(--muted); text-align: center; }

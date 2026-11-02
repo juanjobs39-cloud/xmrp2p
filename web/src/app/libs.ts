@@ -58,6 +58,17 @@ export type Xmr = {
   makerClose(): Promise<void>;
   makerIncoming(): Promise<{ txid: string; amount: string; confirmations: number; inPool: boolean }[]>;
   makerKeys(): Promise<{ address: string; seed: string; viewKey: string; spendKey: string; restoreHeight: number }>;
+  // P2P Fiat: wallet de escrow multisig 2 de 3 por orden.
+  escrowCreate(a: { id: string; network: string; password: string }): Promise<string>;
+  escrowOpen(a: { id: string; network: string; password: string; keysData: Uint8Array; cacheData?: Uint8Array; node?: string; restoreHeight?: number }): Promise<void>;
+  escrowAdvance(id: string, round: number, hexes: string[], password: string): Promise<{ done: boolean; address?: string; hex: string | null }>;
+  escrowSetHeight(id: string, node: string): Promise<number>;
+  escrowData(id: string): Promise<{ keysData: Uint8Array; cacheData: Uint8Array }>;
+  escrowSync(id: string): Promise<{ balance: string; unlocked: string }>;
+  escrowExport(id: string): Promise<string>;
+  escrowImport(id: string, hexes: string[]): Promise<number>;
+  escrowSpend(id: string, destinations: { address: string; amount: string }[]): Promise<string>;
+  escrowClose(id: string): Promise<void>;
 };
 
 let xmr_: Xmr | null = null;

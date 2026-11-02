@@ -199,3 +199,64 @@ export async function makerIncoming() {
     }))
     .filter((t) => t.confirmations < 10);
 }
+
+// ---------- P2P Fiat: wallet de escrow multisig 2 de 3 por orden ----------
+// La lógica de rondas, exportar/importar y armar pagos es la misma que usa el árbitro (arbiter/src/multisig.mjs).
+import * as ms from "../../../arbiter/src/multisig.mjs";
+
+const escrows = new Map();
+const escrow = (id) => {
+  const w = escrows.get(id);
+  if (!w) throw new Error("la wallet del escrow no está abierta");
+  return w;
+};
+
+/** Wallet nueva para el escrow de una orden (sin conexión). → hex de la ronda 0 */
+export async function escrowCreate({ id, network, password }) {
+  if (escrows.has(id)) await escrowClose(id);
+  const w = await moneroTs.createWalletFull({ networkType: NET[network], password, proxyToWorker: true });
+  escrows.set(id, w);
+  return ms.prepare(w);
+}
+
+/** Reabre la wallet del escrow; con `node`, conectada para ver depósitos y armar pagos. */
+export async function escrowOpen({ id, network, password, keysData, cacheData, node, restoreHeight }) {
+  if (escrows.has(id)) await escrowClose(id);
+  const w = await moneroTs.openWalletFull({ networkType: NET[network], password, keysData, cacheData, proxyToWorker: true, ...(node ? { server: { uri: node } } : {}) });
+  // Solo se guardan las llaves (la caché sincronizada pesa decenas de MB): hay que decirle desde dónde escanear.
+  if (restoreHeight) await w.setRestoreHeight(restoreHeight);
+  escrows.set(id, w);
+}
+
+export async function escrowAdvance(id, round, hexes, password) {
+  return ms.advance(escrow(id), round, hexes, password);
+}
+
+/** Fija desde qué bloque escanear (la altura actual) para no recorrer toda la cadena. */
+export async function escrowSetHeight(id, node) {
+  const d = await moneroTs.connectToDaemonRpc({ uri: node, proxyToWorker: false });
+  const h = Math.max(0, Number(await d.getHeight()) - 20);
+  await escrow(id).setRestoreHeight(h);
+  return h;
+}
+
+export async function escrowData(id) {
+  const [keysData, cacheData] = await escrow(id).getData();
+  return { keysData, cacheData };
+}
+
+export async function escrowSync(id) {
+  const w = escrow(id);
+  await w.sync();
+  return { balance: String(await w.getBalance()), unlocked: String(await w.getUnlockedBalance()) };
+}
+
+export const escrowExport = (id) => ms.exportInfo(escrow(id));
+export const escrowImport = (id, hexes) => ms.importInfo(escrow(id), hexes);
+export const escrowSpend = (id, destinations) => ms.createSpend(escrow(id), destinations.map((d) => ({ address: d.address, amount: BigInt(d.amount) })));
+
+export async function escrowClose(id) {
+  const w = escrows.get(id);
+  escrows.delete(id);
+  if (w) await w.close(false);
+}
