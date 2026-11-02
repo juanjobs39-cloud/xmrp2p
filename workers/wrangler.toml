@@ -35,6 +35,13 @@ TROCADOR_MIN_KYC = "B"
 TROCADOR_MARKUP = "0"
 # Días que se guardan IP/idioma/navegador de los intercambios por Trocador. Vacío = indefinido (lo que pide Trocador).
 TROCADOR_RETENTION_DAYS = ""
+# P2P Fiat (XMR ↔ dinero fiat). Apagado: "" (las rutas /v1/p2p responden 404). Solo se enciende en pruebas.
+P2P_ENABLED = ""
+# Red de Monero del escrow: "stagenet" mientras se prueba; "mainnet" solo con aprobación del dueño.
+P2P_XMR_NETWORK = "stagenet"
+# Dirección (0x…) de la llave del administrador. Vacío = panel desactivado. El token del árbitro va como
+# secreto: wrangler secret put P2P_ARBITER_TOKEN.
+P2P_ADMIN_ADDRESS = ""
 
 [triggers]
 crons = ["*/5 * * * *"]
@@ -56,6 +63,15 @@ class_name = "SwapRoom"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["MakerInbox", "SwapRoom"]
+
+# P2P Fiat (beta, solo local por ahora): sala de cada orden (chat cifrado y estados).
+[[durable_objects.bindings]]
+name = "P2P_ORDER_ROOM"
+class_name = "P2POrderRoom"
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["P2POrderRoom"]
 
 # Límite de peticiones por IP (plan gratuito). Escrituras y solicitudes de swap.
 [[ratelimits]]

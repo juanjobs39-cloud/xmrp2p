@@ -7,9 +7,12 @@ import { openapi } from "./openapi";
 import { referencePrice } from "./price";
 import { createSwap, roomRequest } from "./swaps";
 import { handleTrocador, isTrocadorWebhook, purgeTrocador, trocadorWebhook } from "./trocador";
+import { handleP2P, p2pEnabled, sweepOrders } from "./p2p/index";
+import type { P2PEnv } from "./p2p/common";
 
 export { MakerInbox } from "../do/MakerInbox";
 export { SwapRoom } from "../do/SwapRoom";
+export { P2POrderRoom } from "../do/P2POrderRoom";
 
 function corsHeaders(req: Request, env: Env): Record<string, string> {
   const origin = req.headers.get("origin");
@@ -18,8 +21,8 @@ function corsHeaders(req: Request, env: Env): Record<string, string> {
   return allow
     ? {
         "access-control-allow-origin": allow,
-        "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "access-control-allow-headers": "content-type, x-room-token, x-maker-address, x-timestamp, x-signature, mcp-protocol-version",
+        "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+        "access-control-allow-headers": "content-type, authorization, x-room-token, x-maker-address, x-timestamp, x-signature, mcp-protocol-version",
         "access-control-max-age": "86400",
       }
     : {};
@@ -86,6 +89,7 @@ async function route(req: Request, env: Env): Promise<Response> {
     const r = await handleTrocador(req, env, url);
     if (r) return r;
   }
+  if (p.startsWith("/v1/p2p/")) return handleP2P(req, env as P2PEnv, url);
   if (p === "/mcp") return handleMcp(req, env);
   throw new HttpError(404, "ruta no encontrada");
 }
@@ -111,5 +115,6 @@ export default {
   async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
     ctx.waitUntil(runMonitor(env as MonitorEnv).then((r) => console.log("monitor", JSON.stringify(r))));
     ctx.waitUntil(purgeTrocador(env).then((n) => n && console.log("trocador purge", n)));
+    if (p2pEnabled(env as P2PEnv)) ctx.waitUntil(sweepOrders(env as P2PEnv).then((n) => n && console.log("p2p timeouts", n)));
   },
 } satisfies ExportedHandler<Env>;
