@@ -42,6 +42,8 @@ P2P_XMR_NETWORK = "stagenet"
 # Dirección (0x…) de la llave del administrador. Vacío = panel desactivado. El token del árbitro va como
 # secreto: wrangler secret put P2P_ARBITER_TOKEN.
 P2P_ADMIN_ADDRESS = ""
+# Dirección de Monero donde cobra la plataforma (la del árbitro debe ser la misma).
+P2P_FEE_ADDRESS = ""
 
 [triggers]
 crons = ["*/5 * * * *"]

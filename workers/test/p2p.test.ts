@@ -303,6 +303,23 @@ describe("P2P Fiat", () => {
     await signed(admin, "PUT", "/v1/p2p/admin/settings", { blocked_methods: [] });
   });
 
+  it("árbitro: lee el protocolo de la orden y guarda su estado cifrado", async () => {
+    const seller = await newUser();
+    const buyer = await newUser();
+    const ad = (await signed(seller, "POST", "/v1/p2p/ads", sellAd())).body;
+    const o = (await signed(buyer, "POST", "/v1/p2p/orders", { ad_id: ad.id, fiat_amount: "300", xmr_address: STAGENET("B") })).body;
+    expect((await signed(buyer, "POST", `/v1/p2p/orders/${o.id}/messages`, { protocol: { step: "kex", round: 0, hex: "abc" } })).status).toBe(201);
+    const msgs = (await arbiter(`/v1/p2p/arbiter/orders/${o.id}/messages`)).body.messages;
+    expect(msgs.find((m: { from: string; body: { type: string } }) => m.from === "buyer" && m.body.type === "protocol").body.data).toEqual({ step: "kex", round: 0, hex: "abc" });
+    expect((await arbiter(`/v1/p2p/arbiter/orders/${o.id}/state`)).status).toBe(404);
+    const put = await call(`/v1/p2p/arbiter/orders/${o.id}/state`, { method: "PUT", body: '{"v":1,"iv":"x","ct":"y"}', headers: { authorization: `Bearer ${ARBITER}` } });
+    expect(put.status).toBe(200);
+    expect((await arbiter(`/v1/p2p/arbiter/orders/${o.id}/state`)).body).toEqual({ v: 1, iv: "x", ct: "y" });
+    expect((await call(`/v1/p2p/arbiter/orders/${o.id}/state`)).status).toBe(401);
+    const tasks = (await arbiter("/v1/p2p/arbiter/tasks")).body;
+    expect(tasks.admin_address).toBe(admin.address.toLowerCase());
+  });
+
   it("el árbitro necesita su token", async () => {
     expect((await call("/v1/p2p/arbiter/tasks")).status).toBe(401);
     expect((await call("/v1/p2p/arbiter/tasks", { headers: { authorization: "Bearer otro" } })).status).toBe(401);

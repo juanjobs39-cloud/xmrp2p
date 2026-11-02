@@ -172,7 +172,7 @@ async function tasks(env: P2PEnv) {
         return { ...base, task: "watch_deposit", deposit_txid: o.deposit_txid, ...amounts };
       case "releasing":
         // Pagar al comprador (más la comisión), autorizado por la firma del vendedor.
-        return { ...base, task: "release", to: o.buyer_address, ...amounts, authorization: JSON.parse(o.release_auth ?? "null") };
+        return { ...base, task: "release", to: o.buyer_address, refund_to: o.seller_refund_address, ...amounts, authorization: JSON.parse(o.release_auth ?? "null") };
       case "refunding":
         // Devolver al vendedor (sin comisión): el comprador canceló, se agotó el tiempo o el depósito llegó tarde.
         return { ...base, task: "refund", to: o.seller_refund_address, reason: o.cancel_reason, ...amounts };
@@ -182,6 +182,7 @@ async function tasks(env: P2PEnv) {
           task: "resolve",
           winner: o.winner,
           to: o.winner === "buyer" ? o.buyer_address : o.seller_refund_address,
+          refund_to: o.seller_refund_address,
           ...amounts,
           authorization: JSON.parse(o.decision_auth ?? "null"),
         };
@@ -194,7 +195,25 @@ async function tasks(env: P2PEnv) {
 export async function handleArbiter(req: Request, env: P2PEnv, url: URL): Promise<Response> {
   await requireArbiter(req, env);
   const p = url.pathname;
-  if (p === "/v1/p2p/arbiter/tasks" && req.method === "GET") return json({ tasks: await tasks(env), at: now() });
+  if (p === "/v1/p2p/arbiter/tasks" && req.method === "GET")
+    return json({ tasks: await tasks(env), at: now(), admin_address: env.P2P_ADMIN_ADDRESS?.toLowerCase() || null, fee_address: env.P2P_FEE_ADDRESS || null });
+
+  // Mensajes de la orden (protocolo multisig) y estado cifrado del árbitro (el contenedor no tiene disco).
+  const room = /^\/v1\/p2p\/arbiter\/orders\/([0-9a-f]{32})\/(messages|state)$/.exec(p);
+  if (room) {
+    await getOrder(env, room[1]!);
+    const stub = env.P2P_ORDER_ROOM.get(env.P2P_ORDER_ROOM.idFromName(room[1]!));
+    if (room[2] === "messages" && req.method === "GET") {
+      const after = Number(url.searchParams.get("after") ?? "0");
+      return stub.fetch(`https://room/messages?after=${Number.isFinite(after) ? after : 0}`);
+    }
+    if (room[2] === "state" && req.method === "GET") return stub.fetch("https://room/state");
+    if (room[2] === "state" && req.method === "PUT") {
+      const raw = await req.text();
+      if (raw.length > 1_900_000) throw new HttpError(413, "estado demasiado grande");
+      return stub.fetch("https://room/state", { method: "PUT", body: raw });
+    }
+  }
 
   const m = /^\/v1\/p2p\/arbiter\/orders\/([0-9a-f]{32})\/(escrow|deposit|confirmed|payout|message)$/.exec(p);
   if (!m || req.method !== "POST") throw new HttpError(404, "ruta del árbitro no encontrada");

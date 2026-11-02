@@ -1,0 +1,15 @@
+{
+  "name": "xmrp2p-arbiter",
+  "private": true,
+  "type": "module",
+  "description": "Árbitro de P2P Fiat: tercera llave del escrow multisig 2 de 3 de Monero. Co-firma solo lo que autorizan el vendedor o el administrador.",
+  "scripts": {
+    "start": "node src/main.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "monero-ts": "0.11.20",
+    "viem": "2.57.11"
+  }
+}

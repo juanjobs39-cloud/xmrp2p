@@ -28,6 +28,7 @@ export async function handleP2P(req: Request, env: P2PEnv, url: URL): Promise<Re
       deposit_window_min: Number(s.deposit_window_min),
       dispute_after_min: Number(s.dispute_after_min),
       admin_address: env.P2P_ADMIN_ADDRESS?.toLowerCase() || null,
+      fee_address: env.P2P_FEE_ADDRESS || null,
     });
   }
   if (p === "/v1/p2p/fiats" && get) return json({ popular: POPULAR_FIATS, all: FIATS }, 200, { "cache-control": "public, max-age=86400" });

@@ -48,6 +48,15 @@ export class P2POrderRoom extends DurableObject<Env> {
         const all = await this.ctx.storage.list<Message>({ prefix: "m:" });
         return Response.json({ messages: [...all.values()].filter((m) => m.seq > after) });
       }
+      case "/state": {
+        // Estado del árbitro para esta orden (wallet multisig), cifrado por el propio árbitro.
+        if (req.method === "PUT") {
+          await this.ctx.storage.put("arbiter_state", await req.text());
+          return new Response("ok");
+        }
+        const s = await this.ctx.storage.get<string>("arbiter_state");
+        return s ? new Response(s, { headers: { "content-type": "application/json" } }) : new Response("sin estado", { status: 404 });
+      }
       case "/ws": {
         const pair = new WebSocketPair();
         this.ctx.acceptWebSocket(pair[1]);

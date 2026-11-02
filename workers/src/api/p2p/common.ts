@@ -10,6 +10,8 @@ export interface P2PEnv extends Env {
   P2P_ADMIN_ADDRESS?: string;
   /** Token del árbitro (secreto de Cloudflare). Vacío: las rutas del árbitro están desactivadas. */
   P2P_ARBITER_TOKEN?: string;
+  /** Dirección de Monero donde cobra la plataforma (la comisión de cada orden). */
+  P2P_FEE_ADDRESS?: string;
   P2P_ORDER_ROOM: DurableObjectNamespace;
 }
 
