@@ -1,0 +1,77 @@
+---
+// Mercado P2P (la app): anuncios, publicar, órdenes con escrow 2 de 3 y chat. Vistas por hash (#/…).
+import Fiat from "../../../layouts/Fiat.astro";
+import { FIAT_LANGS, REAL, ROUTES, tr, type L } from "../../../content";
+
+export function getStaticPaths() {
+  return FIAT_LANGS.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as L;
+const t = tr(lang);
+
+// La API vive en el mismo origen (fiat.monerop2p.app) salvo que se indique otra.
+const api = import.meta.env.PUBLIC_P2P_API_URL as string | undefined;
+const hosts = [api ?? "", import.meta.env.PUBLIC_MONERO_NODE ?? "", import.meta.env.PUBLIC_MONERO_NODE_MAINNET ?? ""]
+  .filter(Boolean)
+  .map((u) => new URL(u).origin);
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'wasm-unsafe-eval'",
+  "worker-src 'self' blob:",
+  `connect-src 'self' ${hosts.join(" ")} https:${REAL ? "" : " http://127.0.0.1:* http://localhost:*"}`,
+  "img-src 'self' data:",
+  "style-src 'self'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'none'",
+].join("; ");
+const app = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "MoneroP2P Fiat",
+  url: new URL(ROUTES.app[lang], Astro.site).href,
+  applicationCategory: "FinanceApplication",
+  operatingSystem: "Any (web browser)",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+};
+---
+<Fiat
+  lang={lang}
+  route="app"
+  csp={csp}
+  title={t("Mercado P2P de Monero: comprar y vender XMR", "Monero P2P market: buy and sell XMR")}
+  description={t(
+    "Anuncios en vivo para comprar y vender Monero con pesos, dólares, euros o cualquier moneda, con escrow 2 de 3 y sin KYC.",
+    "Live ads to buy and sell Monero for any currency, with a 2-of-3 escrow and no KYC.",
+  )}
+  breadcrumbs={[{ name: t("Inicio", "Home"), href: ROUTES.home[lang] }, { name: t("Mercado", "Market"), href: ROUTES.app[lang] }]}
+  jsonLd={[app]}
+>
+  <main id="contenido" class="prose wide p2p-page" data-lang={lang}>
+    <header class="p2p-hero">
+      <div>
+        <h1>{t("Mercado P2P", "P2P market")} {REAL ? <span class="badge real">{t("Dinero real", "Real money")}</span> : <span class="badge">Beta</span>}</h1>
+        <p class="lead">{t(
+          "El XMR queda en un escrow 2 de 3 hasta que el vendedor confirma tu pago. No pagues antes de que la orden diga que está bloqueado.",
+          "The XMR stays in a 2-of-3 escrow until the seller confirms your payment. Do not pay before the order says it is locked.",
+        )}</p>
+      </div>
+      <ul class="p2p-trust">
+        <li><b>🔒</b> {t("Escrow 2 de 3, sin custodia", "2-of-3 escrow, non-custodial")}</li>
+        <li><b>🙈</b> {t("Sin KYC ni correo", "No KYC, no email")}</li>
+        <li><b>💬</b> {t("Chat cifrado", "Encrypted chat")}</li>
+        <li><b>%</b> {t("0.5% solo para quien vende", "0.5% fee, seller only")}</li>
+      </ul>
+      {!REAL && <p class="p2p-testnet">{t("Red de prueba (stagenet): no uses dinero real.", "Test network (stagenet): do not use real money.")}</p>}
+    </header>
+    <nav class="p2p-nav" id="p2p-nav" aria-label="P2P"></nav>
+    <div id="p2p-root"><div class="p2p-skel-list"><div class="p2p-skel"></div><div class="p2p-skel"></div><div class="p2p-skel"></div></div></div>
+    <noscript><p class="notice danger">{t("El mercado necesita JavaScript. Mientras, puedes leer cómo funciona.", "The market needs JavaScript. Meanwhile, you can read how it works.")} <a href={ROUTES.how[lang]}>{t("Cómo funciona", "How it works")}</a></p></noscript>
+  </main>
+</Fiat>
+
+<script>
+  import { P2PApp } from "../../../../src/p2p/p2p-app";
+  const lang = document.querySelector("main")?.dataset.lang === "es" ? "es" : "en";
+  void new P2PApp(lang).mount();
+</script>

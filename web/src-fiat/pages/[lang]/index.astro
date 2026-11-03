@@ -1,0 +1,119 @@
+---
+// Portada de P2P Fiat: qué es, cómo funciona, métodos y países populares, preguntas frecuentes.
+import Fiat from "../../layouts/Fiat.astro";
+import { COUNTRIES, FACTS, faq, FIAT_LANGS, marketLink, methodById, METHODS, REAL, ROUTES, tr, type L } from "../../content";
+
+export function getStaticPaths() {
+  return FIAT_LANGS.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as L;
+const t = tr(lang);
+const site = Astro.site!;
+const questions = faq(lang).slice(0, 6);
+const popular = ["spei", "nequi", "pix", "cbu", "yape", "pagomovil", "zelle", "sepa", "oxxo", "cash"].map(methodById);
+
+const app = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "MoneroP2P Fiat",
+  url: new URL(ROUTES.home[lang], site).href,
+  applicationCategory: "FinanceApplication",
+  operatingSystem: "Any (web browser)",
+  inLanguage: lang,
+  description: t(
+    "Mercado P2P para comprar y vender Monero (XMR) con moneda local y escrow multifirma 2 de 3, sin KYC.",
+    "P2P marketplace to buy and sell Monero (XMR) for local currency with a 2-of-3 multisig escrow, no KYC.",
+  ),
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD", description: t(`Comprar es gratis; quien vende paga ${FACTS.feePct}%.`, `Buying is free; sellers pay ${FACTS.feePct}%.`) },
+  featureList: [
+    t("Escrow multifirma 2 de 3 de Monero", "2-of-3 Monero multisig escrow"),
+    t("Sin KYC ni correo", "No KYC, no email"),
+    t("Chat cifrado de punta a punta", "End-to-end encrypted chat"),
+    t("Precio de mercado en vivo", "Live market price"),
+  ],
+};
+const faqLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: questions.map((x) => ({ "@type": "Question", name: x.q, acceptedAnswer: { "@type": "Answer", text: x.a } })),
+};
+---
+<Fiat
+  lang={lang}
+  route="home"
+  bareTitle
+  title={t("Comprar y vender Monero (XMR) con pesos, P2P y sin KYC · MoneroP2P Fiat", "Buy and sell Monero (XMR) P2P for cash or bank transfer, no KYC · MoneroP2P Fiat")}
+  description={t(
+    "Compra y vende Monero de persona a persona con SPEI, Nequi, Pix, Yape, transferencia o efectivo. El XMR queda en un escrow 2 de 3 hasta que el vendedor confirma tu pago. Sin KYC; comprar es gratis.",
+    "Buy and sell Monero person to person with bank transfer, Zelle, SEPA, Pix or cash. The XMR sits in a 2-of-3 escrow until the seller confirms your payment. No KYC; buying is free.",
+  )}
+  jsonLd={[app, faqLd]}
+>
+  <main id="contenido" class="fiat">
+    <section class="fiat-hero">
+      <div>
+        <h1>{lang === "es" ? <Fragment>Compra y vende <em>Monero</em> con pesos, de persona a persona</Fragment> : <Fragment>Buy and sell <em>Monero</em> for local money, person to person</Fragment>}</h1>
+        <p class="lead">{t(
+          "Paga con SPEI, Nequi, Pix, Yape, transferencia o efectivo. El XMR queda bloqueado en un escrow 2 de 3 hasta que el vendedor confirma tu pago. Sin KYC, sin correo.",
+          "Pay by bank transfer, Zelle, SEPA, Pix or cash. The XMR is locked in a 2-of-3 escrow until the seller confirms your payment. No KYC, no email.",
+        )}</p>
+        <div class="fiat-cta">
+          <a class="btn big buy" href={marketLink(lang, { buy: true })}>{t("Comprar XMR", "Buy XMR")}</a>
+          <a class="btn big sell" href={marketLink(lang, { buy: false })}>{t("Vender XMR", "Sell XMR")}</a>
+        </div>
+        <ul class="fiat-pills">
+          <li>🔒 {t("Escrow 2 de 3", "2-of-3 escrow")}</li>
+          <li>🙈 {t("Sin KYC", "No KYC")}</li>
+          <li>💬 {t("Chat cifrado", "Encrypted chat")}</li>
+          <li>% {t(`Comprar: 0 % · Vender: ${FACTS.feePct} %`, `Buy: 0% · Sell: ${FACTS.feePct}%`)}</li>
+          {!REAL && <li>🧪 {t("Red de prueba", "Test network")}</li>}
+        </ul>
+      </div>
+      <aside class="fiat-escrow" aria-label={t("Cómo se protege tu orden", "How your order is protected")}>
+        <h2>{t("Así se protege cada orden", "How every order is protected")}</h2>
+        <ol>
+          <li><div><b>{t("El vendedor bloquea el XMR", "The seller locks the XMR")}</b><span>{t("en un escrow que nadie puede mover solo", "in an escrow nobody can move alone")}</span></div></li>
+          <li><div><b>{t("Tú pagas fuera de la plataforma", "You pay off-platform")}</b><span>{t("solo cuando el XMR ya está bloqueado", "only once the XMR is locked")}</span></div></li>
+          <li><div><b>{t("El vendedor confirma y libera", "The seller confirms and releases")}</b><span>{t("el XMR llega a tu wallet", "the XMR arrives in your wallet")}</span></div></li>
+        </ol>
+        <div class="fiat-keys" role="group" aria-label={t("Llaves del escrow", "Escrow keys")}><span>🔑 {t("Comprador", "Buyer")}</span><span>🔑 {t("Vendedor", "Seller")}</span><span>🔑 {t("Árbitro", "Arbiter")}</span></div>
+      </aside>
+    </section>
+
+    <section class="fiat-section">
+      <h2>{t("Cómo funciona", "How it works")}</h2>
+      <ol class="fiat-steps">
+        <li><h3>{t("Crea tu cuenta en segundos", "Create your account in seconds")}</h3><p>{t("Solo un apodo y una contraseña. La llave de tu cuenta vive en tu navegador.", "Just a nickname and a password. Your account key lives in your browser.")}</p></li>
+        <li><h3>{t("Elige un anuncio", "Pick an ad")}</h3><p>{t("Filtra por moneda, monto y método de pago. Solo se pueden tomar anuncios de gente en línea.", "Filter by currency, amount and payment method. Only ads from people online can be taken.")}</p></li>
+        <li><h3>{t("El XMR queda en el escrow", "The XMR goes into escrow")}</h3><p>{t(`El vendedor deposita; tras ${FACTS.confirmations} confirmaciones (unos 20 min) ya puedes pagar.`, `The seller deposits; after ${FACTS.confirmations} confirmations (about 20 min) you can pay.`)}</p></li>
+        <li><h3>{t("Pagas y recibes", "You pay and receive")}</h3><p>{t("Marcas «Ya pagué», el vendedor confirma en su cuenta y libera. Si no lo hace, abres una apelación.", "You mark “I have paid”, the seller checks their account and releases. If they don't, you open an appeal.")}</p></li>
+      </ol>
+      <p><a href={ROUTES.how[lang]}>{t("Ver el proceso completo →", "See the full process →")}</a></p>
+    </section>
+
+    <section class="fiat-section">
+      <h2>{t("Métodos de pago populares", "Popular payment methods")}</h2>
+      <ul class="fiat-grid">
+        {popular.map((m) => (
+          <li><a href={`/${lang}/${m.slug[lang]}/`}><b>{m.name}</b><small class={m.reversible ? "warn" : ""}>{m.where[lang]}{m.reversible ? " · ⚠" : ""}</small></a></li>
+        ))}
+      </ul>
+      <p><a href={ROUTES.methods[lang]}>{t(`Ver los ${METHODS.length} métodos →`, `See all ${METHODS.length} methods →`)}</a></p>
+    </section>
+
+    <section class="fiat-section">
+      <h2>{t("Comprar Monero en tu país", "Buy Monero in your country")}</h2>
+      <ul class="fiat-grid">
+        {COUNTRIES.map((c) => (
+          <li><a href={`/${lang}/${c.slug[lang]}/`}><b>{c.name[lang].replace(/^the /, "")}</b><small>{c.fiat} · {c.methods.slice(0, 3).map((id) => methodById(id).name).join(", ")}</small></a></li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="fiat-section fiat-faq">
+      <h2>{t("Preguntas frecuentes", "Frequently asked questions")}</h2>
+      {questions.map((x) => <details><summary>{x.q}</summary><p>{x.a}</p></details>)}
+      <p><a href={ROUTES.faq[lang]}>{t("Todas las preguntas →", "All questions →")}</a></p>
+    </section>
+  </main>
+</Fiat>

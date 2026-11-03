@@ -23,6 +23,7 @@ recovery/
 node_modules/
 dist/
 dist-ipfs/
+dist-fiat/
 .astro/
 .wrangler/
 .dev.vars

@@ -158,6 +158,15 @@ jobs:
         working-directory: web
       - run: npm run build:ipfs
         working-directory: web
+      # Sitio P2P Fiat (fiat.monerop2p.app)
+      - run: npm run build
+        working-directory: web
+        env:
+          PUBLIC_SITE: fiat
+      - run: npx html-validate "dist-fiat/**/*.html"
+        working-directory: web
+      - run: npx linkinator dist-fiat --recurse --skip "^https?://(?!localhost)"
+        working-directory: web
 
   dleq-research:
     name: DLEQ en Rust (Fase 0)

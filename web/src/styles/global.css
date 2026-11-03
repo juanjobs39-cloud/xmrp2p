@@ -169,6 +169,7 @@ body[data-net="real"] header.site { border-bottom: 3px solid var(--danger-fg); }
 /* Botón "Ser maker" en el menú */
 nav .nav-cta { display: inline-block; padding: 0.3rem 0.8rem; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); font-weight: 700; }
 nav .nav-cta.primary { background: var(--accent); color: var(--accent-fg); }
+nav .nav-new { margin-inline-start: 0.2rem; padding: 0 0.35rem; border-radius: 999px; background: var(--accent); color: var(--accent-fg); font-size: 0.7rem; vertical-align: 0.1em; }
 /* Aviso de MetaMask del maker: fijo abajo para verse aunque el panel esté desplazado */
 #mk-mm:not([hidden]) { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); width: min(40rem, calc(100% - 2rem)); z-index: 50; margin: 0; box-shadow: 0 6px 24px rgb(0 0 0 / 0.25); }
 .import-cta { background: var(--card); border: 1px dashed var(--line); display: flex; flex-wrap: wrap; gap: 0.4rem 0.8rem; align-items: center; }
@@ -249,3 +250,9 @@ body:not(.chosen) .later { display: none !important; }
 #quick-get-coin[hidden], #quick-get-xmr[hidden], #quick-note[hidden], #troc-dest-memo-box[hidden] { display: none; }
 #troc-dest-memo-box { display: grid; gap: 0.4rem; }
 #troc-dest-memo { font: inherit; padding: 0.6rem 0.8rem; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); }
+
+/* Selector Cripto ↔ Cripto | P2P (arriba de la app) */
+.mode-switch { display: flex; gap: 0.25rem; width: fit-content; max-width: 100%; margin: 0 0 1rem; padding: 0.25rem; border: 1px solid var(--line); border-radius: 999px; background: var(--card); overflow-x: auto; }
+.mode-switch a { padding: 0.35rem 0.9rem; border-radius: 999px; color: var(--muted); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.mode-switch a[aria-current="page"] { background: var(--accent); color: var(--accent-fg); }
+.mode-switch a:not([aria-current]):hover { color: var(--fg, inherit); }

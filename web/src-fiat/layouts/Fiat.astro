@@ -1,0 +1,135 @@
+---
+// Plantilla del sitio P2P Fiat (fiat.monerop2p.app): SEO completo (canonical, hreflang, Open Graph,
+// JSON-LD) y la misma identidad visual que monerop2p.app.
+import "../../src/styles/global.css";
+import "../fiat.css";
+import { MAIN_SITE, REAL, REPO, ROUTES, tr, type L, type RouteKey } from "../content";
+
+export interface Props {
+  lang: L;
+  title: string;
+  description: string;
+  /** clave de ROUTES (versiones es/en) o rutas explícitas */
+  route?: RouteKey;
+  alternates?: Partial<Record<L, string>>;
+  jsonLd?: object[];
+  breadcrumbs?: { name: string; href: string }[];
+  csp?: string;
+  noindex?: boolean;
+  /** el título ya incluye la marca */
+  bareTitle?: boolean;
+}
+
+const { lang, title, description, route, jsonLd = [], breadcrumbs, csp, noindex, bareTitle } = Astro.props;
+const t = tr(lang);
+const site = Astro.site!;
+const path = Astro.url.pathname;
+const canonical = new URL(path, site).href;
+const alternates: Partial<Record<L, string>> = Astro.props.alternates ?? (route ? ROUTES[route] : {});
+const brand = "MoneroP2P Fiat";
+const fullTitle = bareTitle ? title : `${title} · ${brand}`;
+const other: L = lang === "es" ? "en" : "es";
+const main = (p: string) => MAIN_SITE + p;
+const legal = {
+  terms: main(lang === "es" ? "/es/terminos/" : "/en/terms/"),
+  privacy: main(lang === "es" ? "/es/privacidad/" : "/en/privacy/"),
+  risks: main(lang === "es" ? "/es/aviso-de-riesgos/" : "/en/risk-notice/"),
+  contact: main(lang === "es" ? "/es/contacto/" : "/en/contact/"),
+};
+
+const org = { "@context": "https://schema.org", "@type": "Organization", name: "MoneroP2P", url: MAIN_SITE + "/", sameAs: [REPO] };
+const website = { "@context": "https://schema.org", "@type": "WebSite", name: brand, url: site.href, inLanguage: ["es", "en"], publisher: { "@type": "Organization", name: "MoneroP2P" } };
+const crumbs = breadcrumbs && {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: breadcrumbs.map((b, i) => ({ "@type": "ListItem", position: i + 1, name: b.name, item: new URL(b.href, site).href })),
+};
+const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
+const nav: [RouteKey, string][] = [
+  ["how", t("Cómo funciona", "How it works")],
+  ["methods", t("Métodos de pago", "Payment methods")],
+  ["safety", t("Seguridad", "Safety")],
+  ["faq", t("Preguntas", "FAQ")],
+];
+---
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {csp && <meta http-equiv="Content-Security-Policy" content={csp} />}
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {Object.entries(alternates).map(([l, href]) => <link rel="alternate" hreflang={l} href={new URL(href!, site).href} />)}
+    {alternates.en && <link rel="alternate" hreflang="x-default" href={new URL(alternates.en, site).href} />}
+    <meta name="robots" content={noindex ? "noindex" : "index, follow, max-image-preview:large"} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={brand} />
+    <meta property="og:locale" content={lang === "es" ? "es_419" : "en_US"} />
+    <meta property="og:locale:alternate" content={lang === "es" ? "en_US" : "es_419"} />
+    <meta property="og:image" content={new URL("/og.png?v=3", site).href} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml" />
+    <link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt" />
+    <meta name="theme-color" content="#e2591b" />
+    {ld.map((o) => <script type="application/ld+json" set:html={JSON.stringify(o)} />)}
+  </head>
+  <body>
+    <a class="skip" href="#contenido">{t("Saltar al contenido", "Skip to content")}</a>
+    <header class="site">
+      <div class="wrap">
+        <a class="brand" href={ROUTES.home[lang]}><img src="/favicon.svg?v=3" alt="" width="28" height="28" />MoneroP2P <span class="fiat-tag">Fiat</span></a>
+        <nav aria-label={t("Principal", "Main")}>
+          <ul>
+            {nav.map(([k, label]) => <li><a href={ROUTES[k][lang]} aria-current={path === ROUTES[k][lang] ? "page" : undefined}>{label}</a></li>)}
+            <li><a class="nav-cta" href={main(lang === "es" ? "/es/app/" : "/en/app/")}>{t("Swaps cripto", "Crypto swaps")}</a></li>
+            <li><a class="nav-cta primary" href={ROUTES.app[lang]} aria-current={path === ROUTES.app[lang] ? "page" : undefined}>{t("Abrir mercado", "Open market")}</a></li>
+          </ul>
+        </nav>
+        {alternates[other] && (
+          <a class="fiat-lang" href={alternates[other]} hreflang={other} lang={other}>🌐 {other === "es" ? "Español" : "English"}</a>
+        )}
+      </div>
+    </header>
+    {breadcrumbs && (
+      <nav class="breadcrumbs wrap" aria-label={t("Migas de pan", "Breadcrumbs")}>
+        <ol>{breadcrumbs.map((b, i) => <li>{i < breadcrumbs.length - 1 ? <a href={b.href}>{b.name}</a> : <span aria-current="page">{b.name}</span>}</li>)}</ol>
+      </nav>
+    )}
+    <slot />
+    <footer class="site">
+      <div class="wrap">
+        <p class="notice warn">
+          {REAL
+            ? t(
+                "⚠️ Dinero real. Tope de 1000 USD por orden. Las transacciones de cripto son irreversibles, el precio es volátil y tú eres responsable de cumplir las leyes de tu país.",
+                "⚠️ Real money. 1000 USD cap per order. Crypto transactions are irreversible, prices are volatile and you are responsible for complying with your country's laws.",
+              )
+            : t(
+                "⚠️ Beta en red de prueba (Monero stagenet): no uses dinero real. Tope de 1000 USD por orden.",
+                "⚠️ Beta on the test network (Monero stagenet): do not use real money. 1000 USD cap per order.",
+              )}{" "}
+          <a href={legal.risks}>{t("Aviso de riesgos", "Risk notice")}</a>
+        </p>
+        <ul>
+          <li><a href={ROUTES.fees[lang]}>{t("Comisiones y límites", "Fees and limits")}</a></li>
+          <li><a href={ROUTES.countries[lang]}>{t("Países", "Countries")}</a></li>
+          <li><a href={ROUTES.safety[lang]}>{t("Seguridad", "Safety")}</a></li>
+          <li><a href={ROUTES.faq[lang]}>{t("Preguntas frecuentes", "FAQ")}</a></li>
+          <li><a href={legal.terms}>{t("Términos de uso", "Terms of use")}</a></li>
+          <li><a href={legal.privacy}>{t("Privacidad", "Privacy")}</a></li>
+          <li><a href={legal.contact}>{t("Contacto", "Contact")}</a></li>
+          <li><a href={main(lang === "es" ? "/es/" : "/en/")}>MoneroP2P</a></li>
+          <li><a href={REPO} rel="noopener">{t("Código fuente (AGPL-3.0)", "Source code (AGPL-3.0)")}</a></li>
+        </ul>
+        <p>{t("El XMR de cada orden queda en un escrow 2 de 3: nadie puede moverlo solo, ni nosotros.", "Each order's XMR sits in a 2-of-3 escrow: nobody can move it alone, not even us.")}</p>
+      </div>
+    </footer>
+  </body>
+</html>

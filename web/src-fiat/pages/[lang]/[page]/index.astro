@@ -1,0 +1,259 @@
+---
+// Páginas de contenido de P2P Fiat (sin JavaScript, para buscadores e IA): cómo funciona, comisiones,
+// seguridad, preguntas, índice de métodos y países, y una página por método de pago y por país.
+import Fiat from "../../../layouts/Fiat.astro";
+import { COUNTRIES, FACTS, faq, FIAT_LANGS, marketLink, methodById, METHODS, ROUTES, tr, type Country, type L, type PayMethod, type RouteKey } from "../../../content";
+
+type Kind = { k: "info"; key: Exclude<RouteKey, "home" | "app"> } | { k: "method"; m: PayMethod } | { k: "country"; c: Country };
+export function getStaticPaths() {
+  // Dentro de la función: Astro ejecuta getStaticPaths aparte del resto del archivo.
+  const INFO = ["how", "fees", "safety", "faq", "methods", "countries"] as const;
+  const out: { params: { lang: L; page: string }; props: { kind: Kind } }[] = [];
+  for (const lang of FIAT_LANGS) {
+    for (const key of INFO) out.push({ params: { lang, page: ROUTES[key][lang].split("/")[2]! }, props: { kind: { k: "info", key } } });
+    for (const m of METHODS) out.push({ params: { lang, page: m.slug[lang] }, props: { kind: { k: "method", m } } });
+    for (const c of COUNTRIES) out.push({ params: { lang, page: c.slug[lang] }, props: { kind: { k: "country", c } } });
+  }
+  return out;
+}
+
+const lang = Astro.params.lang as L;
+const { kind } = Astro.props as { kind: Kind };
+const t = tr(lang);
+const site = Astro.site!;
+const f = FACTS;
+const home = { name: t("Inicio", "Home"), href: ROUTES.home[lang] };
+const alt = (fn: (l: L) => string) => Object.fromEntries(FIAT_LANGS.map((l) => [l, fn(l)])) as Record<L, string>;
+
+let title = "";
+let description = "";
+let alternates: Record<L, string>;
+let crumbs: { name: string; href: string }[];
+const ld: object[] = [];
+
+if (kind.k === "info") {
+  alternates = ROUTES[kind.key];
+  const meta: Record<typeof kind.key, [string, string]> = {
+    how: [
+      t("Cómo funciona el escrow 2 de 3 para comprar y vender Monero", "How the 2-of-3 escrow works to buy and sell Monero"),
+      t("Paso a paso: cuenta sin KYC, anuncio, escrow multifirma de Monero, pago fuera de la plataforma, liberación y apelaciones.", "Step by step: no-KYC account, ad, Monero multisig escrow, off-platform payment, release and appeals."),
+    ],
+    fees: [
+      t("Comisiones y límites", "Fees and limits"),
+      t(`Comprar Monero es gratis; quien vende paga ${f.feePct}%. Tope de ${f.capUsd} USD por orden, plazos de depósito y de pago.`, `Buying Monero is free; sellers pay ${f.feePct}%. ${f.capUsd} USD cap per order, deposit and payment windows.`),
+    ],
+    safety: [
+      t("Seguridad y estafas comunes en P2P", "Safety and common P2P scams"),
+      t("Cómo comprar y vender Monero P2P sin caer en estafas: pagos reversibles, capturas falsas, pagos de terceros y encuentros en persona.", "How to buy and sell Monero P2P without falling for scams: reversible payments, fake screenshots, third-party payments and in-person meetings."),
+    ],
+    faq: [
+      t("Preguntas frecuentes", "Frequently asked questions"),
+      t("Respuestas sobre KYC, escrow, comisiones, límites, apelaciones y wallets para comprar y vender Monero P2P.", "Answers about KYC, escrow, fees, limits, appeals and wallets for buying and selling Monero P2P."),
+    ],
+    methods: [
+      t("Métodos de pago para comprar Monero", "Payment methods to buy Monero"),
+      t(`${METHODS.length} métodos para comprar y vender XMR: SPEI, Nequi, Pix, Yape, Zelle, SEPA, efectivo y más, con su nivel de riesgo.`, `${METHODS.length} ways to buy and sell XMR: SPEI, Nequi, Pix, Yape, Zelle, SEPA, cash and more, with their risk level.`),
+    ],
+    countries: [
+      t("Comprar Monero por país", "Buy Monero by country"),
+      t("Cómo comprar y vender Monero con moneda local en México, Colombia, Argentina, Perú, Venezuela, Chile, Brasil, España y Estados Unidos.", "How to buy and sell Monero with local currency in Mexico, Colombia, Argentina, Peru, Venezuela, Chile, Brazil, Spain and the United States."),
+    ],
+  };
+  [title, description] = meta[kind.key];
+  crumbs = [home, { name: title, href: ROUTES[kind.key][lang] }];
+  if (kind.key === "faq")
+    ld.push({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq(lang).map((x) => ({ "@type": "Question", name: x.q, acceptedAnswer: { "@type": "Answer", text: x.a } })) });
+} else if (kind.k === "method") {
+  const m = kind.m;
+  alternates = alt((l) => `/${l}/${m.slug[l]}/`);
+  title = t(`Comprar y vender Monero (XMR) con ${m.name}`, `Buy and sell Monero (XMR) with ${m.name}`);
+  description = t(
+    `Compra Monero con ${m.name} (${m.where.es}) de persona a persona, sin KYC. El XMR queda en un escrow 2 de 3 hasta que el vendedor confirma tu pago.`,
+    `Buy Monero with ${m.name} (${m.where.en}) person to person, no KYC. The XMR sits in a 2-of-3 escrow until the seller confirms your payment.`,
+  );
+  crumbs = [home, { name: t("Métodos de pago", "Payment methods"), href: ROUTES.methods[lang] }, { name: m.name, href: alternates[lang] }];
+} else {
+  const c = kind.c;
+  alternates = alt((l) => `/${l}/${c.slug[l]}/`);
+  title = t(`Comprar Monero en ${c.name.es} con ${c.fiatName.es}`, `Buy Monero in ${c.name.en} with ${c.fiatName.en}`);
+  description = t(
+    `Cómo comprar y vender Monero (XMR) en ${c.name.es} con ${c.fiatName.es} (${c.fiat}): ${c.methods.map((id) => methodById(id).name).join(", ")}. P2P, sin KYC y con escrow 2 de 3.`,
+    `How to buy and sell Monero (XMR) in ${c.name.en} with ${c.fiatName.en} (${c.fiat}): ${c.methods.map((id) => methodById(id).name).join(", ")}. P2P, no KYC, 2-of-3 escrow.`,
+  );
+  crumbs = [home, { name: t("Países", "Countries"), href: ROUTES.countries[lang] }, { name: c.name[lang].replace(/^the /, ""), href: alternates[lang] }];
+}
+
+const howSteps = [
+  [t("Crea tu cuenta", "Create your account"), t("Elige un apodo y una contraseña. La llave de tu cuenta se crea en tu navegador; descarga el respaldo.", "Choose a nickname and a password. Your account key is created in your browser; download the backup.")],
+  [t("Elige un anuncio o publica el tuyo", "Pick an ad or post your own"), t("Filtra por moneda, monto, método y país. Cada anuncio muestra precio, límites, tiempo para pagar y la reputación del anunciante.", "Filter by currency, amount, method and country. Each ad shows price, limits, payment window and the advertiser's reputation.")],
+  [t("Se arma el escrow 2 de 3", "The 2-of-3 escrow is set up"), t("Al abrir la orden, los navegadores de comprador y vendedor y el árbitro crean una dirección multifirma de Monero. Mantén la pestaña abierta un momento.", "When the order opens, the buyer's and seller's browsers and the arbiter create a Monero multisig address. Keep the tab open for a moment.")],
+  [t("El vendedor deposita", "The seller deposits"), t(`Tiene ${f.depositWindowMin} minutos. Tras ${f.confirmations} confirmaciones (unos 20 min) el XMR queda bloqueado. Si no deposita, la orden se cancela sola.`, `They have ${f.depositWindowMin} minutes. After ${f.confirmations} confirmations (about 20 min) the XMR is locked. If they don't deposit, the order cancels itself.`)],
+  [t("El comprador paga", "The buyer pays"), t("Fuera de la plataforma, con el método del anuncio y a los datos que el vendedor puso en la orden. Luego marca «Ya pagué».", "Off-platform, with the ad's method, to the details the seller put in the order. Then marks “I have paid”.")],
+  [t("El vendedor confirma y libera", "The seller confirms and releases"), t("Revisa su cuenta y libera. La transacción de Monero sale del escrow a la wallet del comprador, y la comisión a la plataforma.", "They check their account and release. The Monero transaction goes from the escrow to the buyer's wallet, and the fee to the platform.")],
+  [t("Si algo sale mal: apelación", "If something goes wrong: appeal"), t(`A los ${f.disputeAfterMin} minutos de marcar el pago, cualquiera puede apelar. Soporte revisa el chat y los comprobantes y firma con una de las partes.`, `${f.disputeAfterMin} minutes after the payment is marked, either side can appeal. Support reviews the chat and the proofs and signs with one of the parties.`)],
+];
+if (kind.k === "info" && kind.key === "how")
+  ld.push({
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: title,
+    description,
+    step: howSteps.map(([name, text], i) => ({ "@type": "HowToStep", position: i + 1, name, text })),
+  });
+---
+<Fiat lang={lang} title={title} description={description} alternates={alternates} breadcrumbs={crumbs} jsonLd={ld}>
+  <main id="contenido" class="fiat narrow">
+    <h1>{title}</h1>
+
+    {kind.k === "info" && kind.key === "how" && (
+      <Fragment>
+        <p class="lead">{t("Un mercado P2P donde el Monero nunca queda en manos de una sola persona: ni del vendedor, ni del comprador, ni nuestra.", "A P2P market where the Monero is never in the hands of a single party: not the seller's, not the buyer's, not ours.")}</p>
+        <ol class="fiat-steps">{howSteps.map(([h, p]) => <li><h3>{h}</h3><p>{p}</p></li>)}</ol>
+        <h2>{t("¿Qué es un escrow 2 de 3?", "What is a 2-of-3 escrow?")}</h2>
+        <p>{t(
+          "Es una dirección de Monero multifirma con tres llaves: una del comprador, una del vendedor y una del árbitro. Para mover el dinero hacen falta dos. Así, el vendedor no puede llevarse el XMR después de que pagaste, y el árbitro no puede moverlo solo.",
+          "It is a multisig Monero address with three keys: one for the buyer, one for the seller and one for the arbiter. Moving the money takes two. So the seller cannot take the XMR back after you paid, and the arbiter cannot move it alone.",
+        )}</p>
+        <h2>{t("¿Por qué no se bloquea el XMR al publicar el anuncio?", "Why isn't the XMR locked when the ad is posted?")}</h2>
+        <p>{t(
+          "Porque el escrow necesita la llave del comprador, que todavía no existe. Bloquearlo antes obligaría a que alguien custodie el dinero. En su lugar: solo se pueden tomar anuncios de vendedores en línea, el comprador paga solo cuando el XMR ya está bloqueado y los vendedores que no depositan quedan pausados.",
+          "Because the escrow needs the buyer's key, which does not exist yet. Locking it earlier would require someone to hold the money. Instead: only ads from online sellers can be taken, the buyer pays only once the XMR is locked, and sellers who fail to deposit get paused.",
+        )}</p>
+      </Fragment>
+    )}
+
+    {kind.k === "info" && kind.key === "fees" && (
+      <Fragment>
+        <table>
+          <tbody>
+            <tr><th>{t("Comisión para quien compra", "Fee for buyers")}</th><td>0 %</td></tr>
+            <tr><th>{t("Comisión para quien vende", "Fee for sellers")}</th><td>{f.feePct} % {t("del monto, en XMR, al liberar", "of the amount, in XMR, on release")}</td></tr>
+            <tr><th>{t("Comisión de la red de Monero", "Monero network fee")}</th><td>{t("unos centavos de dólar; la paga el escrow", "a few cents; paid from the escrow")}</td></tr>
+            <tr><th>{t("Tope por orden", "Cap per order")}</th><td>{f.capUsd} USD {t("(o su equivalente)", "(or equivalent)")}</td></tr>
+            <tr><th>{t("Órdenes abiertas a la vez", "Open orders at a time")}</th><td>{f.maxOpenOrders}</td></tr>
+            <tr><th>{t("Anuncios activos por persona", "Active ads per person")}</th><td>{f.maxActiveAds}</td></tr>
+            <tr><th>{t("Tiempo para depositar (vendedor)", "Time to deposit (seller)")}</th><td>{f.depositWindowMin} min</td></tr>
+            <tr><th>{t("Confirmaciones del depósito", "Deposit confirmations")}</th><td>{f.confirmations} ({t("unos 20 min", "about 20 min")})</td></tr>
+            <tr><th>{t("Tiempo para pagar (comprador)", "Time to pay (buyer)")}</th><td>{f.payWindowMin[0]}–{f.payWindowMin[1]} min, {t("lo fija cada anuncio", "set by each ad")}</td></tr>
+            <tr><th>{t("Apelación disponible", "Appeal available")}</th><td>{t(`${f.disputeAfterMin} min después de marcar el pago`, `${f.disputeAfterMin} min after the payment is marked`)}</td></tr>
+          </tbody>
+        </table>
+        <p>{t("El precio lo pone cada anunciante, normalmente como un porcentaje sobre el precio de mercado (la mediana de varios exchanges), así que sigue al mercado en todo momento.", "Each advertiser sets the price, usually as a percentage over the market price (the median of several exchanges), so it follows the market at all times.")}</p>
+        <p>{t(`Ejemplo: vendes 1 XMR. Depositas 1.005 XMR más la comisión de red; el comprador recibe 1 XMR y la plataforma ${f.feePct} %.`, `Example: you sell 1 XMR. You deposit 1.005 XMR plus the network fee; the buyer gets 1 XMR and the platform ${f.feePct}%.`)}</p>
+      </Fragment>
+    )}
+
+    {kind.k === "info" && kind.key === "safety" && (
+      <Fragment>
+        <p class="lead">{t("El escrow evita que te roben el XMR, pero el pago en dinero pasa fuera de la plataforma. Estas reglas evitan casi todas las estafas.", "The escrow stops anyone from stealing the XMR, but the money payment happens off-platform. These rules prevent almost every scam.")}</p>
+        <h2>{t("Si vendes", "If you sell")}</h2>
+        <ul>
+          <li>{t("Libera solo cuando veas el dinero en la app de TU banco. Las capturas de pantalla se falsifican en segundos.", "Release only when you see the money in YOUR banking app. Screenshots can be faked in seconds.")}</li>
+          <li>{t("Revisa que el nombre de quien paga coincida con el del comprador. Un pago de un tercero puede venir de una cuenta robada.", "Check that the payer's name matches the buyer. A third-party payment may come from a stolen account.")}</li>
+          <li>{t("Cuidado con los métodos reversibles (⚠): PayPal, Mercado Pago, Revolut, tarjetas. Exige historial de órdenes.", "Beware of reversible methods (⚠): PayPal, Mercado Pago, Revolut, cards. Require an order history.")}</li>
+          <li>{t("No liberes por un pago «pendiente», «programado» o «en revisión».", "Do not release on a “pending”, “scheduled” or “under review” payment.")}</li>
+        </ul>
+        <h2>{t("Si compras", "If you buy")}</h2>
+        <ul>
+          <li>{t("No pagues hasta que la orden diga que el XMR está bloqueado en el escrow.", "Do not pay until the order says the XMR is locked in the escrow.")}</li>
+          <li>{t("Paga desde una cuenta a tu nombre y guarda el comprobante.", "Pay from an account in your own name and keep the receipt.")}</li>
+          <li>{t("No escribas «Monero», «cripto» ni «XMR» en el concepto del pago.", "Don't write “Monero”, “crypto” or “XMR” in the payment reference.")}</li>
+        </ul>
+        <h2>{t("Para todos", "For everyone")}</h2>
+        <ul>
+          <li>{t("Nunca cierres un trato fuera de la plataforma: fuera del escrow no hay apelación.", "Never close a deal off-platform: outside the escrow there is no appeal.")}</li>
+          <li>{t("La única dirección es fiat.monerop2p.app. Desconfía de enlaces parecidos.", "The only address is fiat.monerop2p.app. Distrust lookalike links.")}</li>
+          <li>{t("Nadie de soporte te pedirá tu contraseña ni tu archivo de respaldo.", "Nobody from support will ask for your password or your backup file.")}</li>
+          <li>{t("En efectivo: lugar público, con cámaras y de día.", "Cash: public place, with cameras, in daylight.")}</li>
+          <li>{t("Descarga el respaldo de tu cuenta después de cada orden: incluye las llaves de tus escrows abiertos.", "Download your account backup after each order: it includes the keys of your open escrows.")}</li>
+        </ul>
+      </Fragment>
+    )}
+
+    {kind.k === "info" && kind.key === "faq" && (
+      <div class="fiat-faq">{faq(lang).map((x) => <details open><summary>{x.q}</summary><p>{x.a}</p></details>)}</div>
+    )}
+
+    {kind.k === "info" && kind.key === "methods" && (
+      <Fragment>
+        <p class="lead">{t("Puedes pagar con cualquier método que acuerden comprador y vendedor. Estos son los más usados. Los marcados con ⚠ se pueden revertir después de liberar.", "You can pay with any method buyer and seller agree on. These are the most used. Those marked ⚠ can be reversed after release.")}</p>
+        <ul class="fiat-grid">
+          {METHODS.map((m) => <li><a href={`/${lang}/${m.slug[lang]}/`}><b>{m.name}</b><small class={m.reversible ? "warn" : ""}>{m.where[lang]}{m.reversible ? t(" · ⚠ reversible", " · ⚠ reversible") : ""}</small></a></li>)}
+        </ul>
+      </Fragment>
+    )}
+
+    {kind.k === "info" && kind.key === "countries" && (
+      <ul class="fiat-grid">
+        {COUNTRIES.map((c) => <li><a href={`/${lang}/${c.slug[lang]}/`}><b>{c.name[lang].replace(/^the /, "")}</b><small>{c.fiat} · {c.methods.map((id) => methodById(id).name).join(", ")}</small></a></li>)}
+      </ul>
+    )}
+
+    {kind.k === "method" && (
+      <Fragment>
+        <p class="lead">{kind.m.intro[lang]}</p>
+        <p>
+          {t("Riesgo de reversión:", "Reversal risk:")}{" "}
+          <span class={"fiat-risk " + (kind.m.reversible ? "high" : "low")}>{kind.m.reversible ? t("alto ⚠", "high ⚠") : t("bajo", "low")}</span>
+        </p>
+        <div class="fiat-box">
+          <h2>{t(`Ver anuncios con ${kind.m.name}`, `See ${kind.m.name} ads`)}</h2>
+          <div class="fiat-cta">
+            <a class="btn buy" href={marketLink(lang, { buy: true, fiat: kind.m.fiat, method: kind.m.catalog })}>{t("Comprar XMR", "Buy XMR")}</a>
+            <a class="btn sell" href={marketLink(lang, { buy: false, fiat: kind.m.fiat, method: kind.m.catalog })}>{t("Vender XMR", "Sell XMR")}</a>
+          </div>
+        </div>
+        <h2>{t(`Cómo comprar Monero con ${kind.m.name}`, `How to buy Monero with ${kind.m.name}`)}</h2>
+        <ol class="fiat-steps">
+          <li><h3>{t("Elige un anuncio de venta", "Pick a sell ad")}</h3><p>{t(`Filtra por ${kind.m.name} y revisa precio, límites y reputación del vendedor.`, `Filter by ${kind.m.name} and check the price, limits and the seller's reputation.`)}</p></li>
+          <li><h3>{t("Espera el escrow", "Wait for the escrow")}</h3><p>{t("El vendedor deposita el XMR en el escrow 2 de 3. No pagues antes.", "The seller deposits the XMR in the 2-of-3 escrow. Do not pay before.")}</p></li>
+          <li><h3>{t(`Paga con ${kind.m.name}`, `Pay with ${kind.m.name}`)}</h3><p>{t("A los datos que el vendedor puso en la orden, y marca «Ya pagué».", "To the details the seller put in the order, then mark “I have paid”.")}</p></li>
+          <li><h3>{t("Recibe tu XMR", "Get your XMR")}</h3><p>{t("El vendedor confirma tu pago y libera el Monero a tu wallet.", "The seller confirms your payment and releases the Monero to your wallet.")}</p></li>
+        </ol>
+        <h2>{t("Consejos", "Tips")}</h2>
+        <ul>{kind.m.tips[lang].map((x) => <li>{x}</li>)}</ul>
+        <h2>{t(`Vender Monero por ${kind.m.name}`, `Sell Monero for ${kind.m.name}`)}</h2>
+        <p>{t(
+          `Publica un anuncio de venta con ${kind.m.name}, pon tu precio sobre el de mercado y los datos para recibir el pago. Cuando alguien abre una orden, depositas el XMR en el escrow y liberas al ver el dinero. Pagas ${f.feePct} % de comisión.`,
+          `Post a sell ad with ${kind.m.name}, set your price over the market and your payment details. When someone opens an order, you deposit the XMR in the escrow and release once you see the money. You pay a ${f.feePct}% fee.`,
+        )}</p>
+        <p><a href={ROUTES.safety[lang]}>{t("Cómo evitar estafas →", "How to avoid scams →")}</a> · <a href={ROUTES.methods[lang]}>{t("Otros métodos →", "Other methods →")}</a></p>
+      </Fragment>
+    )}
+
+    {kind.k === "country" && (
+      <Fragment>
+        <p class="lead">{kind.c.note[lang]}</p>
+        <div class="fiat-box">
+          <h2>{t(`Anuncios en ${kind.c.fiat}`, `${kind.c.fiat} ads`)}</h2>
+          <div class="fiat-cta">
+            <a class="btn buy" href={marketLink(lang, { buy: true, fiat: kind.c.fiat })}>{t("Comprar XMR", "Buy XMR")}</a>
+            <a class="btn sell" href={marketLink(lang, { buy: false, fiat: kind.c.fiat })}>{t("Vender XMR", "Sell XMR")}</a>
+          </div>
+        </div>
+        <h2>{t("Métodos de pago", "Payment methods")}</h2>
+        <ul class="fiat-grid">
+          {kind.c.methods.map(methodById).map((m) => <li><a href={`/${lang}/${m.slug[lang]}/`}><b>{m.name}</b><small class={m.reversible ? "warn" : ""}>{m.reversible ? t("⚠ reversible", "⚠ reversible") : t("no reversible", "not reversible")}</small></a></li>)}
+        </ul>
+        <h2>{t("Por qué P2P con escrow", "Why P2P with escrow")}</h2>
+        <ul>
+          <li>{t("Sin KYC: no subes identificación ni das tu correo.", "No KYC: no ID upload, no email.")}</li>
+          <li>{t(`Pagas en ${kind.c.fiatName.es} con el método que ya usas.`, `You pay in ${kind.c.fiatName.en} with the method you already use.`)}</li>
+          <li>{t("El XMR queda bloqueado en un escrow 2 de 3 hasta que el vendedor confirma tu pago.", "The XMR stays locked in a 2-of-3 escrow until the seller confirms your payment.")}</li>
+          <li>{t("Comprar es gratis; quien vende paga " + f.feePct + " %.", "Buying is free; sellers pay " + f.feePct + "%.")}</li>
+        </ul>
+        <p class="notice warn">{t(`Tú eres responsable de cumplir las leyes de ${kind.c.name.es}, incluidos los impuestos.`, `You are responsible for complying with the laws of ${kind.c.name.en}, including taxes.`)}</p>
+      </Fragment>
+    )}
+
+    {kind.k === "info" && kind.key !== "methods" && kind.key !== "countries" && (
+      <div class="fiat-box">
+        <h2>{t("¿Listo?", "Ready?")}</h2>
+        <div class="fiat-cta">
+          <a class="btn buy" href={marketLink(lang, { buy: true })}>{t("Comprar XMR", "Buy XMR")}</a>
+          <a class="btn sell" href={marketLink(lang, { buy: false })}>{t("Vender XMR", "Sell XMR")}</a>
+        </div>
+      </div>
+    )}
+  </main>
+</Fiat>

@@ -1,0 +1,61 @@
+/* Sitio P2P Fiat: portada y páginas de contenido (usa los tokens de global.css, modo oscuro incluido). */
+:root { --buy: #10875a; --sell: #c2372f; }
+@media (prefers-color-scheme: dark) { :root { --buy: #3ccf8e; --sell: #ff7b72; } }
+
+.fiat-tag { padding: 0.05rem 0.45rem; border-radius: 6px; background: var(--accent); color: var(--accent-fg); font-size: 0.8rem; }
+.fiat-lang { font-size: 0.92rem; color: var(--muted); text-decoration: none; }
+.fiat-lang:hover { color: var(--fg); }
+
+main.fiat { max-width: var(--max); margin: 0 auto; padding-inline: 1rem; }
+main.fiat.narrow { max-width: 48rem; }
+.fiat-hero { display: grid; gap: 1.5rem 3rem; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: center; padding-block: 1.5rem 1rem; }
+.fiat-hero h1 { font-size: clamp(2rem, 4.6vw, 3.1rem); letter-spacing: -0.01em; margin-top: 0; }
+.fiat-hero h1 em { font-style: normal; color: var(--accent); }
+.fiat-cta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1.2rem 0 0.8rem; }
+.fiat-cta .btn.buy { background: var(--buy); color: #fff; }
+.fiat-cta .btn.sell { background: var(--sell); color: #fff; }
+.fiat-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; list-style: none; margin: 0; padding: 0; font-size: 0.9rem; }
+.fiat-pills li { padding: 0.25rem 0.7rem; border: 1px solid var(--line); border-radius: 999px; background: var(--card); }
+
+/* Tarjeta de la orden (ilustración del escrow 2 de 3) */
+.fiat-escrow { padding: 1.2rem 1.3rem; border: 1px solid var(--line); border-radius: 16px; background: var(--card); box-shadow: 0 10px 30px rgb(0 0 0 / 0.07); }
+.fiat-escrow h2 { margin: 0 0 0.8rem; font-size: 1.05rem; }
+.fiat-escrow ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.6rem; counter-reset: s; }
+.fiat-escrow li { display: grid; grid-template-columns: 1.8rem 1fr; gap: 0.6rem; align-items: start; counter-increment: s; font-size: 0.95rem; }
+.fiat-escrow li::before { content: counter(s); display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 50%; background: var(--bg); border: 1px solid var(--line); font-weight: 700; font-size: 0.85rem; }
+.fiat-escrow li b { display: block; }
+.fiat-escrow li span { color: var(--muted); font-size: 0.9rem; }
+.fiat-keys { display: flex; gap: 0.4rem; margin-top: 1rem; font-size: 0.85rem; }
+.fiat-keys span { flex: 1; padding: 0.4rem; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); text-align: center; }
+
+.fiat-section { margin-top: 2.6rem; }
+.fiat-section > h2 { margin-top: 0; }
+.fiat-grid { display: grid; gap: 0.8rem; grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); list-style: none; margin: 1rem 0 0; padding: 0; }
+.fiat-grid a { display: block; height: 100%; padding: 0.85rem 1rem; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--fg); text-decoration: none; transition: border-color 0.15s ease, transform 0.08s ease; }
+.fiat-grid a:hover { border-color: var(--accent); }
+.fiat-grid a:active { transform: translateY(1px); }
+.fiat-grid b { display: block; }
+.fiat-grid small { color: var(--muted); }
+.fiat-grid .warn { color: var(--warn-fg); }
+
+.fiat-steps { counter-reset: s; list-style: none; padding: 0; display: grid; gap: 0.9rem; }
+.fiat-steps li { position: relative; padding: 0.9rem 1rem 0.9rem 3.3rem; border: 1px solid var(--line); border-radius: 12px; background: var(--card); counter-increment: s; }
+.fiat-steps li::before { content: counter(s); position: absolute; left: 1rem; top: 0.9rem; display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 50%; background: var(--accent); color: var(--accent-fg); font-weight: 700; font-size: 0.85rem; }
+.fiat-steps h3 { margin: 0 0 0.25rem; font-size: 1.05rem; }
+.fiat-steps p { margin: 0; color: var(--muted); }
+
+.fiat-faq details { border-bottom: 1px solid var(--line); padding: 0.75rem 0; }
+.fiat-faq summary { cursor: pointer; font-weight: 600; list-style-position: outside; }
+.fiat-faq details p { margin: 0.5rem 0 0; color: var(--muted); }
+
+.fiat-box { margin: 1.5rem 0; padding: 1.1rem 1.2rem; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+.fiat-box h2 { margin-top: 0; font-size: 1.15rem; }
+.fiat-box .fiat-cta { margin-bottom: 0; }
+.fiat-risk { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }
+.fiat-risk.low { background: #e3f6e8; color: #1d4d2c; }
+.fiat-risk.high { background: var(--warn-bg); color: var(--warn-fg); }
+@media (prefers-color-scheme: dark) { .fiat-risk.low { background: #143321; color: #8fe0a8; } }
+
+@media (max-width: 820px) {
+  .fiat-hero { grid-template-columns: 1fr; }
+}

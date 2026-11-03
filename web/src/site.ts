@@ -4,7 +4,12 @@ export const SITE = {
   email: import.meta.env.PUBLIC_CONTACT_EMAIL ?? "[EMAIL_CONTACTO]",
   repo: "https://github.com/juanjobs39-cloud/xmrp2p",
   apiUrl: import.meta.env.PUBLIC_API_URL ?? "",
+  /** Sitio de P2P Fiat (compra y venta de XMR con dinero fiat, de persona a persona). */
+  fiatUrl: (import.meta.env.PUBLIC_FIAT_SITE_URL as string | undefined) ?? "https://fiat.monerop2p.app",
 };
+
+/** Página de P2P Fiat en el idioma pedido (ese sitio solo existe en español e inglés). */
+export const fiatHref = (lang: string) => `${SITE.fiatUrl}/${lang === "es" ? "es" : "en"}/`;
 
 export type Lang = "es" | "en" | "pt" | "ru" | "uk" | "zh" | "ja" | "ko" | "hi" | "fa";
 export const LANGS: Lang[] = ["en", "es", "pt", "ru", "uk", "zh", "ja", "ko", "hi", "fa"];

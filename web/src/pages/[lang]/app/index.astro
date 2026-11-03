@@ -1,7 +1,7 @@
 ---
 import { makeT } from "../../../i18n/ui";
 import Base from "../../../layouts/Base.astro";
-import { LANGS, ROUTES, SITE, type Lang } from "../../../site";
+import { fiatHref, LANGS, ROUTES, SITE, type Lang } from "../../../site";
 import NetSwitch from "../../../components/NetSwitch.astro";
 import Verified from "../../../components/Verified.astro";
 
@@ -63,6 +63,10 @@ const softwareLd = {
   jsonLd={[softwareLd]}
 >
   <main id="contenido" class="prose" data-lang={lang}>
+    <nav class="mode-switch" aria-label={t("Tipo de cambio", "Exchange type")}>
+      <a href={ROUTES.app[lang]} aria-current="page">{t("Cripto ↔ Cripto", "Crypto ↔ Crypto")}</a>
+      <a href={fiatHref(lang)}>{t("Con pesos, dólares… (P2P)", "With cash or bank (P2P)")}</a>
+    </nav>
     <h1>{t("Cambiar USDT por XMR", "Swap USDT for XMR")} <span class="badge only-test">Testnet</span><span class="badge real only-real">{t("Dinero real", "Real money")}</span></h1>
     <NetSwitch lang={lang} />
     {draftUi && (

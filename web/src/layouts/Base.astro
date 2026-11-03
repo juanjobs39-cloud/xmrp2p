@@ -1,7 +1,7 @@
 ---
 import { makeT } from "../i18n/ui";
 import "../styles/global.css";
-import { LANG_INFO, LANGS, NAV, ROUTES, SITE, type Lang } from "../site";
+import { fiatHref, LANG_INFO, LANGS, NAV, ROUTES, SITE, type Lang } from "../site";
 import { newsIndex } from "../lib/content";
 
 export interface Props {
@@ -91,6 +91,7 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
             {NAV.map((n) => (
               <li><a href={ROUTES[n.key][lang]} aria-current={path === ROUTES[n.key][lang] ? "page" : undefined}>{t(n.es, n.en)}</a></li>
             ))}
+            <li><a class="nav-cta" href={fiatHref(lang)}>{t("P2P Fiat", "P2P Fiat")} <span class="nav-new">{t("Nuevo", "New")}</span></a></li>
             <li><a class="nav-cta" href={ROUTES.makerApp[lang]} aria-current={path === ROUTES.makerApp[lang] ? "page" : undefined}>{t("Ser maker", "Be a maker")}</a></li>
             <li><a class="nav-cta primary" href={ROUTES.app[lang]} aria-current={path === ROUTES.app[lang] ? "page" : undefined}>{t("Abrir la app", "Open the app")}</a></li>
           </ul>

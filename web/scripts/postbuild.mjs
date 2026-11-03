@@ -11,7 +11,8 @@ import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const dist = fileURLToPath(new URL("../dist/", import.meta.url));
+const fiat = process.env.PUBLIC_SITE === "fiat";
+const dist = fileURLToPath(new URL(fiat ? "../dist-fiat/" : "../dist/", import.meta.url));
 const sri = (buf) => "sha384-" + createHash("sha384").update(buf).digest("base64");
 const sha256b64 = (s) => "'sha256-" + createHash("sha256").update(s).digest("base64") + "'";
 

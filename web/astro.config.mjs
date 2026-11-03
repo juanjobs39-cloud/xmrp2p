@@ -6,8 +6,11 @@ import { loadEnv } from "vite";
 // se generaba con el dominio de ejemplo en canonical, hreflang, sitemap y llms.txt.
 const env = { ...loadEnv(process.env.NODE_ENV ?? "production", process.cwd(), "PUBLIC_"), ...process.env };
 
-// Dominio definitivo: PUBLIC_SITE_URL (ver web/.env.example).
-const site = env.PUBLIC_SITE_URL ?? "https://monerop2p.app";
+// Dos sitios desde el mismo proyecto: el principal (src/ → dist/) y P2P Fiat (src-fiat/ → dist-fiat/,
+// en fiat.monerop2p.app), que se construye con PUBLIC_SITE=fiat.
+const fiat = env.PUBLIC_SITE === "fiat";
+// Dominio definitivo: PUBLIC_SITE_URL / PUBLIC_FIAT_SITE_URL (ver web/.env.example).
+const site = fiat ? (env.PUBLIC_FIAT_SITE_URL ?? "https://fiat.monerop2p.app") : (env.PUBLIC_SITE_URL ?? "https://monerop2p.app");
 
 // Reemplaza marcadores del contenido (p. ej. [EMAIL_CONTACTO]) por los valores configurados.
 const PLACEHOLDERS = { "[EMAIL_CONTACTO]": env.PUBLIC_CONTACT_EMAIL };
@@ -38,6 +41,7 @@ function rehypePlaceholders() {
 
 export default defineConfig({
   site,
+  ...(fiat ? { srcDir: "./src-fiat", outDir: "./dist-fiat" } : {}),
   output: "static",
   trailingSlash: "always",
   build: {

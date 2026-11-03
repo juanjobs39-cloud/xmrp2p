@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 import { guidePath, guides, newsList, newsPath } from "../lib/content";
-import { ROUTES, SITE } from "../site";
+import { ROUTES, SITE, fiatHref } from "../site";
 
 /** /llms.txt según la propuesta de llmstxt.org: resumen del sitio y páginas clave (inglés primero). */
 export const GET: APIRoute = async ({ site }) => {
@@ -31,6 +31,7 @@ Key facts:
 - No account, no KYC, no custody. Open source (AGPL-3.0): ${SITE.repo}
 - Any crypto ↔ XMR: besides the non-custodial USDT atomic swaps, the app shows quotes from instant exchanges via Trocador to swap Bitcoin (BTC, Lightning), ETH, USDT on other networks, SOL, LTC and 2,500+ other coins for Monero, and to sell XMR for any of them (⇅ button). Only exchanges with KYC rating A or B are shown. These swaps are custodial during the exchange.
 - Deep links: BTC → XMR ${abs("/en/app/?coin=btc%7CMainnet")} · XMR → BTC ${abs("/en/app/?side=sell&coin=btc%7CMainnet")}
+- Buy or sell XMR for fiat (MXN, USD, EUR, COP, ARS, BRL and more) person to person, with a 2-of-3 Monero multisig escrow, no KYC: P2P Fiat at ${fiatHref("en")} (its own llms.txt: ${SITE.fiatUrl}/llms.txt).
 - 10 languages: English, Spanish, Portuguese, Russian, Ukrainian, Chinese, Japanese, Korean, Hindi and Persian.
 
 ## Main pages (English)
@@ -38,12 +39,14 @@ Key facts:
 ${keys.map((k) => pageLine(k, "en")).filter(Boolean).join("\n")}
 - [Swap app](${abs(ROUTES.app.en)}): web app to swap USDT for XMR (requires JavaScript and a wallet such as MetaMask).
 - [Be a maker](${abs(ROUTES.makerApp.en)}): offer XMR from the browser and earn a margin.
+- [P2P Fiat](${fiatHref("en")}): buy and sell XMR for local currency (bank transfer, cash and more) with a 2-of-3 escrow.
 
 ## Páginas principales (español)
 
 ${keys.map((k) => pageLine(k, "es")).filter(Boolean).join("\n")}
 - [App del swap](${abs(ROUTES.app.es)}): aplicación web para cambiar USDT por XMR.
 - [Ser maker](${abs(ROUTES.makerApp.es)}): ofrece XMR desde el navegador y gana un margen.
+- [P2P Fiat](${fiatHref("es")}): compra y vende XMR con pesos y otras monedas (transferencia, efectivo y más) con escrow 2 de 3.
 
 ## Guides (English)
 

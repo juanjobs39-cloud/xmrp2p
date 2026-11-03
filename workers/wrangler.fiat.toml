@@ -1,0 +1,92 @@
+# P2P Fiat en PRODUCCIÓN (dinero real, Monero mainnet) en fiat.monerop2p.app.
+# Separado de la API de swaps (xmrp2p-api) y del sitio principal: su propia base de datos y su propio árbitro.
+# Sirve las páginas (web/dist-fiat) y la API /v1/p2p/* desde el mismo origen.
+#
+# Primera vez (solo con aprobación del dueño):
+#   env -u NODE_USE_SYSTEM_CA npx wrangler d1 create xmrp2p-fiat                → copia el database_id abajo
+#   env -u NODE_USE_SYSTEM_CA npx wrangler d1 migrations apply xmrp2p-fiat --remote -c wrangler.fiat.toml
+#   secretos (nunca en el repo): P2P_ARBITER_TOKEN y ARBITER_STATE_KEY (wrangler secret put … -c wrangler.fiat.toml)
+#   ARBITER_STATE_KEY cifra la llave del árbitro: el dueño guarda una copia; sin ella no se resuelven apelaciones.
+# Construir y desplegar:
+#   cd ../web && PUBLIC_SITE=fiat npm run build
+#   cd ../workers && env -u NODE_USE_SYSTEM_CA npx wrangler deploy -c wrangler.fiat.toml
+name = "monerop2p-fiat"
+main = "src/p2p-beta.ts"
+compatibility_date = "2026-08-20"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = false
+routes = [{ pattern = "fiat.monerop2p.app", custom_domain = true }]
+
+[assets]
+directory = "../web/dist-fiat"
+not_found_handling = "404-page"
+html_handling = "auto-trailing-slash"
+
+[vars]
+# Sin swaps cripto aquí (viven en api.monerop2p.app).
+ACTIVE_NETWORKS = ""
+BLOCKED_REGIONS = ""
+# Lecturas públicas (anuncios, precio) abiertas a cualquiera; las escrituras van firmadas.
+ALLOWED_ORIGINS = "*"
+MAX_OFFER_TTL = "900"
+TAKE_TIMEOUT_MS = "45000"
+MONITOR_FACTORY = ""
+API_URL = "https://fiat.monerop2p.app"
+PUBLIC_API_URL = "https://fiat.monerop2p.app"
+P2P_ENABLED = "on"
+P2P_XMR_NETWORK = "mainnet"
+# Cuenta P2P del dueño (entra al panel 🛡 Admin).
+P2P_ADMIN_ADDRESS = "0x6d3428fefdc23d566e32f088de3c3195c19b1405"
+# Wallet de Monero del dueño donde cae la comisión (subdirección de mainnet; dirección pública).
+P2P_FEE_ADDRESS = "8AfP2xg6N4WW67y3C6KvHrWBh4vUStzyHdNAMaQb5oK8FjNd2obui1FAD7kei25CRnQYjBLq8dSxhGpieM4ACJ3EQhL7eyr"
+MONERO_NODE = "https://nodo-xmr.monerop2p.app"
+
+[triggers]
+crons = ["* * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "xmrp2p-fiat"
+database_id = "PENDIENTE"
+migrations_dir = "migrations"
+
+[[containers]]
+class_name = "ArbiterContainer"
+image = "../arbiter/Dockerfile"
+max_instances = 1
+instance_type = "basic"
+
+[[durable_objects.bindings]]
+name = "ARBITER"
+class_name = "ArbiterContainer"
+
+[[durable_objects.bindings]]
+name = "MAKER_INBOX"
+class_name = "MakerInbox"
+
+[[durable_objects.bindings]]
+name = "SWAP_ROOM"
+class_name = "SwapRoom"
+
+[[durable_objects.bindings]]
+name = "P2P_ORDER_ROOM"
+class_name = "P2POrderRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["MakerInbox", "SwapRoom", "P2POrderRoom", "ArbiterContainer"]
+
+[[ratelimits]]
+name = "WRITE_LIMITER"
+namespace_id = "2101"
+simple = { limit = 30, period = 60 }
+
+[[ratelimits]]
+name = "TROCADOR_LIMITER"
+namespace_id = "2103"
+simple = { limit = 10, period = 60 }
+
+[[ratelimits]]
+name = "READ_LIMITER"
+namespace_id = "2102"
+simple = { limit = 300, period = 60 }

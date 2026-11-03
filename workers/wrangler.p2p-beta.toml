@@ -1,5 +1,5 @@
 # Beta de P2P Fiat (stagenet), SEPARADA de la API de producción (xmrp2p-api) y del sitio principal.
-# Sirve las páginas (/es/p2p/, /en/p2p/) y la API /v1/p2p/* desde el mismo origen, con su propia base de datos.
+# Sirve las páginas del sitio P2P Fiat (web/dist-fiat) y la API /v1/p2p/* desde el mismo origen, con su propia base de datos.
 # El árbitro corre en un Cloudflare Container (imagen: ../arbiter/Dockerfile); hace falta Docker para desplegar.
 #
 # Primera vez (solo con aprobación del dueño):
@@ -7,7 +7,7 @@
 #   env -u NODE_USE_SYSTEM_CA npx wrangler d1 migrations apply xmrp2p-p2p-beta --remote -c wrangler.p2p-beta.toml
 #   secretos (nunca en el repo):  wrangler secret put P2P_ARBITER_TOKEN / ARBITER_STATE_KEY -c wrangler.p2p-beta.toml
 # Construir y desplegar:
-#   cd ../web && PUBLIC_P2P=on PUBLIC_P2P_API_URL=https://monerop2p-p2p.xmrp2p.workers.dev npm run build
+#   cd ../web && PUBLIC_SITE=fiat PUBLIC_P2P_NET=stagenet npm run build
 #   cd ../workers && env -u NODE_USE_SYSTEM_CA npx wrangler deploy -c wrangler.p2p-beta.toml
 name = "monerop2p-p2p"
 main = "src/p2p-beta.ts"
@@ -16,7 +16,7 @@ compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
 [assets]
-directory = "../web/dist"
+directory = "../web/dist-fiat"
 not_found_handling = "404-page"
 html_handling = "auto-trailing-slash"
 

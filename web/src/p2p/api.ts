@@ -2,7 +2,9 @@
 import type { PrivateKeyAccount } from "viem";
 import { API_URL } from "../app/config";
 
-export const P2P_API = (import.meta.env.PUBLIC_P2P_API_URL as string | undefined) ?? API_URL;
+// En fiat.monerop2p.app la API está en el mismo origen que las páginas.
+export const P2P_API =
+  (import.meta.env.PUBLIC_P2P_API_URL as string | undefined) || (import.meta.env.PUBLIC_SITE === "fiat" ? location.origin : API_URL);
 
 const sha256Hex = async (s: string) =>
   [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map((x) => x.toString(16).padStart(2, "0")).join("");

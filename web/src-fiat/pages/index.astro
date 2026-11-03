@@ -1,0 +1,24 @@
+---
+// Raíz de fiat.monerop2p.app: español si el navegador lo prefiere, si no inglés. Sin JavaScript, inglés.
+const es = new URL("/es/", Astro.site).href;
+const en = new URL("/en/", Astro.site).href;
+const pick = `(function(){var L=navigator.languages||[navigator.language||"en"];for(var i=0;i<L.length;i++){var c=String(L[i]).toLowerCase().split("-")[0];if(c==="es"){location.replace("/es/");return}if(c==="en")break}location.replace("/en/")})()`;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MoneroP2P Fiat</title>
+    <script is:inline set:html={pick} />
+    <noscript><meta http-equiv="refresh" content="0; url=/en/" /></noscript>
+    <link rel="canonical" href={en} />
+    <link rel="alternate" hreflang="es" href={es} />
+    <link rel="alternate" hreflang="en" href={en} />
+    <link rel="alternate" hreflang="x-default" href={en} />
+    <meta name="robots" content="noindex" />
+  </head>
+  <body>
+    <ul><li><a href="/es/" lang="es">Español</a></li><li><a href="/en/" lang="en">English</a></li></ul>
+  </body>
+</html>
