@@ -193,6 +193,8 @@ export class SwapApp {
   private trocClock: ReturnType<typeof setInterval> | null = null;
   private trocExpires = 0;
   private trocState = "";
+  /** Lo que recibe el usuario (XMR al comprar, la moneda al vender), para los textos de estado. */
+  private trocGets = "XMR";
 
   /** Muestra las cotizaciones de Trocador en la lista. Devuelve false si no hay (se usa el widget). */
   private trocCoin: Coin = coinById(DEFAULT_COIN);
@@ -332,6 +334,7 @@ export class SwapApp {
     $("troc-deposit").hidden = false;
     $("troc-hash-box").hidden = true;
     this.trocExpires = 0;
+    this.trocGets = sell ? coin.ticker.toUpperCase() : "XMR";
     this.trocStatus(trade);
     if (this.trocClock) clearInterval(this.trocClock);
     this.trocClock = setInterval(() => this.trocTick(), 1000);
@@ -345,7 +348,7 @@ export class SwapApp {
   private trocStatus(trade: TrocadorTrade): void {
     const s = (trade.status || "new").toLowerCase();
     const key = `troc_status_${s}`;
-    const label = t(this.lang, key as Key);
+    const label = t(this.lang, key as Key, { coin: this.trocGets });
     $("troc-status").textContent = label && label !== key ? label : trade.status;
     this.trocState = s;
     if (trade.expires_at) this.trocExpires = trade.expires_at;
