@@ -260,6 +260,10 @@ describe("P2P Fiat", () => {
     expect((await signed(buyer, "GET", "/v1/p2p/admin/disputes")).status).toBe(403);
     const list = (await signed(admin, "GET", "/v1/p2p/admin/disputes")).body.disputes;
     expect(list.some((d: { order_id: string; opened_by: string }) => d.order_id === o.id && d.opened_by === "buyer")).toBe(true);
+    const open = (await signed(admin, "GET", "/v1/p2p/admin/orders?status=open")).body.orders;
+    expect(open.some((x: { id: string; status: string }) => x.id === o.id && x.status === "disputed")).toBe(true);
+    expect((await signed(admin, "GET", `/v1/p2p/admin/orders?q=${buyer.address.toLowerCase()}`)).body.orders.map((x: { id: string }) => x.id)).toContain(o.id);
+    expect((await signed(buyer, "GET", "/v1/p2p/admin/orders")).status).toBe(403);
     const detail = (await signed(admin, "GET", `/v1/p2p/admin/orders/${o.id}`)).body;
     expect(detail.messages.some((m: { body: { ciphertext?: string } }) => m.body.ciphertext === "hola-cifrado")).toBe(true);
 

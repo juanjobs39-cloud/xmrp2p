@@ -77,6 +77,23 @@ export async function handleAdmin(req: Request, env: P2PEnv, url: URL): Promise<
     return json(await settings(env));
   }
 
+  // Lista de órdenes: ?status=… (o "open" para las que siguen en curso) y ?q= (id de orden o de usuario).
+  if (p === "/v1/p2p/admin/orders" && isGet) {
+    const st = url.searchParams.get("status") ?? "";
+    const q = (url.searchParams.get("q") ?? "").trim().toLowerCase();
+    const where: string[] = [];
+    const args: unknown[] = [];
+    if (st === "open") where.push(`status NOT IN (${FINAL.map(() => "?").join(", ")})`), args.push(...FINAL);
+    else if (st) where.push("status = ?"), args.push(st);
+    if (q) where.push("(id = ? OR buyer = ? OR seller = ?)"), args.push(q, q, q);
+    const r = await env.DB.prepare(
+      `SELECT id, status, fiat, fiat_amount, xmr_pico, usd_value, buyer, seller, created_at, updated_at FROM p2p_orders${where.length ? ` WHERE ${where.join(" AND ")}` : ""} ORDER BY created_at DESC LIMIT 100`,
+    )
+      .bind(...args)
+      .all<Record<string, unknown> & { xmr_pico: string }>();
+    return json({ orders: r.results.map(({ xmr_pico, ...o }) => ({ ...o, xmr: fromPico(xmr_pico) })) });
+  }
+
   const ord = /^\/v1\/p2p\/admin\/orders\/([0-9a-f]{32})(?:\/(resolve|message))?$/.exec(p);
   if (ord) {
     const o = await getOrder(env, ord[1]!);

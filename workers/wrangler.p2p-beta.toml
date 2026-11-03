@@ -1,0 +1,88 @@
+# Beta de P2P Fiat (stagenet), SEPARADA de la API de producción (xmrp2p-api) y del sitio principal.
+# Sirve las páginas (/es/p2p/, /en/p2p/) y la API /v1/p2p/* desde el mismo origen, con su propia base de datos.
+# El árbitro corre en un Cloudflare Container (imagen: ../arbiter/Dockerfile); hace falta Docker para desplegar.
+#
+# Primera vez (solo con aprobación del dueño):
+#   env -u NODE_USE_SYSTEM_CA npx wrangler d1 create xmrp2p-p2p-beta        → copia el database_id abajo
+#   env -u NODE_USE_SYSTEM_CA npx wrangler d1 migrations apply xmrp2p-p2p-beta --remote -c wrangler.p2p-beta.toml
+#   secretos (nunca en el repo):  wrangler secret put P2P_ARBITER_TOKEN / ARBITER_STATE_KEY -c wrangler.p2p-beta.toml
+# Construir y desplegar:
+#   cd ../web && PUBLIC_P2P=on PUBLIC_P2P_API_URL=https://monerop2p-p2p.xmrp2p.workers.dev npm run build
+#   cd ../workers && env -u NODE_USE_SYSTEM_CA npx wrangler deploy -c wrangler.p2p-beta.toml
+name = "monerop2p-p2p"
+main = "src/p2p-beta.ts"
+compatibility_date = "2026-08-20"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[assets]
+directory = "../web/dist"
+not_found_handling = "404-page"
+html_handling = "auto-trailing-slash"
+
+[vars]
+ACTIVE_NETWORKS = ""
+BLOCKED_REGIONS = ""
+ALLOWED_ORIGINS = "*"
+MAX_OFFER_TTL = "900"
+TAKE_TIMEOUT_MS = "45000"
+MONITOR_FACTORY = ""
+API_URL = "https://monerop2p-p2p.xmrp2p.workers.dev"
+PUBLIC_API_URL = "https://monerop2p-p2p.xmrp2p.workers.dev"
+P2P_ENABLED = "on"
+P2P_XMR_NETWORK = "stagenet"
+# Tu cuenta de P2P (la que creas en /es/p2p/#/cuenta): con ella entras al panel 🛡 Admin.
+P2P_ADMIN_ADDRESS = ""
+# Dirección de Monero (stagenet) donde cobra la plataforma; el árbitro usa la misma.
+P2P_FEE_ADDRESS = ""
+MONERO_NODE = "https://xmrp2p-node-proxy.xmrp2p.workers.dev"
+
+[triggers]
+crons = ["* * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "xmrp2p-p2p-beta"
+database_id = "PENDIENTE"
+migrations_dir = "migrations"
+
+[[containers]]
+class_name = "ArbiterContainer"
+image = "../arbiter/Dockerfile"
+max_instances = 1
+instance_type = "basic"
+
+[[durable_objects.bindings]]
+name = "ARBITER"
+class_name = "ArbiterContainer"
+
+[[durable_objects.bindings]]
+name = "MAKER_INBOX"
+class_name = "MakerInbox"
+
+[[durable_objects.bindings]]
+name = "SWAP_ROOM"
+class_name = "SwapRoom"
+
+[[durable_objects.bindings]]
+name = "P2P_ORDER_ROOM"
+class_name = "P2POrderRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["MakerInbox", "SwapRoom", "P2POrderRoom", "ArbiterContainer"]
+
+[[ratelimits]]
+name = "WRITE_LIMITER"
+namespace_id = "2001"
+simple = { limit = 30, period = 60 }
+
+[[ratelimits]]
+name = "TROCADOR_LIMITER"
+namespace_id = "2003"
+simple = { limit = 10, period = 60 }
+
+[[ratelimits]]
+name = "READ_LIMITER"
+namespace_id = "2002"
+simple = { limit = 300, period = 60 }

@@ -74,8 +74,8 @@ export class P2PApp {
   private async route() {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
-    const [, view = "", arg] = location.hash.replace(/^#\/?/, "/").split("/");
-    const needs = ["nuevo", "ordenes", "orden", "anuncios", "cuenta"].includes(view);
+    const [, view = "", arg] = location.hash.split("?")[0]!.replace(/^#\/?/, "/").split("/");
+    const needs = ["nuevo", "ordenes", "orden", "anuncios", "cuenta", "admin"].includes(view);
     if (needs && !this.vault) return this.accountView(view === "cuenta" ? "" : location.hash);
     this.nav(view);
     try {
@@ -84,6 +84,7 @@ export class P2PApp {
       else if (view === "orden" && arg) await this.orderView(arg);
       else if (view === "anuncios") await this.myAdsView();
       else if (view === "cuenta") await this.profileView();
+      else if (view === "admin") await this.adminView(arg);
       else await this.marketView();
     } catch (e) {
       this.show(this.error(e));
@@ -98,6 +99,7 @@ export class P2PApp {
       link("#/ordenes", this.t("Mis órdenes", "My orders"), "ordenes"),
       link("#/anuncios", this.t("Mis anuncios", "My ads"), "anuncios"),
       link("#/cuenta", this.me ? `👤 ${this.me.nickname}` : this.t("Cuenta", "Account"), "cuenta"),
+      this.isAdmin ? link("#/admin", "🛡 Admin", "admin") : "",
     );
   }
 
@@ -746,6 +748,7 @@ export class P2PApp {
           .filter((m) => m.body.type !== "protocol")
           .map((m) => {
             if (m.body.type === "status") return h("p", { class: "p2p-sys" }, `• ${this.statusName(m.body.status ?? "")}`);
+            if (m.body.type === "decision") return h("p", { class: "p2p-sys" }, `• ${this.t("Soporte decidió a favor de", "Support decided for")} ${m.body.winner === "buyer" ? this.t("el comprador", "the buyer") : this.t("el vendedor", "the seller")}: ${m.body.note ?? ""}`);
             if (m.body.type === "payment_details") return h("p", { class: "p2p-sys" }, `• ${this.t("El vendedor envió sus datos de pago", "The seller sent the payment details")}`);
             if (m.body.type !== "message") return h("p", { class: "p2p-sys" }, `• ${m.body.type}`);
             const who = m.from === me ? this.t("Tú", "You") : m.from === "admin" ? this.t("Soporte", "Support") : cp?.nickname ?? m.from;
@@ -796,9 +799,332 @@ export class P2PApp {
       head,
       escrowBox,
       actions,
-      h("section", { class: "card p2p-chat" }, h("h3", {}, this.t("Chat (cifrado de punta a punta)", "Chat (end-to-end encrypted)")), chatBox, h("div", { class: "row" }, input, send), h("small", {}, this.t("Soporte puede leer el chat solo si hay una apelación.", "Support can read the chat only if there is an appeal."))),
+      h("section", { class: "card p2p-chat" }, h("h3", {}, this.t("Chat (cifrado de punta a punta)", "Chat (end-to-end encrypted)")), chatBox, h("div", { class: "row" }, input, send), h("small", {}, this.t("Soporte también puede leer el chat, para resolver apelaciones.", "Support can also read the chat, to resolve appeals."))),
     );
     await tick();
+  }
+
+  // ------------------------------------------------------------ administrador
+
+  private get isAdmin() {
+    return !!this.acct && !!this.cfg.admin_address && this.acct.address.toLowerCase() === this.cfg.admin_address;
+  }
+
+  private ago(ts: number | null | undefined) {
+    if (!ts) return "—";
+    const m = Math.round((nowS() - ts) / 60);
+    return m < 1 ? this.t("ahora", "now") : m < 60 ? `${m} min` : m < 1440 ? `${Math.round(m / 60)} h` : `${Math.round(m / 1440)} d`;
+  }
+
+  private async adminView(arg?: string) {
+    if (!this.isAdmin) {
+      this.show(h("p", { class: "notice danger" }, this.t("Esta cuenta no es la de administrador.", "This account is not the administrator.")));
+      return;
+    }
+    if (arg) return this.adminOrder(arg);
+    const sp = new URLSearchParams(location.hash.split("?")[1] ?? "");
+    const tab = sp.get("ver") ?? "quejas";
+    const tabs = h(
+      "div",
+      { class: "p2p-tabs" },
+      [["quejas", this.t("Apelaciones", "Appeals")], ["ordenes", this.t("Órdenes", "Orders")], ["ajustes", this.t("Ajustes", "Settings")]].map(([k, l]) =>
+        h("a", { class: "p2p-tab" + (k === tab ? " on admin" : ""), href: `#/admin?ver=${k}` }, l),
+      ),
+    );
+    const stats = await this.req<{
+      last_24h: { status: string; n: number }[];
+      completed: { orders: number; usd: number; fees_xmr: string };
+      open_disputes: number;
+      users: number;
+      arbiter_seen: number | null;
+    }>("GET", "/v1/p2p/admin/stats");
+    const arbOk = stats.arbiter_seen !== null && nowS() - stats.arbiter_seen < 180;
+    const tile = (label: string, value: string | number, warn = false) => h("div", { class: "card p2p-tile" + (warn ? " warn" : "") }, h("small", {}, label), h("strong", {}, String(value)));
+    const head = h(
+      "div",
+      { class: "p2p-tiles" },
+      tile(this.t("Apelaciones abiertas", "Open appeals"), stats.open_disputes, stats.open_disputes > 0),
+      tile(this.t("Órdenes 24 h", "Orders 24 h"), stats.last_24h.reduce((a, x) => a + x.n, 0)),
+      tile(this.t("Completadas", "Completed"), `${stats.completed.orders} · ${Math.round(stats.completed.usd).toLocaleString(this.lang)} USD`),
+      tile(this.t("Comisiones cobradas", "Fees earned"), `${fmtXmr(stats.completed.fees_xmr)} XMR`),
+      tile(this.t("Usuarios", "Users"), stats.users),
+      tile(this.t("Árbitro", "Arbiter"), arbOk ? `✔ ${this.ago(stats.arbiter_seen)}` : `✖ ${this.ago(stats.arbiter_seen)}`, !arbOk),
+    );
+    const body = h("div");
+    this.show(h("h2", {}, this.t("Panel de administrador", "Admin panel")), head, tabs, body);
+    if (tab === "ajustes") return this.adminSettings(body);
+    if (tab === "ordenes") return this.adminOrders(body);
+
+    const resolved = sp.get("estado") === "resueltas";
+    const r = await this.req<{ disputes: { order_id: string; opened_by: string; reason: string; fiat: string; fiat_amount: string; xmr: string; waiting_min: number; winner: string | null; method: string }[] }>(
+      "GET",
+      `/v1/p2p/admin/disputes${resolved ? "?status=resolved" : ""}`,
+    );
+    body.replaceChildren(
+      h("p", {}, h("a", { href: resolved ? "#/admin?ver=quejas" : "#/admin?ver=quejas&estado=resueltas" }, resolved ? this.t("Ver abiertas", "Show open") : this.t("Ver resueltas", "Show resolved"))),
+      r.disputes.length
+        ? h(
+            "div",
+            { class: "p2p-list" },
+            r.disputes.map((d) =>
+              h(
+                "a",
+                { class: "card p2p-orow", href: `#/admin/${d.order_id}` },
+                h("strong", {}, `${d.fiat_amount} ${d.fiat}`),
+                h("span", {}, `${fmtXmr(d.xmr)} XMR · ${(JSON.parse(d.method) as Method).name} · ${this.t("abrió", "opened by")} ${d.opened_by === "buyer" ? this.t("comprador", "buyer") : this.t("vendedor", "seller")}: «${d.reason.slice(0, 80)}»`),
+                h("span", { class: "badge" }, resolved ? (d.winner === "buyer" ? this.t("Comprador", "Buyer") : this.t("Vendedor", "Seller")) : `${d.waiting_min} min`),
+                h("small", {}, d.order_id.slice(0, 8)),
+              ),
+            ),
+          )
+        : h("p", { class: "notice ok" }, resolved ? this.t("Aún no hay apelaciones resueltas.", "No resolved appeals yet.") : this.t("No hay apelaciones abiertas. 🎉", "No open appeals. 🎉")),
+    );
+  }
+
+  private async adminOrders(body: HTMLElement) {
+    const sp = new URLSearchParams(location.hash.split("?")[1] ?? "");
+    const states = ["", "open", "setup", "awaiting_deposit", "confirming", "awaiting_payment", "paid", "disputed", "releasing", "refunding", "resolving", "released", "cancelled", "refunded", "resolved_buyer", "resolved_seller"];
+    const cur = sp.get("estado") ?? "open";
+    const status = h(
+      "select",
+      { id: "adm-status" },
+      states.map((s) => h("option", { value: s, selected: s === cur }, s === "" ? this.t("Todas", "All") : s === "open" ? this.t("En curso", "In progress") : this.statusName(s))),
+    );
+    const q = h("input", { id: "adm-q", type: "text", placeholder: this.t("ID de orden o de usuario (0x…)", "Order or user ID (0x…)"), value: sp.get("q") ?? "" });
+    const go = () => (location.hash = `#/admin?${new URLSearchParams({ ver: "ordenes", estado: status.value, q: q.value.trim() })}`);
+    status.onchange = go;
+    q.addEventListener("keydown", (e) => (e as KeyboardEvent).key === "Enter" && go());
+    const qs = new URLSearchParams();
+    if (cur) qs.set("status", cur);
+    if (q.value.trim()) qs.set("q", q.value.trim().toLowerCase());
+    const r = await this.req<{ orders: { id: string; status: string; fiat: string; fiat_amount: string; xmr: string; created_at: number }[] }>("GET", `/v1/p2p/admin/orders?${qs}`);
+    body.replaceChildren(
+      h(
+        "div",
+        { class: "p2p-filters" },
+        this.field(this.t("Estado", "Status"), status),
+        this.field(this.t("Buscar", "Search"), q),
+        h("div", { class: "field app" }, h("label", {}, " "), h("button", { class: "btn", type: "button", onclick: go }, this.t("Buscar", "Search"))),
+      ),
+      r.orders.length
+        ? h(
+            "div",
+            { class: "p2p-list" },
+            r.orders.map((o) =>
+              h(
+                "a",
+                { class: "card p2p-orow", href: `#/admin/${o.id}` },
+                h("strong", {}, `${o.fiat_amount} ${o.fiat}`),
+                h("span", {}, `${fmtXmr(o.xmr)} XMR · ${o.id.slice(0, 8)}`),
+                h("span", { class: "badge" }, this.statusName(o.status)),
+                h("small", {}, this.ago(o.created_at)),
+              ),
+            ),
+          )
+        : h("p", {}, this.t("Sin órdenes con estos filtros.", "No orders match these filters.")),
+    );
+  }
+
+  private async adminSettings(body: HTMLElement) {
+    const s = await this.req<Record<string, string>>("GET", "/v1/p2p/admin/settings");
+    const out = h("div");
+    const num = (id: string, v: string) => h("input", { id, type: "text", inputMode: "decimal", value: v });
+    const fee = num("adm-fee", String(Number(s.fee_bps ?? 50) / 100));
+    const cap = num("adm-cap", s.cap_usd ?? "1000");
+    const dep = num("adm-dep", s.deposit_window_min ?? "30");
+    const dis = num("adm-dis", s.dispute_after_min ?? "15");
+    const blocked = h("input", { id: "adm-blocked", type: "text", value: (JSON.parse(s.blocked_methods ?? "[]") as string[]).join(", "), placeholder: "Western Union, …" });
+    const save = h("button", { class: "btn", type: "button" }, this.t("Guardar ajustes", "Save settings"));
+    save.onclick = () =>
+      void this.busy(
+        save,
+        async () => {
+          await this.req("PUT", "/v1/p2p/admin/settings", {
+            fee_bps: Math.round(Number(fee.value) * 100),
+            cap_usd: Number(cap.value),
+            deposit_window_min: Number(dep.value),
+            dispute_after_min: Number(dis.value),
+            blocked_methods: blocked.value.split(",").map((x) => x.trim()).filter(Boolean),
+          });
+          this.cfg = await get<P2PConfig>("/v1/p2p/config");
+          out.replaceChildren(h("p", { class: "notice ok" }, this.t("Ajustes guardados.", "Settings saved.")));
+        },
+        out,
+      );
+
+    const uid = h("input", { id: "adm-uid", type: "text", placeholder: "0x…" });
+    const ban = (banned: boolean) => {
+      const b = h("button", { class: "btn secondary small", type: "button" }, banned ? this.t("Suspender", "Ban") : this.t("Quitar suspensión", "Unban"));
+      b.onclick = () =>
+        void this.busy(
+          b,
+          async () => {
+            await this.req("POST", `/v1/p2p/admin/users/${uid.value.trim().toLowerCase()}/ban`, { banned });
+            out.replaceChildren(h("p", { class: "notice ok" }, banned ? this.t("Usuario suspendido y sus anuncios en pausa.", "User banned and their ads paused.") : this.t("Suspensión retirada.", "Ban lifted.")));
+          },
+          out,
+        );
+      return b;
+    };
+    const adid = h("input", { id: "adm-adid", type: "text", placeholder: this.t("ID del anuncio", "Ad ID") });
+    const hide = (hidden: boolean) => {
+      const b = h("button", { class: "btn secondary small", type: "button" }, hidden ? this.t("Ocultar", "Hide") : this.t("Mostrar (queda en pausa)", "Unhide (stays paused)"));
+      b.onclick = () =>
+        void this.busy(
+          b,
+          async () => {
+            await this.req("POST", `/v1/p2p/admin/ads/${adid.value.trim()}/hide`, { hidden });
+            out.replaceChildren(h("p", { class: "notice ok" }, this.t("Listo.", "Done.")));
+          },
+          out,
+        );
+      return b;
+    };
+    body.replaceChildren(
+      out,
+      h(
+        "section",
+        { class: "card p2p-form" },
+        h("h3", {}, this.t("Reglas del mercado", "Market rules")),
+        h("div", { class: "p2p-grid" }, this.field(this.t("Comisión del vendedor (%)", "Seller fee (%)"), fee, "0 – 3"), this.field(this.t("Tope por orden (USD)", "Cap per order (USD)"), cap)),
+        h("div", { class: "p2p-grid" }, this.field(this.t("Tiempo para depositar (min)", "Time to deposit (min)"), dep), this.field(this.t("Minutos antes de poder apelar", "Minutes before an appeal"), dis)),
+        this.field(this.t("Métodos de pago bloqueados (separados por coma)", "Blocked payment methods (comma separated)"), blocked),
+        h("p", {}, save),
+      ),
+      h(
+        "section",
+        { class: "card p2p-form" },
+        h("h3", {}, this.t("Usuarios y anuncios", "Users and ads")),
+        this.field(this.t("ID de usuario", "User ID"), uid),
+        h("p", { class: "row wrap" }, ban(true), ban(false)),
+        this.field(this.t("ID de anuncio", "Ad ID"), adid),
+        h("p", { class: "row wrap" }, hide(true), hide(false)),
+      ),
+    );
+  }
+
+  private async adminOrder(id: string) {
+    type AdminOrder = {
+      id: string; status: string; fiat: string; fiat_amount: string; price: string; xmr: string; fee_xmr: string; method: string;
+      buyer: string; seller: string; multisig_address: string | null; deposit_txid: string | null; payout_txid: string | null;
+      enc_payment: string | null; created_at: number; paid_at: number | null; ad_id: string;
+    };
+    const r = await this.req<{
+      order: AdminOrder;
+      buyer: (PublicUser & { since?: number }) | null;
+      seller: (PublicUser & { since?: number }) | null;
+      dispute: { opened_by: string; reason: string; opened_at: number; status: string; winner: string | null; note: string | null } | null;
+      messages: RoomMessage[];
+    }>("GET", `/v1/p2p/admin/orders/${id}`);
+    const o = r.order;
+    const out = h("div");
+    const method = JSON.parse(o.method) as Method;
+    const pay = o.enc_payment ? await open(o.enc_payment, this.vault!).catch(() => null) : null;
+    const lines = await Promise.all(
+      r.messages
+        .filter((m) => m.body.type !== "protocol")
+        .map(async (m) => {
+          const when = new Date(m.at).toLocaleString(this.lang);
+          if (m.body.type === "message") {
+            const who = m.from === "buyer" ? `${this.t("Comprador", "Buyer")} (${r.buyer?.nickname})` : m.from === "seller" ? `${this.t("Vendedor", "Seller")} (${r.seller?.nickname})` : this.t("Soporte", "Support");
+            const txt = await open(m.body.ciphertext!, this.vault!).catch(() => this.t("[no cifrado para ti: el admin no tenía perfil cuando se escribió]", "[not encrypted for you: the admin had no profile when it was written]"));
+            return h("div", { class: "p2p-msg " + (m.from === "admin" ? "mine" : "") }, h("small", {}, `${who} · ${when}`), h("div", {}, txt));
+          }
+          if (m.body.type === "status") return h("p", { class: "p2p-sys" }, `• ${this.statusName(m.body.status ?? "")} · ${when}`);
+          if (m.body.type === "decision") return h("p", { class: "p2p-sys" }, `• ${this.t("Decisión", "Decision")}: ${m.body.winner} — ${m.body.note ?? ""}`);
+          return h("p", { class: "p2p-sys" }, `• ${m.body.type} · ${when}`);
+        }),
+    );
+    const rejected = r.messages.filter((m) => m.from === "arbiter" && m.body.type === "protocol" && (m.body.data as { step?: string } | undefined)?.step === "rejected");
+
+    const input = h("textarea", { id: "adm-msg", rows: 2, maxLength: 2000, placeholder: this.t("Mensaje para las dos partes (cifrado)…", "Message to both parties (encrypted)…") });
+    const send = h("button", { class: "btn small", type: "button" }, this.t("Enviar como soporte", "Send as support"));
+    send.onclick = () =>
+      void this.busy(
+        send,
+        async () => {
+          if (!input.value.trim()) return;
+          const to = [r.buyer?.enc_pubkey ?? "", r.seller?.enc_pubkey ?? "", await encPublic(this.vault!)];
+          await this.req("POST", `/v1/p2p/admin/orders/${id}/message`, { ciphertext: await seal(input.value.trim(), to) });
+          await this.route();
+        },
+        out,
+      );
+
+    const note = h("textarea", { id: "adm-note", rows: 2, maxLength: 1000, placeholder: this.t("Motivo de la decisión (lo ven las dos partes)", "Reason for the decision (both parties see it)") });
+    const resolve = (winner: "buyer" | "seller", label: string, warn: string) => {
+      const b = h("button", { class: `btn ${winner === "buyer" ? "buy" : "sell"}`, type: "button" }, label);
+      b.onclick = () => {
+        if (!confirm(warn)) return;
+        void this.busy(b, async () => (await this.req("POST", `/v1/p2p/admin/orders/${id}/resolve`, { winner, note: note.value.trim() }), await this.route()), out);
+      };
+      return b;
+    };
+    const userBox = (role: string, u: (PublicUser & { since?: number }) | null, uid: string) =>
+      h(
+        "div",
+        { class: "card" },
+        h("h3", {}, role),
+        this.userLine(u),
+        h("p", {}, h("small", {}, `${this.t("Cuenta de hace", "Account age")} ${this.ago(u?.since)} · ${this.t("visto hace", "seen")} ${this.ago(u?.last_seen)}`)),
+        h("p", {}, h("code", { class: "p2p-addr" }, uid)),
+        u?.banned ? h("span", { class: "badge real" }, this.t("Suspendido", "Banned")) : null,
+        h("p", {}, h("a", { href: `#/admin?${new URLSearchParams({ ver: "ordenes", estado: "", q: uid })}` }, this.t("Ver sus órdenes", "See their orders"))),
+      );
+    const dt = (label: string, value: Child) => [h("dt", {}, label), h("dd", {}, value ?? "—")];
+    const code = (v: string | null) => (v ? h("code", { class: "p2p-addr" }, v) : "—");
+
+    let decision: HTMLElement | null = null;
+    if (r.dispute) {
+      const d = r.dispute;
+      decision = h(
+        "section",
+        { class: "card p2p-dispute" },
+        h("h3", {}, `${this.t("Apelación de", "Appeal by")} ${d.opened_by === "buyer" ? this.t("el comprador", "the buyer") : this.t("el vendedor", "the seller")} · ${this.t("hace", "")} ${this.ago(d.opened_at)}`),
+        h("p", {}, d.reason),
+        d.status === "resolved"
+          ? h("p", { class: "notice ok" }, `${this.t("Resuelta a favor de", "Resolved for")} ${d.winner === "buyer" ? this.t("el comprador", "the buyer") : this.t("el vendedor", "the seller")}: ${d.note ?? ""}`)
+          : o.status === "disputed"
+            ? h(
+                "div",
+                {},
+                h("p", {}, h("small", {}, this.t("Revisa el chat y los comprobantes. Tu firma autoriza al árbitro a co-firmar el pago con quien gana; esa persona debe abrir su orden para cobrar.", "Check the chat and the proofs. Your signature lets the arbiter co-sign the payout with the winner; that person must open their order to collect."))),
+                note,
+                h(
+                  "p",
+                  { class: "row wrap" },
+                  resolve("buyer", this.t("Dar el XMR al comprador", "Give the XMR to the buyer"), this.t("¿Confirmas que el comprador SÍ pagó? El XMR va al comprador (la comisión a la plataforma). No se puede deshacer.", "Confirm the buyer DID pay? The XMR goes to the buyer (fee to the platform). This cannot be undone.")),
+                  resolve("seller", this.t("Devolver el XMR al vendedor", "Return the XMR to the seller"), this.t("¿Confirmas que el comprador NO pagó? Todo el XMR regresa al vendedor, sin comisión. No se puede deshacer.", "Confirm the buyer did NOT pay? All the XMR goes back to the seller, no fee. This cannot be undone.")),
+                ),
+              )
+            : null,
+      );
+    }
+
+    this.show(
+      h("p", {}, h("a", { href: "#/admin" }, "← " + this.t("Panel", "Panel"))),
+      out,
+      h("div", { class: "row between wrap" }, h("h2", {}, `${o.fiat_amount} ${o.fiat} · ${fmtXmr(o.xmr)} XMR`), h("span", { class: "badge" }, this.statusName(o.status))),
+      decision,
+      rejected.length ? h("p", { class: "notice danger" }, `${this.t("El árbitro rechazó un pago", "The arbiter rejected a payment")}: ${String((rejected[rejected.length - 1]!.body.data as { reason?: string }).reason)}`) : null,
+      h(
+        "dl",
+        { class: "p2p-dl" },
+        dt("ID", h("code", {}, o.id)),
+        dt(this.t("Precio", "Price"), `${o.price} ${o.fiat}/XMR`),
+        dt(this.t("Método", "Method"), this.methodTag(method)),
+        dt(this.t("Comisión", "Fee"), `${fmtXmr(o.fee_xmr)} XMR`),
+        dt(this.t("Creada", "Created"), new Date(o.created_at * 1000).toLocaleString(this.lang)),
+        dt(this.t("Marcada pagada", "Marked paid"), o.paid_at ? new Date(o.paid_at * 1000).toLocaleString(this.lang) : "—"),
+        dt("Escrow", code(o.multisig_address)),
+        dt(this.t("Depósito", "Deposit"), code(o.deposit_txid)),
+        dt(this.t("Pago de salida", "Payout"), code(o.payout_txid)),
+        dt(this.t("Anuncio", "Ad"), h("code", {}, o.ad_id)),
+      ),
+      h("div", { class: "p2p-grid" }, userBox(this.t("Comprador", "Buyer"), r.buyer, o.buyer), userBox(this.t("Vendedor", "Seller"), r.seller, o.seller)),
+      h("section", { class: "card p2p-pay" }, h("h3", {}, this.t("Datos de pago que mandó el vendedor", "Payment details the seller sent")), pay ? h("pre", {}, pay) : h("p", {}, "—")),
+      h("section", { class: "card p2p-chat" }, h("h3", {}, this.t("Chat de la orden", "Order chat")), h("div", { class: "p2p-chat-log" }, lines), h("div", { class: "row" }, input, send)),
+    );
   }
 
   private steps(o: OrderView) {

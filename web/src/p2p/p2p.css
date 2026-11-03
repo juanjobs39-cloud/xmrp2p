@@ -60,3 +60,14 @@
 .p2p-msg.admin { border: 1px solid var(--warn-fg); }
 .p2p-msg small { display: block; color: var(--muted); font-size: 0.75rem; }
 .p2p-sys { margin: 0; font-size: 0.82rem; color: var(--muted); text-align: center; }
+
+/* Panel de administrador */
+.p2p-tiles { display: grid; gap: 0.6rem; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); margin: 1rem 0; }
+.p2p-tile { display: grid; gap: 0.2rem; }
+.p2p-tile small { color: var(--muted); }
+.p2p-tile strong { font-size: 1.25rem; }
+.p2p-tile.warn { border-color: var(--warn-fg); background: var(--warn-bg); color: var(--warn-fg); }
+.p2p-tab.on.admin { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); text-decoration: none; }
+a.p2p-tab { text-align: center; text-decoration: none; }
+.p2p-dispute { border-color: var(--warn-fg); margin: 1rem 0; display: grid; gap: 0.5rem; }
+.p2p-dispute textarea { width: 100%; box-sizing: border-box; }
