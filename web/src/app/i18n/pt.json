@@ -76,8 +76,8 @@
   "troc_status_new": "Criada",
   "troc_status_waiting": "Aguardando seu depósito",
   "troc_status_confirming": "Confirmando seu depósito",
-  "troc_status_sending": "Enviando seu XMR",
-  "troc_status_finished": "Concluída: XMR enviado",
+  "troc_status_sending": "Enviando seu {coin}",
+  "troc_status_finished": "Concluída: {coin} enviado",
   "troc_status_failed": "Falhou: fale com o suporte informando o ID",
   "troc_status_expired": "Expirou sem depósito",
   "troc_status_halted": "Interrompida pela exchange: fale com o suporte informando o ID",
@@ -92,5 +92,9 @@
   "troc_dest_label": "Seu endereço de {coin} (onde você recebe)",
   "troc_refund_xmr": "Endereço de reembolso de Monero (opcional)",
   "troc_bad_dest": "O endereço não parece válido para {coin}.",
-  "troc_need_memo": "Esta moeda precisa de memo ou tag no endereço de destino."
+  "troc_need_memo": "Esta moeda precisa de memo ou tag no endereço de destino.",
+  "troc_timer": "Tempo para enviar seu depósito: {time}",
+  "troc_timer_over": "O tempo para depositar acabou. Não envie nada para este endereço: crie uma nova troca.",
+  "troc_hash": "Transação do pagamento (hash):",
+  "troc_copy_hash": "Copiar hash"
 }

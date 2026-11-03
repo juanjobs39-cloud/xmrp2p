@@ -76,8 +76,8 @@
   "troc_status_new": "बनाया गया",
   "troc_status_waiting": "आपके जमा का इंतज़ार",
   "troc_status_confirming": "आपके जमा की पुष्टि हो रही है",
-  "troc_status_sending": "आपका XMR भेजा जा रहा है",
-  "troc_status_finished": "पूरा: XMR भेजा गया",
+  "troc_status_sending": "आपका {coin} भेजा जा रहा है",
+  "troc_status_finished": "पूरा: {coin} भेजा गया",
   "troc_status_failed": "विफल: ID के साथ सपोर्ट से संपर्क करें",
   "troc_status_expired": "बिना जमा के समय-सीमा ख़त्म",
   "troc_status_halted": "एक्सचेंज ने रोका: ID के साथ सपोर्ट से संपर्क करें",
@@ -92,5 +92,9 @@
   "troc_dest_label": "आपका {coin} पता (जहाँ आपको मिलेगा)",
   "troc_refund_xmr": "मोनेरो रिफ़ंड पता (वैकल्पिक)",
   "troc_bad_dest": "यह पता {coin} के लिए सही नहीं लगता.",
-  "troc_need_memo": "इस कॉइन के लिए पाने वाले पते में memo या tag ज़रूरी है."
+  "troc_need_memo": "इस कॉइन के लिए पाने वाले पते में memo या tag ज़रूरी है.",
+  "troc_timer": "जमा भेजने के लिए बचा समय: {time}",
+  "troc_timer_over": "जमा करने का समय खत्म हो गया। इस पते पर कुछ भी न भेजें: नया एक्सचेंज बनाएँ।",
+  "troc_hash": "भुगतान लेन-देन (हैश):",
+  "troc_copy_hash": "हैश कॉपी करें"
 }

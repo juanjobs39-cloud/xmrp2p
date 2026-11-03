@@ -76,8 +76,8 @@
   "troc_status_new": "생성됨",
   "troc_status_waiting": "입금을 기다리는 중",
   "troc_status_confirming": "입금을 확인하는 중",
-  "troc_status_sending": "XMR을 보내는 중",
-  "troc_status_finished": "완료: XMR 전송됨",
+  "troc_status_sending": "{coin}을 보내는 중",
+  "troc_status_finished": "완료: {coin} 전송됨",
   "troc_status_failed": "실패: ID와 함께 지원팀에 문의하세요",
   "troc_status_expired": "입금 없이 만료됨",
   "troc_status_halted": "교환소에서 중단됨: ID와 함께 지원팀에 문의하세요",
@@ -92,5 +92,9 @@
   "troc_dest_label": "내 {coin} 주소(받을 곳)",
   "troc_refund_xmr": "모네로 환불 주소(선택)",
   "troc_bad_dest": "{coin} 주소로 올바르지 않은 것 같습니다.",
-  "troc_need_memo": "이 코인은 받는 주소에 메모 또는 태그가 필요합니다."
+  "troc_need_memo": "이 코인은 받는 주소에 메모 또는 태그가 필요합니다.",
+  "troc_timer": "입금까지 남은 시간: {time}",
+  "troc_timer_over": "입금 시간이 지났습니다. 이 주소로 아무것도 보내지 마세요. 새 교환을 만드세요.",
+  "troc_hash": "지급 거래(해시):",
+  "troc_copy_hash": "해시 복사"
 }

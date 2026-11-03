@@ -76,8 +76,8 @@
   "troc_status_new": "ایجاد شد",
   "troc_status_waiting": "در انتظار واریز شما",
   "troc_status_confirming": "در حال تأیید واریز شما",
-  "troc_status_sending": "در حال فرستادن XMR شما",
-  "troc_status_finished": "پایان: XMR فرستاده شد",
+  "troc_status_sending": "در حال فرستادن {coin} شما",
+  "troc_status_finished": "پایان: {coin} فرستاده شد",
   "troc_status_failed": "ناموفق: با شناسه با پشتیبانی تماس بگیرید",
   "troc_status_expired": "بدون واریز منقضی شد",
   "troc_status_halted": "متوقف‌شده توسط صرافی: با شناسه با پشتیبانی تماس بگیرید",
@@ -92,5 +92,9 @@
   "troc_dest_label": "آدرس {coin} شما (محل دریافت)",
   "troc_refund_xmr": "آدرس بازپرداخت مونرو (اختیاری)",
   "troc_bad_dest": "این آدرس برای {coin} معتبر به نظر نمی‌رسد.",
-  "troc_need_memo": "این رمزارز در آدرس مقصد به memo یا tag نیاز دارد."
+  "troc_need_memo": "این رمزارز در آدرس مقصد به memo یا tag نیاز دارد.",
+  "troc_timer": "زمان باقی‌مانده برای واریز: {time}",
+  "troc_timer_over": "زمان واریز تمام شد. چیزی به این آدرس نفرستید: یک تبادل جدید بسازید.",
+  "troc_hash": "تراکنش پرداخت (هش):",
+  "troc_copy_hash": "کپی هش"
 }

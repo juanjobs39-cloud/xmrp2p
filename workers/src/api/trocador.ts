@@ -208,10 +208,33 @@ interface TradeBody {
 const XMR_MAIN = /^[48][1-9A-HJ-NP-Za-km-z]{94}([1-9A-HJ-NP-Za-km-z]{11})?$/;
 const EVM = /^0x[0-9a-fA-F]{40}$/;
 const str = (v: unknown, max = 200): string => (typeof v === "string" ? v.slice(0, max) : "");
+/** Monto: Trocador lo manda como número o como texto. */
+const amt = (v: unknown): string => (typeof v === "number" && Number.isFinite(v) ? String(v) : str(v, 40));
 
 /** Datos públicos de un intercambio (nunca la IP ni el navegador). */
+/**
+ * Fecha de Trocador → segundos Unix. Acepta número (segundos o milisegundos) o texto de fecha;
+ * un texto sin zona horaria se toma como UTC. Devuelve 0 si no se entiende.
+ */
+export function unixTime(v: unknown): number {
+  if (typeof v === "number" && Number.isFinite(v) && v > 0) return Math.floor(v > 1e12 ? v / 1000 : v);
+  if (typeof v !== "string" || !v.trim()) return 0;
+  const s = v.trim();
+  if (/^\d+(\.\d+)?$/.test(s)) return unixTime(Number(s));
+  const iso = s.replace(" ", "T");
+  const ms = Date.parse(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`);
+  return Number.isFinite(ms) ? Math.floor(ms / 1000) : 0;
+}
+
+const sub = (v: unknown, k: string): unknown => (v && typeof v === "object" ? (v as Record<string, unknown>)[k] : undefined);
+
 function publicTrade(t: Record<string, unknown>) {
+  // Hora en que vence el intercambio (quotes.expiresAt) y hash del pago final (details.hashout).
+  const expires = unixTime(sub(t.quotes, "expiresAt") ?? t.expiresAt);
+  const hashout = str(sub(t.details, "hashout"), 200).trim();
   return {
+    ...(expires ? { expires_at: expires } : {}),
+    ...(/^[A-Za-z0-9:_-]{8,200}$/.test(hashout) ? { hashout } : {}),
     trade_id: String(t.trade_id ?? ""),
     ticker_from: str(t.ticker_from),
     network_from: str(t.network_from),
@@ -219,8 +242,8 @@ function publicTrade(t: Record<string, unknown>) {
     network_to: str(t.network_to),
     provider: str(t.provider),
     status: str(t.status) || "new",
-    amount_from: str(t.amount_from),
-    amount_to: str(t.amount_to),
+    amount_from: amt(t.amount_from),
+    amount_to: amt(t.amount_to),
     address_provider: str(t.address_provider),
     address_provider_memo: str(t.address_provider_memo),
     id_provider: str(t.id_provider),
@@ -274,8 +297,18 @@ async function createTrade(req: Request, env: Env): Promise<Response> {
   if (refund) Object.assign(params, { refund, refund_memo: "0" });
   if (env.TROCADOR_WEBHOOK_KEY) Object.assign(params, { webhook: `${site}/v1/trocador/webhook`, webhook_key: env.TROCADOR_WEBHOOK_KEY });
   const body = await trocador(env, "new_trade", params);
-  const trade = publicTrade(body);
+  let trade = publicTrade(body);
   if (!trade.trade_id || !trade.address_provider) throw new HttpError(502, "Trocador no devolvió la dirección de depósito");
+  // new_trade no trae la hora de vencimiento; la consulta de estado sí (quotes.expiresAt). Una sola petición.
+  if (!trade.expires_at) {
+    try {
+      const st = await trocador(env, "trade", { id: trade.trade_id });
+      const exp = publicTrade((Array.isArray(st) ? st[0] : st) as Record<string, unknown>).expires_at;
+      if (exp) trade = { ...trade, expires_at: exp };
+    } catch (e) {
+      console.warn("trocador vencimiento", trade.trade_id, String(e));
+    }
+  }
 
   // Conservación exigida por los proveedores de Trocador (ver la política de privacidad).
   const cf = (req as Request & { cf?: { country?: string } }).cf;

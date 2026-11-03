@@ -117,6 +117,7 @@ const softwareLd = {
           </form>
           <div id="troc-deposit" class="quick-form" hidden>
             <p>{t("Envía exactamente", "Send exactly")} <strong><span id="troc-amount"></span> <span id="troc-ticker">USDT</span></strong> · {t("Red:", "Network:")} <strong id="troc-net">Arbitrum One</strong></p>
+            <p id="troc-timer" class="troc-timer" role="timer" aria-live="off" hidden></p>
             <p class="troc-addr"><code id="troc-addr"></code></p>
             <div id="troc-memo-box" hidden>
               <p><strong>{t("Incluye también este memo o tag (obligatorio):", "Also include this memo or tag (required):")}</strong></p>
@@ -124,6 +125,11 @@ const softwareLd = {
             </div>
             <button id="troc-copy" class="btn secondary" type="button">{t("Copiar dirección", "Copy address")}</button>
             <p>{t("Estado:", "Status:")} <strong id="troc-status"></strong></p>
+            <div id="troc-hash-box" hidden>
+              <p><strong id="troc-hash-label"></strong></p>
+              <p class="troc-addr"><code id="troc-hash"></code></p>
+              <button id="troc-hash-copy" class="btn secondary small" type="button"></button>
+            </div>
             <p class="meta">{t("Exchange:", "Exchange:")} <span id="troc-provider"></span> · ID <code id="troc-id"></code><br />{t("Guarda el ID. Si algo falla, escribe al soporte de Trocador (@TrocadorSupportBot en Telegram o support@trocador.app) con ese ID. El estado se actualiza solo cada minuto.", "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes every minute.")}</p>
           </div>
         </div>

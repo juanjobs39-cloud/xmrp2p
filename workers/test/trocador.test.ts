@@ -1,7 +1,7 @@
 import { env as baseEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import worker from "../src/api/index";
-import { parseQuotes } from "../src/api/trocador";
+import { parseQuotes, unixTime } from "../src/api/trocador";
 
 const XMR = "4" + "A".repeat(94);
 const env = { ...(baseEnv as object), TROCADOR_API_KEY: "k-test", TROCADOR_WEBHOOK_KEY: "wh-test", TROCADOR_LIMITER: undefined } as never;
@@ -27,8 +27,8 @@ function mockTrocador() {
         ] },
       });
     if (u.pathname === "/new_trade")
-      return Response.json({ trade_id: "tr1", provider: "Best", status: "waiting", amount_from: "50", amount_to: "0.12", address_provider: "0xdeposit", fixed: "True" });
-    if (u.pathname === "/trade") return Response.json([{ trade_id: "tr1", status: "finished" }]);
+      return Response.json({ trade_id: "tr1", provider: "Best", status: "waiting", amount_from: 50, amount_to: 0.12, address_provider: "0xdeposit", fixed: "True" });
+    if (u.pathname === "/trade") return Response.json([{ trade_id: "tr1", status: "finished", quotes: { expiresAt: "2026-11-03 12:30:00.287403+00:00" } }]);
     return new Response("{}", { status: 404 });
   });
   return { seen, spy };
@@ -42,6 +42,17 @@ describe("Trocador", () => {
     expect(q.map((x) => x.provider)).toEqual(["b", "a"]);
     expect(q[1]!.fixed).toBe(true);
     expect(parseQuotes(null)).toEqual([]);
+  });
+
+  it("entiende las fechas de vencimiento de Trocador", () => {
+    expect(unixTime("2026-11-03 12:30:00")).toBe(Date.UTC(2026, 10, 3, 12, 30) / 1000);
+    expect(unixTime("2026-11-03T12:30:00+00:00")).toBe(Date.UTC(2026, 10, 3, 12, 30) / 1000);
+    expect(unixTime(1793700000)).toBe(1793700000);
+    expect(unixTime("2026-11-03 03:56:04.287403+00:00")).toBe(1793678164); // formato real de Trocador
+    expect(unixTime(1793700000123)).toBe(1793700000);
+    expect(unixTime("1793700000")).toBe(1793700000);
+    expect(unixTime("mañana")).toBe(0);
+    expect(unixTime(undefined)).toBe(0);
   });
 
   it("sin llave las rutas responden 503", async () => {
@@ -70,7 +81,7 @@ describe("Trocador", () => {
     });
     expect(r.status).toBe(200);
     const t = (await r.json()) as Record<string, unknown>;
-    expect(t).toMatchObject({ trade_id: "tr1", address_provider: "0xdeposit", status: "waiting" });
+    expect(t).toMatchObject({ trade_id: "tr1", address_provider: "0xdeposit", status: "waiting", amount_from: "50", amount_to: "0.12", expires_at: Date.UTC(2026, 10, 3, 12, 30) / 1000 });
     expect(JSON.stringify(t)).not.toContain("5.6.7.8");
     const p = seen.find((u) => u.pathname === "/new_trade")!.searchParams;
     expect([p.get("id"), p.get("provider"), p.get("fixed"), p.get("address"), p.get("webhook_key")]).toEqual(["rate123", "Best", "True", XMR, "wh-test"]);
@@ -97,10 +108,11 @@ describe("Trocador", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ rate_id: "rate123", provider: "Best", fixed: true, usdt: "50", address: XMR }),
     });
-    const hook = (key: string) => call("/v1/trocador/webhook", { method: "POST", headers: { "webhook-key": key, "content-type": "application/json" }, body: JSON.stringify({ trade_id: "tr1", status: "finished" }) });
+    const hook = (key: string) => call("/v1/trocador/webhook", { method: "POST", headers: { "webhook-key": key, "content-type": "application/json" }, body: JSON.stringify({ trade_id: "tr1", status: "finished", details: { hashout: "ab12cd34ef56" } }) });
     expect((await hook("mala")).status).toBe(401);
     expect((await hook("wh-test")).status).toBe(200);
     const s = (await (await call("/v1/trocador/trades/tr1")).json()) as Record<string, unknown>;
-    expect(s).toMatchObject({ status: "finished", address_provider: "0xdeposit" });
+    // El webhook no trae el vencimiento: se conserva el que ya teníamos, y llega el hash del pago.
+    expect(s).toMatchObject({ status: "finished", address_provider: "0xdeposit", hashout: "ab12cd34ef56", expires_at: Date.UTC(2026, 10, 3, 12, 30) / 1000 });
   });
 });

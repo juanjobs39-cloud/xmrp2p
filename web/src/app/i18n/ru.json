@@ -76,8 +76,8 @@
   "troc_status_new": "Создан",
   "troc_status_waiting": "Ждём ваш депозит",
   "troc_status_confirming": "Подтверждаем ваш депозит",
-  "troc_status_sending": "Отправляем ваши XMR",
-  "troc_status_finished": "Завершён: XMR отправлены",
+  "troc_status_sending": "Отправляем ваши {coin}",
+  "troc_status_finished": "Завершён: {coin} отправлены",
   "troc_status_failed": "Ошибка: напишите в поддержку и укажите ID",
   "troc_status_expired": "Истёк без депозита",
   "troc_status_halted": "Остановлен обменником: напишите в поддержку и укажите ID",
@@ -92,5 +92,9 @@
   "troc_dest_label": "Ваш адрес {coin} (сюда придут средства)",
   "troc_refund_xmr": "Адрес возврата Monero (необязательно)",
   "troc_bad_dest": "Адрес не похож на корректный для {coin}.",
-  "troc_need_memo": "Для этой монеты в адресе назначения нужен memo или тег."
+  "troc_need_memo": "Для этой монеты в адресе назначения нужен memo или тег.",
+  "troc_timer": "Осталось времени на депозит: {time}",
+  "troc_timer_over": "Время на депозит истекло. Ничего не отправляйте на этот адрес: создайте новый обмен.",
+  "troc_hash": "Транзакция выплаты (хеш):",
+  "troc_copy_hash": "Скопировать хеш"
 }
