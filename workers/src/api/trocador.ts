@@ -208,6 +208,8 @@ interface TradeBody {
 const XMR_MAIN = /^[48][1-9A-HJ-NP-Za-km-z]{94}([1-9A-HJ-NP-Za-km-z]{11})?$/;
 const EVM = /^0x[0-9a-fA-F]{40}$/;
 const str = (v: unknown, max = 200): string => (typeof v === "string" ? v.slice(0, max) : "");
+/** Monto: Trocador lo manda como número o como texto. */
+const amt = (v: unknown): string => (typeof v === "number" && Number.isFinite(v) ? String(v) : str(v, 40));
 
 /** Datos públicos de un intercambio (nunca la IP ni el navegador). */
 /**
@@ -240,8 +242,8 @@ function publicTrade(t: Record<string, unknown>) {
     network_to: str(t.network_to),
     provider: str(t.provider),
     status: str(t.status) || "new",
-    amount_from: str(t.amount_from),
-    amount_to: str(t.amount_to),
+    amount_from: amt(t.amount_from),
+    amount_to: amt(t.amount_to),
     address_provider: str(t.address_provider),
     address_provider_memo: str(t.address_provider_memo),
     id_provider: str(t.id_provider),
@@ -295,8 +297,18 @@ async function createTrade(req: Request, env: Env): Promise<Response> {
   if (refund) Object.assign(params, { refund, refund_memo: "0" });
   if (env.TROCADOR_WEBHOOK_KEY) Object.assign(params, { webhook: `${site}/v1/trocador/webhook`, webhook_key: env.TROCADOR_WEBHOOK_KEY });
   const body = await trocador(env, "new_trade", params);
-  const trade = publicTrade(body);
+  let trade = publicTrade(body);
   if (!trade.trade_id || !trade.address_provider) throw new HttpError(502, "Trocador no devolvió la dirección de depósito");
+  // new_trade no trae la hora de vencimiento; la consulta de estado sí (quotes.expiresAt). Una sola petición.
+  if (!trade.expires_at) {
+    try {
+      const st = await trocador(env, "trade", { id: trade.trade_id });
+      const exp = publicTrade((Array.isArray(st) ? st[0] : st) as Record<string, unknown>).expires_at;
+      if (exp) trade = { ...trade, expires_at: exp };
+    } catch (e) {
+      console.warn("trocador vencimiento", trade.trade_id, String(e));
+    }
+  }
 
   // Conservación exigida por los proveedores de Trocador (ver la política de privacidad).
   const cf = (req as Request & { cf?: { country?: string } }).cf;
