@@ -1,5 +1,6 @@
 // Notifica a IndexNow (Bing, Yandex, Seznam, Naver…) las URL nuevas o cambiadas tras publicar.
 // Uso: INDEXNOW_KEY=<llave> PUBLIC_SITE_URL=https://<DOMINIO> node scripts/indexnow.mjs [--all] [--dry-run]
+// P2P Fiat: PUBLIC_SITE=fiat PUBLIC_SITE_URL=https://fiat.monerop2p.app …
 // Compara el sitemap de dist/ con .indexnow-cache.json (lastmod por URL) y envía solo las diferencias.
 import { readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -12,11 +13,13 @@ const dry = process.argv.includes("--dry-run");
 if (!/^[a-zA-Z0-9-]{8,128}$/.test(key)) throw new Error("Define INDEXNOW_KEY (8–128 caracteres a-z, A-Z, 0-9, -) y vuelve a construir el sitio");
 if (!site.startsWith("https://")) throw new Error("Define PUBLIC_SITE_URL con https://");
 
-const xml = await readFile(root + "dist/sitemap.xml", "utf8");
+// Con PUBLIC_SITE=fiat usa el sitio de P2P Fiat (dist-fiat/ y su propia caché).
+const fiat = process.env.PUBLIC_SITE === "fiat";
+const xml = await readFile(root + (fiat ? "dist-fiat/sitemap.xml" : "dist/sitemap.xml"), "utf8");
 const current = Object.fromEntries(
   [...xml.matchAll(/<url>\s*<loc>([^<]+)<\/loc>(?:\s*<lastmod>([^<]+)<\/lastmod>)?/g)].map((m) => [m[1], m[2] ?? ""]),
 );
-const cachePath = root + ".indexnow-cache.json";
+const cachePath = root + (fiat ? ".indexnow-cache-fiat.json" : ".indexnow-cache.json");
 let cache = {};
 try {
   cache = JSON.parse(await readFile(cachePath, "utf8"));

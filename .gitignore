@@ -75,6 +75,7 @@ web/dist-ipfs/
 
 # Web: estado local
 web/.indexnow-cache.json
+web/.indexnow-cache-fiat.json
 web/.lighthouseci/
 
 # E2E: secretos de testnet y estado local

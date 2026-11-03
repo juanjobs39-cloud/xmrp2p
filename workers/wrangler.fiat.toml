@@ -47,12 +47,14 @@ crons = ["* * * * *"]
 [[d1_databases]]
 binding = "DB"
 database_name = "xmrp2p-fiat"
-database_id = "PENDIENTE"
+database_id = "e3507dbb-267c-4a3e-907a-8e3a940301d9"
 migrations_dir = "migrations"
 
 [[containers]]
 class_name = "ArbiterContainer"
-image = "../arbiter/Dockerfile"
+# Misma imagen del árbitro que la beta (ya subida a Cloudflare). Si cambia arbiter/, usar
+# image = "../arbiter/Dockerfile" (requiere Docker) para construirla de nuevo.
+image = "registry.cloudflare.com/948485f1fb296b4facdf70267af252d3/monerop2p-p2p-arbitercontainer:f67fff2c"
 max_instances = 1
 instance_type = "basic"
 
