@@ -95,9 +95,15 @@ export interface User {
   orders_total: number;
   release_secs: number;
   releases: number;
+  deposit_secs?: number;
+  deposits?: number;
   positive: number;
   negative: number;
 }
+
+/** Se cuenta «en línea» a quien tuvo actividad (o latido de la app) en los últimos 10 minutos. */
+export const ONLINE_SECS = 600;
+export const isOnline = (lastSeen: number, t = now()) => t - lastSeen < ONLINE_SECS;
 
 export async function getUser(env: P2PEnv, id: string): Promise<User | null> {
   return env.DB.prepare("SELECT * FROM p2p_users WHERE id = ?").bind(id).first<User>();
@@ -120,10 +126,12 @@ export function publicUser(u: User) {
     enc_pubkey: u.enc_pubkey,
     since: u.created_at,
     last_seen: u.last_seen,
+    online: isOnline(u.last_seen),
     banned: !!u.banned,
     orders_done: u.orders_done,
     completion_pct: u.orders_total ? Math.round((u.orders_done / u.orders_total) * 1000) / 10 : null,
     avg_release_min: u.releases ? Math.round(u.release_secs / u.releases / 6) / 10 : null,
+    avg_deposit_min: u.deposits ? Math.round((u.deposit_secs ?? 0) / u.deposits / 6) / 10 : null,
     positive: u.positive,
     negative: u.negative,
   };

@@ -10,46 +10,42 @@ import { ApiError, get, signed, type Ad, type Method, type OrderView, type P2PCo
 import { EscrowDriver, type EscrowNote } from "./escrow";
 import { account, encPublic, hasVault, newVault, open, openVault, saveVault, seal, type P2PVault, type SavedMethod } from "./identity";
 import "./p2p.css";
+import { avatar, h, fmtXmr, nowS, type Child } from "./ui";
+import { marketView } from "./market";
+import { newAdView } from "./new-ad";
+import { myAdsView, orderView, ordersView } from "./orders";
+import { adminView } from "./admin";
 
-type Lang = "es" | "en";
-const KINDS = ["bank", "wallet", "cash", "card", "giftcard", "other"] as const;
+export { h, fmtXmr, nowS, type Child };
 
-// ---------- utilidades de DOM ----------
-type Child = Node | string | null | undefined | false;
-function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Record<string, unknown> = {}, ...kids: (Child | Child[])[]): HTMLElementTagNameMap[K] {
-  const el = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (v === undefined || v === null || v === false) continue;
-    if (k.startsWith("on") && typeof v === "function") el.addEventListener(k.slice(2), v as EventListener);
-    else if (k === "class") el.className = String(v);
-    else if (k in el && typeof v !== "string") (el as unknown as Record<string, unknown>)[k] = v;
-    else el.setAttribute(k, v === true ? "" : String(v));
-  }
-  for (const c of kids.flat()) if (c !== null && c !== undefined && c !== false) el.append(c);
-  return el;
-}
-const fmtXmr = (x: string) => String(Number(x).toFixed(6)).replace(/\.?0+$/, "");
-const nowS = () => Math.floor(Date.now() / 1000);
+export type Lang = "es" | "en";
+export const KINDS = ["bank", "wallet", "cash", "card", "giftcard", "other"] as const;
 
 export class P2PApp {
-  private cfg!: P2PConfig;
-  private fiats: { popular: string[]; all: string[] } = { popular: [], all: [] };
-  private vault: P2PVault | null = null;
-  private pass = "";
-  private acct: PrivateKeyAccount | null = null;
-  private me: PublicUser | null = null;
-  private root: HTMLElement;
-  private timer: ReturnType<typeof setTimeout> | null = null;
-  private drivers = new Map<string, EscrowDriver>();
-  private names: Intl.DisplayNames;
-  private node = MONERO.defaultNode;
+  cfg!: P2PConfig;
+  fiats: { popular: string[]; all: string[] } = { popular: [], all: [] };
+  vault: P2PVault | null = null;
+  pass = "";
+  acct: PrivateKeyAccount | null = null;
+  me: PublicUser | null = null;
+  root: HTMLElement;
+  timer: ReturnType<typeof setTimeout> | null = null;
+  drivers = new Map<string, EscrowDriver>();
+  names: Intl.DisplayNames;
+  node = MONERO.defaultNode;
+  /** Órdenes que esperan algo de mí (punto rojo en «Mis órdenes»). */
+  pending = 0;
+  private seenOrders: Set<string> | null = null;
+  private beat: ReturnType<typeof setInterval> | null = null;
+  private flash: ReturnType<typeof setInterval> | null = null;
+  private view = "";
 
-  constructor(private lang: Lang) {
+  constructor(public lang: Lang) {
     this.root = document.getElementById("p2p-root")!;
     this.names = new Intl.DisplayNames([lang], { type: "currency" });
   }
 
-  private t = (es: string, en: string) => (this.lang === "es" ? es : en);
+  t = (es: string, en: string) => (this.lang === "es" ? es : en);
 
   // ------------------------------------------------------------ arranque
 
@@ -71,7 +67,7 @@ export class P2PApp {
     await this.route();
   }
 
-  private async route() {
+  async route() {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
     const [, view = "", arg] = location.hash.split("?")[0]!.replace(/^#\/?/, "/").split("/");
@@ -79,40 +75,116 @@ export class P2PApp {
     if (needs && !this.vault) return this.accountView(view === "cuenta" ? "" : location.hash);
     this.nav(view);
     try {
-      if (view === "nuevo") await this.newAdView();
-      else if (view === "ordenes") await this.ordersView();
-      else if (view === "orden" && arg) await this.orderView(arg);
-      else if (view === "anuncios") await this.myAdsView();
+      if (view === "nuevo") await newAdView(this);
+      else if (view === "ordenes") await ordersView(this);
+      else if (view === "orden" && arg) await orderView(this, arg);
+      else if (view === "anuncios") await myAdsView(this);
       else if (view === "cuenta") await this.profileView();
-      else if (view === "admin") await this.adminView(arg);
-      else await this.marketView();
+      else if (view === "admin") await adminView(this, arg);
+      else await marketView(this);
     } catch (e) {
       this.show(this.error(e));
     }
   }
 
-  private nav(view: string) {
-    const link = (hash: string, label: string, key: string) => h("a", { href: hash, "aria-current": view === key ? "page" : undefined }, label);
+  nav(view: string = this.view) {
+    this.view = view;
+    const link = (hash: string, icon: string, label: string, key: string, dot = 0) =>
+      h(
+        "a",
+        { href: hash, "aria-current": view === key || (key === "ordenes" && view === "orden") ? "page" : undefined },
+        h("span", { class: "p2p-ico", "aria-hidden": "true" }, icon),
+        h("span", {}, label),
+        dot ? h("b", { class: "p2p-dot", title: this.t("Esperan tu acción", "Waiting for you") }, String(dot)) : null,
+      );
     document.getElementById("p2p-nav")!.replaceChildren(
-      link("#/", this.t("Mercado", "Market"), ""),
-      link("#/nuevo", this.t("Publicar anuncio", "Post an ad"), "nuevo"),
-      link("#/ordenes", this.t("Mis órdenes", "My orders"), "ordenes"),
-      link("#/anuncios", this.t("Mis anuncios", "My ads"), "anuncios"),
-      link("#/cuenta", this.me ? `👤 ${this.me.nickname}` : this.t("Cuenta", "Account"), "cuenta"),
-      this.isAdmin ? link("#/admin", "🛡 Admin", "admin") : "",
+      link("#/", "⇄", this.t("Mercado", "Market"), ""),
+      link("#/nuevo", "＋", this.t("Publicar", "Post ad"), "nuevo"),
+      link("#/ordenes", "☰", this.t("Mis órdenes", "My orders"), "ordenes", this.pending),
+      link("#/anuncios", "▤", this.t("Mis anuncios", "My ads"), "anuncios"),
+      link("#/cuenta", "◉", this.me ? this.me.nickname : this.t("Cuenta", "Account"), "cuenta"),
+      this.isAdmin ? link("#/admin", "🛡", "Admin", "admin") : "",
     );
   }
 
-  private show(...nodes: Child[]) {
+  /** Latido (marca «en línea») y revisión de órdenes nuevas mientras la cuenta está abierta. */
+  private startBeat() {
+    if (this.beat) return;
+    const ping = () => void this.req("POST", "/v1/p2p/me/ping", {}).catch(() => {});
+    const watch = async () => {
+      if (!this.me) return;
+      try {
+        const r = await this.req<{ orders: { id: string; role: string; status: string; fiat: string; fiat_amount: string; xmr: string }[] }>("GET", "/v1/p2p/my/orders");
+        const needs = (o: { role: string; status: string }) =>
+          (o.role === "seller" && ["setup", "awaiting_deposit", "paid"].includes(o.status)) || (o.role === "buyer" && ["setup", "awaiting_payment"].includes(o.status));
+        const pending = r.orders.filter(needs);
+        const fresh = this.seenOrders ? pending.filter((o) => !this.seenOrders!.has(o.id) && ["setup", "awaiting_deposit"].includes(o.status)) : [];
+        this.seenOrders = new Set(r.orders.map((o) => o.id));
+        if (pending.length !== this.pending) {
+          this.pending = pending.length;
+          this.nav();
+        }
+        for (const o of fresh) this.alertOrder(o);
+      } catch {
+        /* sin red: se reintenta en la siguiente vuelta */
+      }
+    };
+    ping();
+    void watch();
+    this.beat = setInterval(ping, 120_000);
+    setInterval(() => void watch(), 30_000);
+  }
+
+  /** Aviso de orden nueva: notificación del navegador, sonido corto y título que parpadea. */
+  private alertOrder(o: { id: string; role: string; fiat: string; fiat_amount: string; xmr: string }) {
+    const title = this.t("Nueva orden en MoneroP2P", "New order on MoneroP2P");
+    const body =
+      o.role === "seller"
+        ? this.t(`Te compran ${fmtXmr(o.xmr)} XMR por ${o.fiat_amount} ${o.fiat}. Abre la orden y deposita.`, `Someone buys ${fmtXmr(o.xmr)} XMR for ${o.fiat_amount} ${o.fiat}. Open the order and deposit.`)
+        : this.t(`Te venden ${fmtXmr(o.xmr)} XMR por ${o.fiat_amount} ${o.fiat}. Abre la orden.`, `Someone sells you ${fmtXmr(o.xmr)} XMR for ${o.fiat_amount} ${o.fiat}. Open the order.`);
+    try {
+      if ("Notification" in window && Notification.permission === "granted") {
+        const n = new Notification(title, { body, tag: o.id });
+        n.onclick = () => (window.focus(), (location.hash = `#/orden/${o.id}`));
+      }
+    } catch {
+      /* algunos navegadores no permiten notificaciones aquí */
+    }
+    try {
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.frequency.value = 880;
+      g.gain.setValueAtTime(0.08, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+      osc.connect(g).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    } catch {
+      /* sin audio */
+    }
+    if (this.flash || document.hasFocus()) return;
+    const base = document.title;
+    let on = false;
+    this.flash = setInterval(() => (document.title = (on = !on) ? `🔔 ${this.t("Nueva orden", "New order")}` : base), 1000);
+    window.addEventListener("focus", () => (clearInterval(this.flash!), (this.flash = null), (document.title = base)), { once: true });
+  }
+
+  /** Pide permiso de notificaciones (solo tras un clic del usuario). */
+  askNotify() {
+    if ("Notification" in window && Notification.permission === "default") void Notification.requestPermission().catch(() => {});
+  }
+
+  show(...nodes: Child[]) {
     this.root.replaceChildren(...(nodes.filter(Boolean) as Node[]));
   }
 
-  private error(e: unknown): HTMLElement {
+  error(e: unknown): HTMLElement {
     const msg = e instanceof ApiError || e instanceof Error ? e.message : String(e);
     return h("p", { class: "notice danger", role: "alert" }, msg);
   }
 
-  private async busy<T>(btn: HTMLButtonElement, f: () => Promise<T>, out?: HTMLElement): Promise<T | undefined> {
+  async busy<T>(btn: HTMLButtonElement, f: () => Promise<T>, out?: HTMLElement): Promise<T | undefined> {
     btn.disabled = true;
     btn.classList.add("loading");
     out?.replaceChildren();
@@ -127,7 +199,7 @@ export class P2PApp {
     }
   }
 
-  private fiatSelect(value: string, id: string): HTMLSelectElement {
+  fiatSelect(value: string, id: string): HTMLSelectElement {
     const opt = (c: string) => h("option", { value: c, selected: c === value }, `${c} · ${this.names.of(c) ?? c}`);
     return h(
       "select",
@@ -137,37 +209,58 @@ export class P2PApp {
     );
   }
 
-  private field(label: string, input: HTMLElement, hint?: string) {
+  field(label: string, input: HTMLElement, hint?: string) {
     return h("div", { class: "field app" }, h("label", { for: input.id }, label), input, hint ? h("small", {}, hint) : null);
   }
 
-  private userLine(u?: PublicUser | null) {
+  /** Conexión: «En línea» o «Visto hace X». */
+  seen(u: PublicUser): string {
+    return this.isOn(u) ? this.t("En línea", "Online") : this.t(`Visto hace ${this.ago(u.last_seen)}`, `Seen ${this.ago(u.last_seen)} ago`);
+  }
+  isOn(u: PublicUser) {
+    return u.online ?? nowS() - u.last_seen < 600;
+  }
+
+  /** Anunciante: avatar, apodo, conexión y reputación (órdenes, % completadas, tiempos). */
+  userLine(u?: PublicUser | null, compact = false) {
     if (!u) return h("span", {}, "—");
     const stats = [
       `${u.orders_done} ${this.t("órdenes", "orders")}`,
-      u.completion_pct !== null ? `${u.completion_pct}%` : null,
-      u.avg_release_min !== null ? `${this.t("libera en", "releases in")} ~${u.avg_release_min} min` : null,
-      `👍 ${u.positive} · 👎 ${u.negative}`,
+      u.completion_pct !== null ? `${u.completion_pct}% ${this.t("completadas", "completion")}` : null,
+      compact || u.avg_deposit_min == null ? null : `${this.t("deposita en", "deposits in")} ~${u.avg_deposit_min} min`,
+      compact || u.avg_release_min === null ? null : `${this.t("libera en", "releases in")} ~${u.avg_release_min} min`,
     ].filter(Boolean);
-    const online = nowS() - u.last_seen < 600;
-    return h("span", { class: "p2p-user" }, h("strong", {}, u.nickname), online ? h("span", { class: "p2p-online", title: "online" }, "●") : null, " ", h("small", {}, stats.join(" · ")));
+    const on = this.isOn(u);
+    const votes = u.positive + u.negative;
+    return h(
+      "span",
+      { class: "p2p-user" },
+      avatar(u.nickname, on),
+      h(
+        "span",
+        { class: "p2p-user-txt" },
+        h("strong", {}, u.nickname, votes ? h("span", { class: "p2p-rate", title: `👍 ${u.positive} · 👎 ${u.negative}` }, ` · 👍 ${Math.round((u.positive / votes) * 100)}%`) : null),
+        h("small", {}, stats.join(" · ")),
+        h("small", { class: on ? "p2p-on" : "p2p-off" }, this.seen(u)),
+      ),
+    );
   }
 
-  private methodTag(m: Method) {
+  methodTag(m: Method) {
     return h("span", { class: "p2p-tag" + (m.reversible ? " rev" : ""), title: m.reversible ? this.t("Pago reversible: riesgo de contracargo", "Reversible payment: chargeback risk") : undefined }, m.name, m.country ? ` (${m.country})` : "", m.reversible ? " ⚠" : "");
   }
 
-  private async req<T>(method: string, path: string, body?: Record<string, unknown>) {
+  async req<T>(method: string, path: string, body?: Record<string, unknown>) {
     return signed<T>(this.acct!, method, path, body);
   }
 
-  private async saveV() {
+  async saveV() {
     await saveVault(this.vault!, this.pass);
   }
 
   // ------------------------------------------------------------ cuenta
 
-  private async accountView(next: string) {
+  async accountView(next: string) {
     this.nav("cuenta");
     const net = this.cfg.xmr_network;
     const out = h("div");
@@ -236,7 +329,7 @@ export class P2PApp {
     );
   }
 
-  private async unlocked(v: P2PVault, pass: string, next: string) {
+  async unlocked(v: P2PVault, pass: string, next: string) {
     this.vault = v;
     this.pass = pass;
     this.acct = account(v);
@@ -245,18 +338,19 @@ export class P2PApp {
     } catch (e) {
       if (!(e instanceof ApiError && e.status === 404)) throw e;
     }
+    this.startBeat();
     if (location.hash === next || !next) await this.route();
     else location.hash = next;
   }
 
-  private async downloadBackup() {
+  async downloadBackup() {
     const file = await saveVault(this.vault!, this.pass);
     const a = h("a", { href: URL.createObjectURL(new Blob([JSON.stringify(file, null, 1)], { type: "application/json" })), download: `monerop2p-p2p-respaldo-${new Date().toISOString().slice(0, 10)}.json` });
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
   }
 
-  private async profileView() {
+  async profileView() {
     const out = h("div");
     const nick = h("input", { id: "p2p-nick", type: "text", maxLength: 20, value: this.me?.nickname ?? "" });
     const save = h("button", { class: "btn", type: "button" }, this.t("Guardar apodo", "Save nickname"));
@@ -290,293 +384,25 @@ export class P2PApp {
 
   // ------------------------------------------------------------ mercado
 
-  private async marketView() {
-    const sp = new URLSearchParams(location.hash.split("?")[1] ?? "");
-    const wantBuy = sp.get("lado") !== "vender";
-    const fiat = this.fiatSelect(sp.get("fiat") ?? (this.lang === "es" ? "MXN" : "USD"), "p2p-fiat");
-    const country = h("input", { id: "p2p-country", type: "text", maxLength: 2, placeholder: "MX", value: sp.get("pais") ?? "" });
-    const method = h("input", { id: "p2p-method", type: "text", placeholder: "SPEI", value: sp.get("metodo") ?? "" });
-    const amount = h("input", { id: "p2p-amount", type: "text", inputMode: "decimal", placeholder: "500", value: sp.get("monto") ?? "" });
-    const list = h("div", { class: "p2p-list" });
-    const price = h("p", { class: "p2p-market" });
-
-    const tab = (buy: boolean, label: string) =>
-      h("button", { type: "button", class: "p2p-tab" + (buy === wantBuy ? " on" : "") + (buy ? " buy" : " sell"), onclick: () => go(buy) }, label);
-    const go = (buy = wantBuy) => {
-      const q = new URLSearchParams({ lado: buy ? "comprar" : "vender", fiat: fiat.value });
-      if (country.value) q.set("pais", country.value.toUpperCase());
-      if (method.value) q.set("metodo", method.value);
-      if (amount.value) q.set("monto", amount.value);
-      location.hash = `#/?${q}`;
-    };
-    const search = h("button", { class: "btn", type: "button", onclick: () => go() }, this.t("Buscar", "Search"));
-    for (const el of [country, method, amount]) el.addEventListener("keydown", (e) => (e as KeyboardEvent).key === "Enter" && go());
-    fiat.onchange = () => go();
-
-    this.show(
-      h("div", { class: "p2p-tabs" }, tab(true, this.t("Comprar XMR", "Buy XMR")), tab(false, this.t("Vender XMR", "Sell XMR"))),
-      h("div", { class: "p2p-filters" }, this.field(this.t("Moneda", "Currency"), fiat), this.field(this.t("País", "Country"), country), this.field(this.t("Método", "Method"), method), this.field(this.t("Monto", "Amount"), amount), h("div", { class: "field app" }, h("label", {}, " "), search)),
-      price,
-      list,
-    );
-
-    const q = new URLSearchParams({ side: wantBuy ? "sell" : "buy", fiat: fiat.value });
-    if (country.value) q.set("country", country.value.toUpperCase());
-    if (method.value) q.set("method", method.value);
-    if (amount.value) q.set("amount", amount.value);
-    list.replaceChildren(h("p", {}, this.t("Cargando anuncios…", "Loading ads…")));
-    const r = await get<{ market_price: number | null; ads: (Ad & { user: PublicUser })[] }>(`/v1/p2p/ads?${q}`);
-    if (r.market_price) price.textContent = `${this.t("Precio de mercado", "Market price")}: 1 XMR ≈ ${r.market_price.toLocaleString(this.lang, { maximumFractionDigits: 2 })} ${fiat.value}`;
-    if (!r.ads.length) {
-      list.replaceChildren(h("p", { class: "notice" }, this.t("No hay anuncios con estos filtros. ¡Publica el primero!", "No ads match these filters. Post the first one!"), " ", h("a", { href: "#/nuevo" }, this.t("Publicar anuncio", "Post an ad"))));
-      return;
-    }
-    list.replaceChildren(...r.ads.map((ad) => this.adCard(ad, wantBuy)));
-  }
-
-  private adCard(ad: Ad & { user: PublicUser }, wantBuy: boolean): HTMLElement {
-    const form = h("div", { class: "p2p-take", hidden: true });
-    const take = h("button", { class: "btn small " + (wantBuy ? "buy" : "sell"), type: "button" }, wantBuy ? this.t("Comprar", "Buy") : this.t("Vender", "Sell"));
-    take.onclick = () => {
-      if (!this.vault) {
-        location.hash = "#/cuenta";
-        return;
-      }
-      form.hidden = !form.hidden;
-      if (!form.childElementCount) this.takeForm(ad, wantBuy, form);
-    };
-    const own = this.acct && ad.user_id.toLowerCase() === this.acct.address.toLowerCase();
-    return h(
-      "article",
-      { class: "card p2p-ad" },
-      h("div", { class: "p2p-ad-main" },
-        h("div", {}, this.userLine(ad.user)),
-        h("div", { class: "p2p-price" }, `${ad.price!.toLocaleString(this.lang)} `, h("small", {}, `${ad.fiat}/XMR`)),
-        h("div", {}, h("small", {}, `${this.t("Límite", "Limit")}: ${ad.min_fiat} – ${ad.max_fiat} ${ad.fiat}`), h("br"), h("small", {}, `${this.t("Disponible", "Available")}: ${fmtXmr(ad.available_xmr)} XMR`)),
-        h("div", { class: "p2p-tags" }, ad.methods.map((m) => this.methodTag(m))),
-        h("div", {}, own ? h("small", {}, this.t("Tu anuncio", "Your ad")) : take),
-      ),
-      ad.terms ? h("p", { class: "p2p-terms" }, h("small", {}, ad.terms)) : null,
-      form,
-    );
-  }
-
-  private takeForm(ad: Ad, wantBuy: boolean, box: HTMLElement) {
-    const out = h("div");
-    const amount = h("input", { id: `p2p-amt-${ad.id}`, type: "text", inputMode: "decimal", placeholder: `${ad.min_fiat} – ${ad.max_fiat}` });
-    const est = h("small", {});
-    amount.oninput = () => {
-      const n = Number(amount.value);
-      est.textContent = n > 0 && ad.price ? `≈ ${fmtXmr(String(n / ad.price))} XMR` : "";
-    };
-    const method = h("select", { id: `p2p-m-${ad.id}` }, ad.methods.map((m, i) => h("option", { value: String(i) }, m.name + (m.reversible ? " ⚠" : ""))));
-    const addr = h("input", { id: `p2p-addr-${ad.id}`, type: "text", spellcheck: false, autocomplete: "off", placeholder: MONERO.addressPrefixes[0] + "…" });
-    const go = h("button", { class: "btn", type: "button" }, this.t("Abrir orden", "Open order"));
-    go.onclick = () =>
-      void this.busy(
-        go,
-        async () => {
-          if (!this.me) throw new Error(this.t("Primero elige un apodo en Cuenta.", "First choose a nickname in Account."));
-          const o = await this.req<OrderView>("POST", "/v1/p2p/orders", { ad_id: ad.id, fiat_amount: amount.value.trim(), method_index: Number(method.value), xmr_address: addr.value.trim() });
-          location.hash = `#/orden/${o.id}`;
-        },
-        out,
-      );
-    box.replaceChildren(
-      out,
-      this.field(`${this.t(wantBuy ? "Vas a pagar" : "Vas a recibir", wantBuy ? "You pay" : "You receive")} (${ad.fiat})`, amount),
-      est,
-      this.field(this.t("Método de pago", "Payment method"), method),
-      this.field(
-        wantBuy ? this.t("Tu dirección de Monero (donde recibes el XMR)", "Your Monero address (where you get the XMR)") : this.t("Tu dirección de Monero para reembolsos", "Your Monero address for refunds"),
-        addr,
-        this.cfg.xmr_network === "stagenet" ? this.t("Red de prueba: dirección de stagenet (empieza con 5 o 7).", "Test network: stagenet address (starts with 5 or 7).") : undefined,
-      ),
-      wantBuy
-        ? h("p", {}, h("small", {}, this.t("El vendedor deposita el XMR en un escrow 2 de 3. Tú pagas por fuera y él libera.", "The seller deposits the XMR into a 2-of-3 escrow. You pay off-platform and they release.")))
-        : h("p", {}, h("small", {}, this.t(`Depositarás el XMR más la comisión del ${this.cfg.fee_bps / 100}% en un escrow 2 de 3. Libera solo cuando veas el dinero en tu cuenta.`, `You will deposit the XMR plus the ${this.cfg.fee_bps / 100}% fee into a 2-of-3 escrow. Release only when you see the money in your account.`))),
-      h("p", {}, go),
-    );
-  }
-
   // ------------------------------------------------------------ crear anuncio
 
-  private async newAdView() {
-    const out = h("div");
-    const side = h("select", { id: "na-side" }, h("option", { value: "sell" }, this.t("Quiero vender XMR", "I want to sell XMR")), h("option", { value: "buy" }, this.t("Quiero comprar XMR", "I want to buy XMR")));
-    const fiat = this.fiatSelect(this.lang === "es" ? "MXN" : "USD", "na-fiat");
-    const country = h("input", { id: "na-country", type: "text", maxLength: 2, placeholder: this.t("opcional", "optional") });
-    const ptype = h("select", { id: "na-ptype" }, h("option", { value: "float" }, this.t("Flotante (mercado ± margen)", "Floating (market ± margin)")), h("option", { value: "fixed" }, this.t("Fijo", "Fixed")));
-    const margin = h("input", { id: "na-margin", type: "text", inputMode: "decimal", value: "0" });
-    const fixed = h("input", { id: "na-price", type: "text", inputMode: "decimal" });
-    const marginF = this.field(this.t("Margen sobre el mercado (%)", "Margin over market (%)"), margin);
-    const fixedF = this.field(this.t("Precio por XMR", "Price per XMR"), fixed);
-    const mkt = h("small", {});
-    fixedF.hidden = true;
-    ptype.onchange = () => ((marginF.hidden = ptype.value !== "float"), (fixedF.hidden = ptype.value !== "fixed"));
-    const min = h("input", { id: "na-min", type: "text", inputMode: "decimal", placeholder: "100" });
-    const max = h("input", { id: "na-max", type: "text", inputMode: "decimal", placeholder: "5000" });
-    const amount = h("input", { id: "na-amount", type: "text", inputMode: "decimal", placeholder: "1.5" });
-    const windowMin = h("select", { id: "na-window" }, [15, 30, 45, 60, 120].map((n) => h("option", { value: String(n), selected: n === 30 }, `${n} min`)));
-    const terms = h("textarea", { id: "na-terms", rows: 3, maxLength: 1000 });
-    const minRev = h("input", { id: "na-minrev", type: "text", inputMode: "numeric", value: "0" });
-    const addr = h("input", { id: "na-addr", type: "text", spellcheck: false, autocomplete: "off" });
-    const addrF = this.field("", addr);
-    const methodsBox = h("div", { class: "p2p-methods" });
-    const chosen: (Method & { details?: string })[] = [];
-
-    const renderChosen = () =>
-      methodsBox.replaceChildren(
-        ...chosen.map((m, i) => {
-          const det = h("textarea", { id: `na-det-${i}`, rows: 2, maxLength: 500, value: m.details ?? this.saved(fiat.value, m.name)?.details ?? "", placeholder: this.t("Titular, CLABE / cuenta / correo…", "Holder, account / IBAN / email…") });
-          det.oninput = () => (m.details = det.value);
-          m.details = det.value;
-          return h(
-            "div",
-            { class: "p2p-chosen" },
-            h("div", { class: "row between" }, this.methodTag(m), h("button", { class: "btn secondary small", type: "button", onclick: () => (chosen.splice(i, 1), renderChosen()) }, "✕")),
-            side.value === "sell" ? this.field(this.t("Tus datos para recibir el pago (se envían cifrados solo al comprador)", "Your details to get paid (sent encrypted only to the buyer)"), det) : null,
-          );
-        }),
-      );
-    const suggested = h("div", { class: "p2p-tags" });
-    const loadMethods = async () => {
-      const r = await get<{ suggested: Method[] }>(`/v1/p2p/methods?fiat=${fiat.value}`);
-      suggested.replaceChildren(
-        ...r.suggested.map((m) =>
-          h("button", { type: "button", class: "p2p-tag btn-tag" + (m.reversible ? " rev" : ""), onclick: () => chosen.length < 5 && !chosen.some((c) => c.name === m.name) && (chosen.push({ ...m }), renderChosen()) }, `+ ${m.name}${m.country ? ` (${m.country})` : ""}${m.reversible ? " ⚠" : ""}`),
-        ),
-      );
-      const p = await get<{ price: number }>(`/v1/p2p/price?fiat=${fiat.value}`).catch(() => null);
-      mkt.textContent = p ? `${this.t("Mercado", "Market")}: 1 XMR ≈ ${p.price.toLocaleString(this.lang, { maximumFractionDigits: 2 })} ${fiat.value}` : "";
-    };
-    const kind = h("select", { id: "na-kind" }, KINDS.map((k) => h("option", { value: k }, this.kindName(k))));
-    const cname = h("input", { id: "na-cname", type: "text", maxLength: 40, placeholder: this.t("Banco, app o PayPal…", "Bank, app or PayPal…") });
-    const ccountry = h("input", { id: "na-ccountry", type: "text", maxLength: 2, placeholder: this.t("país", "country") });
-    const cadd = h("button", { class: "btn secondary small", type: "button" }, this.t("Agregar", "Add"));
-    cadd.onclick = () => {
-      const name = cname.value.trim();
-      if (name.length < 2 || chosen.length >= 5) return;
-      chosen.push({ kind: kind.value, name, country: ccountry.value.toUpperCase() || undefined, reversible: kind.value === "card" || /paypal|revolut|mercado ?pago|venmo|cash ?app|card|tarjeta/i.test(name) });
-      cname.value = "";
-      renderChosen();
-    };
-    const syncSide = () => {
-      addrF.querySelector("label")!.textContent =
-        side.value === "sell" ? this.t("Tu dirección de Monero para reembolsos", "Your Monero address for refunds") : this.t("Tu dirección de Monero (donde recibes el XMR)", "Your Monero address (where you get the XMR)");
-      amount.placeholder = side.value === "sell" ? "1.5" : "1.5";
-      renderChosen();
-    };
-    side.onchange = syncSide;
-    fiat.onchange = () => ((chosen.length = 0), renderChosen(), void loadMethods());
-
-    const publish = h("button", { class: "btn big", type: "button" }, this.t("Publicar anuncio", "Post ad"));
-    publish.onclick = () =>
-      void this.busy(
-        publish,
-        async () => {
-          if (!this.me) throw new Error(this.t("Primero elige un apodo en Cuenta.", "First choose a nickname in Account."));
-          if (!chosen.length) throw new Error(this.t("Agrega al menos un método de pago.", "Add at least one payment method."));
-          if (side.value === "sell" && chosen.some((m) => !m.details?.trim())) throw new Error(this.t("Escribe tus datos de pago para cada método.", "Enter your payment details for each method."));
-          const body: Record<string, unknown> = {
-            side: side.value,
-            fiat: fiat.value,
-            country: country.value.toUpperCase() || null,
-            price_type: ptype.value,
-            ...(ptype.value === "float" ? { margin_pct: Number(margin.value) } : { price: fixed.value.trim() }),
-            min_fiat: min.value.trim(),
-            max_fiat: max.value.trim(),
-            amount_xmr: amount.value.trim(),
-            methods: chosen.map(({ details: _d, ...m }) => m),
-            pay_window_min: Number(windowMin.value),
-            terms: terms.value,
-            min_orders_reversible: Number(minRev.value) || 0,
-            xmr_address: addr.value.trim(),
-          };
-          await this.req("POST", "/v1/p2p/ads", body);
-          if (side.value === "sell") {
-            for (const m of chosen) this.remember({ fiat: fiat.value, kind: m.kind, name: m.name, country: m.country ?? undefined, details: m.details!.trim() });
-            await this.saveV();
-          }
-          location.hash = "#/anuncios";
-        },
-        out,
-      );
-
-    this.show(
-      h("h2", {}, this.t("Publicar anuncio", "Post an ad")),
-      out,
-      h(
-        "section",
-        { class: "card p2p-form" },
-        this.field(this.t("Tipo", "Type"), side),
-        h("div", { class: "p2p-grid" }, this.field(this.t("Moneda", "Currency"), fiat), this.field(this.t("País (opcional)", "Country (optional)"), country)),
-        h("div", { class: "p2p-grid" }, this.field(this.t("Precio", "Price"), ptype), marginF, fixedF),
-        mkt,
-        h("div", { class: "p2p-grid" }, this.field(this.t("Mínimo por orden", "Minimum per order"), min), this.field(this.t("Máximo por orden", "Maximum per order"), max, this.t(`Tope: equivalente a ${this.cfg.cap_usd} USD`, `Cap: ${this.cfg.cap_usd} USD equivalent`))),
-        this.field(this.t("Cantidad total de XMR", "Total XMR amount"), amount),
-        h("h3", {}, this.t("Métodos de pago (hasta 5)", "Payment methods (up to 5)")),
-        h("p", {}, h("small", {}, this.t("Sugeridos:", "Suggested:"))),
-        suggested,
-        h("div", { class: "p2p-grid" }, this.field(this.t("Otro: tipo", "Other: type"), kind), this.field(this.t("Nombre", "Name"), cname), this.field(this.t("País", "Country"), ccountry), h("div", { class: "field app" }, h("label", {}, " "), cadd)),
-        methodsBox,
-        h("p", { class: "notice warn" }, this.t("⚠ PayPal, tarjetas y similares se pueden revertir después de que liberas. Úsalos solo con gente con historial.", "⚠ PayPal, cards and similar can be reversed after you release. Use them only with people who have a track record.")),
-        h("div", { class: "p2p-grid" }, this.field(this.t("Tiempo para pagar", "Time to pay"), windowMin), this.field(this.t("Órdenes mínimas para métodos reversibles", "Minimum orders for reversible methods"), minRev)),
-        this.field(this.t("Condiciones (opcional)", "Terms (optional)"), terms),
-        addrF,
-        h("p", {}, publish),
-      ),
-    );
-    syncSide();
-    await loadMethods();
-  }
-
-  private kindName(k: string) {
+  kindName(k: string) {
     const es: Record<string, string> = { bank: "Banco", wallet: "Billetera / app", cash: "Efectivo", card: "Tarjeta", giftcard: "Tarjeta de regalo", other: "Otro" };
     const en: Record<string, string> = { bank: "Bank", wallet: "Wallet / app", cash: "Cash", card: "Card", giftcard: "Gift card", other: "Other" };
     return (this.lang === "es" ? es : en)[k] ?? k;
   }
 
-  private saved(fiat: string, name: string): SavedMethod | undefined {
+  saved(fiat: string, name: string): SavedMethod | undefined {
     return this.vault?.methods.find((m) => m.fiat === fiat && m.name.toLowerCase() === name.toLowerCase());
   }
-  private remember(m: SavedMethod) {
+  remember(m: SavedMethod) {
     const v = this.vault!;
     v.methods = [...v.methods.filter((x) => !(x.fiat === m.fiat && x.name.toLowerCase() === m.name.toLowerCase())), m];
   }
 
   // ------------------------------------------------------------ mis anuncios y órdenes
 
-  private async myAdsView() {
-    const r = await this.req<{ ads: Ad[] }>("GET", "/v1/p2p/my/ads");
-    const row = (ad: Ad) => {
-      const out = h("div");
-      const set = (status: string, label: string) => {
-        const b = h("button", { class: "btn secondary small", type: "button" }, label);
-        b.onclick = () => void this.busy(b, async () => (await this.req("PATCH", `/v1/p2p/ads/${ad.id}`, { status }), this.route()), out);
-        return b;
-      };
-      return h(
-        "article",
-        { class: "card p2p-ad" },
-        out,
-        h("div", { class: "p2p-ad-main" },
-          h("strong", {}, ad.side === "sell" ? this.t("Vendes XMR", "You sell XMR") : this.t("Compras XMR", "You buy XMR")),
-          h("div", { class: "p2p-price" }, ad.price ? `${ad.price.toLocaleString(this.lang)} ` : "—", h("small", {}, `${ad.fiat}/XMR`)),
-          h("small", {}, `${ad.min_fiat} – ${ad.max_fiat} ${ad.fiat} · ${fmtXmr(ad.available_xmr)} XMR`),
-          h("div", { class: "p2p-tags" }, ad.methods.map((m) => this.methodTag(m))),
-          h("span", { class: "badge" + (ad.status === "active" ? " ok" : "") }, ({ active: this.t("Activo", "Active"), paused: this.t("En pausa", "Paused"), hidden: this.t("Oculto por soporte", "Hidden by support") } as Record<string, string>)[ad.status] ?? ad.status),
-        ),
-        h("p", { class: "row wrap" }, ad.status === "active" ? set("paused", this.t("Pausar", "Pause")) : set("active", this.t("Activar", "Activate")), set("closed", this.t("Cerrar", "Close"))),
-      );
-    };
-    this.show(
-      h("div", { class: "row between" }, h("h2", {}, this.t("Mis anuncios", "My ads")), h("a", { class: "btn small", href: "#/nuevo" }, this.t("Nuevo anuncio", "New ad"))),
-      r.ads.length ? h("div", { class: "p2p-list" }, r.ads.map(row)) : h("p", {}, this.t("Aún no tienes anuncios.", "You have no ads yet.")),
-    );
-  }
-
-  private statusName(s: string): string {
+  statusName(s: string): string {
     const es: Record<string, string> = {
       setup: "Armando escrow", awaiting_deposit: "Esperando depósito", confirming: "Confirmando depósito", awaiting_payment: "Esperando pago",
       paid: "Pagado, por liberar", releasing: "Liberando", released: "Completada", cancelled: "Cancelada", refunding: "Reembolsando",
@@ -590,544 +416,21 @@ export class P2PApp {
     return (this.lang === "es" ? es : en)[s] ?? s;
   }
 
-  private async ordersView() {
-    const r = await this.req<{ orders: { id: string; role: string; status: string; fiat: string; fiat_amount: string; xmr: string; price: string; created_at: number }[] }>("GET", "/v1/p2p/my/orders");
-    this.show(
-      h("h2", {}, this.t("Mis órdenes", "My orders")),
-      r.orders.length
-        ? h(
-            "div",
-            { class: "p2p-list" },
-            r.orders.map((o) =>
-              h(
-                "a",
-                { class: "card p2p-orow", href: `#/orden/${o.id}` },
-                h("strong", { class: o.role === "buyer" ? "buy" : "sell" }, o.role === "buyer" ? this.t("Compra", "Buy") : this.t("Venta", "Sell")),
-                h("span", {}, `${fmtXmr(o.xmr)} XMR · ${o.fiat_amount} ${o.fiat}`),
-                h("span", { class: "badge" }, this.statusName(o.status)),
-                h("small", {}, new Date(o.created_at * 1000).toLocaleString(this.lang)),
-              ),
-            ),
-          )
-        : h("p", {}, this.t("Aún no tienes órdenes.", "You have no orders yet."), " ", h("a", { href: "#/" }, this.t("Ir al mercado", "Go to the market"))),
-    );
-  }
-
   // ------------------------------------------------------------ orden
-
-  private async orderView(id: string) {
-    const messages: RoomMessage[] = [];
-    let after = 0;
-    let adminEnc: string | null | undefined;
-    const plain = new Map<number, string>();
-    let paymentText: string | null = null;
-    let note: EscrowNote = null;
-    let noteErr = "";
-    const chatBox = h("div", { class: "p2p-chat-log", "aria-live": "polite" });
-    const head = h("div");
-    const actions = h("div");
-    const escrowBox = h("div");
-    const out = h("div");
-    const input = h("textarea", { id: "p2p-msg", rows: 2, maxLength: 2000, placeholder: this.t("Escribe un mensaje (cifrado)…", "Write a message (encrypted)…") });
-    const send = h("button", { class: "btn small", type: "button" }, this.t("Enviar", "Send"));
-    let o!: OrderView;
-
-    const recipients = () => [o.buyer?.enc_pubkey, o.seller?.enc_pubkey, adminEnc ?? ""].filter(Boolean) as string[];
-    send.onclick = () =>
-      void this.busy(
-        send,
-        async () => {
-          const txt = input.value.trim();
-          if (!txt) return;
-          await this.req("POST", `/v1/p2p/orders/${id}/messages`, { ciphertext: await seal(txt, recipients()) });
-          input.value = "";
-          await tick(false);
-        },
-        out,
-      );
-
-    const driver = () => {
-      let d = this.drivers.get(id);
-      if (!d)
-        this.drivers.set(
-          id,
-          (d = new EscrowDriver(id, {
-            vault: this.vault!,
-            save: () => this.saveV(),
-            post: (data) => this.req("POST", `/v1/p2p/orders/${id}/messages`, { protocol: data }),
-            cfg: this.cfg,
-            node: this.node,
-          })),
-        );
-      return d;
-    };
-
-    const render = () => {
-      const me = o.role;
-      const cp = o.counterpart;
-      const left = o.deadline_at ? o.deadline_at - nowS() : null;
-      head.replaceChildren(
-        h("div", { class: "row between wrap" },
-          h("h2", {}, `${me === "buyer" ? this.t("Compras", "You buy") : this.t("Vendes", "You sell")} ${fmtXmr(o.xmr)} XMR`),
-          h("span", { class: "badge" }, this.statusName(o.status)),
-        ),
-        h("dl", { class: "p2p-dl" },
-          h("dt", {}, this.t("Monto", "Amount")), h("dd", {}, `${o.fiat_amount} ${o.fiat}`),
-          h("dt", {}, this.t("Precio", "Price")), h("dd", {}, `${o.price} ${o.fiat}/XMR`),
-          h("dt", {}, this.t("Método", "Method")), h("dd", {}, this.methodTag(o.method)),
-          h("dt", {}, me === "buyer" ? this.t("Vendedor", "Seller") : this.t("Comprador", "Buyer")), h("dd", {}, this.userLine(cp)),
-          me === "seller" ? [h("dt", {}, this.t("Comisión (0.5%)", "Fee (0.5%)")), h("dd", {}, `${fmtXmr(o.fee_xmr)} XMR`)] : null,
-          left !== null && left > 0 ? [h("dt", {}, this.t("Tiempo restante", "Time left")), h("dd", { class: "p2p-timer" }, `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`)] : null,
-          o.payout_txid ? [h("dt", {}, "Tx"), h("dd", {}, h("code", {}, o.payout_txid))] : null,
-        ),
-        this.steps(o) ?? "",
-      );
-
-      // Escrow y avisos
-      const ek: Child[] = [];
-      if (["setup", "awaiting_deposit", "releasing", "refunding", "resolving"].includes(o.status))
-        ek.push(h("p", { class: "notice warn" }, this.t("Deja esta pestaña abierta: tu navegador firma su parte del escrow.", "Keep this tab open: your browser signs its part of the escrow.")));
-      if (note?.kind === "deposit")
-        ek.push(
-          h("div", { class: "card p2p-deposit" },
-            h("p", {}, h("strong", {}, this.t(`Deposita exactamente ${o.deposit_required_xmr} XMR`, `Deposit exactly ${o.deposit_required_xmr} XMR`))),
-            h("p", {}, h("code", { class: "p2p-addr" }, note.address)),
-            h("small", {}, this.t("Incluye el XMR de la orden, la comisión y una pequeña reserva para la comisión de red. Tu navegador calculó esta dirección.", "Includes the order XMR, the fee and a small reserve for the network fee. Your browser computed this address.")),
-          ),
-        );
-      if (note?.kind === "mismatch") ek.push(h("p", { class: "notice danger" }, this.t("¡La dirección del escrow no coincide con la que calculó tu navegador! No deposites y abre una apelación.", "The escrow address does not match the one your browser computed! Do not deposit; open an appeal.")));
-      if (note?.kind === "rejected") ek.push(h("p", { class: "notice danger" }, `${this.t("El árbitro rechazó el pago", "The arbiter rejected the payment")}: ${note.reason}`));
-      if (note?.kind === "info" && note.text === "waiting_signature") ek.push(h("p", { class: "notice" }, this.t("Pago armado; esperando la segunda firma del árbitro…", "Payment built; waiting for the arbiter's second signature…")));
-      if (noteErr) ek.push(h("p", { class: "notice danger" }, noteErr));
-      if (o.status === "confirming") ek.push(h("p", { class: "notice" }, this.t("Depósito visto. Esperando 10 confirmaciones (~20 min).", "Deposit seen. Waiting for 10 confirmations (~20 min).")));
-      if (me === "buyer" && ["awaiting_payment", "paid", "disputed"].includes(o.status))
-        ek.push(
-          h("div", { class: "card p2p-pay" },
-            h("h3", {}, this.t("Datos de pago del vendedor", "Seller's payment details")),
-            paymentText ? h("pre", {}, paymentText) : h("p", {}, this.t("Esperando que el vendedor los envíe…", "Waiting for the seller to send them…")),
-            o.status === "awaiting_payment" ? h("small", {}, this.t("Paga exactamente el monto, desde una cuenta a tu nombre, y sin escribir «Monero» ni «XMR» en el concepto.", "Pay the exact amount, from an account in your name, and do not write “Monero” or “XMR” in the reference.")) : null,
-          ),
-        );
-      escrowBox.replaceChildren(...(ek.filter(Boolean) as Node[]));
-
-      // Acciones
-      const act: HTMLElement[] = [];
-      const btn = (label: string, cls: string, f: () => Promise<unknown>, confirmText?: string) => {
-        const b = h("button", { class: `btn ${cls}`, type: "button" }, label);
-        b.onclick = () => {
-          if (confirmText && !confirm(confirmText)) return;
-          void this.busy(b, async () => (await f(), await tick(false)), out);
-        };
-        return b;
-      };
-      const post = (action: string, body: Record<string, unknown> = {}) => this.req<OrderView>("POST", `/v1/p2p/orders/${id}/${action}`, body);
-      if (me === "buyer" && o.status === "awaiting_payment")
-        act.push(btn(this.t("Ya pagué", "I have paid"), "buy", () => post("paid"), this.t("¿Ya hiciste el pago completo? Marcarlo sin pagar es fraude.", "Have you made the full payment? Marking it without paying is fraud.")));
-      if (me === "seller" && ["awaiting_payment", "paid", "disputed"].includes(o.status))
-        act.push(btn(this.t("Liberar XMR", "Release XMR"), "sell", () => post("release"), this.t("¿Ya ves el dinero en TU cuenta? Libera solo si lo recibiste. No se puede deshacer.", "Do you see the money in YOUR account? Release only if you received it. This cannot be undone.")));
-      const canCancel = me === "buyer" ? ["setup", "awaiting_deposit", "confirming", "awaiting_payment"].includes(o.status) : ["setup", "awaiting_deposit"].includes(o.status);
-      if (canCancel) act.push(btn(this.t("Cancelar orden", "Cancel order"), "secondary", () => post("cancel"), this.t("¿Cancelar la orden?", "Cancel the order?")));
-      if (o.status === "paid") {
-        if (o.dispute_available_at && nowS() < o.dispute_available_at)
-          act.push(h("small", {}, this.t(`Podrás apelar en ${Math.ceil((o.dispute_available_at - nowS()) / 60)} min.`, `You can appeal in ${Math.ceil((o.dispute_available_at - nowS()) / 60)} min.`)));
-        else {
-          const reason = h("textarea", { id: "p2p-reason", rows: 2, maxLength: 1000, placeholder: this.t("Qué pasó (mín. 5 caracteres)", "What happened (min. 5 characters)") });
-          act.push(h("details", { class: "p2p-appeal" }, h("summary", {}, this.t("Apelar", "Appeal")), reason, btn(this.t("Abrir apelación", "Open appeal"), "secondary", () => post("dispute", { reason: reason.value }))));
-        }
-      }
-      if (o.dispute) act.push(h("p", { class: "notice warn" }, `${this.t("Apelación", "Appeal")}: ${o.dispute.reason}${o.dispute.note ? ` — ${this.t("Resolución", "Decision")}: ${o.dispute.note}` : ""}`));
-      if (["released", "resolved_buyer", "resolved_seller"].includes(o.status)) {
-        const c = h("input", { id: "p2p-fb", type: "text", maxLength: 300, placeholder: this.t("Comentario (opcional)", "Comment (optional)") });
-        act.push(h("div", { class: "row wrap" }, c, btn("👍", "secondary small", () => post("feedback", { positive: true, comment: c.value })), btn("👎", "secondary small", () => post("feedback", { positive: false, comment: c.value }))));
-      }
-      actions.replaceChildren(...act);
-
-      // Chat
-      chatBox.replaceChildren(
-        ...messages
-          .filter((m) => m.body.type !== "protocol")
-          .map((m) => {
-            if (m.body.type === "status") return h("p", { class: "p2p-sys" }, `• ${this.statusName(m.body.status ?? "")}`);
-            if (m.body.type === "decision") return h("p", { class: "p2p-sys" }, `• ${this.t("Soporte decidió a favor de", "Support decided for")} ${m.body.winner === "buyer" ? this.t("el comprador", "the buyer") : this.t("el vendedor", "the seller")}: ${m.body.note ?? ""}`);
-            if (m.body.type === "payment_details") return h("p", { class: "p2p-sys" }, `• ${this.t("El vendedor envió sus datos de pago", "The seller sent the payment details")}`);
-            if (m.body.type !== "message") return h("p", { class: "p2p-sys" }, `• ${m.body.type}`);
-            const who = m.from === me ? this.t("Tú", "You") : m.from === "admin" ? this.t("Soporte", "Support") : cp?.nickname ?? m.from;
-            return h("div", { class: "p2p-msg " + (m.from === me ? "mine" : m.from === "admin" ? "admin" : "") }, h("small", {}, who), h("div", {}, plain.get(m.seq) ?? this.t("[no se pudo descifrar]", "[could not decrypt]")));
-          }),
-      );
-    };
-
-    const tick = async (schedule = true) => {
-      try {
-        o = await this.req<OrderView>("GET", `/v1/p2p/orders/${id}`);
-        const r = await this.req<{ messages: RoomMessage[] }>("GET", `/v1/p2p/orders/${id}/messages?after=${after}`);
-        for (const m of r.messages) {
-          messages.push(m);
-          after = Math.max(after, m.seq);
-          if (m.body.type === "message" && m.body.ciphertext) plain.set(m.seq, await open(m.body.ciphertext, this.vault!).catch(() => this.t("[no se pudo descifrar]", "[could not decrypt]")));
-        }
-        if (adminEnc === undefined)
-          adminEnc = this.cfg.admin_address ? ((await get<PublicUser>(`/v1/p2p/users/${this.cfg.admin_address}`).catch(() => null))?.enc_pubkey ?? null) : null;
-        if (o.role === "buyer" && o.enc_payment && !paymentText) paymentText = await open(o.enc_payment, this.vault!).catch(() => null);
-        // Vendedor: manda sus datos de pago guardados (cifrados) en cuanto el depósito está confirmado.
-        if (o.role === "seller" && ["awaiting_payment", "paid"].includes(o.status) && !messages.some((m) => m.body.type === "payment_details")) {
-          const s = this.saved(o.fiat, o.method.name);
-          if (s) await this.req("POST", `/v1/p2p/orders/${id}/payment-details`, { enc_payment: await seal(`${o.method.name}\n${s.details}`, recipients()) });
-          else if (!actions.querySelector("#p2p-paydet")) noteErr = this.t(`No tienes guardados tus datos de ${o.method.name}: escríbelos en el chat para el comprador.`, `You have no saved details for ${o.method.name}: write them in the chat for the buyer.`);
-        }
-        if (this.vault!.escrows[id] || o.status === "setup") {
-          try {
-            note = await driver().step(o, messages);
-            noteErr = "";
-          } catch (e) {
-            noteErr = `${this.t("Escrow", "Escrow")}: ${e instanceof Error ? e.message : String(e)}`;
-          }
-        }
-        if (["released", "cancelled", "refunded", "resolved_buyer", "resolved_seller"].includes(o.status) && this.drivers.has(id)) {
-          await this.drivers.get(id)!.close();
-          this.drivers.delete(id);
-        }
-        render();
-      } catch (e) {
-        out.replaceChildren(this.error(e));
-      }
-      if (schedule && location.hash === `#/orden/${id}`) this.timer = setTimeout(() => void tick(), o && ["setup", "releasing", "refunding", "resolving"].includes(o.status) ? 4000 : 8000);
-    };
-
-    this.show(
-      out,
-      head,
-      escrowBox,
-      actions,
-      h("section", { class: "card p2p-chat" }, h("h3", {}, this.t("Chat (cifrado de punta a punta)", "Chat (end-to-end encrypted)")), chatBox, h("div", { class: "row" }, input, send), h("small", {}, this.t("Soporte también puede leer el chat, para resolver apelaciones.", "Support can also read the chat, to resolve appeals."))),
-    );
-    await tick();
-  }
 
   // ------------------------------------------------------------ administrador
 
-  private get isAdmin() {
+  get isAdmin() {
     return !!this.acct && !!this.cfg.admin_address && this.acct.address.toLowerCase() === this.cfg.admin_address;
   }
 
-  private ago(ts: number | null | undefined) {
+  ago(ts: number | null | undefined) {
     if (!ts) return "—";
     const m = Math.round((nowS() - ts) / 60);
     return m < 1 ? this.t("ahora", "now") : m < 60 ? `${m} min` : m < 1440 ? `${Math.round(m / 60)} h` : `${Math.round(m / 1440)} d`;
   }
 
-  private async adminView(arg?: string) {
-    if (!this.isAdmin) {
-      this.show(h("p", { class: "notice danger" }, this.t("Esta cuenta no es la de administrador.", "This account is not the administrator.")));
-      return;
-    }
-    if (arg) return this.adminOrder(arg);
-    const sp = new URLSearchParams(location.hash.split("?")[1] ?? "");
-    const tab = sp.get("ver") ?? "quejas";
-    const tabs = h(
-      "div",
-      { class: "p2p-tabs" },
-      [["quejas", this.t("Apelaciones", "Appeals")], ["ordenes", this.t("Órdenes", "Orders")], ["ajustes", this.t("Ajustes", "Settings")]].map(([k, l]) =>
-        h("a", { class: "p2p-tab" + (k === tab ? " on admin" : ""), href: `#/admin?ver=${k}` }, l),
-      ),
-    );
-    const stats = await this.req<{
-      last_24h: { status: string; n: number }[];
-      completed: { orders: number; usd: number; fees_xmr: string };
-      open_disputes: number;
-      users: number;
-      arbiter_seen: number | null;
-    }>("GET", "/v1/p2p/admin/stats");
-    const arbOk = stats.arbiter_seen !== null && nowS() - stats.arbiter_seen < 180;
-    const tile = (label: string, value: string | number, warn = false) => h("div", { class: "card p2p-tile" + (warn ? " warn" : "") }, h("small", {}, label), h("strong", {}, String(value)));
-    const head = h(
-      "div",
-      { class: "p2p-tiles" },
-      tile(this.t("Apelaciones abiertas", "Open appeals"), stats.open_disputes, stats.open_disputes > 0),
-      tile(this.t("Órdenes 24 h", "Orders 24 h"), stats.last_24h.reduce((a, x) => a + x.n, 0)),
-      tile(this.t("Completadas", "Completed"), `${stats.completed.orders} · ${Math.round(stats.completed.usd).toLocaleString(this.lang)} USD`),
-      tile(this.t("Comisiones cobradas", "Fees earned"), `${fmtXmr(stats.completed.fees_xmr)} XMR`),
-      tile(this.t("Usuarios", "Users"), stats.users),
-      tile(this.t("Árbitro", "Arbiter"), arbOk ? `✔ ${this.ago(stats.arbiter_seen)}` : `✖ ${this.ago(stats.arbiter_seen)}`, !arbOk),
-    );
-    const body = h("div");
-    this.show(h("h2", {}, this.t("Panel de administrador", "Admin panel")), head, tabs, body);
-    if (tab === "ajustes") return this.adminSettings(body);
-    if (tab === "ordenes") return this.adminOrders(body);
-
-    const resolved = sp.get("estado") === "resueltas";
-    const r = await this.req<{ disputes: { order_id: string; opened_by: string; reason: string; fiat: string; fiat_amount: string; xmr: string; waiting_min: number; winner: string | null; method: string }[] }>(
-      "GET",
-      `/v1/p2p/admin/disputes${resolved ? "?status=resolved" : ""}`,
-    );
-    body.replaceChildren(
-      h("p", {}, h("a", { href: resolved ? "#/admin?ver=quejas" : "#/admin?ver=quejas&estado=resueltas" }, resolved ? this.t("Ver abiertas", "Show open") : this.t("Ver resueltas", "Show resolved"))),
-      r.disputes.length
-        ? h(
-            "div",
-            { class: "p2p-list" },
-            r.disputes.map((d) =>
-              h(
-                "a",
-                { class: "card p2p-orow", href: `#/admin/${d.order_id}` },
-                h("strong", {}, `${d.fiat_amount} ${d.fiat}`),
-                h("span", {}, `${fmtXmr(d.xmr)} XMR · ${(JSON.parse(d.method) as Method).name} · ${this.t("abrió", "opened by")} ${d.opened_by === "buyer" ? this.t("comprador", "buyer") : this.t("vendedor", "seller")}: «${d.reason.slice(0, 80)}»`),
-                h("span", { class: "badge" }, resolved ? (d.winner === "buyer" ? this.t("Comprador", "Buyer") : this.t("Vendedor", "Seller")) : `${d.waiting_min} min`),
-                h("small", {}, d.order_id.slice(0, 8)),
-              ),
-            ),
-          )
-        : h("p", { class: "notice ok" }, resolved ? this.t("Aún no hay apelaciones resueltas.", "No resolved appeals yet.") : this.t("No hay apelaciones abiertas. 🎉", "No open appeals. 🎉")),
-    );
-  }
-
-  private async adminOrders(body: HTMLElement) {
-    const sp = new URLSearchParams(location.hash.split("?")[1] ?? "");
-    const states = ["", "open", "setup", "awaiting_deposit", "confirming", "awaiting_payment", "paid", "disputed", "releasing", "refunding", "resolving", "released", "cancelled", "refunded", "resolved_buyer", "resolved_seller"];
-    const cur = sp.get("estado") ?? "open";
-    const status = h(
-      "select",
-      { id: "adm-status" },
-      states.map((s) => h("option", { value: s, selected: s === cur }, s === "" ? this.t("Todas", "All") : s === "open" ? this.t("En curso", "In progress") : this.statusName(s))),
-    );
-    const q = h("input", { id: "adm-q", type: "text", placeholder: this.t("ID de orden o de usuario (0x…)", "Order or user ID (0x…)"), value: sp.get("q") ?? "" });
-    const go = () => (location.hash = `#/admin?${new URLSearchParams({ ver: "ordenes", estado: status.value, q: q.value.trim() })}`);
-    status.onchange = go;
-    q.addEventListener("keydown", (e) => (e as KeyboardEvent).key === "Enter" && go());
-    const qs = new URLSearchParams();
-    if (cur) qs.set("status", cur);
-    if (q.value.trim()) qs.set("q", q.value.trim().toLowerCase());
-    const r = await this.req<{ orders: { id: string; status: string; fiat: string; fiat_amount: string; xmr: string; created_at: number }[] }>("GET", `/v1/p2p/admin/orders?${qs}`);
-    body.replaceChildren(
-      h(
-        "div",
-        { class: "p2p-filters" },
-        this.field(this.t("Estado", "Status"), status),
-        this.field(this.t("Buscar", "Search"), q),
-        h("div", { class: "field app" }, h("label", {}, " "), h("button", { class: "btn", type: "button", onclick: go }, this.t("Buscar", "Search"))),
-      ),
-      r.orders.length
-        ? h(
-            "div",
-            { class: "p2p-list" },
-            r.orders.map((o) =>
-              h(
-                "a",
-                { class: "card p2p-orow", href: `#/admin/${o.id}` },
-                h("strong", {}, `${o.fiat_amount} ${o.fiat}`),
-                h("span", {}, `${fmtXmr(o.xmr)} XMR · ${o.id.slice(0, 8)}`),
-                h("span", { class: "badge" }, this.statusName(o.status)),
-                h("small", {}, this.ago(o.created_at)),
-              ),
-            ),
-          )
-        : h("p", {}, this.t("Sin órdenes con estos filtros.", "No orders match these filters.")),
-    );
-  }
-
-  private async adminSettings(body: HTMLElement) {
-    const s = await this.req<Record<string, string>>("GET", "/v1/p2p/admin/settings");
-    const out = h("div");
-    const num = (id: string, v: string) => h("input", { id, type: "text", inputMode: "decimal", value: v });
-    const fee = num("adm-fee", String(Number(s.fee_bps ?? 50) / 100));
-    const cap = num("adm-cap", s.cap_usd ?? "1000");
-    const dep = num("adm-dep", s.deposit_window_min ?? "30");
-    const dis = num("adm-dis", s.dispute_after_min ?? "15");
-    const blocked = h("input", { id: "adm-blocked", type: "text", value: (JSON.parse(s.blocked_methods ?? "[]") as string[]).join(", "), placeholder: "Western Union, …" });
-    const save = h("button", { class: "btn", type: "button" }, this.t("Guardar ajustes", "Save settings"));
-    save.onclick = () =>
-      void this.busy(
-        save,
-        async () => {
-          await this.req("PUT", "/v1/p2p/admin/settings", {
-            fee_bps: Math.round(Number(fee.value) * 100),
-            cap_usd: Number(cap.value),
-            deposit_window_min: Number(dep.value),
-            dispute_after_min: Number(dis.value),
-            blocked_methods: blocked.value.split(",").map((x) => x.trim()).filter(Boolean),
-          });
-          this.cfg = await get<P2PConfig>("/v1/p2p/config");
-          out.replaceChildren(h("p", { class: "notice ok" }, this.t("Ajustes guardados.", "Settings saved.")));
-        },
-        out,
-      );
-
-    const uid = h("input", { id: "adm-uid", type: "text", placeholder: "0x…" });
-    const ban = (banned: boolean) => {
-      const b = h("button", { class: "btn secondary small", type: "button" }, banned ? this.t("Suspender", "Ban") : this.t("Quitar suspensión", "Unban"));
-      b.onclick = () =>
-        void this.busy(
-          b,
-          async () => {
-            await this.req("POST", `/v1/p2p/admin/users/${uid.value.trim().toLowerCase()}/ban`, { banned });
-            out.replaceChildren(h("p", { class: "notice ok" }, banned ? this.t("Usuario suspendido y sus anuncios en pausa.", "User banned and their ads paused.") : this.t("Suspensión retirada.", "Ban lifted.")));
-          },
-          out,
-        );
-      return b;
-    };
-    const adid = h("input", { id: "adm-adid", type: "text", placeholder: this.t("ID del anuncio", "Ad ID") });
-    const hide = (hidden: boolean) => {
-      const b = h("button", { class: "btn secondary small", type: "button" }, hidden ? this.t("Ocultar", "Hide") : this.t("Mostrar (queda en pausa)", "Unhide (stays paused)"));
-      b.onclick = () =>
-        void this.busy(
-          b,
-          async () => {
-            await this.req("POST", `/v1/p2p/admin/ads/${adid.value.trim()}/hide`, { hidden });
-            out.replaceChildren(h("p", { class: "notice ok" }, this.t("Listo.", "Done.")));
-          },
-          out,
-        );
-      return b;
-    };
-    body.replaceChildren(
-      out,
-      h(
-        "section",
-        { class: "card p2p-form" },
-        h("h3", {}, this.t("Reglas del mercado", "Market rules")),
-        h("div", { class: "p2p-grid" }, this.field(this.t("Comisión del vendedor (%)", "Seller fee (%)"), fee, "0 – 3"), this.field(this.t("Tope por orden (USD)", "Cap per order (USD)"), cap)),
-        h("div", { class: "p2p-grid" }, this.field(this.t("Tiempo para depositar (min)", "Time to deposit (min)"), dep), this.field(this.t("Minutos antes de poder apelar", "Minutes before an appeal"), dis)),
-        this.field(this.t("Métodos de pago bloqueados (separados por coma)", "Blocked payment methods (comma separated)"), blocked),
-        h("p", {}, save),
-      ),
-      h(
-        "section",
-        { class: "card p2p-form" },
-        h("h3", {}, this.t("Usuarios y anuncios", "Users and ads")),
-        this.field(this.t("ID de usuario", "User ID"), uid),
-        h("p", { class: "row wrap" }, ban(true), ban(false)),
-        this.field(this.t("ID de anuncio", "Ad ID"), adid),
-        h("p", { class: "row wrap" }, hide(true), hide(false)),
-      ),
-    );
-  }
-
-  private async adminOrder(id: string) {
-    type AdminOrder = {
-      id: string; status: string; fiat: string; fiat_amount: string; price: string; xmr: string; fee_xmr: string; method: string;
-      buyer: string; seller: string; multisig_address: string | null; deposit_txid: string | null; payout_txid: string | null;
-      enc_payment: string | null; created_at: number; paid_at: number | null; ad_id: string;
-    };
-    const r = await this.req<{
-      order: AdminOrder;
-      buyer: (PublicUser & { since?: number }) | null;
-      seller: (PublicUser & { since?: number }) | null;
-      dispute: { opened_by: string; reason: string; opened_at: number; status: string; winner: string | null; note: string | null } | null;
-      messages: RoomMessage[];
-    }>("GET", `/v1/p2p/admin/orders/${id}`);
-    const o = r.order;
-    const out = h("div");
-    const method = JSON.parse(o.method) as Method;
-    const pay = o.enc_payment ? await open(o.enc_payment, this.vault!).catch(() => null) : null;
-    const lines = await Promise.all(
-      r.messages
-        .filter((m) => m.body.type !== "protocol")
-        .map(async (m) => {
-          const when = new Date(m.at).toLocaleString(this.lang);
-          if (m.body.type === "message") {
-            const who = m.from === "buyer" ? `${this.t("Comprador", "Buyer")} (${r.buyer?.nickname})` : m.from === "seller" ? `${this.t("Vendedor", "Seller")} (${r.seller?.nickname})` : this.t("Soporte", "Support");
-            const txt = await open(m.body.ciphertext!, this.vault!).catch(() => this.t("[no cifrado para ti: el admin no tenía perfil cuando se escribió]", "[not encrypted for you: the admin had no profile when it was written]"));
-            return h("div", { class: "p2p-msg " + (m.from === "admin" ? "mine" : "") }, h("small", {}, `${who} · ${when}`), h("div", {}, txt));
-          }
-          if (m.body.type === "status") return h("p", { class: "p2p-sys" }, `• ${this.statusName(m.body.status ?? "")} · ${when}`);
-          if (m.body.type === "decision") return h("p", { class: "p2p-sys" }, `• ${this.t("Decisión", "Decision")}: ${m.body.winner} — ${m.body.note ?? ""}`);
-          return h("p", { class: "p2p-sys" }, `• ${m.body.type} · ${when}`);
-        }),
-    );
-    const rejected = r.messages.filter((m) => m.from === "arbiter" && m.body.type === "protocol" && (m.body.data as { step?: string } | undefined)?.step === "rejected");
-
-    const input = h("textarea", { id: "adm-msg", rows: 2, maxLength: 2000, placeholder: this.t("Mensaje para las dos partes (cifrado)…", "Message to both parties (encrypted)…") });
-    const send = h("button", { class: "btn small", type: "button" }, this.t("Enviar como soporte", "Send as support"));
-    send.onclick = () =>
-      void this.busy(
-        send,
-        async () => {
-          if (!input.value.trim()) return;
-          const to = [r.buyer?.enc_pubkey ?? "", r.seller?.enc_pubkey ?? "", await encPublic(this.vault!)];
-          await this.req("POST", `/v1/p2p/admin/orders/${id}/message`, { ciphertext: await seal(input.value.trim(), to) });
-          await this.route();
-        },
-        out,
-      );
-
-    const note = h("textarea", { id: "adm-note", rows: 2, maxLength: 1000, placeholder: this.t("Motivo de la decisión (lo ven las dos partes)", "Reason for the decision (both parties see it)") });
-    const resolve = (winner: "buyer" | "seller", label: string, warn: string) => {
-      const b = h("button", { class: `btn ${winner === "buyer" ? "buy" : "sell"}`, type: "button" }, label);
-      b.onclick = () => {
-        if (!confirm(warn)) return;
-        void this.busy(b, async () => (await this.req("POST", `/v1/p2p/admin/orders/${id}/resolve`, { winner, note: note.value.trim() }), await this.route()), out);
-      };
-      return b;
-    };
-    const userBox = (role: string, u: (PublicUser & { since?: number }) | null, uid: string) =>
-      h(
-        "div",
-        { class: "card" },
-        h("h3", {}, role),
-        this.userLine(u),
-        h("p", {}, h("small", {}, `${this.t("Cuenta de hace", "Account age")} ${this.ago(u?.since)} · ${this.t("visto hace", "seen")} ${this.ago(u?.last_seen)}`)),
-        h("p", {}, h("code", { class: "p2p-addr" }, uid)),
-        u?.banned ? h("span", { class: "badge real" }, this.t("Suspendido", "Banned")) : null,
-        h("p", {}, h("a", { href: `#/admin?${new URLSearchParams({ ver: "ordenes", estado: "", q: uid })}` }, this.t("Ver sus órdenes", "See their orders"))),
-      );
-    const dt = (label: string, value: Child) => [h("dt", {}, label), h("dd", {}, value ?? "—")];
-    const code = (v: string | null) => (v ? h("code", { class: "p2p-addr" }, v) : "—");
-
-    let decision: HTMLElement | null = null;
-    if (r.dispute) {
-      const d = r.dispute;
-      decision = h(
-        "section",
-        { class: "card p2p-dispute" },
-        h("h3", {}, `${this.t("Apelación de", "Appeal by")} ${d.opened_by === "buyer" ? this.t("el comprador", "the buyer") : this.t("el vendedor", "the seller")} · ${this.t("hace", "")} ${this.ago(d.opened_at)}`),
-        h("p", {}, d.reason),
-        d.status === "resolved"
-          ? h("p", { class: "notice ok" }, `${this.t("Resuelta a favor de", "Resolved for")} ${d.winner === "buyer" ? this.t("el comprador", "the buyer") : this.t("el vendedor", "the seller")}: ${d.note ?? ""}`)
-          : o.status === "disputed"
-            ? h(
-                "div",
-                {},
-                h("p", {}, h("small", {}, this.t("Revisa el chat y los comprobantes. Tu firma autoriza al árbitro a co-firmar el pago con quien gana; esa persona debe abrir su orden para cobrar.", "Check the chat and the proofs. Your signature lets the arbiter co-sign the payout with the winner; that person must open their order to collect."))),
-                note,
-                h(
-                  "p",
-                  { class: "row wrap" },
-                  resolve("buyer", this.t("Dar el XMR al comprador", "Give the XMR to the buyer"), this.t("¿Confirmas que el comprador SÍ pagó? El XMR va al comprador (la comisión a la plataforma). No se puede deshacer.", "Confirm the buyer DID pay? The XMR goes to the buyer (fee to the platform). This cannot be undone.")),
-                  resolve("seller", this.t("Devolver el XMR al vendedor", "Return the XMR to the seller"), this.t("¿Confirmas que el comprador NO pagó? Todo el XMR regresa al vendedor, sin comisión. No se puede deshacer.", "Confirm the buyer did NOT pay? All the XMR goes back to the seller, no fee. This cannot be undone.")),
-                ),
-              )
-            : null,
-      );
-    }
-
-    this.show(
-      h("p", {}, h("a", { href: "#/admin" }, "← " + this.t("Panel", "Panel"))),
-      out,
-      h("div", { class: "row between wrap" }, h("h2", {}, `${o.fiat_amount} ${o.fiat} · ${fmtXmr(o.xmr)} XMR`), h("span", { class: "badge" }, this.statusName(o.status))),
-      decision,
-      rejected.length ? h("p", { class: "notice danger" }, `${this.t("El árbitro rechazó un pago", "The arbiter rejected a payment")}: ${String((rejected[rejected.length - 1]!.body.data as { reason?: string }).reason)}`) : null,
-      h(
-        "dl",
-        { class: "p2p-dl" },
-        dt("ID", h("code", {}, o.id)),
-        dt(this.t("Precio", "Price"), `${o.price} ${o.fiat}/XMR`),
-        dt(this.t("Método", "Method"), this.methodTag(method)),
-        dt(this.t("Comisión", "Fee"), `${fmtXmr(o.fee_xmr)} XMR`),
-        dt(this.t("Creada", "Created"), new Date(o.created_at * 1000).toLocaleString(this.lang)),
-        dt(this.t("Marcada pagada", "Marked paid"), o.paid_at ? new Date(o.paid_at * 1000).toLocaleString(this.lang) : "—"),
-        dt("Escrow", code(o.multisig_address)),
-        dt(this.t("Depósito", "Deposit"), code(o.deposit_txid)),
-        dt(this.t("Pago de salida", "Payout"), code(o.payout_txid)),
-        dt(this.t("Anuncio", "Ad"), h("code", {}, o.ad_id)),
-      ),
-      h("div", { class: "p2p-grid" }, userBox(this.t("Comprador", "Buyer"), r.buyer, o.buyer), userBox(this.t("Vendedor", "Seller"), r.seller, o.seller)),
-      h("section", { class: "card p2p-pay" }, h("h3", {}, this.t("Datos de pago que mandó el vendedor", "Payment details the seller sent")), pay ? h("pre", {}, pay) : h("p", {}, "—")),
-      h("section", { class: "card p2p-chat" }, h("h3", {}, this.t("Chat de la orden", "Order chat")), h("div", { class: "p2p-chat-log" }, lines), h("div", { class: "row" }, input, send)),
-    );
-  }
-
-  private steps(o: OrderView) {
+  steps(o: OrderView) {
     const order = ["setup", "awaiting_deposit", "confirming", "awaiting_payment", "paid", "releasing", "released"];
     const i = order.indexOf(o.status);
     const labels = this.lang === "es" ? ["Escrow", "Depósito", "Confirmación", "Pago", "Liberación", "Listo"] : ["Escrow", "Deposit", "Confirmation", "Payment", "Release", "Done"];

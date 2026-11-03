@@ -19,9 +19,11 @@ export interface Props {
   ogType?: "website" | "article";
   noindex?: boolean;
   markdownAlternate?: string;
+  /** aviso del pie propio de la página (si no, el del swap) */
+  footerNote?: string;
 }
 
-const { lang, title, description, route, jsonLd = [], breadcrumbs, csp, ogType = "website", noindex, markdownAlternate } = Astro.props;
+const { lang, title, description, route, jsonLd = [], breadcrumbs, csp, ogType = "website", noindex, markdownAlternate, footerNote } = Astro.props;
 const site = Astro.site!;
 const path = Astro.url.pathname;
 const canonical = new URL(path, site).href;
@@ -114,7 +116,7 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
     <footer class="site">
       <div class="wrap">
         <p class="notice warn">
-          {t(
+          {footerNote ?? t(
             "⚠️ Máximo 100 USDT por swap. Las transacciones de cripto son irreversibles, el precio es volátil, el emisor de USDT puede congelar direcciones y tú eres responsable de cumplir las leyes de tu país.",
             "⚠️ Maximum 100 USDT per swap. Crypto transactions are irreversible, prices are volatile, the USDT issuer can freeze addresses, and you are responsible for complying with your country's laws.",
           )}{" "}

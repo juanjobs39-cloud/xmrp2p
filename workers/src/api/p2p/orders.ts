@@ -1,7 +1,7 @@
 import { HttpError, json, randomId, readJson } from "../env";
 import { adPrice, getAd } from "./ads";
 import { xmrPrice, type Method } from "./catalog";
-import { activeUser, fiatAmount, fromPico, getUser, now, PICO, publicUser, requireXmrAddress, settings, signer, text, type P2PEnv } from "./common";
+import { activeUser, fiatAmount, fromPico, getUser, isOnline, now, PICO, publicUser, requireXmrAddress, settings, signer, text, type P2PEnv } from "./common";
 
 /**
  * Estados de una orden:
@@ -191,6 +191,8 @@ export async function createOrder(req: Request, env: P2PEnv, path: string): Prom
   if (ad.user_id === taker) throw new HttpError(400, "no puedes abrir una orden en tu propio anuncio");
   const maker = await getUser(env, ad.user_id);
   if (!maker || maker.banned) throw new HttpError(409, "el anunciante no está disponible");
+  // El escrow se arma con los navegadores de las dos partes: el anunciante tiene que estar en línea.
+  if (!isOnline(maker.last_seen)) throw new HttpError(409, "el anunciante no está en línea; intenta con otro anuncio");
   const open = await env.DB.prepare(
     `SELECT COUNT(*) AS n FROM p2p_orders WHERE (buyer = ? OR seller = ?) AND status NOT IN (${FINAL.map(() => "?").join(", ")})`,
   )
@@ -401,6 +403,19 @@ export async function orderAction(req: Request, env: P2PEnv, path: string, id: s
   return json(await view(env, o, role));
 }
 
+/** Depósitos vencidos (en 24 horas) que pausan los anuncios de venta del vendedor. */
+export const MISSED_DEPOSITS_TO_PAUSE = 2;
+
+async function pauseIfMissed(env: P2PEnv, seller: string, t: number) {
+  const r = await env.DB.prepare("SELECT COUNT(*) AS n FROM p2p_orders WHERE seller = ? AND cancel_reason = 'timeout_deposit' AND closed_at > ?")
+    .bind(seller, t - 86400)
+    .first<{ n: number }>();
+  if ((r?.n ?? 0) < MISSED_DEPOSITS_TO_PAUSE) return;
+  await env.DB.prepare("UPDATE p2p_ads SET status = 'paused', paused_reason = 'missed_deposits', updated_at = ? WHERE user_id = ? AND side = 'sell' AND status = 'active'")
+    .bind(t, seller)
+    .run();
+}
+
 /** Tiempos agotados (tarea programada cada 5 minutos). */
 export async function sweepOrders(env: P2PEnv): Promise<number> {
   const t = now();
@@ -417,6 +432,7 @@ export async function sweepOrders(env: P2PEnv): Promise<number> {
         const c = await transition(env, o, NO_DEPOSIT, "cancelled", { cancel_reason: "timeout_deposit", closed_at: t, deadline_at: null });
         await restoreAd(env, c);
         await applyStats(env, c, "cancelled", "seller");
+        await pauseIfMissed(env, c.seller, t);
       } else {
         // El comprador no marcó «Ya pagué» a tiempo: el XMR regresa al vendedor.
         const c = await transition(env, o, ["awaiting_payment"], "refunding", { cancel_reason: "timeout_payment", deadline_at: null });

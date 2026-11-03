@@ -1,6 +1,6 @@
 import { HttpError, json, randomId, readJson } from "../env";
 import { normalizeMethod, requireCountry, requireFiat, xmrPrice, type Method } from "./catalog";
-import { activeUser, fiatAmount, fromPico, getUser, now, publicUser, requireXmrAddress, settings, signer, text, toPico, type P2PEnv } from "./common";
+import { activeUser, fiatAmount, fromPico, getUser, isOnline, now, publicUser, requireXmrAddress, settings, signer, text, toPico, type P2PEnv } from "./common";
 
 const MAX_ACTIVE_ADS = 10;
 
@@ -22,6 +22,7 @@ export interface Ad {
   min_orders_reversible: number;
   xmr_address: string;
   status: "active" | "paused" | "closed" | "hidden";
+  paused_reason?: string | null;
   created_at: number;
   updated_at: number;
 }
@@ -128,6 +129,7 @@ export function publicAd(ad: Ad, market: number | null) {
     terms: ad.terms,
     min_orders_reversible: ad.min_orders_reversible,
     status: ad.status,
+    paused_reason: ad.paused_reason ?? null,
     updated_at: ad.updated_at,
   };
 }
@@ -198,7 +200,7 @@ export async function updateAd(req: Request, env: P2PEnv, path: string, adId: st
   if ("side" in data && data.side !== ad.side) throw new HttpError(400, "no se puede cambiar side");
   const v = validateAd(env, merged, JSON.parse(s.blocked_methods ?? "[]"));
   await env.DB.prepare(
-    "UPDATE p2p_ads SET fiat = ?, country = ?, price_type = ?, price = ?, margin_pct = ?, min_fiat = ?, max_fiat = ?, remaining_pico = ?, methods = ?, pay_window_min = ?, terms = ?, min_orders_reversible = ?, xmr_address = ?, status = ?, updated_at = ? WHERE id = ?",
+    "UPDATE p2p_ads SET fiat = ?, country = ?, price_type = ?, price = ?, margin_pct = ?, min_fiat = ?, max_fiat = ?, remaining_pico = ?, methods = ?, pay_window_min = ?, terms = ?, min_orders_reversible = ?, xmr_address = ?, status = ?, paused_reason = NULL, updated_at = ? WHERE id = ?",
   )
     .bind(v.fiat, v.country, v.price_type, v.price, v.margin_pct, v.min_fiat, v.max_fiat, v.remaining_pico, JSON.stringify(v.methods), v.pay_window_min, v.terms, v.min_orders_reversible, v.xmr_address, status, now(), ad.id)
     .run();
@@ -210,6 +212,7 @@ export async function updateAd(req: Request, env: P2PEnv, path: string, adId: st
  * GET /v1/p2p/ads?side=sell&fiat=MXN[&country=MX][&method=SPEI][&amount=500]
  * side=sell: anuncios de quien vende XMR (los ve quien quiere comprar), del más barato al más caro.
  * side=buy: anuncios de quien compra XMR, del que paga más al que paga menos.
+ * Primero los anunciantes en línea (el escrow se arma con los dos navegadores abiertos). online=1: solo ellos.
  */
 export async function listAds(env: P2PEnv, url: URL): Promise<Response> {
   const sp = url.searchParams;
@@ -219,14 +222,16 @@ export async function listAds(env: P2PEnv, url: URL): Promise<Response> {
   const country = requireCountry(sp.get("country"));
   const method = (sp.get("method") ?? "").trim().toLowerCase();
   const amount = sp.get("amount") ? Number(fiatAmount(sp.get("amount"), "amount")) : null;
+  const onlyOnline = sp.get("online") === "1";
+  const t = now();
   const rows = await env.DB.prepare(
-    "SELECT a.*, u.nickname, u.orders_done, u.orders_total, u.release_secs, u.releases, u.positive, u.negative, u.last_seen" +
+    "SELECT a.*, u.nickname, u.orders_done, u.orders_total, u.release_secs, u.releases, u.deposit_secs, u.deposits, u.positive, u.negative, u.last_seen" +
       " FROM p2p_ads a JOIN p2p_users u ON u.id = a.user_id" +
       " WHERE a.status = 'active' AND a.side = ? AND a.fiat = ? AND u.banned = 0 AND (? IS NULL OR a.country IS NULL OR a.country = ?)" +
       " LIMIT 300",
   )
     .bind(side, fiat, country, country)
-    .all<Ad & { nickname: string; orders_done: number; orders_total: number; release_secs: number; releases: number; positive: number; negative: number; last_seen: number }>();
+    .all<Ad & { nickname: string; orders_done: number; orders_total: number; release_secs: number; releases: number; deposit_secs: number; deposits: number; positive: number; negative: number; last_seen: number }>();
   const mkt = await market(fiat);
   const ads = rows.results
     .map((r) => {
@@ -242,7 +247,8 @@ export async function listAds(env: P2PEnv, url: URL): Promise<Response> {
     .filter((a) => a.price !== null && Number(a.max_fiat) >= Number(a.min_fiat))
     .filter((a) => !method || a.methods.some((m) => m.name.toLowerCase().includes(method)))
     .filter((a) => amount === null || (amount >= Number(a.min_fiat) && amount <= Number(a.max_fiat)))
-    .sort((a, b) => (side === "sell" ? a.price! - b.price! : b.price! - a.price!))
+    .filter((a) => !onlyOnline || isOnline(a.user.last_seen, t))
+    .sort((a, b) => Number(isOnline(b.user.last_seen, t)) - Number(isOnline(a.user.last_seen, t)) || (side === "sell" ? a.price! - b.price! : b.price! - a.price!))
     .slice(0, 100);
   return json({ side, fiat, market_price: mkt, ads });
 }

@@ -45,6 +45,12 @@ export async function handleP2P(req: Request, env: P2PEnv, url: URL): Promise<Re
   if (prof && get) return getProfile(env, prof[1]!);
 
   // ---- Firmadas por el usuario ----
+  if (p === "/v1/p2p/me/ping" && req.method === "POST") {
+    // Latido de la app abierta: marca al usuario «en línea».
+    const { raw } = await readJson<Record<string, unknown>>(req);
+    await activeUser(env, await signer(req, env, p, raw));
+    return json({ ok: true });
+  }
   if (p === "/v1/p2p/me") {
     if (req.method === "PUT") return putMe(req, env, p);
     if (get) return getMe(req, env, p);

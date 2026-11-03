@@ -113,6 +113,7 @@ describe("P2P Fiat", () => {
     expect(m.body.suggested.find((x: { name: string }) => x.name === "Mercado Pago").reversible).toBe(true);
     const p = await call("/v1/p2p/price?fiat=MXN");
     expect(p.body.price).toBe(4000);
+    expect(p.body.sources.length).toBeGreaterThanOrEqual(2);
     expect((await call("/v1/p2p/price?fiat=XXX")).status).toBe(400);
   });
 
@@ -322,6 +323,42 @@ describe("P2P Fiat", () => {
     expect((await call(`/v1/p2p/arbiter/orders/${o.id}/state`)).status).toBe(401);
     const tasks = (await arbiter("/v1/p2p/arbiter/tasks")).body;
     expect(tasks.admin_address).toBe(admin.address.toLowerCase());
+  });
+
+  it("en línea: latido, anunciantes desconectados al final y sin poder tomar su anuncio", async () => {
+    const seller = await newUser();
+    const buyer = await newUser();
+    const ad = (await signed(seller, "POST", "/v1/p2p/ads", sellAd({ fiat: "EUR", country: null, price: "180" }))).body;
+    const list = async (q = "") => (await call(`/v1/p2p/ads?side=sell&fiat=EUR${q}`)).body.ads.find((a: { id: string }) => a.id === ad.id);
+    expect((await list()).user.online).toBe(true);
+    await DB.prepare("UPDATE p2p_users SET last_seen = ? WHERE id = ?").bind(Math.floor(Date.now() / 1000) - 3600, seller.address.toLowerCase()).run();
+    expect((await list()).user.online).toBe(false);
+    expect(await list("&online=1")).toBeUndefined();
+    const r = await signed(buyer, "POST", "/v1/p2p/orders", { ad_id: ad.id, fiat_amount: "100", xmr_address: STAGENET("B") });
+    expect(r.status).toBe(409);
+    expect((await signed(seller, "POST", "/v1/p2p/me/ping", {})).body).toEqual({ ok: true });
+    expect((await list("&online=1")).user.online).toBe(true);
+    expect((await signed(buyer, "POST", "/v1/p2p/orders", { ad_id: ad.id, fiat_amount: "100", xmr_address: STAGENET("B") })).status).toBe(201);
+  });
+
+  it("2 depósitos vencidos en 24 h pausan los anuncios de venta; el tiempo de depósito cuenta en la reputación", async () => {
+    const seller = await newUser();
+    const buyer = await newUser();
+    const ad = (await signed(seller, "POST", "/v1/p2p/ads", sellAd())).body;
+    const open = async () => (await signed(buyer, "POST", "/v1/p2p/orders", { ad_id: ad.id, fiat_amount: "200", xmr_address: STAGENET("B") })).body;
+    const a = await open();
+    const b = await open();
+    const c = await open();
+    await fund(c.id);
+    expect((await call(`/v1/p2p/users/${seller.address}`)).body.avg_deposit_min).not.toBeNull();
+    await DB.prepare("UPDATE p2p_orders SET deadline_at = 1 WHERE id = ?").bind(a.id).run();
+    await sweepOrders(env);
+    expect((await call(`/v1/p2p/ads/${ad.id}`)).body.status).toBe("active");
+    await DB.prepare("UPDATE p2p_orders SET deadline_at = 1 WHERE id = ?").bind(b.id).run();
+    await sweepOrders(env);
+    expect((await call(`/v1/p2p/ads/${ad.id}`)).body).toMatchObject({ status: "paused", paused_reason: "missed_deposits" });
+    const re = await signed(seller, "PATCH", `/v1/p2p/ads/${ad.id}`, { status: "active" });
+    expect(re.body).toMatchObject({ status: "active", paused_reason: null });
   });
 
   it("el árbitro necesita su token", async () => {

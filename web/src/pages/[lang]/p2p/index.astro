@@ -36,19 +36,30 @@ const csp = [
     "Compra y vende Monero por pesos, dólares, euros o cualquier moneda, de persona a persona, con escrow 2 de 3.",
     "Buy and sell Monero for any currency, person to person, with a 2-of-3 escrow.",
   )}
+  footerNote={t(
+    "⚠️ Beta en red de prueba (Monero stagenet): no uses dinero real. Tope de 1000 USD por orden. Las transacciones de cripto son irreversibles, el precio es volátil y tú eres responsable de cumplir las leyes de tu país.",
+    "⚠️ Beta on the test network (Monero stagenet): do not use real money. 1000 USD cap per order. Crypto transactions are irreversible, prices are volatile and you are responsible for complying with your country's laws.",
+  )}
 >
-  <main id="contenido" class="prose wide" data-lang={lang}>
-    <h1>P2P Fiat <span class="badge">Beta</span></h1>
-    <p class="lead">{t(
-      "Compra y vende XMR por cualquier moneda, de persona a persona. El XMR queda en un escrow 2 de 3 hasta que el vendedor confirma tu pago.",
-      "Buy and sell XMR for any currency, person to person. The XMR stays in a 2-of-3 escrow until the seller confirms your payment.",
-    )}</p>
-    <p class="notice warn">{t(
-      "Beta en red de prueba (Monero stagenet): no uses dinero real. Comisión del 0.5% para quien vende. Tope de 1000 USD por orden.",
-      "Beta on the test network (Monero stagenet): do not use real money. 0.5% fee for the seller. 1000 USD cap per order.",
-    )}</p>
+  <main id="contenido" class="prose wide p2p-page" data-lang={lang}>
+    <header class="p2p-hero">
+      <div>
+        <h1>P2P Fiat <span class="badge">Beta</span></h1>
+        <p class="lead">{t(
+          "Compra y vende XMR por cualquier moneda, de persona a persona. El XMR queda en un escrow 2 de 3 hasta que el vendedor confirma tu pago.",
+          "Buy and sell XMR for any currency, person to person. The XMR stays in a 2-of-3 escrow until the seller confirms your payment.",
+        )}</p>
+      </div>
+      <ul class="p2p-trust">
+        <li><b>🔒</b> {t("Escrow 2 de 3, sin custodia", "2-of-3 escrow, non-custodial")}</li>
+        <li><b>🙈</b> {t("Sin KYC ni correo", "No KYC, no email")}</li>
+        <li><b>💬</b> {t("Chat cifrado", "Encrypted chat")}</li>
+        <li><b>%</b> {t("0.5% solo para quien vende", "0.5% fee, seller only")}</li>
+      </ul>
+      <p class="p2p-testnet">{t("Red de prueba (stagenet): no uses dinero real.", "Test network (stagenet): do not use real money.")}</p>
+    </header>
     <nav class="p2p-nav" id="p2p-nav" aria-label="P2P"></nav>
-    <div id="p2p-root"><p>{t("Cargando…", "Loading…")}</p></div>
+    <div id="p2p-root"><div class="p2p-skel-list"><div class="p2p-skel"></div><div class="p2p-skel"></div><div class="p2p-skel"></div></div></div>
     <noscript><p class="notice danger">{t("P2P Fiat necesita JavaScript.", "P2P Fiat needs JavaScript.")}</p></noscript>
   </main>
 </Base>

@@ -123,9 +123,9 @@ export async function usdRates(): Promise<Record<string, number>> {
 }
 
 /** Precio de mercado de 1 XMR en la moneda indicada (y el de USD, para el tope). */
-export async function xmrPrice(fiat: string): Promise<{ fiat: string; price: number; usd: number; rate: number }> {
-  const [{ price: usd }, rates] = await Promise.all([referencePrice(), usdRates()]);
+export async function xmrPrice(fiat: string): Promise<{ fiat: string; price: number; usd: number; rate: number; sources: string[]; at: number }> {
+  const [{ price: usd, sources, at }, rates] = await Promise.all([referencePrice(), usdRates()]);
   const rate = fiat === "USD" ? 1 : rates[fiat];
   if (!rate || !Number.isFinite(rate)) throw new HttpError(503, `no hay tipo de cambio para ${fiat}`);
-  return { fiat, price: usd * rate, usd, rate };
+  return { fiat, price: usd * rate, usd, rate, sources: Object.keys(sources), at };
 }

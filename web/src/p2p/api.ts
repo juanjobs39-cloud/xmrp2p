@@ -54,6 +54,10 @@ export interface PublicUser {
   orders_done: number;
   completion_pct: number | null;
   avg_release_min: number | null;
+  /** Minutos promedio que tarda en depositar al escrow (como vendedor). */
+  avg_deposit_min?: number | null;
+  /** Actividad en los últimos 10 minutos (la app manda un latido mientras está abierta). */
+  online?: boolean;
   positive: number;
   negative: number;
   last_seen: number;
@@ -76,6 +80,8 @@ export interface Ad {
   terms: string;
   min_orders_reversible: number;
   status: string;
+  /** missed_deposits: la plataforma lo pausó por depósitos vencidos. */
+  paused_reason?: string | null;
   user?: PublicUser;
 }
 export interface P2PConfig {
