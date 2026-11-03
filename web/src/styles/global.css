@@ -48,10 +48,18 @@ header.site .wrap { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; align-i
 nav ul { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; list-style: none; margin: 0; padding: 0; }
 nav a { color: var(--fg); text-decoration: none; }
 nav a[aria-current="page"] { color: var(--accent); font-weight: 600; }
-.lang { font-size: 0.95rem; position: relative; }
-.lang summary { cursor: pointer; list-style: none; padding: 0.3rem 0.6rem; border: 1px solid var(--line); border-radius: 8px; white-space: nowrap; }
+/* Selector de idioma: píldora pequeña (sin el estilo de caja de los <details> de contenido). */
+.lang { position: relative; margin: 0; padding: 0; border: 0; background: none; font-size: 0.85rem; }
+.lang summary, .fiat-lang { display: inline-flex; align-items: center; gap: 0.25rem; cursor: pointer; list-style: none; padding: 0.15rem 0.55rem; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 0.85rem; font-weight: 600; white-space: nowrap; text-decoration: none; }
+.lang summary:hover, .fiat-lang:hover, .lang[open] summary { color: var(--fg); border-color: var(--muted); }
+/* En pantallas angostas el menú baja de renglón: el idioma se queda arriba, junto al logo. */
+@media (max-width: 1500px) {
+  header.site .brand { order: 0; }
+  header.site .lang, header.site .fiat-lang { order: 1; margin-inline-start: auto; }
+  header.site nav { order: 2; flex-basis: 100%; }
+}
 .lang summary::-webkit-details-marker { display: none; }
-.lang ul { position: absolute; inset-inline-start: 0; top: calc(100% + 0.3rem); z-index: 20; list-style: none; margin: 0; padding: 0.3rem 0; min-width: 10rem; background: var(--card); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 6px 20px rgb(0 0 0 / 0.15); }
+.lang ul { position: absolute; inset-inline-end: 0; top: calc(100% + 0.3rem); z-index: 20; list-style: none; margin: 0; padding: 0.3rem 0; min-width: 10rem; background: var(--card); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 6px 20px rgb(0 0 0 / 0.15); }
 .lang:not([open]) ul { display: none; }
 .lang li a { display: block; padding: 0.35rem 0.9rem; text-decoration: none; }
 .lang li a:hover { background: var(--bg); }

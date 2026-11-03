@@ -46,6 +46,7 @@ const crumbs = breadcrumbs && {
 };
 const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
 const nav: [RouteKey, string][] = [
+  ["home", t("Inicio", "Home")],
   ["how", t("Cómo funciona", "How it works")],
   ["methods", t("Métodos de pago", "Payment methods")],
   ["safety", t("Seguridad", "Safety")],
@@ -93,7 +94,7 @@ const nav: [RouteKey, string][] = [
           </ul>
         </nav>
         {alternates[other] && (
-          <a class="fiat-lang" href={alternates[other]} hreflang={other} lang={other}>🌐 {other === "es" ? "Español" : "English"}</a>
+          <a class="fiat-lang" href={alternates[other]} hreflang={other} lang={other} title={other === "es" ? "Español" : "English"} aria-label={other === "es" ? "Español" : "English"}><span aria-hidden="true">🌐</span> {other.toUpperCase()}</a>
         )}
       </div>
     </header>

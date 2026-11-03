@@ -98,7 +98,7 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
         </nav>
         {others.length > 0 && (
           <details class="lang">
-            <summary aria-label={t("Idioma", "Language")}>🌐 {LANG_INFO[lang].name}</summary>
+            <summary aria-label={`${t("Idioma", "Language")}: ${LANG_INFO[lang].name}`} title={LANG_INFO[lang].name}><span aria-hidden="true">🌐</span> {lang.toUpperCase()}</summary>
             <ul>
               {others.map((l) => (
                 <li><a href={alternates[l]} hreflang={l} lang={l} dir={LANG_INFO[l].rtl ? "rtl" : "ltr"}>{LANG_INFO[l].name}</a></li>

@@ -56,6 +56,7 @@ export const ROUTES: Record<string, Record<Lang, string>> = Object.fromEntries(
 
 /** Menú principal: textos en español e inglés; los demás idiomas se traducen con makeT (src/i18n/ui.ts). */
 export const NAV: { key: keyof typeof ROUTES; es: string; en: string }[] = [
+  { key: "home", es: "Inicio", en: "Home" },
   { key: "how", es: "Cómo funciona", en: "How it works" },
   { key: "security", es: "Seguridad", en: "Security" },
   { key: "guides", es: "Guías", en: "Guides" },
