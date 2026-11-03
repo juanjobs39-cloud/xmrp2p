@@ -34,7 +34,7 @@ P2P_XMR_NETWORK = "stagenet"
 # Tu cuenta de P2P (la que creas en /es/p2p/#/cuenta): con ella entras al panel 🛡 Admin.
 P2P_ADMIN_ADDRESS = ""
 # Dirección de Monero (stagenet) donde cobra la plataforma; el árbitro usa la misma.
-P2P_FEE_ADDRESS = ""
+P2P_FEE_ADDRESS = "53arCcnbRwtX3BAyh6s6xMHUvnUt3iEkXbLqnR68FSffHj3L7wukBPSTu9Ga3RiPtBKNwLQz6s3bgECs8EG9Raip82H1Q2p"
 MONERO_NODE = "https://xmrp2p-node-proxy.xmrp2p.workers.dev"
 
 [triggers]
@@ -43,7 +43,7 @@ crons = ["* * * * *"]
 [[d1_databases]]
 binding = "DB"
 database_name = "xmrp2p-p2p-beta"
-database_id = "PENDIENTE"
+database_id = "bb73811f-9111-44f7-ae93-6e0459c214e2"
 migrations_dir = "migrations"
 
 [[containers]]
