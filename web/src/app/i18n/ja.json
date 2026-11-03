@@ -92,5 +92,9 @@
   "troc_dest_label": "あなたの{coin}アドレス（受取先）",
   "troc_refund_xmr": "Moneroの返金アドレス（任意）",
   "troc_bad_dest": "{coin}のアドレスとして正しくないようです。",
-  "troc_need_memo": "この通貨では、受取アドレスにメモまたはタグが必要です。"
+  "troc_need_memo": "この通貨では、受取アドレスにメモまたはタグが必要です。",
+  "troc_timer": "入金までの残り時間：{time}",
+  "troc_timer_over": "入金の期限が過ぎました。このアドレスには何も送らないでください。新しい交換を作成してください。",
+  "troc_hash": "支払いトランザクション（ハッシュ）：",
+  "troc_copy_hash": "ハッシュをコピー"
 }

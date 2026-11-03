@@ -92,5 +92,9 @@
   "troc_dest_label": "你的 {coin} 地址（在这里收款）",
   "troc_refund_xmr": "门罗币退款地址（可选）",
   "troc_bad_dest": "该地址看起来不适用于 {coin}。",
-  "troc_need_memo": "此币种的收款地址需要填写 memo 或 tag。"
+  "troc_need_memo": "此币种的收款地址需要填写 memo 或 tag。",
+  "troc_timer": "剩余存款时间：{time}",
+  "troc_timer_over": "存款时间已过。请勿向此地址发送任何资金：请创建新的兑换。",
+  "troc_hash": "付款交易（哈希）：",
+  "troc_copy_hash": "复制哈希"
 }

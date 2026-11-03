@@ -70,6 +70,10 @@ export interface TrocadorTrade {
   address_provider_memo: string;
   id_provider: string;
   fixed: boolean;
+  /** Hora (segundos Unix) en que vence el intercambio si no llega el depósito. */
+  expires_at?: number;
+  /** Hash de la transacción con la que el exchange pagó (cuando termina). */
+  hashout?: string;
 }
 
 export interface RoomMessage {

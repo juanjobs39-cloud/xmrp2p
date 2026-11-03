@@ -138,6 +138,7 @@ export class SwapApp {
       void this.guard(() => this.trocCreate(), (e as SubmitEvent).submitter);
     });
     $("troc-copy").addEventListener("click", () => void navigator.clipboard?.writeText($("troc-addr").textContent ?? ""));
+    $("troc-hash-copy").addEventListener("click", () => void navigator.clipboard?.writeText($("troc-hash").textContent ?? ""));
     this.xmrAddressLabel = $("troc-address-label").textContent ?? "";
     this.coinRefundLabel = $("troc-refund-label").textContent ?? "";
     const pick = (c: Coin) => {
@@ -188,6 +189,10 @@ export class SwapApp {
   private trocRates: TrocadorRates | null = null;
   private trocPick: TrocadorQuote | null = null;
   private trocTimer: ReturnType<typeof setInterval> | null = null;
+  /** Cuenta regresiva del intercambio de Trocador (vence si no llega el depósito a tiempo). */
+  private trocClock: ReturnType<typeof setInterval> | null = null;
+  private trocExpires = 0;
+  private trocState = "";
 
   /** Muestra las cotizaciones de Trocador en la lista. Devuelve false si no hay (se usa el widget). */
   private trocCoin: Coin = coinById(DEFAULT_COIN);
@@ -325,7 +330,11 @@ export class SwapApp {
     $("troc-provider").textContent = trade.provider;
     $("troc-id").textContent = trade.trade_id;
     $("troc-deposit").hidden = false;
+    $("troc-hash-box").hidden = true;
+    this.trocExpires = 0;
     this.trocStatus(trade);
+    if (this.trocClock) clearInterval(this.trocClock);
+    this.trocClock = setInterval(() => this.trocTick(), 1000);
     // Nuestro servidor guarda el estado que manda el webhook de Trocador: consultarlo no les cuesta peticiones.
     if (this.trocTimer) clearInterval(this.trocTimer);
     this.trocTimer = setInterval(() => {
@@ -338,10 +347,43 @@ export class SwapApp {
     const key = `troc_status_${s}`;
     const label = t(this.lang, key as Key);
     $("troc-status").textContent = label && label !== key ? label : trade.status;
+    this.trocState = s;
+    if (trade.expires_at) this.trocExpires = trade.expires_at;
+    if (trade.hashout) {
+      $("troc-hash-label").textContent = t(this.lang, "troc_hash");
+      $("troc-hash-copy").textContent = t(this.lang, "troc_copy_hash");
+      $("troc-hash").textContent = trade.hashout;
+      $("troc-hash-box").hidden = false;
+    }
+    this.trocTick();
     if (["finished", "failed", "refunded", "expired", "halted"].includes(s) && this.trocTimer) {
       clearInterval(this.trocTimer);
       this.trocTimer = null;
     }
+  }
+
+  /** Tiempo que queda para depositar; solo mientras Trocador espera el depósito. */
+  private trocTick(): void {
+    const el = $("troc-timer");
+    const waiting = this.trocState === "new" || this.trocState === "waiting";
+    const left = this.trocExpires - Math.floor(Date.now() / 1000);
+    if (this.trocState === "expired" || (waiting && this.trocExpires && left <= 0)) {
+      el.textContent = t(this.lang, "troc_timer_over");
+      el.classList.add("over");
+      el.hidden = false;
+    } else if (waiting && this.trocExpires) {
+      const hh = Math.floor(left / 3600);
+      const mm = String(Math.floor((left % 3600) / 60)).padStart(hh ? 2 : 1, "0");
+      const ss = String(left % 60).padStart(2, "0");
+      el.textContent = t(this.lang, "troc_timer", { time: hh ? `${hh}:${mm}:${ss}` : `${mm}:${ss}` });
+      el.classList.remove("over");
+      el.hidden = false;
+      return;
+    } else {
+      el.hidden = true;
+    }
+    if (this.trocClock) clearInterval(this.trocClock);
+    this.trocClock = null;
   }
 
   /** «Intercambiar»: cotizaciones de todos los makers para el monto, o Trocador si no hay. */
