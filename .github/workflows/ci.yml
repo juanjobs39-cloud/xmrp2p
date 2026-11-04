@@ -146,6 +146,11 @@ jobs:
           node-version: "22"
       - run: npm ci --legacy-peer-deps
         working-directory: web
+      # El árbitro de P2P Fiat: sus reglas se prueban también contra los pagos que arma la app.
+      - run: npm ci
+        working-directory: arbiter
+      - run: npm test
+        working-directory: arbiter
       - run: npm test
         working-directory: web
       - run: npm run build

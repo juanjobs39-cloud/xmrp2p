@@ -10,8 +10,8 @@
 import { xmrLib } from "../app/libs";
 import type { OrderView, P2PConfig, RoomMessage } from "./api";
 import { b64, unb64, type EscrowState, type P2PVault } from "./identity";
+import { NETWORK_FEE_RESERVE, releaseDestinations } from "./payout";
 
-const NETWORK_FEE_RESERVE = 100_000_000n; // 0.0001 XMR, igual que el backend y el árbitro
 
 export const toPico = (xmr: string): bigint => {
   const [i, f = ""] = xmr.split(".");
@@ -161,8 +161,14 @@ export class EscrowDriver {
     let dests: { address: string; amount: string }[];
     if (toBuyer) {
       if (!this.ctx.cfg.fee_address) throw new Error("falta la dirección de cobro de la plataforma");
-      dests = [{ address: o.buyer_address, amount: toPico(o.xmr).toString() }];
-      if (toPico(o.fee_xmr) > 0n) dests.push({ address: this.ctx.cfg.fee_address, amount: toPico(o.fee_xmr).toString() });
+      dests = releaseDestinations({
+        balance: BigInt(bal.unlocked || bal.balance),
+        buyer: o.buyer_address,
+        xmr: toPico(o.xmr),
+        platform: this.ctx.cfg.fee_address,
+        fee: toPico(o.fee_xmr),
+        refund: o.seller_refund_address,
+      });
     } else {
       const amount = BigInt(bal.unlocked || bal.balance) - NETWORK_FEE_RESERVE;
       if (amount <= 0n || !o.seller_refund_address) throw new Error("no hay saldo para reembolsar");
