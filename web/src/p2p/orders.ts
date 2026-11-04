@@ -171,7 +171,10 @@ export async function orderView(app: P2PApp, id: string) {
       paid: me === "seller" ? t(`El comprador dice que pagó ${pay}. Revisa TU cuenta y libera.`, `The buyer says they paid ${pay}. Check YOUR account and release.`) : t("Esperando que el vendedor confirme tu pago y libere.", "Waiting for the seller to confirm your payment and release."),
       disputed: t("En apelación: soporte revisa el chat y los comprobantes.", "Under appeal: support is reviewing the chat and the proofs."),
       releasing: t("Enviando el XMR al comprador…", "Sending the XMR to the buyer…"),
-      refunding: t("Devolviendo el XMR al vendedor…", "Returning the XMR to the seller…"),
+      refunding:
+        o.cancel_reason === "underfunded"
+          ? t("El depósito no alcanzó el monto de la orden: se cancela y el XMR vuelve al vendedor (menos la comisión de red).", "The deposit fell short of the order amount: it is cancelled and the XMR goes back to the seller (minus the network fee).")
+          : t("Devolviendo el XMR al vendedor…", "Returning the XMR to the seller…"),
       resolving: t("Pagando según la decisión de soporte…", "Paying out per support's decision…"),
     };
     const tone = statusTone(o.status);
@@ -215,7 +218,7 @@ export async function orderView(app: P2PApp, id: string) {
         h("div", { class: "card p2p-deposit" },
           h("p", {}, h("strong", {}, app.t(`Deposita exactamente ${o.deposit_required_xmr} XMR`, `Deposit exactly ${o.deposit_required_xmr} XMR`))),
           h("div", { class: "p2p-copy" }, h("code", { class: "p2p-addr" }, note.address), h("button", { class: "btn secondary small", type: "button", onclick: (e: Event) => void navigator.clipboard?.writeText(depAddr).then(() => ((e.target as HTMLElement).textContent = app.t("¡Copiada!", "Copied!"))) }, app.t("Copiar", "Copy"))),
-          h("small", {}, app.t("Incluye el XMR de la orden, la comisión y una pequeña reserva para la comisión de red. Si depositas de más, o sobra de la reserva, se te devuelve automáticamente a tu dirección de reembolso al cerrar la orden. Tu navegador calculó esta dirección.", "Includes the order XMR, the fee and a small reserve for the network fee. If you deposit more, or part of the reserve is left over, it is returned automatically to your refund address when the order closes. Your browser computed this address.")),
+          h("small", {}, app.t("Incluye el XMR de la orden, la comisión y una pequeña reserva para la comisión de red. Si depositas de más, o sobra de la reserva, se te devuelve automáticamente a tu dirección de reembolso al cerrar la orden. Si depositas de menos, la orden se cancela y se te reembolsa (menos la comisión de red); si te faltó, manda la diferencia a esta misma dirección antes de que venza el plazo. Tu navegador calculó esta dirección.", "Includes the order XMR, the fee and a small reserve for the network fee. If you deposit more, or part of the reserve is left over, it is returned automatically to your refund address when the order closes. If you deposit too little, the order is cancelled and refunded to you (minus the network fee); if you are short, send the difference to this same address before the deadline. Your browser computed this address.")),
         ),
       );
     }

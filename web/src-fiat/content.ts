@@ -586,6 +586,13 @@ export function faq(lang: L): { q: string; a: string }[] {
       ),
     },
     {
+      q: t("Vendedor: ¿y si deposito de menos?", "Seller: what if I deposit too little?"),
+      a: t(
+        "La orden se cancela sola. Al completar las confirmaciones, si el total en el escrow no cubre el monto, la comisión y la reserva para la red, se te devuelve todo (menos la comisión de red) a tu dirección de reembolso y el monto vuelve a tu anuncio, pero cuenta como orden cancelada por ti. El comprador nunca ve tus datos de pago, así que no paga. Si notas que te faltó, manda la diferencia a la misma dirección antes de que termine la ventana de depósito y se suma. No envíes cantidades minúsculas: un depósito de 0.0001 XMR o menos no alcanza para pagar su propio reembolso.",
+        "The order is cancelled automatically. Once the confirmations are in, if the escrow total does not cover the amount, the fee and the network reserve, everything is returned (minus the network fee) to your refund address and the amount goes back to your ad, but it counts as an order you cancelled. The buyer never sees your payment details, so they do not pay. If you notice you sent too little, send the difference to the same address before the deposit window ends and it is added up. Do not send tiny amounts: a deposit of 0.0001 XMR or less cannot cover its own refund.",
+      ),
+    },
+    {
       q: t("¿Quién ve el chat?", "Who can read the chat?"),
       a: t(
         "El chat está cifrado de punta a punta entre comprador, vendedor y soporte. Soporte puede leerlo solo para resolver apelaciones.",
