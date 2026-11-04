@@ -170,11 +170,12 @@ describe("P2P Fiat", () => {
     // El comprador no puede marcar pagado antes de que el escrow tenga fondos.
     expect((await signed(buyer, "POST", `/v1/p2p/orders/${o.id}/paid`, {})).status).toBe(409);
 
-    // Datos de pago cifrados: los manda el vendedor y solo los ve el comprador.
-    expect((await signed(buyer, "POST", `/v1/p2p/orders/${o.id}/payment-details`, { enc_payment: "x".repeat(20) })).status).toBe(403);
-    await signed(seller, "POST", `/v1/p2p/orders/${o.id}/payment-details`, { enc_payment: "cifrado:" + "z".repeat(20) });
-    expect((await signed(buyer, "GET", `/v1/p2p/orders/${o.id}`)).body.enc_payment).toMatch(/^cifrado:/);
-    expect((await signed(seller, "GET", `/v1/p2p/orders/${o.id}`)).body.enc_payment).toBeUndefined();
+    // Antes de que el XMR esté bloqueado no hay chat ni datos de pago (nadie puede pedir pagar sin escrow);
+    // los mensajes del protocolo del escrow sí pasan.
+    expect((await signed(seller, "POST", `/v1/p2p/orders/${o.id}/messages`, { ciphertext: "paga ya" })).status).toBe(409);
+    expect((await signed(buyer, "POST", `/v1/p2p/orders/${o.id}/messages`, { ciphertext: "hola" })).status).toBe(409);
+    expect((await signed(seller, "POST", `/v1/p2p/orders/${o.id}/payment-details`, { enc_payment: "cifrado:" + "z".repeat(20) })).status).toBe(409);
+    expect((await signed(seller, "POST", `/v1/p2p/orders/${o.id}/messages`, { protocol: { step: "kex", round: 0, hex: "abc" } })).status).toBe(201);
 
     const t1 = (await arbiter("/v1/p2p/arbiter/tasks")).body.tasks.find((t: { order_id: string }) => t.order_id === o.id);
     expect(t1.task).toBe("setup_escrow");
@@ -182,6 +183,13 @@ describe("P2P Fiat", () => {
     const funded = (await signed(buyer, "GET", `/v1/p2p/orders/${o.id}`)).body;
     expect(funded.status).toBe("awaiting_payment");
     expect(funded.deadline_at - funded.funded_at).toBe(15 * 60);
+
+    // Con el XMR bloqueado: datos de pago cifrados (los manda el vendedor y solo los ve el comprador) y chat.
+    expect((await signed(buyer, "POST", `/v1/p2p/orders/${o.id}/payment-details`, { enc_payment: "x".repeat(20) })).status).toBe(403);
+    await signed(seller, "POST", `/v1/p2p/orders/${o.id}/payment-details`, { enc_payment: "cifrado:" + "z".repeat(20) });
+    expect((await signed(buyer, "GET", `/v1/p2p/orders/${o.id}`)).body.enc_payment).toMatch(/^cifrado:/);
+    expect((await signed(seller, "GET", `/v1/p2p/orders/${o.id}`)).body.enc_payment).toBeUndefined();
+    expect((await signed(buyer, "POST", `/v1/p2p/orders/${o.id}/messages`, { ciphertext: "hola" })).status).toBe(201);
 
     expect((await signed(buyer, "POST", `/v1/p2p/orders/${o.id}/paid`, {})).body.status).toBe("paid");
     // Después de «Ya pagué» el comprador ya no puede cancelar, ni el vendedor.

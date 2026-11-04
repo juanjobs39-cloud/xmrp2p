@@ -116,6 +116,15 @@ export async function orderView(app: P2PApp, id: string) {
   const out = h("div");
   const input = h("textarea", { id: "p2p-msg", rows: 2, maxLength: 2000, placeholder: app.t("Escribe un mensaje (cifrado)…", "Write a message (encrypted)…") });
   const send = h("button", { class: "btn small", type: "button" }, app.t("Enviar", "Send"));
+  const chatIn = h("div", { class: "p2p-chat-in" }, input, send);
+  const chatLock = h(
+    "p",
+    { class: "p2p-chat-lock", hidden: true },
+    app.t(
+      "🔒 El chat se abre cuando el XMR del vendedor quede bloqueado en el escrow. Nunca pagues antes, aunque te lo pidan por otro medio.",
+      "🔒 The chat opens once the seller's XMR is locked in the escrow. Never pay before that, even if someone asks you through another channel.",
+    ),
+  );
   let o!: OrderView;
 
   const recipients = () => [o.buyer?.enc_pubkey, o.seller?.enc_pubkey, adminEnc ?? ""].filter(Boolean) as string[];
@@ -206,7 +215,7 @@ export async function orderView(app: P2PApp, id: string) {
         h("div", { class: "card p2p-deposit" },
           h("p", {}, h("strong", {}, app.t(`Deposita exactamente ${o.deposit_required_xmr} XMR`, `Deposit exactly ${o.deposit_required_xmr} XMR`))),
           h("div", { class: "p2p-copy" }, h("code", { class: "p2p-addr" }, note.address), h("button", { class: "btn secondary small", type: "button", onclick: (e: Event) => void navigator.clipboard?.writeText(depAddr).then(() => ((e.target as HTMLElement).textContent = app.t("¡Copiada!", "Copied!"))) }, app.t("Copiar", "Copy"))),
-          h("small", {}, app.t("Incluye el XMR de la orden, la comisión y una pequeña reserva para la comisión de red. Tu navegador calculó esta dirección.", "Includes the order XMR, the fee and a small reserve for the network fee. Your browser computed this address.")),
+          h("small", {}, app.t("Incluye el XMR de la orden, la comisión y una pequeña reserva para la comisión de red. Si depositas de más, o sobra de la reserva, se te devuelve automáticamente a tu dirección de reembolso al cerrar la orden. Tu navegador calculó esta dirección.", "Includes the order XMR, the fee and a small reserve for the network fee. If you deposit more, or part of the reserve is left over, it is returned automatically to your refund address when the order closes. Your browser computed this address.")),
         ),
       );
     }
@@ -257,7 +266,11 @@ export async function orderView(app: P2PApp, id: string) {
     }
     actions.replaceChildren(...act);
 
-    // Chat
+    // Chat: cerrado hasta que el XMR está bloqueado (el servidor también lo exige).
+    const locked = !o.funded_at;
+    chatLock.hidden = !locked;
+    chatIn.hidden = locked;
+    input.disabled = send.disabled = locked;
     chatBox.replaceChildren(
       ...messages
         .filter((m) => m.body.type !== "protocol")
@@ -334,7 +347,8 @@ export async function orderView(app: P2PApp, id: string) {
         { class: "card p2p-chat" },
         h("h3", {}, "💬 ", app.t("Chat", "Chat"), h("small", { class: "muted" }, " · " + app.t("cifrado de punta a punta", "end-to-end encrypted"))),
         chatBox,
-        h("div", { class: "p2p-chat-in" }, input, send),
+        chatLock,
+        chatIn,
         h("small", { class: "muted" }, app.t("Soporte también puede leer el chat, para resolver apelaciones.", "Support can also read the chat, to resolve appeals.")),
       ),
     ),

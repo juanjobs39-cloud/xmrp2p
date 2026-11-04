@@ -163,7 +163,7 @@ function takeSheet(app: P2PApp, ad: MarketAd, wantBuy: boolean, market: number |
     est.replaceChildren(...kids(
       h("span", {}, wantBuy ? t("Recibirás", "You get") : t("Venderás", "You sell")),
       h("strong", {}, `≈ ${fmtXmr(xmr)} XMR`),
-      !wantBuy ? h("small", {}, t(`Depositarás ≈ ${fmtXmr(xmr * (1 + fee))} XMR (incluye ${app.cfg.fee_bps / 100}% de comisión) + comisión de red`, `You will deposit ≈ ${fmtXmr(xmr * (1 + fee))} XMR (includes the ${app.cfg.fee_bps / 100}% fee) + network fee`)) : null,
+      !wantBuy ? h("small", {}, t(`Depositarás ≈ ${fmtXmr(xmr * (1 + fee))} XMR (incluye ${app.cfg.fee_bps / 100}% de comisión) + una reserva para la red. Lo que sobre se te devuelve automáticamente.`, `You will deposit ≈ ${fmtXmr(xmr * (1 + fee))} XMR (includes the ${app.cfg.fee_bps / 100}% fee) + a network reserve. Anything left over is returned to you automatically.`)) : null,
       bad ? h("small", { class: "danger" }, t(`Fuera del límite (${ad.min_fiat} – ${ad.max_fiat} ${ad.fiat})`, `Outside the limit (${ad.min_fiat} – ${ad.max_fiat} ${ad.fiat})`)) : null,
     ));
   };

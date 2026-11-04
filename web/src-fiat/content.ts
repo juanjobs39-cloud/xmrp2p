@@ -572,6 +572,20 @@ export function faq(lang: L): { q: string; a: string }[] {
       ),
     },
     {
+      q: t("¿Por qué el chat está cerrado al abrir la orden?", "Why is the chat closed when the order opens?"),
+      a: t(
+        "Para protegerte. El chat se abre cuando el XMR del vendedor ya está bloqueado en el escrow; antes nadie puede escribirte ni mandarte datos de pago. Si alguien te pide pagar antes, por la plataforma o por otro medio, es una estafa.",
+        "To protect you. The chat opens once the seller's XMR is locked in the escrow; before that nobody can message you or send payment details. If anyone asks you to pay earlier, on the platform or elsewhere, it is a scam.",
+      ),
+    },
+    {
+      q: t("Vendedor: ¿y si deposito de más?", "Seller: what if I deposit too much?"),
+      a: t(
+        "Se te devuelve automáticamente. Al cerrar la orden, lo que sobre en el escrow (un depósito de más o la reserva para la red que no se usó) va a tu dirección de reembolso en la misma transacción del pago.",
+        "It is returned to you automatically. When the order closes, whatever is left in the escrow (an overpayment or the unused network reserve) goes to your refund address in the same payout transaction.",
+      ),
+    },
+    {
       q: t("¿Quién ve el chat?", "Who can read the chat?"),
       a: t(
         "El chat está cifrado de punta a punta entre comprador, vendedor y soporte. Soporte puede leerlo solo para resolver apelaciones.",

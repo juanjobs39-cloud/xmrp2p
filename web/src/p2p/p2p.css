@@ -284,3 +284,4 @@ a.p2p-tab { text-align: center; text-decoration: none; }
 .p2p-filters .btn { min-height: 2.6rem; width: 100%; }
 
 #p2p-root [hidden], .p2p-sheet [hidden] { display: none !important; }
+.p2p-chat-lock { margin: 0; padding: 0.7rem 0.9rem; border-radius: 10px; background: var(--p2p-info-bg); color: var(--p2p-info-fg); font-size: 0.9rem; }

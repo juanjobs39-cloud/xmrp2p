@@ -94,6 +94,8 @@ async function messages(req: Request, env: P2PEnv, path: string, id: string, url
   if (data.protocol !== undefined) {
     await roomEvent(env, id, role, { type: "protocol", data: data.protocol });
   } else {
+    // Antes de que el XMR esté bloqueado no hay chat: así nadie puede pedir que se pague sin escrow.
+    if (!o.funded_at) throw new HttpError(409, "el chat se abre cuando el XMR del vendedor está bloqueado en el escrow");
     await roomEvent(env, id, role, { type: "message", ciphertext: text(data.ciphertext, "ciphertext", 8000, 1) });
   }
   return json({ ok: true }, 201);

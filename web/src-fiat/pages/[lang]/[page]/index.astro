@@ -139,7 +139,7 @@ if (kind.k === "info" && kind.key === "how")
           </tbody>
         </table>
         <p>{t("El precio lo pone cada anunciante, normalmente como un porcentaje sobre el precio de mercado (la mediana de varios exchanges), así que sigue al mercado en todo momento.", "Each advertiser sets the price, usually as a percentage over the market price (the median of several exchanges), so it follows the market at all times.")}</p>
-        <p>{t(`Ejemplo: vendes 1 XMR. Depositas 1.005 XMR más la comisión de red; el comprador recibe 1 XMR y la plataforma ${f.feePct} %.`, `Example: you sell 1 XMR. You deposit 1.005 XMR plus the network fee; the buyer gets 1 XMR and the platform ${f.feePct}%.`)}</p>
+        <p>{t(`Ejemplo: vendes 1 XMR. Depositas 1.005 XMR más una reserva de 0.0001 XMR para la red; el comprador recibe 1 XMR y la plataforma ${f.feePct} %. Lo que sobre de la reserva, o si depositas de más, se te devuelve automáticamente a tu dirección de reembolso.`, `Example: you sell 1 XMR. You deposit 1.005 XMR plus a 0.0001 XMR network reserve; the buyer gets 1 XMR and the platform ${f.feePct}%. Whatever is left of the reserve, or any overpayment, is returned to your refund address automatically.`)}</p>
       </Fragment>
     )}
 
@@ -155,7 +155,7 @@ if (kind.k === "info" && kind.key === "how")
         </ul>
         <h2>{t("Si compras", "If you buy")}</h2>
         <ul>
-          <li>{t("No pagues hasta que la orden diga que el XMR está bloqueado en el escrow.", "Do not pay until the order says the XMR is locked in the escrow.")}</li>
+          <li>{t("No pagues hasta que la orden diga que el XMR está bloqueado en el escrow. Por eso el chat y los datos de pago aparecen solo después: si alguien te pide pagar antes, es una estafa.", "Do not pay until the order says the XMR is locked in the escrow. That is why the chat and the payment details only appear afterwards: if anyone asks you to pay earlier, it is a scam.")}</li>
           <li>{t("Paga desde una cuenta a tu nombre y guarda el comprobante.", "Pay from an account in your own name and keep the receipt.")}</li>
           <li>{t("No escribas «Monero», «cripto» ni «XMR» en el concepto del pago.", "Don't write “Monero”, “crypto” or “XMR” in the payment reference.")}</li>
         </ul>

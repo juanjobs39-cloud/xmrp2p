@@ -378,6 +378,7 @@ export async function orderAction(req: Request, env: P2PEnv, path: string, id: s
       // Datos de pago del vendedor, cifrados en su navegador para el comprador y el administrador.
       if (role !== "seller") throw new HttpError(403, "solo el vendedor envía sus datos de pago");
       if (FINAL.includes(o.status)) throw new HttpError(409, "la orden ya terminó");
+      if (!o.funded_at) throw new HttpError(409, "los datos de pago se envían cuando el XMR está bloqueado en el escrow");
       const enc = text(data.enc_payment, "enc_payment", 8000, 10);
       await env.DB.prepare("UPDATE p2p_orders SET enc_payment = ?, updated_at = ? WHERE id = ?").bind(enc, t, o.id).run();
       await roomEvent(env, o.id, "system", { type: "payment_details" });
