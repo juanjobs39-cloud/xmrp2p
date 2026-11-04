@@ -36,7 +36,7 @@ PUBLIC_API_URL = "https://fiat.monerop2p.app"
 P2P_ENABLED = "on"
 P2P_XMR_NETWORK = "mainnet"
 # Cuenta P2P del dueño (entra al panel 🛡 Admin).
-P2P_ADMIN_ADDRESS = "0x6d3428fefdc23d566e32f088de3c3195c19b1405"
+P2P_ADMIN_ADDRESS = "0x63261e0810aad5a0367a286fb963405436fc8847"
 # Wallet de Monero del dueño donde cae la comisión (subdirección de mainnet; dirección pública).
 P2P_FEE_ADDRESS = "8AfP2xg6N4WW67y3C6KvHrWBh4vUStzyHdNAMaQb5oK8FjNd2obui1FAD7kei25CRnQYjBLq8dSxhGpieM4ACJ3EQhL7eyr"
 MONERO_NODE = "https://nodo-xmr.monerop2p.app"
