@@ -37,7 +37,7 @@ const legal = {
   contact: main(lang === "es" ? "/es/contacto/" : "/en/contact/"),
 };
 
-const org = { "@context": "https://schema.org", "@type": "Organization", name: "MoneroP2P", url: MAIN_SITE + "/", sameAs: [REPO] };
+const org = { "@context": "https://schema.org", "@type": "Organization", name: "MoneroP2P", url: MAIN_SITE + "/", logo: MAIN_SITE + "/favicon-192.png", sameAs: [REPO] };
 const website = { "@context": "https://schema.org", "@type": "WebSite", name: brand, url: site.href, inLanguage: ["es", "en"], publisher: { "@type": "Organization", name: "MoneroP2P" } };
 const crumbs = breadcrumbs && {
   "@context": "https://schema.org",
@@ -76,7 +76,10 @@ const nav: [RouteKey, string][] = [
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt" />
     <meta name="theme-color" content="#e2591b" />
     {ld.map((o) => <script type="application/ld+json" set:html={JSON.stringify(o)} />)}

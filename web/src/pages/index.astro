@@ -12,6 +12,10 @@ const pick = `(function(){var a=${JSON.stringify(apps)},L=navigator.languages||[
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{SITE.brand}</title>
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <script is:inline set:html={pick} />
     <noscript><meta http-equiv="refresh" content={`0; url=${ROUTES.app.en}`} /></noscript>
     <link rel="canonical" href={en} />
