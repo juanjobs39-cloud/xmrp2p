@@ -101,6 +101,8 @@ if (kind === "page") {
   alternates = await newsAlternates(n.key);
   breadcrumbs = [home, newsCrumb, { name: title, href: newsPath(entry) }];
   ({ Content } = await render(entry));
+  mdAlt = newsPath(entry).replace(/\/$/, ".md");
+  const org = { "@type": "Organization", name: SITE.brand, url: new URL("/", Astro.site).href, logo: new URL("/favicon-192.png", Astro.site).href };
   jsonLd.push({
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -110,9 +112,28 @@ if (kind === "page") {
     datePublished: n.published.toISOString(),
     dateModified: (n.updated ?? n.published).toISOString(),
     mainEntityOfPage: new URL(newsPath(entry), Astro.site).href,
-    author: { "@type": "Organization", name: SITE.brand },
-    publisher: { "@type": "Organization", name: SITE.brand },
+    url: new URL(newsPath(entry), Astro.site).href,
+    image: new URL("/og.png?v=3", Astro.site).href,
+    isAccessibleForFree: true,
+    isPartOf: { "@type": "Blog", name: t("Novedades de MoneroP2P", "MoneroP2P news"), url: new URL(newsIndex(lang), Astro.site).href },
+    ...(n.keywords.length ? { keywords: n.keywords.join(", ") } : {}),
+    ...(n.mentions.length
+      ? { mentions: n.mentions.map((m: { name: string; url: string; description?: string }) => ({ "@type": "WebApplication", name: m.name, url: m.url, applicationCategory: "FinanceApplication", operatingSystem: "Web", ...(m.description ? { description: m.description } : {}) })) }
+      : {}),
+    encoding: { "@type": "MediaObject", encodingFormat: "text/markdown", contentUrl: new URL(mdAlt, Astro.site).href },
+    author: org,
+    publisher: org,
   });
+  if (n.howto) {
+    jsonLd.push({
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      name: n.howto.name,
+      inLanguage: lang,
+      ...(n.howto.totalTime ? { totalTime: n.howto.totalTime } : {}),
+      step: n.howto.steps.map((s: { name: string; text: string }, i: number) => ({ "@type": "HowToStep", position: i + 1, name: s.name, text: s.text })),
+    });
+  }
   if (n.faq.length) {
     jsonLd.push({
       "@context": "https://schema.org",
@@ -181,7 +202,7 @@ const anchor = (text: string, i: number, prefix: string) => {
   return id;
 };
 ---
-<Base {lang} {title} {description} {route} {alternates} {breadcrumbs} {jsonLd} ogType={kind === "guide" ? "article" : "website"} markdownAlternate={mdAlt}>
+<Base {lang} {title} {description} {route} {alternates} {breadcrumbs} {jsonLd} ogType={kind === "guide" || kind === "post" ? "article" : "website"} markdownAlternate={mdAlt}>
   <main id="contenido" class="prose">
     <article>
       <h1>{title}</h1>

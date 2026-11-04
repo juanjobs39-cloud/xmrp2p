@@ -1,19 +1,33 @@
 import type { APIRoute, GetStaticPaths } from "astro";
-import { getCollection, type CollectionEntry } from "astro:content";
-import { fmtDate, guidePath } from "../../../lib/content";
+import { getCollection } from "astro:content";
+import { fmtDate, guidePath, newsIndex, newsPath } from "../../../lib/content";
 import { ROUTES } from "../../../site";
 import { makeT } from "../../../i18n/ui";
 
-/** Versión Markdown de cada guía en la misma URL terminada en .md (p. ej. /es/guias/<slug>.md). */
-export const getStaticPaths: GetStaticPaths = async () =>
-  (await getCollection("guides")).map((g) => ({
+interface Doc {
+  lang: "es" | "en" | "pt" | "ru" | "uk" | "zh" | "ja" | "ko" | "hi" | "fa";
+  title: string;
+  description: string;
+  date: Date;
+  url: string;
+  body: string;
+}
+
+/** Versión Markdown de cada guía y de cada novedad en la misma URL terminada en .md (p. ej. /es/guias/<slug>.md). */
+export const getStaticPaths: GetStaticPaths = async () => [
+  ...(await getCollection("guides")).map((g) => ({
     params: { lang: g.data.lang, section: ROUTES.guides[g.data.lang].split("/")[2], slug: g.data.slug },
-    props: { g },
-  }));
+    props: { doc: { lang: g.data.lang, title: g.data.title, description: g.data.description, date: g.data.updated, url: guidePath(g), body: g.body ?? "" } satisfies Doc },
+  })),
+  ...(await getCollection("news")).map((n) => ({
+    params: { lang: n.data.lang, section: newsIndex(n.data.lang).split("/")[2], slug: n.data.slug },
+    props: { doc: { lang: n.data.lang, title: n.data.title, description: n.data.description, date: n.data.updated ?? n.data.published, url: newsPath(n), body: n.body ?? "" } satisfies Doc },
+  })),
+];
 
 export const GET: APIRoute = ({ props, site }) => {
-  const g = (props as { g: CollectionEntry<"guides"> }).g;
-  const t = makeT(g.data.lang);
-  const head = `# ${g.data.title}\n\n> ${g.data.description}\n\n${t("Última actualización", "Last updated")}: ${fmtDate(g.data.updated, g.data.lang)} · ${t("Versión web", "Web version")}:${new URL(guidePath(g), site).href}\n\n`;
-  return new Response(head + (g.body ?? ""), { headers: { "content-type": "text/markdown; charset=utf-8" } });
+  const d = (props as { doc: Doc }).doc;
+  const t = makeT(d.lang);
+  const head = `# ${d.title}\n\n> ${d.description}\n\n${t("Última actualización", "Last updated")}: ${fmtDate(d.date, d.lang)} · ${t("Versión web", "Web version")}: ${new URL(d.url, site).href}\n\n`;
+  return new Response(head + d.body, { headers: { "content-type": "text/markdown; charset=utf-8" } });
 };

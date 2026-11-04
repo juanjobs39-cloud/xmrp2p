@@ -52,6 +52,17 @@ const news = defineCollection({
     updated: z.coerce.date().optional(),
     /** Preguntas frecuentes de la entrada: se publican también como datos estructurados (FAQPage). */
     faq: z.array(z.object({ q: z.string(), a: z.string() })).default([]),
+    /** Palabras clave (BlogPosting.keywords). */
+    keywords: z.array(z.string()).default([]),
+    /** Sitios o apps de los que habla la entrada (BlogPosting.mentions), p. ej. la plataforma P2P Fiat. */
+    mentions: z.array(z.object({ name: z.string(), url: z.string().url(), description: z.string().optional() })).default([]),
+    howto: z
+      .object({
+        name: z.string(),
+        totalTime: z.string().optional(),
+        steps: z.array(z.object({ name: z.string(), text: z.string() })),
+      })
+      .optional(),
   }),
 });
 
