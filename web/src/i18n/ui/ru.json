@@ -243,5 +243,11 @@
   "MoneroP2P launches, changes and progress: new networks, contract verifications and app features.": "Запуски, изменения и развитие MoneroP2P: новые сети, проверки контракта и функции приложения.",
   "What changes on MoneroP2P, told with dates and verifiable facts.": "Что меняется в MoneroP2P — с датами и проверяемыми фактами.",
   "← All news": "← Все новости",
-  "Crypto swaps": "Криптообмен"
+  "Crypto swaps": "Криптообмен",
+  "Buy Monero": "Купить Monero",
+  "MoneroP2P: buy Monero (XMR) without KYC, P2P or with USDT and crypto": "MoneroP2P: купить Monero (XMR) без KYC — P2P, за USDT или другую криптовалюту",
+  "Buy Monero (XMR) without KYC: P2P with local currency and a 2-of-3 escrow, non-custodial USDT atomic swaps or swaps from BTC and 2,500+ coins. Open source.": "Купите Monero (XMR) без KYC: P2P за местную валюту с эскроу 2 из 3, атомарные свопы USDT без посредников или обмен BTC и 2500+ монет. Открытый код.",
+  "Swap crypto for Monero (XMR): BTC, USDT and ETH to XMR, no account": "Обменять криптовалюту на Monero (XMR): BTC, USDT и ETH на XMR без аккаунта",
+  "Swap BTC, USDT, ETH and 2,500+ coins for Monero (XMR) with no account: non-custodial USDT atomic swaps and instant-exchange quotes. XMR to BTC too.": "Обменяйте BTC, USDT, ETH и 2500+ монет на Monero (XMR) без аккаунта: атомарные свопы USDT без посредников и курсы мгновенных обменников. Также XMR на BTC.",
+  "How to buy Monero: every option, with or without crypto →": "Как купить Monero: все способы, с криптовалютой и без →"
 }

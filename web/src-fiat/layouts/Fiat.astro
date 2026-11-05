@@ -3,7 +3,7 @@
 // JSON-LD) y la misma identidad visual que monerop2p.app.
 import "../../src/styles/global.css";
 import "../fiat.css";
-import { MAIN_SITE, REAL, REPO, ROUTES, tr, type L, type RouteKey } from "../content";
+import { FIAT_LANGS, LANG_NAME, MAIN_SITE, OG_LOCALE, REAL, REPO, ROUTES, tr, type L, type RouteKey } from "../content";
 
 export interface Props {
   lang: L;
@@ -28,17 +28,19 @@ const canonical = new URL(path, site).href;
 const alternates: Partial<Record<L, string>> = Astro.props.alternates ?? (route ? ROUTES[route] : {});
 const brand = "MoneroP2P Fiat";
 const fullTitle = bareTitle ? title : `${title} · ${brand}`;
-const other: L = lang === "es" ? "en" : "es";
+const others = FIAT_LANGS.filter((l) => l !== lang && alternates[l]);
 const main = (p: string) => MAIN_SITE + p;
+// El sitio principal tiene rutas en español y, para los demás idiomas, las rutas en inglés con su prefijo.
+const mainPath = (es: string, en: string) => main(lang === "es" ? `/es/${es}` : `/${lang}/${en}`);
 const legal = {
-  terms: main(lang === "es" ? "/es/terminos/" : "/en/terms/"),
-  privacy: main(lang === "es" ? "/es/privacidad/" : "/en/privacy/"),
-  risks: main(lang === "es" ? "/es/aviso-de-riesgos/" : "/en/risk-notice/"),
-  contact: main(lang === "es" ? "/es/contacto/" : "/en/contact/"),
+  terms: mainPath("terminos/", "terms/"),
+  privacy: mainPath("privacidad/", "privacy/"),
+  risks: mainPath("aviso-de-riesgos/", "risk-notice/"),
+  contact: mainPath("contacto/", "contact/"),
 };
 
 const org = { "@context": "https://schema.org", "@type": "Organization", name: "MoneroP2P", url: MAIN_SITE + "/", logo: MAIN_SITE + "/favicon-192.png", sameAs: [REPO] };
-const website = { "@context": "https://schema.org", "@type": "WebSite", name: brand, url: site.href, inLanguage: ["es", "en"], publisher: { "@type": "Organization", name: "MoneroP2P" } };
+const website = { "@context": "https://schema.org", "@type": "WebSite", name: brand, url: site.href, inLanguage: FIAT_LANGS, publisher: { "@type": "Organization", name: "MoneroP2P" } };
 const crumbs = breadcrumbs && {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
@@ -70,8 +72,8 @@ const nav: [RouteKey, string][] = [
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content={brand} />
-    <meta property="og:locale" content={lang === "es" ? "es_419" : "en_US"} />
-    <meta property="og:locale:alternate" content={lang === "es" ? "en_US" : "es_419"} />
+    <meta property="og:locale" content={OG_LOCALE[lang]} />
+    {others.map((l) => <meta property="og:locale:alternate" content={OG_LOCALE[l]} />)}
     <meta property="og:image" content={new URL("/og.png?v=3", site).href} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
@@ -92,12 +94,15 @@ const nav: [RouteKey, string][] = [
         <nav aria-label={t("Principal", "Main")}>
           <ul>
             {nav.map(([k, label]) => <li><a href={ROUTES[k][lang]} aria-current={path === ROUTES[k][lang] ? "page" : undefined}>{label}</a></li>)}
-            <li><a class="nav-cta" href={main(lang === "es" ? "/es/app/" : "/en/app/")}>{t("Swaps cripto", "Crypto swaps")}</a></li>
+            <li><a class="nav-cta" href={mainPath("app/", "app/")}>{t("Swaps cripto", "Crypto swaps")}</a></li>
             <li><a class="nav-cta primary" href={ROUTES.app[lang]} aria-current={path === ROUTES.app[lang] ? "page" : undefined}>{t("Abrir mercado", "Open market")}</a></li>
           </ul>
         </nav>
-        {alternates[other] && (
-          <a class="fiat-lang" href={alternates[other]} hreflang={other} lang={other} title={other === "es" ? "Español" : "English"} aria-label={other === "es" ? "Español" : "English"}><span aria-hidden="true">🌐</span> {other.toUpperCase()}</a>
+        {others.length > 0 && (
+          <details class="lang">
+            <summary aria-label={`${t("Idioma", "Language")}: ${LANG_NAME[lang]}`} title={LANG_NAME[lang]}><span aria-hidden="true">🌐</span> {lang.toUpperCase()}</summary>
+            <ul>{others.map((l) => <li><a href={alternates[l]} hreflang={l} lang={l}>{LANG_NAME[l]}</a></li>)}</ul>
+          </details>
         )}
       </div>
     </header>
@@ -129,7 +134,7 @@ const nav: [RouteKey, string][] = [
           <li><a href={legal.terms}>{t("Términos de uso", "Terms of use")}</a></li>
           <li><a href={legal.privacy}>{t("Privacidad", "Privacy")}</a></li>
           <li><a href={legal.contact}>{t("Contacto", "Contact")}</a></li>
-          <li><a href={main(lang === "es" ? "/es/" : "/en/")}>MoneroP2P</a></li>
+          <li><a href={mainPath("", "")}>MoneroP2P</a></li>
           <li><a href={REPO} rel="noopener">{t("Código fuente (AGPL-3.0)", "Source code (AGPL-3.0)")}</a></li>
         </ul>
         <p>{t("El XMR de cada orden queda en un escrow 2 de 3: nadie puede moverlo solo, ni nosotros.", "Each order's XMR sits in a 2-of-3 escrow: nobody can move it alone, not even us.")}</p>

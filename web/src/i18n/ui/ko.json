@@ -239,5 +239,11 @@
   "Swap direction: sell XMR": "방향 바꾸기: XMR 팔기",
   "Swap direction": "방향 바꾸기",
   "Memo or tag (required for this coin)": "메모 또는 태그(이 코인은 필수)",
-  "Crypto swaps": "암호화폐 스왑"
+  "Crypto swaps": "암호화폐 스왑",
+  "Buy Monero": "모네로 구매",
+  "MoneroP2P: buy Monero (XMR) without KYC, P2P or with USDT and crypto": "MoneroP2P: KYC 없이 모네로(XMR) 구매 — P2P, USDT 또는 다른 암호화폐로",
+  "Buy Monero (XMR) without KYC: P2P with local currency and a 2-of-3 escrow, non-custodial USDT atomic swaps or swaps from BTC and 2,500+ coins. Open source.": "KYC 없이 모네로(XMR) 구매: 2-of-3 에스크로가 있는 법정화폐 P2P, 비수탁 USDT 아토믹 스왑, BTC 등 2,500개 이상 코인에서 교환. 오픈 소스.",
+  "Swap crypto for Monero (XMR): BTC, USDT and ETH to XMR, no account": "암호화폐를 모네로(XMR)로 교환: BTC, USDT, ETH를 XMR로, 계정 없이",
+  "Swap BTC, USDT, ETH and 2,500+ coins for Monero (XMR) with no account: non-custodial USDT atomic swaps and instant-exchange quotes. XMR to BTC too.": "계정 없이 BTC, USDT, ETH 등 2,500개 이상 코인을 모네로(XMR)로 교환: 비수탁 USDT 아토믹 스왑과 즉시 교환소 견적. XMR에서 BTC도 가능.",
+  "How to buy Monero: every option, with or without crypto →": "모네로 구매 방법: 암호화폐가 있든 없든 모든 방법 →"
 }

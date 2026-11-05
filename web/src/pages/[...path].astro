@@ -62,6 +62,37 @@ if (kind === "page") {
   route = entry.data.key;
   breadcrumbs = [home, { name: title, href: ROUTES[route!]![lang] }];
   ({ Content } = await render(entry));
+  const p = entry.data;
+  if (p.keywords.length || p.faq.length || p.howto) {
+    jsonLd.push({
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: title,
+      description,
+      inLanguage: lang,
+      url: new URL(ROUTES[route!]![lang], Astro.site).href,
+      dateModified: p.updated.toISOString(),
+      ...(p.keywords.length ? { keywords: p.keywords.join(", ") } : {}),
+    });
+  }
+  if (p.faq.length) {
+    jsonLd.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      inLanguage: lang,
+      mainEntity: p.faq.map((f: { q: string; a: string }) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+    });
+  }
+  if (p.howto) {
+    jsonLd.push({
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      name: p.howto.name,
+      inLanguage: lang,
+      ...(p.howto.totalTime ? { totalTime: p.howto.totalTime } : {}),
+      step: p.howto.steps.map((s: { name: string; text: string }, i: number) => ({ "@type": "HowToStep", position: i + 1, name: s.name, text: s.text })),
+    });
+  }
 } else if (kind === "guide") {
   const g = entry.data;
   ({ title, description, updated } = g);
@@ -216,6 +247,9 @@ const anchor = (text: string, i: number, prefix: string) => {
         </p>
       )}
       {Content && <Content />}
+      {(kind === "guide" || kind === "post") && (
+        <p class="answer"><a href={ROUTES.buy[lang]}>{t("Cómo comprar Monero: todas las opciones, con o sin cripto →", "How to buy Monero: every option, with or without crypto →")}</a></p>
+      )}
 
       {kind === "news" && (
         <>

@@ -239,5 +239,11 @@
   "Swap direction: sell XMR": "切换方向：出售 XMR",
   "Swap direction": "切换方向",
   "Memo or tag (required for this coin)": "Memo 或 tag（此币种必填）",
-  "Crypto swaps": "加密货币兑换"
+  "Crypto swaps": "加密货币兑换",
+  "Buy Monero": "购买门罗币",
+  "MoneroP2P: buy Monero (XMR) without KYC, P2P or with USDT and crypto": "MoneroP2P：无需 KYC 购买门罗币（XMR）——P2P、USDT 或其他加密货币",
+  "Buy Monero (XMR) without KYC: P2P with local currency and a 2-of-3 escrow, non-custodial USDT atomic swaps or swaps from BTC and 2,500+ coins. Open source.": "无需 KYC 购买门罗币（XMR）：用当地货币 P2P 交易并由 2/3 托管保护、无托管 USDT 原子交换，或从 BTC 等 2500+ 币种兑换。开源。",
+  "Swap crypto for Monero (XMR): BTC, USDT and ETH to XMR, no account": "将加密货币换成门罗币（XMR）：BTC、USDT、ETH 换 XMR，无需账户",
+  "Swap BTC, USDT, ETH and 2,500+ coins for Monero (XMR) with no account: non-custodial USDT atomic swaps and instant-exchange quotes. XMR to BTC too.": "无需账户，将 BTC、USDT、ETH 等 2500+ 币种换成门罗币（XMR）：无托管 USDT 原子交换和即时兑换平台报价。也支持 XMR 换 BTC。",
+  "How to buy Monero: every option, with or without crypto →": "如何购买门罗币：所有方式，有无加密货币均可 →"
 }

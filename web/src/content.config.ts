@@ -12,6 +12,16 @@ const pages = defineCollection({
     title: z.string(),
     description: z.string().max(170),
     updated: z.coerce.date(),
+    /** Opcionales: se publican como datos estructurados (FAQPage, HowTo) y palabras clave. */
+    keywords: z.array(z.string()).default([]),
+    faq: z.array(z.object({ q: z.string(), a: z.string() })).default([]),
+    howto: z
+      .object({
+        name: z.string(),
+        totalTime: z.string().optional(),
+        steps: z.array(z.object({ name: z.string(), text: z.string() })),
+      })
+      .optional(),
   }),
 });
 

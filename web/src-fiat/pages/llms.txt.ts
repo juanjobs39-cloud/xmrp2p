@@ -21,6 +21,7 @@ Key facts:
 - Prices are set by advertisers, usually as a margin over the market price (median of Kraken, KuCoin, MEXC, HTX and CoinGecko, converted with daily FX rates).
 - Reversible payment methods (PayPal, Mercado Pago, Revolut, cards) are flagged; sellers can require a minimum order history for them.
 - Accounts are keys generated in the browser, protected by a password, with a downloadable backup.
+- Languages: Spanish (/es/), English (/en/), Portuguese (/pt/) and Russian (/ru/); the market app UI is in Spanish or English.
 - Open source (AGPL-3.0): ${REPO}. Crypto ↔ XMR swaps (BTC, USDT, ETH… and atomic swaps) live on the main site: ${MAIN_SITE}/
 
 ## Deep links (market with filters)

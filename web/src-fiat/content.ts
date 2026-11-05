@@ -1,10 +1,36 @@
 /**
  * Contenido del sitio P2P Fiat (fiat.monerop2p.app): rutas, métodos de pago, países y preguntas frecuentes,
- * en español e inglés. Las cifras deben coincidir con el servidor (workers/src/api/p2p y la migración de ajustes).
+ * en español, inglés, portugués y ruso. Las cifras deben coincidir con el servidor (workers/src/api/p2p y la migración de ajustes).
+ *
+ * Textos: se escriben en español e inglés, t("Hola", "Hello"). Portugués y ruso salen de src-fiat/i18n/<idioma>.json
+ * (buscados por el texto en inglés) o, si el texto lleva datos de un método o país, de los argumentos 3 y 4.
+ * Para sacar la lista de textos en inglés: FIAT_I18N_DUMP=ruta.txt PUBLIC_SITE=fiat npm run build
  */
-export type L = "es" | "en";
-export const FIAT_LANGS: L[] = ["es", "en"];
-export const tr = (lang: L) => (es: string, en: string) => (lang === "es" ? es : en);
+import { appendFileSync } from "node:fs";
+import ptDict from "./i18n/pt.json";
+import ruDict from "./i18n/ru.json";
+import { COUNTRY_I18N, METHOD_I18N } from "./i18n/entities";
+
+export type L = "es" | "en" | "pt" | "ru";
+export const FIAT_LANGS: L[] = ["es", "en", "pt", "ru"];
+export const LANG_NAME: Record<L, string> = { es: "Español", en: "English", pt: "Português", ru: "Русский" };
+export const OG_LOCALE: Record<L, string> = { es: "es_419", en: "en_US", pt: "pt_BR", ru: "ru_RU" };
+const DICT: Record<"pt" | "ru", Record<string, string>> = { pt: ptDict, ru: ruDict };
+const dump = typeof process !== "undefined" ? process.env.FIAT_I18N_DUMP : undefined;
+const seen = new Set<string>();
+export const tr =
+  (lang: L) =>
+  (es: string, en: string, pt?: string, ru?: string): string => {
+    if (lang === "es") return es;
+    if (lang === "en") return en;
+    const inline = lang === "pt" ? pt : ru;
+    if (inline !== undefined) return inline;
+    if (dump && !seen.has(en)) {
+      seen.add(en);
+      appendFileSync(dump, JSON.stringify(en) + "\n");
+    }
+    return DICT[lang][en] ?? en;
+  };
 
 /** Red de Monero del sitio: mainnet (dinero real) salvo en la beta de pruebas (PUBLIC_P2P_NET=stagenet). */
 export const REAL = (import.meta.env.PUBLIC_P2P_NET ?? "mainnet") !== "stagenet";
@@ -25,15 +51,17 @@ export const FACTS = {
   onlineMin: 10,
 };
 
+/** Rutas por idioma. El ruso usa las rutas en inglés con su prefijo. */
+const R = (es: string, en: string, pt: string) => ({ es: `/es/${es}`, en: `/en/${en}`, pt: `/pt/${pt}`, ru: `/ru/${en}` });
 export const ROUTES = {
-  home: { es: "/es/", en: "/en/" },
-  app: { es: "/es/app/", en: "/en/app/" },
-  how: { es: "/es/como-funciona/", en: "/en/how-it-works/" },
-  fees: { es: "/es/comisiones-y-limites/", en: "/en/fees-and-limits/" },
-  safety: { es: "/es/seguridad/", en: "/en/safety/" },
-  faq: { es: "/es/preguntas-frecuentes/", en: "/en/faq/" },
-  methods: { es: "/es/metodos-de-pago/", en: "/en/payment-methods/" },
-  countries: { es: "/es/paises/", en: "/en/countries/" },
+  home: R("", "", ""),
+  app: R("app/", "app/", "app/"),
+  how: R("como-funciona/", "how-it-works/", "como-funciona/"),
+  fees: R("comisiones-y-limites/", "fees-and-limits/", "taxas-e-limites/"),
+  safety: R("seguridad/", "safety/", "seguranca/"),
+  faq: R("preguntas-frecuentes/", "faq/", "perguntas-frequentes/"),
+  methods: R("metodos-de-pago/", "payment-methods/", "metodos-de-pagamento/"),
+  countries: R("paises/", "countries/", "paises/"),
 } satisfies Record<string, Record<L, string>>;
 export type RouteKey = keyof typeof ROUTES;
 
@@ -47,6 +75,11 @@ export function marketLink(lang: L, o: { buy?: boolean; fiat?: string; method?: 
 }
 
 type T2 = Record<L, string>;
+/** Texto escrito en español e inglés; portugués y ruso se completan desde src-fiat/i18n/entities.ts. */
+type T2in = Record<"es" | "en", string>;
+type MethodIn = Omit<PayMethod, "id" | "slug" | "where" | "intro" | "tips"> & { where: T2in; intro: T2in; tips: Record<"es" | "en", string[]> };
+type CountryIn = Omit<Country, "id" | "slug" | "name" | "fiatName" | "note" | "loc"> & { name: T2in; fiatName: T2in; note: T2in };
+const t4 = (x: T2in, pt?: string, ru?: string): T2 => ({ ...x, pt: pt ?? x.en, ru: ru ?? x.en });
 export interface PayMethod {
   id: string;
   slug: T2;
@@ -62,11 +95,17 @@ export interface PayMethod {
   tips: Record<L, string[]>;
 }
 
-const pm = (id: string, esSlug: string, enSlug: string, d: Omit<PayMethod, "id" | "slug">): PayMethod => ({
-  id,
-  slug: { es: `comprar-monero-con-${esSlug}`, en: `buy-monero-with-${enSlug}` },
-  ...d,
-});
+const pm = (id: string, esSlug: string, enSlug: string, d: MethodIn): PayMethod => {
+  const x = METHOD_I18N[id];
+  return {
+    id,
+    ...d,
+    slug: { es: `comprar-monero-con-${esSlug}`, en: `buy-monero-with-${enSlug}`, pt: `comprar-monero-com-${x?.pt.slug ?? enSlug}`, ru: `buy-monero-with-${enSlug}` },
+    where: t4(d.where, x?.pt.where, x?.ru.where),
+    intro: t4(d.intro, x?.pt.intro, x?.ru.intro),
+    tips: { ...d.tips, pt: x?.pt.tips ?? d.tips.en, ru: x?.ru.tips ?? d.tips.en },
+  };
+};
 
 export const METHODS: PayMethod[] = [
   pm("spei", "spei", "spei", {
@@ -385,12 +424,21 @@ export interface Country {
   fiatName: T2;
   methods: string[];
   note: T2;
+  /** «no Brasil», «в Бразилии»: el país con su preposición, para los títulos en portugués y ruso. */
+  loc: { pt: string; ru: string };
 }
-const ct = (id: string, esSlug: string, enSlug: string, d: Omit<Country, "id" | "slug">): Country => ({
-  id,
-  slug: { es: `comprar-monero-en-${esSlug}`, en: `buy-monero-in-${enSlug}` },
-  ...d,
-});
+const ct = (id: string, esSlug: string, enSlug: string, d: CountryIn): Country => {
+  const x = COUNTRY_I18N[id];
+  return {
+    id,
+    ...d,
+    slug: { es: `comprar-monero-en-${esSlug}`, en: `buy-monero-in-${enSlug}`, pt: `comprar-monero-${x?.pt.slug ?? enSlug}`, ru: `buy-monero-in-${enSlug}` },
+    name: t4(d.name, x?.pt.name, x?.ru.name),
+    fiatName: t4(d.fiatName, x?.pt.fiatName, x?.ru.fiatName),
+    note: t4(d.note, x?.pt.note, x?.ru.note),
+    loc: { pt: x?.pt.loc ?? `em ${d.name.en}`, ru: x?.ru.loc ?? `в ${d.name.en}` },
+  };
+};
 
 export const COUNTRIES: Country[] = [
   ct("mx", "mexico", "mexico", {
@@ -611,6 +659,7 @@ export function faq(lang: L): { q: string; a: string }[] {
 
 /** Todas las páginas indexables, agrupadas por equivalentes es/en (sitemap y llms.txt). */
 export function pageGroups(): { kind: "info" | "method" | "country"; urls: Record<L, string>; name: Record<L, string> }[] {
+  const all = <T,>(fn: (l: L) => T) => Object.fromEntries(FIAT_LANGS.map((l) => [l, fn(l)])) as Record<L, T>;
   const info: [RouteKey, string, string][] = [
     ["home", "Comprar y vender Monero P2P", "Buy and sell Monero P2P"],
     ["app", "Mercado P2P (app)", "P2P market (app)"],
@@ -622,16 +671,16 @@ export function pageGroups(): { kind: "info" | "method" | "country"; urls: Recor
     ["countries", "Países", "Countries"],
   ];
   return [
-    ...info.map(([k, es, en]) => ({ kind: "info" as const, urls: ROUTES[k], name: { es, en } })),
+    ...info.map(([k, es, en]) => ({ kind: "info" as const, urls: ROUTES[k], name: all((l) => tr(l)(es, en)) })),
     ...METHODS.map((m) => ({
       kind: "method" as const,
-      urls: { es: `/es/${m.slug.es}/`, en: `/en/${m.slug.en}/` },
-      name: { es: `Comprar Monero con ${m.name}`, en: `Buy Monero with ${m.name}` },
+      urls: all((l) => `/${l}/${m.slug[l]}/`),
+      name: all((l) => tr(l)(`Comprar Monero con ${m.name}`, `Buy Monero with ${m.name}`, `Comprar Monero com ${m.name}`, `Купить Monero через ${m.name}`)),
     })),
     ...COUNTRIES.map((c) => ({
       kind: "country" as const,
-      urls: { es: `/es/${c.slug.es}/`, en: `/en/${c.slug.en}/` },
-      name: { es: `Comprar Monero en ${c.name.es}`, en: `Buy Monero in ${c.name.en}` },
+      urls: all((l) => `/${l}/${c.slug[l]}/`),
+      name: all((l) => tr(l)(`Comprar Monero en ${c.name.es}`, `Buy Monero in ${c.name.en}`, `Comprar Monero ${c.loc.pt}`, `Купить Monero ${c.loc.ru}`)),
     })),
   ];
 }

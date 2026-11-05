@@ -66,19 +66,24 @@ if (kind.k === "info") {
 } else if (kind.k === "method") {
   const m = kind.m;
   alternates = alt((l) => `/${l}/${m.slug[l]}/`);
-  title = t(`Comprar y vender Monero (XMR) con ${m.name}`, `Buy and sell Monero (XMR) with ${m.name}`);
+  title = t(`Comprar y vender Monero (XMR) con ${m.name}`, `Buy and sell Monero (XMR) with ${m.name}`, `Comprar e vender Monero (XMR) com ${m.name}`, `Купить и продать Monero (XMR) через ${m.name}`);
   description = t(
     `Compra Monero con ${m.name} (${m.where.es}) de persona a persona, sin KYC. El XMR queda en un escrow 2 de 3 hasta que el vendedor confirma tu pago.`,
     `Buy Monero with ${m.name} (${m.where.en}) person to person, no KYC. The XMR sits in a 2-of-3 escrow until the seller confirms your payment.`,
+    `Compre Monero com ${m.name} (${m.where.pt}) de pessoa para pessoa, sem KYC. O XMR fica em um escrow 2 de 3 até o vendedor confirmar seu pagamento.`,
+    `Покупайте Monero через ${m.name} (${m.where.ru}) напрямую между людьми, без KYC. XMR хранится в эскроу 2 из 3, пока продавец не подтвердит оплату.`,
   );
   crumbs = [home, { name: t("Métodos de pago", "Payment methods"), href: ROUTES.methods[lang] }, { name: m.name, href: alternates[lang] }];
 } else {
   const c = kind.c;
   alternates = alt((l) => `/${l}/${c.slug[l]}/`);
-  title = t(`Comprar Monero en ${c.name.es} con ${c.fiatName.es}`, `Buy Monero in ${c.name.en} with ${c.fiatName.en}`);
+  const ms = c.methods.map((id) => methodById(id).name).join(", ");
+  title = t(`Comprar Monero en ${c.name.es} con ${c.fiatName.es}`, `Buy Monero in ${c.name.en} with ${c.fiatName.en}`, `Comprar Monero ${c.loc.pt} com ${c.fiatName.pt}`, `Купить Monero ${c.loc.ru} за ${c.fiatName.ru}`);
   description = t(
-    `Cómo comprar y vender Monero (XMR) en ${c.name.es} con ${c.fiatName.es} (${c.fiat}): ${c.methods.map((id) => methodById(id).name).join(", ")}. P2P, sin KYC y con escrow 2 de 3.`,
-    `How to buy and sell Monero (XMR) in ${c.name.en} with ${c.fiatName.en} (${c.fiat}): ${c.methods.map((id) => methodById(id).name).join(", ")}. P2P, no KYC, 2-of-3 escrow.`,
+    `Cómo comprar y vender Monero (XMR) en ${c.name.es} con ${c.fiatName.es} (${c.fiat}): ${ms}. P2P, sin KYC y con escrow 2 de 3.`,
+    `How to buy and sell Monero (XMR) in ${c.name.en} with ${c.fiatName.en} (${c.fiat}): ${ms}. P2P, no KYC, 2-of-3 escrow.`,
+    `Como comprar e vender Monero (XMR) ${c.loc.pt} com ${c.fiatName.pt} (${c.fiat}): ${ms}. P2P, sem KYC e com escrow 2 de 3.`,
+    `Как купить и продать Monero (XMR) ${c.loc.ru} за ${c.fiatName.ru} (${c.fiat}): ${ms}. P2P, без KYC, эскроу 2 из 3.`,
   );
   crumbs = [home, { name: t("Países", "Countries"), href: ROUTES.countries[lang] }, { name: c.name[lang].replace(/^the /, ""), href: alternates[lang] }];
 }
@@ -197,25 +202,27 @@ if (kind.k === "info" && kind.key === "how")
           <span class={"fiat-risk " + (kind.m.reversible ? "high" : "low")}>{kind.m.reversible ? t("alto ⚠", "high ⚠") : t("bajo", "low")}</span>
         </p>
         <div class="fiat-box">
-          <h2>{t(`Ver anuncios con ${kind.m.name}`, `See ${kind.m.name} ads`)}</h2>
+          <h2>{t(`Ver anuncios con ${kind.m.name}`, `See ${kind.m.name} ads`, `Ver anúncios com ${kind.m.name}`, `Объявления с ${kind.m.name}`)}</h2>
           <div class="fiat-cta">
             <a class="btn buy" href={marketLink(lang, { buy: true, fiat: kind.m.fiat, method: kind.m.catalog })}>{t("Comprar XMR", "Buy XMR")}</a>
             <a class="btn sell" href={marketLink(lang, { buy: false, fiat: kind.m.fiat, method: kind.m.catalog })}>{t("Vender XMR", "Sell XMR")}</a>
           </div>
         </div>
-        <h2>{t(`Cómo comprar Monero con ${kind.m.name}`, `How to buy Monero with ${kind.m.name}`)}</h2>
+        <h2>{t(`Cómo comprar Monero con ${kind.m.name}`, `How to buy Monero with ${kind.m.name}`, `Como comprar Monero com ${kind.m.name}`, `Как купить Monero через ${kind.m.name}`)}</h2>
         <ol class="fiat-steps">
-          <li><h3>{t("Elige un anuncio de venta", "Pick a sell ad")}</h3><p>{t(`Filtra por ${kind.m.name} y revisa precio, límites y reputación del vendedor.`, `Filter by ${kind.m.name} and check the price, limits and the seller's reputation.`)}</p></li>
+          <li><h3>{t("Elige un anuncio de venta", "Pick a sell ad")}</h3><p>{t(`Filtra por ${kind.m.name} y revisa precio, límites y reputación del vendedor.`, `Filter by ${kind.m.name} and check the price, limits and the seller's reputation.`, `Filtre por ${kind.m.name} e confira preço, limites e reputação do vendedor.`, `Отфильтруйте по ${kind.m.name} и проверьте цену, лимиты и репутацию продавца.`)}</p></li>
           <li><h3>{t("Espera el escrow", "Wait for the escrow")}</h3><p>{t("El vendedor deposita el XMR en el escrow 2 de 3. No pagues antes.", "The seller deposits the XMR in the 2-of-3 escrow. Do not pay before.")}</p></li>
-          <li><h3>{t(`Paga con ${kind.m.name}`, `Pay with ${kind.m.name}`)}</h3><p>{t("A los datos que el vendedor puso en la orden, y marca «Ya pagué».", "To the details the seller put in the order, then mark “I have paid”.")}</p></li>
+          <li><h3>{t(`Paga con ${kind.m.name}`, `Pay with ${kind.m.name}`, `Pague com ${kind.m.name}`, `Оплатите через ${kind.m.name}`)}</h3><p>{t("A los datos que el vendedor puso en la orden, y marca «Ya pagué».", "To the details the seller put in the order, then mark “I have paid”.")}</p></li>
           <li><h3>{t("Recibe tu XMR", "Get your XMR")}</h3><p>{t("El vendedor confirma tu pago y libera el Monero a tu wallet.", "The seller confirms your payment and releases the Monero to your wallet.")}</p></li>
         </ol>
         <h2>{t("Consejos", "Tips")}</h2>
         <ul>{kind.m.tips[lang].map((x) => <li>{x}</li>)}</ul>
-        <h2>{t(`Vender Monero por ${kind.m.name}`, `Sell Monero for ${kind.m.name}`)}</h2>
+        <h2>{t(`Vender Monero por ${kind.m.name}`, `Sell Monero for ${kind.m.name}`, `Vender Monero por ${kind.m.name}`, `Продать Monero через ${kind.m.name}`)}</h2>
         <p>{t(
           `Publica un anuncio de venta con ${kind.m.name}, pon tu precio sobre el de mercado y los datos para recibir el pago. Cuando alguien abre una orden, depositas el XMR en el escrow y liberas al ver el dinero. Pagas ${f.feePct} % de comisión.`,
           `Post a sell ad with ${kind.m.name}, set your price over the market and your payment details. When someone opens an order, you deposit the XMR in the escrow and release once you see the money. You pay a ${f.feePct}% fee.`,
+          `Publique um anúncio de venda com ${kind.m.name}, defina seu preço sobre o de mercado e os dados para receber. Quando alguém abrir uma ordem, você deposita o XMR no escrow e libera ao ver o dinheiro. Você paga ${f.feePct}% de taxa.`,
+          `Разместите объявление о продаже с ${kind.m.name}, укажите цену относительно рынка и реквизиты для оплаты. Когда кто-то откроет ордер, внесите XMR в эскроу и отпустите его, увидев деньги. Комиссия — ${f.feePct}%.`,
         )}</p>
         <p><a href={ROUTES.safety[lang]}>{t("Cómo evitar estafas →", "How to avoid scams →")}</a> · <a href={ROUTES.methods[lang]}>{t("Otros métodos →", "Other methods →")}</a></p>
       </Fragment>
@@ -225,7 +232,7 @@ if (kind.k === "info" && kind.key === "how")
       <Fragment>
         <p class="lead">{kind.c.note[lang]}</p>
         <div class="fiat-box">
-          <h2>{t(`Anuncios en ${kind.c.fiat}`, `${kind.c.fiat} ads`)}</h2>
+          <h2>{t(`Anuncios en ${kind.c.fiat}`, `${kind.c.fiat} ads`, `Anúncios em ${kind.c.fiat}`, `Объявления в ${kind.c.fiat}`)}</h2>
           <div class="fiat-cta">
             <a class="btn buy" href={marketLink(lang, { buy: true, fiat: kind.c.fiat })}>{t("Comprar XMR", "Buy XMR")}</a>
             <a class="btn sell" href={marketLink(lang, { buy: false, fiat: kind.c.fiat })}>{t("Vender XMR", "Sell XMR")}</a>
@@ -238,11 +245,11 @@ if (kind.k === "info" && kind.key === "how")
         <h2>{t("Por qué P2P con escrow", "Why P2P with escrow")}</h2>
         <ul>
           <li>{t("Sin KYC: no subes identificación ni das tu correo.", "No KYC: no ID upload, no email.")}</li>
-          <li>{t(`Pagas en ${kind.c.fiatName.es} con el método que ya usas.`, `You pay in ${kind.c.fiatName.en} with the method you already use.`)}</li>
+          <li>{t(`Pagas en ${kind.c.fiatName.es} con el método que ya usas.`, `You pay in ${kind.c.fiatName.en} with the method you already use.`, `Você paga em ${kind.c.fiatName.pt} com o método que já usa.`, `Вы платите в валюте «${kind.c.fiatName.ru}» привычным способом.`)}</li>
           <li>{t("El XMR queda bloqueado en un escrow 2 de 3 hasta que el vendedor confirma tu pago.", "The XMR stays locked in a 2-of-3 escrow until the seller confirms your payment.")}</li>
           <li>{t("Comprar es gratis; quien vende paga " + f.feePct + " %.", "Buying is free; sellers pay " + f.feePct + "%.")}</li>
         </ul>
-        <p class="notice warn">{t(`Tú eres responsable de cumplir las leyes de ${kind.c.name.es}, incluidos los impuestos.`, `You are responsible for complying with the laws of ${kind.c.name.en}, including taxes.`)}</p>
+        <p class="notice warn">{t(`Tú eres responsable de cumplir las leyes de ${kind.c.name.es}, incluidos los impuestos.`, `You are responsible for complying with the laws of ${kind.c.name.en}, including taxes.`, `Você é responsável por cumprir as leis ${kind.c.loc.pt.replace(/^n(o|a|os|as) /, "d$1 ")}, incluindo impostos.`, `Вы обязаны соблюдать законы страны (${kind.c.name.ru}), включая налоги.`)}</p>
       </Fragment>
     )}
 

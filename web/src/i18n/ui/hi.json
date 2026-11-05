@@ -239,5 +239,11 @@
   "Swap direction: sell XMR": "दिशा बदलें: XMR बेचें",
   "Swap direction": "दिशा बदलें",
   "Memo or tag (required for this coin)": "Memo या tag (इस कॉइन के लिए ज़रूरी)",
-  "Crypto swaps": "क्रिप्टो स्वैप"
+  "Crypto swaps": "क्रिप्टो स्वैप",
+  "Buy Monero": "Monero खरीदें",
+  "MoneroP2P: buy Monero (XMR) without KYC, P2P or with USDT and crypto": "MoneroP2P: बिना KYC Monero (XMR) खरीदें — P2P, USDT या दूसरी क्रिप्टो से",
+  "Buy Monero (XMR) without KYC: P2P with local currency and a 2-of-3 escrow, non-custodial USDT atomic swaps or swaps from BTC and 2,500+ coins. Open source.": "बिना KYC Monero (XMR) खरीदें: स्थानीय मुद्रा से P2P और 2-of-3 एस्क्रो, बिना कस्टडी USDT एटॉमिक स्वैप, या BTC और 2,500+ कॉइन से स्वैप। ओपन सोर्स।",
+  "Swap crypto for Monero (XMR): BTC, USDT and ETH to XMR, no account": "क्रिप्टो को Monero (XMR) में बदलें: BTC, USDT और ETH से XMR, बिना खाते",
+  "Swap BTC, USDT, ETH and 2,500+ coins for Monero (XMR) with no account: non-custodial USDT atomic swaps and instant-exchange quotes. XMR to BTC too.": "बिना खाते BTC, USDT, ETH और 2,500+ कॉइन को Monero (XMR) में बदलें: बिना कस्टडी USDT एटॉमिक स्वैप और इंस्टेंट एक्सचेंज के रेट। XMR से BTC भी।",
+  "How to buy Monero: every option, with or without crypto →": "Monero कैसे खरीदें: क्रिप्टो के साथ या बिना, सभी तरीके →"
 }

@@ -8,8 +8,8 @@ export const SITE = {
   fiatUrl: (import.meta.env.PUBLIC_FIAT_SITE_URL as string | undefined) ?? "https://fiat.monerop2p.app",
 };
 
-/** Página de P2P Fiat en el idioma pedido (ese sitio solo existe en español e inglés). */
-export const fiatHref = (lang: string) => `${SITE.fiatUrl}/${lang === "es" ? "es" : "en"}/`;
+/** Página de P2P Fiat en el idioma pedido (ese sitio existe en español, inglés, portugués y ruso). */
+export const fiatHref = (lang: string) => `${SITE.fiatUrl}/${["es", "pt", "ru"].includes(lang) ? lang : "en"}/`;
 
 export type Lang = "es" | "en" | "pt" | "ru" | "uk" | "zh" | "ja" | "ko" | "hi" | "fa";
 export const LANGS: Lang[] = ["en", "es", "pt", "ru", "uk", "zh", "ja", "ko", "hi", "fa"];
@@ -31,6 +31,7 @@ export const LANG_INFO: Record<Lang, { name: string; og: string; locale: string;
 /** Rutas en español e inglés; los demás idiomas usan la ruta en inglés con su prefijo (/pt/how-it-works/). */
 const BASE: Record<string, { es: string; en: string }> = {
   home: { es: "/es/", en: "/en/" },
+  buy: { es: "/es/comprar-monero/", en: "/en/buy-monero/" },
   how: { es: "/es/como-funciona/", en: "/en/how-it-works/" },
   security: { es: "/es/seguridad/", en: "/en/security/" },
   maker: { es: "/es/conviertete-en-maker/", en: "/en/become-a-maker/" },
@@ -57,6 +58,7 @@ export const ROUTES: Record<string, Record<Lang, string>> = Object.fromEntries(
 /** Menú principal: textos en español e inglés; los demás idiomas se traducen con makeT (src/i18n/ui.ts). */
 export const NAV: { key: keyof typeof ROUTES; es: string; en: string }[] = [
   { key: "home", es: "Inicio", en: "Home" },
+  { key: "buy", es: "Comprar Monero", en: "Buy Monero" },
   { key: "how", es: "Cómo funciona", en: "How it works" },
   { key: "security", es: "Seguridad", en: "Security" },
   { key: "guides", es: "Guías", en: "Guides" },

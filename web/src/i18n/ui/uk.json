@@ -239,5 +239,11 @@
   "Swap direction: sell XMR": "Змінити напрямок: продати XMR",
   "Swap direction": "Змінити напрямок",
   "Memo or tag (required for this coin)": "Memo або тег (обов’язково для цієї монети)",
-  "Crypto swaps": "Криптообмін"
+  "Crypto swaps": "Криптообмін",
+  "Buy Monero": "Купити Monero",
+  "MoneroP2P: buy Monero (XMR) without KYC, P2P or with USDT and crypto": "MoneroP2P: купити Monero (XMR) без KYC — P2P, за USDT або іншу криптовалюту",
+  "Buy Monero (XMR) without KYC: P2P with local currency and a 2-of-3 escrow, non-custodial USDT atomic swaps or swaps from BTC and 2,500+ coins. Open source.": "Купіть Monero (XMR) без KYC: P2P за місцеву валюту з ескроу 2 з 3, атомарні свопи USDT без посередників або обмін BTC і 2500+ монет. Відкритий код.",
+  "Swap crypto for Monero (XMR): BTC, USDT and ETH to XMR, no account": "Обміняти криптовалюту на Monero (XMR): BTC, USDT і ETH на XMR без акаунта",
+  "Swap BTC, USDT, ETH and 2,500+ coins for Monero (XMR) with no account: non-custodial USDT atomic swaps and instant-exchange quotes. XMR to BTC too.": "Обміняйте BTC, USDT, ETH і 2500+ монет на Monero (XMR) без акаунта: атомарні свопи USDT без посередників і курси миттєвих обмінників. Також XMR на BTC.",
+  "How to buy Monero: every option, with or without crypto →": "Як купити Monero: усі способи, з криптовалютою і без →"
 }
