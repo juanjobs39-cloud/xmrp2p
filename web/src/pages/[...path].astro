@@ -7,7 +7,7 @@ import { makeT } from "../i18n/ui";
 import { getCollection, render } from "astro:content";
 import Base from "../layouts/Base.astro";
 import { NEWS_LANGS, fmtDate, guideAlternates, guidePath, guides, newsAlternates, newsIndex, newsLang, newsList, newsPath } from "../lib/content";
-import { LANGS, ROUTES, SITE, type Lang } from "../site";
+import { LANGS, ROUTES, SITE, WALLET, type Lang } from "../site";
 
 export async function getStaticPaths() {
   const out = [];
@@ -73,6 +73,24 @@ if (kind === "page") {
       url: new URL(ROUTES[route!]![lang], Astro.site).href,
       dateModified: p.updated.toISOString(),
       ...(p.keywords.length ? { keywords: p.keywords.join(", ") } : {}),
+    });
+  }
+  if (route === "wallet") {
+    jsonLd.push({
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: "MoneroP2P Wallet",
+      applicationCategory: "FinanceApplication",
+      applicationSubCategory: "Cryptocurrency wallet",
+      operatingSystem: "Chrome, Brave, Edge, Firefox",
+      softwareVersion: WALLET.version,
+      description,
+      inLanguage: lang,
+      url: new URL(ROUTES.wallet[lang], Astro.site).href,
+      isAccessibleForFree: true,
+      license: "https://www.gnu.org/licenses/agpl-3.0.html",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      publisher: { "@type": "Organization", name: SITE.brand, url: Astro.site?.href },
     });
   }
   if (p.faq.length) {
@@ -245,6 +263,28 @@ const anchor = (text: string, i: number, prefix: string) => {
           <a href={ROUTES.faq[lang]}>{t("preguntas frecuentes", "FAQ")}</a>
           {t("). Funciona con dinero real en Arbitrum One, con un máximo de 100 USDT por swap.", "). It runs with real money on Arbitrum One, with a maximum of 100 USDT per swap.")}
         </p>
+      )}
+      {route === "wallet" && kind === "page" && (
+        <section class="install" aria-labelledby="install-h">
+          <h2 id="install-h">{t("Instalar MoneroP2P Wallet", "Install MoneroP2P Wallet")}</h2>
+          <div class="install-row">
+            {[
+              { href: WALLET.chrome, label: t("Chrome, Brave y Opera", "Chrome, Brave and Opera") },
+              { href: WALLET.firefox, label: "Firefox" },
+              { href: WALLET.edge, label: "Microsoft Edge" },
+            ].map((b) =>
+              b.href ? (
+                <a class="btn" href={b.href} rel="noopener">{b.label}</a>
+              ) : (
+                <span class="btn secondary" aria-disabled="true">{b.label} · {t("Próximamente", "Coming soon")}</span>
+              ),
+            )}
+          </div>
+          <p class="note">
+            {t("Versión", "Version")} {WALLET.version} · {t("Beta: aún sin auditoría externa. No guardes más de lo que estés dispuesto a arriesgar.", "Beta: not externally audited yet. Don't keep more than you're willing to risk.")}{" "}
+            <a href={WALLET.source} rel="noopener">{t("Código fuente y compilación verificable", "Source code and verifiable build")}</a>
+          </p>
+        </section>
       )}
       {Content && <Content />}
       {(kind === "guide" || kind === "post") && (

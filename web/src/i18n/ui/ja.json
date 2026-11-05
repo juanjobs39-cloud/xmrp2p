@@ -245,5 +245,11 @@
   "Buy Monero (XMR) without KYC: P2P with local currency and a 2-of-3 escrow, non-custodial USDT atomic swaps or swaps from BTC and 2,500+ coins. Open source.": "KYC なしでモネロ（XMR）を購入：法定通貨の P2P と 2-of-3 エスクロー、ノンカストディアルな USDT アトミックスワップ、BTC など 2,500 以上の通貨から交換。オープンソース。",
   "Swap crypto for Monero (XMR): BTC, USDT and ETH to XMR, no account": "暗号資産をモネロ（XMR）に交換：BTC・USDT・ETH から XMR へ、アカウント不要",
   "Swap BTC, USDT, ETH and 2,500+ coins for Monero (XMR) with no account: non-custodial USDT atomic swaps and instant-exchange quotes. XMR to BTC too.": "アカウント不要で BTC、USDT、ETH など 2,500 以上の通貨をモネロ（XMR）に交換：ノンカストディアルな USDT アトミックスワップと即時交換所の見積もり。XMR から BTC も可能。",
-  "How to buy Monero: every option, with or without crypto →": "モネロの買い方：暗号資産がある場合もない場合も、すべての方法 →"
+  "How to buy Monero: every option, with or without crypto →": "モネロの買い方：暗号資産がある場合もない場合も、すべての方法 →",
+  "Install MoneroP2P Wallet": "MoneroP2P Wallet をインストール",
+  "Chrome, Brave and Opera": "Chrome・Brave・Opera",
+  "Coming soon": "近日公開",
+  "Version": "バージョン",
+  "Beta: not externally audited yet. Don't keep more than you're willing to risk.": "ベータ版：外部監査はまだです。失ってもよい額以上は保管しないでください。",
+  "Source code and verifiable build": "ソースコードと検証可能なビルド"
 }

@@ -3,7 +3,7 @@ key: privacy
 lang: pt
 title: Política de privacidade
 description: "Quais dados o MoneroP2P processa (quase nenhum), o que é público na blockchain, o que o proxy de nós vê e como reduzir a exposição."
-updated: 2026-10-30
+updated: 2026-11-04
 ---
 
 **Resposta curta:** não temos contas, não usamos cookies nem analytics e não guardamos suas chaves. Alguns dados são públicos por natureza (as transações na rede do USDT) e nossos servidores processam dados técnicos mínimos para funcionar. A exceção são as exchanges instantâneas via Trocador, explicadas abaixo.
@@ -44,6 +44,10 @@ Se você usar nosso proxy, ele vê quais consultas seu navegador faz (por exempl
 ## Armazenamento no navegador
 
 O app guarda no seu navegador uma cópia **criptografada** do swap em andamento, com a mesma senha do seu arquivo de recuperação. Você pode apagá-la limpando os dados do site.
+
+## Extensão MoneroP2P Wallet
+
+A extensão **não coleta nem envia dados pessoais**: não tem contas, analytics nem telemetria. Sua semente, suas chaves e seu histórico ficam **cifrados só no seu navegador** (Argon2id e XChaCha20-Poly1305) e nunca saem dele. Para sincronizar, a extensão se conecta ao nó Monero que você escolher (por padrão, nosso proxy, descrito acima); esse nó vê as consultas à blockchain e as transações já assinadas que você envia, não suas chaves. Ao desinstalar a extensão, todos os dados dela são apagados.
 
 ## Contato
 

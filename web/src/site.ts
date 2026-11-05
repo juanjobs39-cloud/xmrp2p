@@ -32,6 +32,7 @@ export const LANG_INFO: Record<Lang, { name: string; og: string; locale: string;
 const BASE: Record<string, { es: string; en: string }> = {
   home: { es: "/es/", en: "/en/" },
   buy: { es: "/es/comprar-monero/", en: "/en/buy-monero/" },
+  wallet: { es: "/es/wallet/", en: "/en/wallet/" },
   how: { es: "/es/como-funciona/", en: "/en/how-it-works/" },
   security: { es: "/es/seguridad/", en: "/en/security/" },
   maker: { es: "/es/conviertete-en-maker/", en: "/en/become-a-maker/" },
@@ -65,3 +66,15 @@ export const NAV: { key: keyof typeof ROUTES; es: string; en: string }[] = [
   { key: "faq", es: "Preguntas", en: "FAQ" },
   { key: "maker", es: "Cómo ser maker", en: "How to be a maker" },
 ];
+
+/**
+ * Extensión MoneroP2P Wallet. Los enlaces de las tiendas se llenan cuando cada tienda la publique;
+ * mientras estén vacíos, la página /wallet muestra "Próximamente" en ese botón.
+ */
+export const WALLET = {
+  version: "0.1.0",
+  chrome: "", // Chrome Web Store (sirve para Chrome, Brave, Opera y Vivaldi)
+  firefox: "", // addons.mozilla.org
+  edge: "", // Microsoft Edge Add-ons
+  source: "https://github.com/juanjobs39-cloud/xmrp2p/tree/main/wallet",
+};

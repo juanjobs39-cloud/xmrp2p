@@ -245,5 +245,11 @@
   "Buy Monero (XMR) without KYC: P2P with local currency and a 2-of-3 escrow, non-custodial USDT atomic swaps or swaps from BTC and 2,500+ coins. Open source.": "बिना KYC Monero (XMR) खरीदें: स्थानीय मुद्रा से P2P और 2-of-3 एस्क्रो, बिना कस्टडी USDT एटॉमिक स्वैप, या BTC और 2,500+ कॉइन से स्वैप। ओपन सोर्स।",
   "Swap crypto for Monero (XMR): BTC, USDT and ETH to XMR, no account": "क्रिप्टो को Monero (XMR) में बदलें: BTC, USDT और ETH से XMR, बिना खाते",
   "Swap BTC, USDT, ETH and 2,500+ coins for Monero (XMR) with no account: non-custodial USDT atomic swaps and instant-exchange quotes. XMR to BTC too.": "बिना खाते BTC, USDT, ETH और 2,500+ कॉइन को Monero (XMR) में बदलें: बिना कस्टडी USDT एटॉमिक स्वैप और इंस्टेंट एक्सचेंज के रेट। XMR से BTC भी।",
-  "How to buy Monero: every option, with or without crypto →": "Monero कैसे खरीदें: क्रिप्टो के साथ या बिना, सभी तरीके →"
+  "How to buy Monero: every option, with or without crypto →": "Monero कैसे खरीदें: क्रिप्टो के साथ या बिना, सभी तरीके →",
+  "Install MoneroP2P Wallet": "MoneroP2P Wallet इंस्टॉल करें",
+  "Chrome, Brave and Opera": "Chrome, Brave और Opera",
+  "Coming soon": "जल्द आ रहा है",
+  "Version": "संस्करण",
+  "Beta: not externally audited yet. Don't keep more than you're willing to risk.": "बीटा: अभी तक बाहरी ऑडिट नहीं हुआ है। उतना ही रखें जितना जोखिम उठा सकें।",
+  "Source code and verifiable build": "सोर्स कोड और जाँचने योग्य बिल्ड"
 }

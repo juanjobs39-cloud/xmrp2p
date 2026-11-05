@@ -245,5 +245,11 @@
   "Buy Monero (XMR) without KYC: P2P with local currency and a 2-of-3 escrow, non-custodial USDT atomic swaps or swaps from BTC and 2,500+ coins. Open source.": "Купіть Monero (XMR) без KYC: P2P за місцеву валюту з ескроу 2 з 3, атомарні свопи USDT без посередників або обмін BTC і 2500+ монет. Відкритий код.",
   "Swap crypto for Monero (XMR): BTC, USDT and ETH to XMR, no account": "Обміняти криптовалюту на Monero (XMR): BTC, USDT і ETH на XMR без акаунта",
   "Swap BTC, USDT, ETH and 2,500+ coins for Monero (XMR) with no account: non-custodial USDT atomic swaps and instant-exchange quotes. XMR to BTC too.": "Обміняйте BTC, USDT, ETH і 2500+ монет на Monero (XMR) без акаунта: атомарні свопи USDT без посередників і курси миттєвих обмінників. Також XMR на BTC.",
-  "How to buy Monero: every option, with or without crypto →": "Як купити Monero: усі способи, з криптовалютою і без →"
+  "How to buy Monero: every option, with or without crypto →": "Як купити Monero: усі способи, з криптовалютою і без →",
+  "Install MoneroP2P Wallet": "Встановити MoneroP2P Wallet",
+  "Chrome, Brave and Opera": "Chrome, Brave і Opera",
+  "Coming soon": "Незабаром",
+  "Version": "Версія",
+  "Beta: not externally audited yet. Don't keep more than you're willing to risk.": "Бета: зовнішнього аудиту поки не було. Не зберігайте більше, ніж готові втратити.",
+  "Source code and verifiable build": "Вихідний код і перевірювана збірка"
 }

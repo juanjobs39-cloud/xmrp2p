@@ -245,5 +245,11 @@
   "Buy Monero (XMR) without KYC: P2P with local currency and a 2-of-3 escrow, non-custodial USDT atomic swaps or swaps from BTC and 2,500+ coins. Open source.": "خرید مونرو (XMR) بدون KYC: معامله P2P با پول محلی و امانت ۲ از ۳، سواپ اتمی USDT بدون واسطه یا تبدیل از BTC و بیش از ۲۵۰۰ رمزارز. متن‌باز.",
   "Swap crypto for Monero (XMR): BTC, USDT and ETH to XMR, no account": "تبدیل رمزارز به مونرو (XMR): BTC، USDT و ETH به XMR بدون حساب",
   "Swap BTC, USDT, ETH and 2,500+ coins for Monero (XMR) with no account: non-custodial USDT atomic swaps and instant-exchange quotes. XMR to BTC too.": "BTC، USDT، ETH و بیش از ۲۵۰۰ رمزارز را بدون حساب به مونرو (XMR) تبدیل کنید: سواپ اتمی USDT بدون واسطه و نرخ صرافی‌های فوری. XMR به BTC هم ممکن است.",
-  "How to buy Monero: every option, with or without crypto →": "چطور مونرو بخریم: همه روش‌ها، با رمزارز یا بدون آن →"
+  "How to buy Monero: every option, with or without crypto →": "چطور مونرو بخریم: همه روش‌ها، با رمزارز یا بدون آن →",
+  "Install MoneroP2P Wallet": "نصب MoneroP2P Wallet",
+  "Chrome, Brave and Opera": "Chrome، Brave و Opera",
+  "Coming soon": "به‌زودی",
+  "Version": "نسخه",
+  "Beta: not externally audited yet. Don't keep more than you're willing to risk.": "بتا: هنوز حسابرسی خارجی نشده است. بیش از مقداری که حاضرید ریسک کنید نگه ندارید.",
+  "Source code and verifiable build": "کد منبع و ساخت قابل بررسی"
 }
