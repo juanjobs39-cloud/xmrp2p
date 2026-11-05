@@ -12,6 +12,7 @@ import { mountCoinPicker } from "./coin-picker";
 import type { TrocadorQuote, TrocadorRates, TrocadorTrade } from "./api";
 import { decide, type Action, type XmrCheck } from "./decide";
 import { Evm, type WalletStep } from "./evm";
+import { walletAddressButton } from "./wallet-provider";
 import { t, type Key, type Lang } from "./i18n";
 import { decryptRecovery, encryptRecovery, recoveryFilename, type RecoveryFile } from "./recovery";
 import { cryptoLib, xmrLib } from "./libs";
@@ -118,6 +119,7 @@ export class SwapApp {
     if (DRAFT_UI) this.mountQuick();
     await this.loadOffers();
     this.applyDeepLink();
+    void this.attachWallet();
   }
 
   /** Ofertas vigentes (las usa la vista simple). */
@@ -499,6 +501,13 @@ export class SwapApp {
    * Enlace profundo para agregadores: /app/?usdt=50&to=<dirección XMR>&offer=<id>&ref=<origen>.
    * Solo llena el formulario: el usuario sigue revisando, descargando su respaldo y firmando.
    */
+  /** Con MoneroP2P Wallet instalada: botón que llena la dirección de Monero sin copiar y pegar. */
+  private async attachWallet(): Promise<void> {
+    const input = $<HTMLInputElement>("destination");
+    const b = await walletAddressButton(input, this.net.monero.network, this.lang === "es" ? "Usar mi MoneroP2P Wallet" : "Use my MoneroP2P Wallet", (m) => this.status(m));
+    if (b) input.insertAdjacentElement("afterend", b);
+  }
+
   private applyDeepLink(): void {
     const sp = new URLSearchParams(location.search);
     const usdt = sp.get("usdt");

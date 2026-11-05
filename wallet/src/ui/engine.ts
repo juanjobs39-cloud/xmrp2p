@@ -1,6 +1,7 @@
 // Motor Monero: monero-ts (wallet2 compilado a WASM) dentro de un Web Worker de la propia
 // extensión. La semilla solo existe en la memoria de esta página mientras está desbloqueada.
 import moneroTs from "monero-ts";
+import { feeFor, splitAll } from "../core/fee";
 
 export type Net = "mainnet" | "stagenet";
 const NET = { mainnet: moneroTs.MoneroNetworkType.MAINNET, stagenet: moneroTs.MoneroNetworkType.STAGENET };
@@ -42,9 +43,13 @@ export interface Sub {
 
 export interface Prepared {
   txid: string;
+  /** Comisión de la red de Monero. */
   fee: string;
+  /** Lo que recibe el destino. */
   amount: string;
   address: string;
+  /** Comisión de MoneroP2P (0 si no aplica). */
+  platformFee: string;
   metadata: string;
 }
 
@@ -81,6 +86,24 @@ export async function validateSeed(seed: string, network: Net): Promise<string> 
   const addr = await w.getPrimaryAddress();
   await w.close();
   return addr;
+}
+
+/** Llave privada de gasto (hex), calculada sin conexión. Solo se usa para derivar la cuenta de Arbitrum. */
+export async function spendKey(seed: string, network: Net): Promise<string> {
+  init();
+  const w = await moneroTs.createWalletKeys({ networkType: NET[network], seed });
+  const k = await w.getPrivateSpendKey();
+  await w.close();
+  return k;
+}
+
+/** Subdirección (0, index) calculada sin conexión, para dársela a un sitio sin abrir wallet2. */
+export async function subaddressAt(seed: string, network: Net, index: number): Promise<string> {
+  init();
+  const w = await moneroTs.createWalletKeys({ networkType: NET[network], seed });
+  const a = await w.getAddress(0, index);
+  await w.close();
+  return a;
 }
 
 /** Abre la wallet desde el caché cifrado (rápido) o desde la semilla (escanea desde restoreHeight). */
@@ -162,11 +185,30 @@ export async function subaddresses(): Promise<Sub[]> {
 /** Subdirección sin usar más reciente; si no hay ninguna, crea una. Así cada cobro usa una distinta. */
 export async function freshSubaddress(forceNew = false, label = ""): Promise<Sub> {
   if (!forceNew) {
-    const unused = (await subaddresses()).filter((s) => s.index > 0 && !s.used);
+    // Las que tienen etiqueta ya se entregaron a un sitio o al swap: no se repiten aquí.
+    const unused = (await subaddresses()).filter((s) => s.index > 0 && !s.used && !s.label);
     if (unused.length) return unused[unused.length - 1];
   }
   const s = await w().createSubaddress(0, label);
   return { index: Number(s.getIndex()), address: s.getAddress(), label, used: false, balance: "0" };
+}
+
+/** Cuántas subdirecciones conoce wallet2 en la cuenta 0. */
+export async function subaddressCount(): Promise<number> {
+  return (await w().getSubaddresses(0)).length;
+}
+
+/**
+ * Hace que wallet2 conozca las subdirecciones hasta `next - 1` (las que se dieron a sitios desde la
+ * ventana de aprobación sin abrir wallet2), para que detecte lo que llegue a ellas.
+ */
+export async function ensureSubaddresses(next: number): Promise<number> {
+  let n = await subaddressCount();
+  while (n < next) {
+    await w().createSubaddress(0, "site");
+    n++;
+  }
+  return n;
 }
 
 export async function txs(): Promise<Tx[]> {
@@ -190,17 +232,38 @@ export async function txs(): Promise<Tx[]> {
   return out.sort((a, b) => (a.pending === b.pending ? b.height - a.height : a.pending ? -1 : 1));
 }
 
-/** Prepara el envío SIN transmitirlo, para mostrar la comisión exacta y pedir confirmación. */
-export async function prepare(address: string, amount: bigint | "all"): Promise<Prepared> {
+/**
+ * Prepara el envío SIN transmitirlo, para mostrar las comisiones exactas y pedir confirmación.
+ * `feeTo`: dirección de comisiones de MoneroP2P, o null si no aplica (stagenet, envíos a uno mismo).
+ */
+export async function prepare(address: string, amount: bigint | "all", feeTo: string | null): Promise<Prepared> {
   const wl = w();
+  const dests: { address: string; amount: bigint }[] = [];
+  let subtractFeeFrom: number[] | undefined;
+  let platformFee = 0n;
   if (amount === "all") {
-    const list = await wl.sweepUnlocked({ address, relay: false });
-    if (list.length !== 1) throw new Error("sweep_many");
-    const tx = list[0];
-    return { txid: tx.getHash(), fee: String(tx.getFee()), amount: String(tx.getOutgoingAmount() ?? 0n), address, metadata: tx.getMetadata() };
+    const unlocked = BigInt(await wl.getUnlockedBalance(0));
+    if (unlocked <= 0n) throw new Error("not enough unlocked");
+    const split = feeTo ? splitAll(unlocked) : { dest: unlocked, fee: 0n };
+    platformFee = split.fee;
+    dests.push({ address, amount: split.dest });
+    subtractFeeFrom = [0];
+  } else {
+    platformFee = feeTo ? feeFor(amount) : 0n;
+    dests.push({ address, amount });
   }
-  const tx = await wl.createTx({ accountIndex: 0, address, amount, relay: false });
-  return { txid: tx.getHash(), fee: String(tx.getFee()), amount: String(amount), address, metadata: tx.getMetadata() };
+  if (platformFee > 0n && feeTo) dests.push({ address: feeTo, amount: platformFee });
+  const tx = await wl.createTx({ accountIndex: 0, destinations: dests, subtractFeeFrom, relay: false });
+  // Lo que de verdad recibe el destino (con "todo", ya sin la comisión de la red).
+  const sent = tx.getOutgoingTransfer()?.getDestinations()?.find((d) => d.getAddress() === address)?.getAmount();
+  return {
+    txid: tx.getHash(),
+    fee: String(tx.getFee()),
+    amount: String(sent ?? dests[0].amount),
+    address,
+    platformFee: String(platformFee),
+    metadata: tx.getMetadata(),
+  };
 }
 
 export async function relay(p: Prepared): Promise<string> {

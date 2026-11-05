@@ -3,7 +3,7 @@ key: wallet
 lang: en
 title: "MoneroP2P Wallet: non-custodial Monero (XMR) wallet for your browser"
 description: "Free extension for Chrome, Brave, Edge and Firefox. Your Monero keys never leave your device; buy XMR with USDT or local currency without leaving the wallet."
-updated: 2026-11-04
+updated: 2026-11-05
 keywords:
   - monero wallet
   - xmr wallet
@@ -21,7 +21,7 @@ faq:
   - q: "Can I use my own node?"
     a: "Yes. In Settings you can enter your node's URL (https, or http://127.0.0.1 for a local one)."
   - q: "How much does it cost?"
-    a: "It is free and open source (AGPL-3.0). You only pay the Monero network fee when sending."
+    a: "The extension is free and open source (AGPL-3.0). Each XMR transfer pays the Monero network fee plus a 0.25% MoneroP2P fee, shown separately before you confirm. Receiving and sending to your own addresses pay no MoneroP2P fee."
 ---
 
 **MoneroP2P Wallet** is a Monero (XMR) wallet that runs as a browser extension. Your keys are created and stay on your device, encrypted with your password. From the same wallet you can buy XMR with USDT or with your local currency on MoneroP2P's services.
@@ -32,6 +32,7 @@ faq:
 - **Receive** with a new subaddress for every payment, with a QR code, so nobody can link your payments.
 - **Send** with the exact fee shown before you confirm and a clear summary of the destination.
 - **Explore:** open the [USDT to XMR exchange](/en/app/) (with your address already filled in) and [P2P Fiat](https://fiat.monerop2p.app/en/app/) in one click, to buy with bank transfer, cash or other local methods.
+- **USDT and ETH on Arbitrum:** an Arbitrum One account comes from the same seed. On monerop2p.app and P2P Fiat the wallet connects by itself (no MetaMask) and fills in your Monero address; every signature or transfer asks for your approval in an extension window.
 
 ## How it protects you
 

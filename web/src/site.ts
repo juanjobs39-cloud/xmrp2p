@@ -72,7 +72,7 @@ export const NAV: { key: keyof typeof ROUTES; es: string; en: string }[] = [
  * mientras estén vacíos, la página /wallet muestra "Próximamente" en ese botón.
  */
 export const WALLET = {
-  version: "0.1.0",
+  version: "0.2.0",
   chrome: "", // Chrome Web Store (sirve para Chrome, Brave, Opera y Vivaldi)
   firefox: "", // addons.mozilla.org
   edge: "", // Microsoft Edge Add-ons

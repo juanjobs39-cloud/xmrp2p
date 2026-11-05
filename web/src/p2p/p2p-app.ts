@@ -6,6 +6,7 @@
 import type { PrivateKeyAccount } from "viem";
 import { MONERO, XMR_MAINNET } from "../app/config";
 import type { RecoveryFile } from "../app/recovery";
+import { moneroWallet, walletAddressButton } from "../app/wallet-provider";
 import { ApiError, get, signed, type Ad, type Method, type OrderView, type P2PConfig, type PublicUser, type RoomMessage } from "./api";
 import { EscrowDriver, type EscrowNote } from "./escrow";
 import { account, encPublic, hasVault, newVault, open, openVault, saveVault, seal, type P2PVault, type SavedMethod } from "./identity";
@@ -177,6 +178,13 @@ export class P2PApp {
 
   show(...nodes: Child[]) {
     this.root.replaceChildren(...(nodes.filter(Boolean) as Node[]));
+  }
+
+  /** Con MoneroP2P Wallet instalada: botón junto al campo que lo llena con una subdirección nueva. */
+  walletFill(input: HTMLInputElement): void {
+    void walletAddressButton(input, this.cfg.xmr_network, this.t("Usar mi MoneroP2P Wallet", "Use my MoneroP2P Wallet"), (m) => input.parentElement?.append(this.error(new Error(m)))).then(
+      (b) => b && input.insertAdjacentElement("afterend", b),
+    );
   }
 
   error(e: unknown): HTMLElement {

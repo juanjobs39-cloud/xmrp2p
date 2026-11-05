@@ -170,6 +170,7 @@ function takeSheet(app: P2PApp, ad: MarketAd, wantBuy: boolean, market: number |
   amount.oninput = update;
   const method = h("select", { id: "p2p-m" }, ad.methods.map((m, i) => h("option", { value: String(i) }, m.name + (m.reversible ? " ⚠" : ""))));
   const addr = h("input", { id: "p2p-addr", type: "text", spellcheck: false, autocomplete: "off", placeholder: MONERO.addressPrefixes[0] + "…" });
+  app.walletFill(addr);
   const go = h("button", { class: "btn big " + (wantBuy ? "buy" : "sell"), type: "button" }, wantBuy ? t("Comprar XMR", "Buy XMR") : t("Vender XMR", "Sell XMR"));
   go.onclick = () =>
     void app.busy(

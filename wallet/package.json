@@ -1,6 +1,6 @@
 {
   "name": "monerop2p-wallet",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Wallet de Monero sin custodia en forma de extensión de navegador (Chrome, Brave, Edge, Firefox).",
   "license": "AGPL-3.0-only",
@@ -17,7 +17,8 @@
     "@noble/hashes": "1.8.0",
     "hash-wasm": "4.12.0",
     "monero-ts": "0.11.20",
-    "qrcode-generator": "2.0.4"
+    "qrcode-generator": "2.0.4",
+    "viem": "2.57.11"
   },
   "devDependencies": {
     "@types/chrome": "0.1.4",

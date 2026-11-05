@@ -154,6 +154,7 @@ export async function newAdView(app: P2PApp) {
   const minRev = h("input", { id: "na-minrev", type: "text", inputMode: "numeric", value: "0" });
   const country = h("input", { id: "na-country", type: "text", maxLength: 2, placeholder: t("opcional", "optional") });
   const addr = h("input", { id: "na-addr", type: "text", spellcheck: false, autocomplete: "off" });
+  app.walletFill(addr);
   const addrF = app.field("", addr, app.cfg.xmr_network === "stagenet" ? t("Red de prueba: dirección de stagenet (empieza con 5 o 7).", "Test network: stagenet address (starts with 5 or 7).") : undefined);
   const syncAddr = () =>
     (addrF.querySelector("label")!.textContent =

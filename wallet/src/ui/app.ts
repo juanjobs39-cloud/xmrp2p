@@ -1,6 +1,7 @@
 // Interfaz de la wallet (popup y pestaña). DOM simple, sin frameworks ni innerHTML con datos.
 import qrcode from "qrcode-generator";
 import { formatXmr, parseXmr } from "../core/amount";
+import { FEE_ADDRESS, feePercentLabel } from "../core/fee";
 import { lookalikeOf, parseAddress } from "../core/monero-address";
 import {
   clearLocal,
@@ -18,6 +19,9 @@ import {
 import { clearBlobs, deleteBlob, getSealed, pack, putSealed, unpack } from "../core/blobstore";
 import { createVault, fromB64, MIN_PASSWORD, openJson, passwordScore, randomBytes, toB64, unlockVault, type VaultFile } from "../core/vault";
 import * as engine from "./engine";
+import * as evm from "./evm-engine";
+import { CHAINS, deriveEvmKey, formatUnitsShort, isEvmAddress, parseUnitsStrict, TOKEN_DECIMALS } from "../core/evm";
+import { checkTypedData, type EvmTxParams, type PendingRequest, type TypedData } from "../core/provider";
 import { getLang, setLang, strength, t, type Key } from "./i18n";
 
 declare const __VERSION__: string;
@@ -91,6 +95,9 @@ function openUrl(url: string): void {
   else window.open(url, "_blank", "noopener,noreferrer");
 }
 
+/** Error con un texto ya pensado para el usuario (se muestra tal cual). */
+class UserError extends Error {}
+
 function errText(e: unknown): string {
   const m = e instanceof Error ? e.message : String(e);
   return m.length > 200 ? m.slice(0, 200) + "…" : m;
@@ -114,8 +121,53 @@ let currentView: () => void = () => {};
 let lastTouch = 0;
 let saveTimer: ReturnType<typeof setInterval> | undefined;
 
-const isTab = new URLSearchParams(location.search).get("view") === "tab";
+const params = new URLSearchParams(location.search);
+const isTab = params.get("view") === "tab";
+const approveId = params.get("view") === "approve" ? params.get("id") : null;
 document.documentElement.classList.toggle("tab", isTab);
+document.documentElement.classList.toggle("approve", !!approveId);
+
+/** Mensaje al fondo de la extensión (null fuera de la extensión). */
+async function bg<T>(msg: Record<string, unknown>): Promise<T | null> {
+  const ext = (globalThis as { chrome?: typeof chrome }).chrome;
+  if (!inExtension || !ext?.runtime) return null;
+  return (await ext.runtime.sendMessage(msg).catch(() => null)) as T | null;
+}
+
+// ------------------------------------------------------------------ cuenta de Arbitrum
+
+let evmReady: Promise<string | null> = Promise.resolve(null);
+
+/**
+ * Carga la cuenta de Arbitrum. La llave se deriva una vez de la llave de gasto de Monero y se guarda
+ * cifrada con la llave de la bóveda; la dirección (pública) va a la sesión para que el fondo
+ * responda eth_accounts sin tocar llaves.
+ */
+function loadEvm(): Promise<string | null> {
+  const key = sessionKey;
+  const s = secret;
+  if (!key || !s) return (evmReady = Promise.resolve(null));
+  evmReady = (async () => {
+    let hex: string;
+    const sealed = await getSealed(key, "evm");
+    if (sealed) hex = new TextDecoder().decode(sealed);
+    else {
+      hex = deriveEvmKey(await engine.spendKey(s.seed, s.network));
+      await putSealed(key, "evm", new TextEncoder().encode(hex));
+    }
+    if (sessionKey !== key) return null; // se bloqueó mientras tanto
+    const a = evm.load(hex as `0x${string}`, s.network);
+    await setSession({ evmAddress: a });
+    return a;
+  })().catch(() => null);
+  return evmReady;
+}
+
+/** Guarda cuántas subdirecciones hay, para que la ventana de aprobación no repita índices. */
+async function syncSubNext(): Promise<void> {
+  const n = await engine.subaddressCount();
+  if (((await getLocal("subNext")) ?? 1) < n) await setLocal({ subNext: n });
+}
 
 function node(): string {
   const net = secret?.network ?? "mainnet";
@@ -167,6 +219,7 @@ async function lockNow(): Promise<void> {
   secret = null;
   sessionKey = null;
   snapshot = null;
+  evm.unload();
   unlockView();
   const ext = (globalThis as { chrome?: typeof chrome }).chrome;
   if (inExtension) await ext!.runtime.sendMessage({ type: "lock" }).catch(() => {});
@@ -175,7 +228,9 @@ async function lockNow(): Promise<void> {
 }
 
 onLocked(() => {
+  if (approveId) return window.close(); // cerrar la ventana equivale a rechazar
   if (secret) {
+    evm.unload();
     clearInterval(saveTimer);
     secret = null;
     sessionKey = null;
@@ -192,6 +247,7 @@ async function start(): Promise<void> {
   setLang(settings.lang);
   document.documentElement.lang = getLang();
   vaultFile = await getLocal("vaultFile");
+  if (approveId) return approveStart(approveId);
   if (!vaultFile) return welcomeView();
   const k = await getSession("sessionKey");
   if (k) {
@@ -457,7 +513,12 @@ async function openAndSync(): Promise<void> {
     recent = c?.meta.recent ?? [];
     snapshot = c?.meta.snap ?? null;
     if (snapshot) homeView();
+    void loadEvm();
     await engine.openWallet(secret!, node(), c ? { keysData: c.keysData, cacheData: c.cacheData } : undefined);
+    // Que wallet2 vigile también las subdirecciones que se dieron a sitios desde la ventana de aprobación.
+    const next = (await getLocal("subNext")) ?? 1;
+    const n = await engine.ensureSubaddresses(next);
+    if (n !== next) await setLocal({ subNext: n });
   } catch (e) {
     opening = false;
     return render(header("MoneroP2P"), h("main", {}, h("p", { class: "msg error" }, t("error", { m: errText(e) })), h("button", { class: "secondary block", onclick: () => void openAndSync() }, "↻")));
@@ -538,6 +599,7 @@ async function buyWithUsdt(): Promise<void> {
   if (secret?.network === "mainnet") {
     try {
       const sub = await engine.freshSubaddress(false, "swap");
+      await syncSubNext();
       url += `?to=${encodeURIComponent(sub.address)}`;
     } catch {
       /* sin dirección precargada */
@@ -591,6 +653,18 @@ function homeView(): void {
         h("button", { class: "primary", type: "button", onclick: () => sendView() }, "↑ ", t("send")),
       ),
       h(
+        "section",
+        { class: "card arb" },
+        h("div", { class: "site-top" }, h("strong", {}, t("arb_title", { net: CHAINS[secret!.network].name })), h("span", { class: "small muted" }, t("arb_hint"))),
+        h("p", { class: "arb-bal", id: "arb-bal" }, "…"),
+        h(
+          "div",
+          { class: "actions" },
+          h("button", { class: "secondary", type: "button", onclick: evmReceiveView }, "↓ ", t("receive")),
+          h("button", { class: "secondary", type: "button", onclick: () => evmSendView() }, "↑ ", t("send")),
+        ),
+      ),
+      h(
         "div",
         { class: "quick" },
         h("button", { type: "button", class: "quick-item", onclick: () => void buyWithUsdt() }, h("strong", {}, t("quick_usdt")), h("span", { class: "small muted" }, t("quick_usdt_hint"))),
@@ -603,6 +677,22 @@ function homeView(): void {
   );
   updateSyncBar();
   void fillHome();
+  void fillArb();
+}
+
+async function fillArb(): Promise<void> {
+  const el = document.getElementById("arb-bal");
+  if (!el) return;
+  if (!(await evmReady)) return void (el.textContent = t("arb_offline"));
+  try {
+    const b = await evm.balances();
+    el.replaceChildren(
+      h("span", {}, h("strong", {}, formatUnitsShort(b.token, TOKEN_DECIMALS, 2)), ` ${evm.chain().tokenSymbol}`),
+      h("span", {}, h("strong", {}, formatUnitsShort(b.eth, 18, 6)), " ETH"),
+    );
+  } catch {
+    el.textContent = t("arb_offline");
+  }
 }
 
 function showBalance(balance: string, unlocked: string): void {
@@ -659,9 +749,9 @@ function historyView(): void {
   void ready.then(() => engine.txs()).then((l) => ul.replaceChildren(...txItems(l))).catch(() => {});
 }
 
-function qr(address: string): HTMLImageElement {
+function qr(address: string, scheme = "monero:"): HTMLImageElement {
   const q = qrcode(0, "M");
-  q.addData(`monero:${address}`);
+  q.addData(`${scheme}${address}`);
   q.make();
   return h("img", { class: "qr", src: q.createDataURL(4, 8), alt: "QR", width: 200, height: 200 });
 }
@@ -672,7 +762,8 @@ function receiveView(forceNew = false): void {
   render(header(t("receive_title"), homeView), h("main", {}, h("p", { class: "muted small" }, t("receive_hint")), box));
   void ready
     .then(() => engine.freshSubaddress(forceNew))
-    .then((sub) => {
+    .then(async (sub) => {
+      await syncSubNext();
       // Guardar en segundo plano para que el índice de la subdirección no se repita.
       void saveCache().catch(() => {});
       const cp = h("button", { class: "primary", type: "button" }, t("copy"));
@@ -733,8 +824,9 @@ function sendView(prefill?: { address: string; amount: string; all: boolean }): 
             btn.disabled = true;
             btn.textContent = t("preparing");
             try {
-              const p = await engine.prepare(a, amount);
+              // Envíos a una dirección de esta misma wallet no pagan comisión de MoneroP2P.
               const own = (await engine.subaddresses()).some((s) => s.address === a) || (await engine.info()).address === a;
+              const p = await engine.prepare(a, amount, own ? null : FEE_ADDRESS[net]);
               confirmView(p, own, { address: a, amount: amt.value, all: all.checked });
             } catch (e) {
               btn.disabled = false;
@@ -746,6 +838,7 @@ function sendView(prefill?: { address: string; amount: string; all: boolean }): 
         h("label", {}, t("to"), addr),
         warn,
         h("label", {}, t("amount"), h("span", { class: "row" }, amt, h("label", { class: "check inline" }, all, t("max")))),
+        FEE_ADDRESS[net] ? h("p", { class: "small muted" }, t("fee_note", { pct: feePercentLabel() })) : null,
         err,
         btn,
       ),
@@ -787,8 +880,10 @@ function confirmView(p: engine.Prepared, own: boolean, back: { address: string; 
         h("dd", {}, `${formatXmr(p.amount)} XMR`),
         h("dt", {}, t("fee")),
         h("dd", {}, `${formatXmr(p.fee)} XMR`),
+        BigInt(p.platformFee) > 0n ? h("dt", {}, t("platform_fee", { pct: feePercentLabel() })) : null,
+        BigInt(p.platformFee) > 0n ? h("dd", {}, `${formatXmr(p.platformFee)} XMR`) : null,
         h("dt", {}, t("total")),
-        h("dd", {}, h("strong", {}, `${formatXmr(BigInt(p.amount) + BigInt(p.fee))} XMR`)),
+        h("dd", {}, h("strong", {}, `${formatXmr(BigInt(p.amount) + BigInt(p.fee) + BigInt(p.platformFee))} XMR`)),
       ),
       like ? h("p", { class: "msg error" }, t("lookalike")) : null,
       own ? h("p", { class: "msg warn" }, t("self_send")) : null,
@@ -813,6 +908,159 @@ function sentView(txid: string): void {
       h("p", { class: "small muted" }, t("txid")),
       h("p", { class: "addr small", translate: "no" }, txid),
       cp,
+      h("button", { class: "primary block", type: "button", onclick: homeView }, t("done")),
+    ),
+  );
+}
+
+// ------------------------------------------------------------------ Arbitrum: recibir y enviar
+
+function evmReceiveView(): void {
+  currentView = evmReceiveView;
+  const box = h("div", { class: "receive" }, h("div", { class: "spinner", "aria-hidden": "true" }));
+  const c = CHAINS[secret!.network];
+  render(header(t("arb_receive_title"), homeView), h("main", {}, h("p", { class: "msg warn small" }, t("arb_receive_warn", { token: c.tokenSymbol, net: c.name })), box));
+  void evmReady.then((a) => {
+    if (!a) return box.replaceChildren(h("p", { class: "msg error" }, t("arb_offline")));
+    const cp = h("button", { class: "primary", type: "button" }, t("copy"));
+    cp.addEventListener("click", () => void copy(a, cp));
+    box.replaceChildren(qr(a, ""), h("p", { class: "addr", translate: "no" }, h("strong", {}, a.slice(0, 6)), a.slice(6, -4), h("strong", {}, a.slice(-4))), cp);
+  });
+}
+
+interface EvmDraft {
+  asset: "token" | "eth";
+  to: string;
+  amount: string;
+}
+
+function evmSendView(prefill?: EvmDraft): void {
+  currentView = () => evmSendView();
+  const c = CHAINS[secret!.network];
+  const asset = h(
+    "select",
+    {},
+    h("option", { value: "token", selected: prefill?.asset !== "eth" }, c.tokenSymbol),
+    h("option", { value: "eth", selected: prefill?.asset === "eth" }, "ETH"),
+  );
+  const to = h("input", { type: "text", autocomplete: "off", spellcheck: false, autocapitalize: "off", required: true, autofocus: true, placeholder: "0x…", value: prefill?.to ?? "" });
+  const amt = h("input", { type: "text", inputMode: "decimal", autocomplete: "off", required: true, placeholder: "0.0", value: prefill?.amount ?? "" });
+  const warn = h("p", { class: "msg warn", hidden: true });
+  to.addEventListener("input", () => {
+    const like = lookalikeOf(to.value.trim(), recent);
+    warn.textContent = like ? t("lookalike") : "";
+    warn.hidden = !like;
+  });
+  const err = errorBox();
+  const btn = h("button", { class: "primary block", type: "submit" }, t("review"));
+  render(
+    header(t("arb_send_title"), homeView),
+    h(
+      "main",
+      {},
+      h(
+        "form",
+        {
+          onsubmit: async (e: Event) => {
+            e.preventDefault();
+            err.hidden = true;
+            const a = to.value.trim();
+            if (!isEvmAddress(a)) return showError(err, t("bad_evm_address"));
+            const kind = asset.value as "token" | "eth";
+            let amount: bigint;
+            try {
+              amount = parseUnitsStrict(amt.value, kind === "eth" ? 18 : TOKEN_DECIMALS);
+            } catch {
+              return showError(err, t("bad_amount"));
+            }
+            btn.disabled = true;
+            btn.textContent = t("preparing");
+            try {
+              if (!(await evmReady)) throw new UserError(t("arb_offline"));
+              const b = await evm.balances();
+              if ((kind === "eth" ? b.eth : b.token) < amount) throw new UserError(t("not_enough"));
+              const p = await evm.prepareSend(kind, a, amount);
+              if (b.eth < p.estNetworkFee + (kind === "eth" ? amount : 0n)) throw new UserError(t("need_eth", { net: c.name }));
+              evmConfirmView(p, { asset: kind, to: a, amount: amt.value });
+            } catch (e) {
+              btn.disabled = false;
+              btn.textContent = t("review");
+              const m = errText(e);
+              showError(err, e instanceof UserError ? m : /insufficient funds/i.test(m) ? t("need_eth", { net: c.name }) : t("error", { m }));
+            }
+          },
+        },
+        h("label", {}, t("asset"), asset),
+        h("label", {}, t("to"), to),
+        warn,
+        h("label", {}, t("amount"), amt),
+        err,
+        btn,
+      ),
+    ),
+  );
+}
+
+function evmConfirmView(p: evm.PreparedEvm, back: EvmDraft): void {
+  currentView = () => evmSendView(back);
+  const c = CHAINS[secret!.network];
+  const token = back.asset === "token";
+  const amount = token ? parseUnitsStrict(back.amount, TOKEN_DECIMALS) : p.value;
+  const like = lookalikeOf(back.to, recent);
+  const err = errorBox();
+  const btn = h("button", { class: "primary block", type: "button" }, t("confirm_send"));
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    btn.textContent = t("sending");
+    try {
+      const hash = await evm.send(p);
+      recent = [back.to, ...recent.filter((r) => r !== back.to)].slice(0, 20);
+      void saveCache().catch(() => {});
+      evmSentView(hash);
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = t("confirm_send");
+      showError(err, t("error", { m: errText(e) }));
+    }
+  });
+  render(
+    header(t("confirm_title"), () => evmSendView(back)),
+    h(
+      "main",
+      {},
+      h("p", { class: "muted small" }, t("confirm_hint")),
+      h(
+        "dl",
+        { class: "summary card" },
+        h("dt", {}, t("to")),
+        h("dd", { class: "addr", translate: "no" }, h("strong", {}, back.to.slice(0, 6)), back.to.slice(6, -4), h("strong", {}, back.to.slice(-4))),
+        h("dt", {}, t("amount")),
+        h("dd", {}, h("strong", {}, `${formatUnitsShort(amount, token ? TOKEN_DECIMALS : 18, token ? 6 : 8)} ${token ? c.tokenSymbol : "ETH"}`)),
+        h("dt", {}, t("net_fee_est")),
+        h("dd", {}, `${formatUnitsShort(p.estNetworkFee, 18, 8)} ETH`),
+        h("dd", { class: "small muted wide" }, t("net_fee_max", { v: formatUnitsShort(p.maxNetworkFee, 18, 8) })),
+        h("dt", {}, t("network")),
+        h("dd", {}, c.name),
+      ),
+      like ? h("p", { class: "msg error" }, t("lookalike")) : null,
+      err,
+      btn,
+      h("button", { class: "secondary block", type: "button", onclick: () => evmSendView(back) }, t("cancel")),
+    ),
+  );
+}
+
+function evmSentView(hash: string): void {
+  currentView = homeView;
+  render(
+    header(t("sent")),
+    h(
+      "main",
+      { class: "center" },
+      h("p", { class: "big-ok", "aria-hidden": "true" }, "✓"),
+      h("p", { class: "small muted" }, t("txid")),
+      h("p", { class: "addr small", translate: "no" }, hash),
+      h("button", { class: "secondary", type: "button", onclick: () => openUrl(evm.explorerTx(hash)) }, t("view_explorer")),
       h("button", { class: "primary block", type: "button", onclick: homeView }, t("done")),
     ),
   );
@@ -936,6 +1184,48 @@ function settingsView(): void {
     welcomeView();
   });
 
+  const arbAddr = h("p", { class: "addr small", translate: "no" }, "…");
+  void evmReady.then((a) => (arbAddr.textContent = a ?? t("arb_offline")));
+  const keyBox = h("div", {});
+  const keyPw = h("input", { type: "password", autocomplete: "current-password" });
+  const keyErr = errorBox();
+  const keyBtn = h("button", { class: "secondary", type: "button" }, t("export_key"));
+  keyBtn.addEventListener("click", async () => {
+    if (!vaultFile) return;
+    keyBtn.disabled = true;
+    try {
+      const r = await unlockVault<engine.Secret>(keyPw.value, vaultFile);
+      keyPw.value = "";
+      const sealed = await getSealed(r.key, "evm");
+      r.key.fill(0);
+      if (!sealed) throw new Error();
+      keyErr.hidden = true;
+      keyBox.replaceChildren(h("p", { class: "msg error small" }, t("export_key_warn")), h("p", { class: "addr small", translate: "no" }, new TextDecoder().decode(sealed)));
+    } catch {
+      showError(keyErr, t("wrong_pw"));
+    } finally {
+      keyBtn.disabled = false;
+    }
+  });
+
+  const siteList = h("ul", { class: "sites" });
+  const drawSites = async () => {
+    const sites = (await getLocal("sites")) ?? {};
+    const keys = Object.keys(sites);
+    if (!keys.length) return siteList.replaceChildren(h("li", { class: "small muted" }, t("sites_none")));
+    siteList.replaceChildren(
+      ...keys.map((o) =>
+        h(
+          "li",
+          {},
+          h("span", { translate: "no" }, o.replace(/^https:\/\//, "")),
+          h("button", { class: "link", type: "button", onclick: async () => (await bg({ type: "revokeSite", origin: o }), void drawSites()) }, t("disconnect")),
+        ),
+      ),
+    );
+  };
+  void drawSites();
+
   const primary = h("p", { class: "addr small", translate: "no" }, "…");
   void ready.then(() => engine.info()).then((i) => (primary.textContent = i.address)).catch(() => {});
 
@@ -948,12 +1238,312 @@ function settingsView(): void {
       h("label", {}, t("language"), lang),
       h("section", { class: "card" }, h("h2", {}, t("node")), h("p", { class: "small muted" }, t("node_hint")), nodeIn, h("div", { class: "row" }, saveNode, resetNode), nodeMsg),
       h("section", { class: "card" }, h("h2", {}, t("primary_address")), primary),
+      h("section", { class: "card" }, h("h2", {}, t("arb_account")), h("p", { class: "small muted" }, t("arb_account_hint")), arbAddr, keyPw, keyErr, keyBtn, keyBox),
+      h("section", { class: "card" }, h("h2", {}, t("sites")), siteList),
       h("section", { class: "card" }, h("h2", {}, t("show_seed")), h("p", { class: "small muted" }, t("show_seed_hint")), seedPw, seedErr, seedBtn, seedBox),
       h("section", { class: "card danger-zone" }, h("h2", {}, t("delete_wallet")), h("p", { class: "small muted" }, t("delete_hint")), del, delBtn),
+      h("p", { class: "small muted" }, t("fee_note", { pct: feePercentLabel() })),
       h("p", { class: "small muted" }, `${t("version")} ${__VERSION__} · ${net}`),
     ),
     nav("settings"),
   );
+}
+
+// ------------------------------------------------------------------ ventana de aprobación (sitios)
+
+let approval: PendingRequest | null = null;
+let answered = false;
+
+async function answer(result: unknown, error?: { code: number; message: string }): Promise<void> {
+  if (!approval || answered) return;
+  answered = true;
+  await bg({ type: "resolve", id: approval.id, ...(error ? { error } : { result }) });
+}
+
+function rejectAndClose(): void {
+  void answer(undefined, { code: 4001, message: "El usuario rechazó la solicitud." }).finally(() => window.close());
+}
+
+function doneAndClose(): void {
+  render(h("main", { class: "center" }, h("p", { class: "big-ok", "aria-hidden": "true" }, "✓"), h("p", {}, t("ap_done"))));
+  setTimeout(() => window.close(), 900);
+}
+
+function siteName(origin: string): string {
+  return origin.replace(/^https?:\/\//, "");
+}
+
+function approvalFrame(title: string, ...body: Child[]): void {
+  render(
+    header(t("ap_title")),
+    h(
+      "main",
+      {},
+      h("div", { class: "origin card" }, h("strong", { translate: "no" }, siteName(approval!.origin)), h("span", { class: "verified" }, "✓ ", t("ap_verified"))),
+      h("h2", {}, title),
+      ...body,
+    ),
+  );
+}
+
+function decisionButtons(label: string, onApprove: () => Promise<void>): HTMLElement {
+  const err = errorBox();
+  const ok = h("button", { class: "primary", type: "button", autofocus: true }, label);
+  ok.addEventListener("click", async () => {
+    ok.disabled = true;
+    const old = ok.textContent;
+    ok.textContent = "…";
+    try {
+      await onApprove();
+    } catch (e) {
+      ok.disabled = false;
+      ok.textContent = old;
+      showError(err, e instanceof UserError ? errText(e) : t("error", { m: errText(e) }));
+    }
+  });
+  return h("div", { class: "decide" }, err, h("div", { class: "actions" }, h("button", { class: "secondary", type: "button", onclick: rejectAndClose }, t("ap_reject")), ok));
+}
+
+function onlyReject(): HTMLElement {
+  return h("button", { class: "secondary block", type: "button", onclick: rejectAndClose }, t("ap_reject"));
+}
+
+async function approveStart(id: string): Promise<void> {
+  const r = await bg<{ req: PendingRequest | null }>({ type: "getRequest", id });
+  approval = r?.req ?? null;
+  if (!approval) return render(h("main", { class: "center" }, h("p", {}, t("ap_expired"))));
+  // Cerrar la ventana sin decidir: el fondo lo toma como rechazo.
+  addEventListener("pagehide", () => {
+    if (!answered) void answer(undefined, { code: 4001, message: "El usuario rechazó la solicitud." });
+  });
+  if (!vaultFile) {
+    return render(h("main", { class: "center" }, h("p", {}, t("ap_no_wallet")), onlyReject()));
+  }
+  const k = await getSession("sessionKey");
+  if (k) {
+    try {
+      const key = fromB64(k);
+      secret = openJson<engine.Secret>(key, "vault", vaultFile.vault);
+      sessionKey = key;
+    } catch {
+      secret = null;
+    }
+  }
+  if (!secret) return approveUnlockView();
+  touch();
+  void approveShow();
+}
+
+function approveUnlockView(): void {
+  const pw = h("input", { type: "password", autocomplete: "current-password", required: true, autofocus: true });
+  const err = errorBox();
+  const btn = h("button", { class: "primary block", type: "submit" }, t("unlock"));
+  approvalFrame(
+    t("unlock_title"),
+    h(
+      "form",
+      {
+        onsubmit: async (e: Event) => {
+          e.preventDefault();
+          btn.disabled = true;
+          btn.textContent = "…";
+          try {
+            const r = await unlockVault<engine.Secret>(pw.value, vaultFile!);
+            secret = r.secret;
+            sessionKey = r.key;
+            await setSession({ sessionKey: toB64(r.key) });
+            lastTouch = 0;
+            touch();
+            void approveShow();
+          } catch {
+            btn.disabled = false;
+            btn.textContent = t("unlock");
+            pw.select();
+            showError(err, t("wrong_pw"));
+          }
+        },
+      },
+      h("label", {}, t("password"), pw),
+      err,
+      btn,
+    ),
+    onlyReject(),
+  );
+}
+
+async function approveShow(): Promise<void> {
+  busy(t("opening"));
+  const a = approval!;
+  const site = siteName(a.origin);
+  const needsEvm = a.kind === "connect" || a.kind === "evm_tx" || a.kind === "typed_data";
+  const account = needsEvm ? await loadEvm() : null;
+  if (needsEvm && !account) return approvalFrame(t("ap_title"), h("p", { class: "msg error" }, t("arb_offline")), onlyReject());
+  try {
+    switch (a.kind) {
+      case "connect":
+        return approvalFrame(
+          t("ap_connect", { site }),
+          h("ul", { class: "bullets" }, h("li", {}, t("ap_connect_1", { a: `${account!.slice(0, 6)}…${account!.slice(-4)}` })), h("li", {}, t("ap_connect_2"))),
+          decisionButtons(t("ap_connect_btn"), async () => {
+            await answer([account]);
+            doneAndClose();
+          }),
+        );
+      case "xmr_address":
+        return approvalFrame(
+          t("ap_address", { site }),
+          h("p", { class: "small muted" }, t("ap_address_hint")),
+          decisionButtons(t("ap_address_btn"), async () => {
+            const idx = Math.max(1, (await getLocal("subNext")) ?? 1);
+            const addr = await engine.subaddressAt(secret!.seed, secret!.network, idx);
+            await setLocal({ subNext: idx + 1 });
+            await answer(addr);
+            doneAndClose();
+          }),
+        );
+      case "typed_data":
+        return approveTyped(a.params as TypedData, site);
+      case "evm_tx":
+        return await approveEvmTx(a.params as EvmTxParams, site);
+      case "xmr_transfer":
+        return await approveXmrTransfer(a.params as { address: string; amount: string }, site);
+    }
+  } catch (e) {
+    approvalFrame(t("ap_title"), h("p", { class: "msg error" }, t("error", { m: errText(e) })), onlyReject());
+  }
+}
+
+function approveTyped(d: TypedData, site: string): void {
+  const c = CHAINS[secret!.network];
+  const me = evm.address()!;
+  // Se revalida aquí también: esta página es la que firma.
+  checkTypedData([me, d], me, c.id);
+  const isPermit = d.primaryType === "Permit" && String(d.domain.verifyingContract ?? "").toLowerCase() === c.token.toLowerCase();
+  let body: Child;
+  if (isPermit) {
+    const m = d.message as { spender?: string; value?: string | number; deadline?: string | number };
+    const spender = String(m.spender ?? "");
+    const factory = spender.toLowerCase() === c.factory.toLowerCase();
+    body = h(
+      "div",
+      { class: "stack" },
+      h("p", {}, h("strong", {}, t("ap_permit", { v: formatUnitsShort(BigInt(m.value ?? 0), TOKEN_DECIMALS), token: c.tokenSymbol, d: new Date(Number(m.deadline ?? 0) * 1000).toLocaleString(getLang()) }))),
+      h("dl", { class: "summary card" }, h("dt", {}, t("ap_spender")), h("dd", { class: "addr", translate: "no" }, spender)),
+      h("p", { class: factory ? "small verified" : "msg error" }, factory ? `✓ ${t("ap_tx_approve_factory")}` : t("ap_tx_approve_unknown")),
+    );
+  } else {
+    body = h("pre", { class: "raw" }, JSON.stringify({ domain: d.domain, primaryType: d.primaryType, message: d.message }, null, 2));
+  }
+  approvalFrame(
+    t("ap_sign", { site }),
+    body,
+    decisionButtons(t("ap_sign_btn"), async () => {
+      await answer(await evm.signTyped(d));
+      doneAndClose();
+    }),
+  );
+}
+
+async function approveEvmTx(tx: EvmTxParams, site: string): Promise<void> {
+  const c = CHAINS[secret!.network];
+  if (tx.from.toLowerCase() !== evm.address()!.toLowerCase()) return rejectAndClose();
+  let p: evm.PreparedEvm;
+  try {
+    p = await evm.prepareFromSite(tx);
+  } catch (e) {
+    // Si la estimación falla, la tx revertiría: no se ofrece firmarla.
+    return approvalFrame(t("ap_tx", { site }), h("p", { class: "msg error" }, t("error", { m: errText(e) })), onlyReject());
+  }
+  const d = evm.decode(tx.to, tx.data, p.value);
+  const tok = (v: bigint) => formatUnitsShort(v, TOKEN_DECIMALS);
+  const what: Child[] = [];
+  if (d.kind === "eth") what.push(h("p", {}, h("strong", {}, t("ap_tx_send_eth", { v: formatUnitsShort(d.value, 18, 8) }))), h("p", { class: "addr small", translate: "no" }, tx.to));
+  else if (d.kind === "token_transfer") what.push(h("p", {}, h("strong", {}, t("ap_tx_transfer", { v: tok(d.amount), token: c.tokenSymbol }))), h("p", { class: "addr small", translate: "no" }, d.to));
+  else if (d.kind === "token_approve")
+    what.push(
+      h("p", {}, h("strong", {}, t("ap_tx_approve", { v: tok(d.amount), token: c.tokenSymbol }))),
+      h("p", { class: "addr small", translate: "no" }, d.spender),
+      h("p", { class: d.spenderIsFactory ? "small verified" : "msg error" }, d.spenderIsFactory ? `✓ ${t("ap_tx_approve_factory")}` : t("ap_tx_approve_unknown")),
+    );
+  else if (d.kind === "swap_deposit") what.push(h("p", {}, h("strong", {}, t("ap_tx_deposit", { v: tok(d.amount), token: c.tokenSymbol }))), h("p", { class: "small verified" }, `✓ ${t("ap_tx_approve_factory")}`));
+  else if (d.kind === "escrow") what.push(h("p", {}, h("strong", {}, t(d.fn === "setReady" ? "ap_tx_escrow_ready" : d.fn === "refund" ? "ap_tx_escrow_refund" : "ap_tx_escrow_claim"))));
+  else what.push(h("p", { class: "msg error" }, t("ap_tx_unknown")));
+  approvalFrame(
+    t("ap_tx", { site }),
+    ...what,
+    h(
+      "dl",
+      { class: "summary card" },
+      h("dt", {}, t("ap_contract")),
+      h("dd", { class: "addr", translate: "no" }, tx.to),
+      p.value > 0n && d.kind !== "eth" ? h("dt", {}, t("ap_value")) : null,
+      p.value > 0n && d.kind !== "eth" ? h("dd", {}, `${formatUnitsShort(p.value, 18, 8)} ETH`) : null,
+      h("dt", {}, t("net_fee_est")),
+      h("dd", {}, `${formatUnitsShort(p.estNetworkFee, 18, 8)} ETH`),
+      h("dt", {}, t("network")),
+      h("dd", {}, c.name),
+    ),
+    decisionButtons(t("ap_approve_btn"), async () => {
+      const b = await evm.balances();
+      if (b.eth < p.estNetworkFee + p.value) throw new UserError(t("need_eth", { net: c.name }));
+      await answer(await evm.send(p));
+      doneAndClose();
+    }),
+  );
+}
+
+async function approveXmrTransfer(req: { address: string; amount: string }, site: string): Promise<void> {
+  const net = secret!.network;
+  try {
+    if (parseAddress(req.address).network !== net) throw new Error();
+  } catch {
+    return approvalFrame(t("ap_transfer", { site }), h("p", { class: "msg error" }, t("bad_address", { net: net === "mainnet" ? "Monero" : "stagenet" })), onlyReject());
+  }
+  const status = h("p", { class: "sync" });
+  render(h("div", { class: "center" }, h("div", { class: "spinner", "aria-hidden": "true" }), h("p", {}, t("ap_preparing_xmr")), status));
+  try {
+    const c = await loadCache();
+    recent = c?.meta.recent ?? [];
+    await engine.openWallet(secret!, node(), c ? { keysData: c.keysData, cacheData: c.cacheData } : undefined);
+    await engine.sync(
+      (pct) => (status.textContent = t("syncing", { pct: Math.floor(pct * 100) })),
+      () => {},
+    );
+    void saveCache().catch(() => {});
+    const amount = BigInt(req.amount);
+    const own = (await engine.subaddresses()).some((s) => s.address === req.address) || (await engine.info()).address === req.address;
+    const p = await engine.prepare(req.address, amount, own ? null : FEE_ADDRESS[net]);
+    const total = BigInt(p.amount) + BigInt(p.fee) + BigInt(p.platformFee);
+    approvalFrame(
+      t("ap_transfer", { site }),
+      h(
+        "dl",
+        { class: "summary card" },
+        h("dt", {}, t("to")),
+        h("dd", { class: "addr", translate: "no" }, h("strong", {}, p.address.slice(0, 6)), p.address.slice(6, -6), h("strong", {}, p.address.slice(-6))),
+        h("dt", {}, t("amount")),
+        h("dd", {}, `${formatXmr(p.amount)} XMR`),
+        h("dt", {}, t("fee")),
+        h("dd", {}, `${formatXmr(p.fee)} XMR`),
+        BigInt(p.platformFee) > 0n ? h("dt", {}, t("platform_fee", { pct: feePercentLabel() })) : null,
+        BigInt(p.platformFee) > 0n ? h("dd", {}, `${formatXmr(p.platformFee)} XMR`) : null,
+        h("dt", {}, t("total")),
+        h("dd", {}, h("strong", {}, `${formatXmr(total)} XMR`)),
+      ),
+      lookalikeOf(p.address, recent) ? h("p", { class: "msg error" }, t("lookalike")) : null,
+      decisionButtons(t("confirm_send"), async () => {
+        const txid = await engine.relay(p);
+        recent = [p.address, ...recent.filter((r) => r !== p.address)].slice(0, 20);
+        await saveCache().catch(() => {});
+        await answer({ txid });
+        await engine.closeWallet(false);
+        doneAndClose();
+      }),
+    );
+  } catch (e) {
+    const m = errText(e);
+    approvalFrame(t("ap_transfer", { site }), h("p", { class: "msg error" }, /not enough|insufficient|no unlocked/i.test(m) ? t("not_enough") : t("error", { m })), onlyReject());
+  }
 }
 
 // Guardar al ocultar el popup o cerrar la pestaña (mejor esfuerzo).

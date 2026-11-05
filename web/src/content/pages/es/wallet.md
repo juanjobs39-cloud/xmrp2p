@@ -3,7 +3,7 @@ key: wallet
 lang: es
 title: "MoneroP2P Wallet: wallet de Monero (XMR) sin custodia para tu navegador"
 description: "Extensión gratuita para Chrome, Brave, Edge y Firefox. Tus llaves de Monero nunca salen de tu equipo; compra XMR con USDT o con tu moneda sin salir de la wallet."
-updated: 2026-11-04
+updated: 2026-11-05
 keywords:
   - wallet monero
   - wallet xmr
@@ -21,7 +21,7 @@ faq:
   - q: "¿Puedo usar mi propio nodo?"
     a: "Sí. En Ajustes puedes poner la URL de tu nodo (https, o http://127.0.0.1 para uno local)."
   - q: "¿Cuánto cuesta?"
-    a: "Es gratis y de código abierto (AGPL-3.0). Solo pagas la comisión de la red de Monero al enviar."
+    a: "La extensión es gratis y de código abierto (AGPL-3.0). Cada envío de XMR paga la comisión de la red de Monero y una comisión de MoneroP2P de 0.25 %, que se muestra aparte antes de confirmar. Recibir y enviar a tus propias direcciones no pagan comisión de MoneroP2P."
 ---
 
 **MoneroP2P Wallet** es una wallet de Monero (XMR) en forma de extensión para tu navegador. Tus llaves se crean y se quedan en tu equipo, cifradas con tu contraseña. Desde la misma wallet puedes comprar XMR con USDT o con tu moneda local en los servicios de MoneroP2P.
@@ -32,6 +32,7 @@ faq:
 - **Recibir** con una subdirección nueva en cada cobro, con código QR, para que nadie pueda relacionar tus pagos.
 - **Enviar** con la comisión exacta antes de confirmar y un resumen claro del destino.
 - **Explorar:** abre en un clic el [exchange de USDT a XMR](/es/app/) (con tu dirección ya puesta) y [P2P Fiat](https://fiat.monerop2p.app/es/app/) para comprar con transferencia, efectivo u otros métodos locales.
+- **USDT y ETH en Arbitrum:** una cuenta de Arbitrum One sale de la misma semilla. En monerop2p.app y P2P Fiat la wallet se conecta sola (sin MetaMask) y llena tu dirección de Monero; cada firma o envío pide tu aprobación en una ventana de la extensión.
 
 ## Cómo te protege
 

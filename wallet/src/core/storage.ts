@@ -16,11 +16,17 @@ export interface LocalData {
   settings?: Settings;
   /** Red de la wallet guardada, visible sin desbloquear (no es secreto). */
   network?: "mainnet" | "stagenet";
+  /** Sitios aprobados para ver la cuenta y pedir firmas (solo orígenes de MoneroP2P). */
+  sites?: Record<string, { connectedAt: number }>;
+  /** Siguiente índice de subdirección libre (la comparten la wallet y las aprobaciones de sitios). */
+  subNext?: number;
 }
 
 export interface SessionData {
   sessionKey?: string;
   lastActive?: number;
+  /** Cuenta de Arbitrum (pública) mientras la wallet está desbloqueada. */
+  evmAddress?: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = { autolockMin: 15, nodes: {} };

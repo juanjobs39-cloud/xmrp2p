@@ -106,3 +106,88 @@ describe("empaquetado del caché", () => {
     expect(() => unpack(new Uint8Array([0, 0, 0, 1, 0, 0, 0, 9, 1]))).toThrow();
   });
 });
+
+import { FEE_ADDRESS, feeFor, splitAll } from "../src/core/fee";
+describe("comisión de envío", () => {
+  it("cobra 0.25 % y nada en montos diminutos", () => {
+    expect(feeFor(1_000_000_000_000n)).toBe(2_500_000_000n); // 1 XMR → 0.0025
+    expect(feeFor(1_000_000_000n)).toBe(0n); // 0.001 XMR → 0.0000025 < mínimo
+  });
+  it("reparte el saldo en enviar todo", () => {
+    const { dest, fee } = splitAll(1_002_500_000_000n);
+    expect(dest + fee).toBe(1_002_500_000_000n);
+    expect(fee).toBe(feeFor(dest));
+  });
+  it("la dirección de comisiones es de la red principal y válida", () => {
+    expect(parseAddress(FEE_ADDRESS.mainnet!).network).toBe("mainnet");
+    expect(FEE_ADDRESS.stagenet).toBeNull();
+  });
+});
+
+import { privateKeyToAccount } from "viem/accounts";
+import { deriveEvmKey, formatUnitsShort, isEvmAddress, parseUnitsStrict } from "../src/core/evm";
+describe("cuenta de Arbitrum", () => {
+  it("HKDF-SHA256 coincide con un cálculo independiente (Python hmac)", () => {
+    expect(deriveEvmKey("01".repeat(32))).toBe("0xa61ddfd475dc3bce1aeca696abe29b41bf64db96ed5abe674f48d258e35b97f5");
+  });
+  it("misma semilla, misma cuenta; otra semilla, otra cuenta", async () => {
+    const mk = async () => {
+      const w = await moneroTs.createWalletKeys({ networkType: moneroTs.MoneroNetworkType.STAGENET, language: "English" });
+      const seed = await w.getSeed();
+      const k = await w.getPrivateSpendKey();
+      await w.close();
+      return { seed, k };
+    };
+    const a = await mk();
+    const again = await moneroTs.createWalletKeys({ networkType: moneroTs.MoneroNetworkType.STAGENET, seed: a.seed });
+    const k2 = await again.getPrivateSpendKey();
+    await again.close();
+    expect(deriveEvmKey(k2)).toBe(deriveEvmKey(a.k));
+    const b = await mk();
+    const acct = privateKeyToAccount(deriveEvmKey(a.k));
+    expect(isEvmAddress(acct.address)).toBe(true);
+    expect(privateKeyToAccount(deriveEvmKey(b.k)).address).not.toBe(acct.address);
+  }, 60_000);
+  it("rechaza llaves mal formadas", () => {
+    expect(() => deriveEvmKey("zz")).toThrow();
+  });
+  it("unidades", () => {
+    expect(parseUnitsStrict("1.5", 6)).toBe(1_500_000n);
+    expect(parseUnitsStrict("0,25", 6)).toBe(250_000n);
+    expect(() => parseUnitsStrict("1.1234567", 6)).toThrow();
+    expect(() => parseUnitsStrict("0", 6)).toThrow();
+    expect(formatUnitsShort(1_500_000n, 6)).toBe("1.5");
+    expect(formatUnitsShort(10n ** 18n, 18)).toBe("1");
+  });
+});
+
+import { allowedOrigin, checkPiconero, checkTx, checkTypedData } from "../src/core/provider";
+describe("reglas del proveedor", () => {
+  const me = "0x1111111111111111111111111111111111111111";
+  it("solo los sitios de MoneroP2P", () => {
+    expect(allowedOrigin("https://monerop2p.app")).toBe(true);
+    expect(allowedOrigin("https://fiat.monerop2p.app")).toBe(true);
+    expect(allowedOrigin("https://monerop2p.app.evil.com")).toBe(false);
+    expect(allowedOrigin("http://monerop2p.app")).toBe(false);
+  });
+  it("valida transacciones", () => {
+    const to = "0x2222222222222222222222222222222222222222";
+    expect(checkTx({ from: me, to, data: "0xabcd", value: "0x0" }, me).to).toBe(to);
+    expect(() => checkTx({ from: to, to }, me)).toThrow(/from/);
+    expect(() => checkTx({ from: me, data: "0x60" }, me)).toThrow(/contratos/);
+    expect(() => checkTx({ from: me, to, data: "0xabc" }, me)).toThrow();
+    expect(() => checkTx({ from: me, to, value: "1000" }, me)).toThrow();
+  });
+  it("valida datos tipados y su red", () => {
+    const d = { types: { Permit: [] }, domain: { chainId: 42161 }, primaryType: "Permit", message: {} };
+    expect(checkTypedData([me, JSON.stringify(d)], me, 42161).data.primaryType).toBe("Permit");
+    expect(() => checkTypedData([me, JSON.stringify(d)], me, 421614)).toThrow();
+    expect(() => checkTypedData(["0x3333333333333333333333333333333333333333", d], me, 42161)).toThrow();
+  });
+  it("montos de XMR en piconero", () => {
+    expect(checkPiconero("1000")).toBe(1000n);
+    expect(() => checkPiconero("0")).toThrow();
+    expect(() => checkPiconero(1000)).toThrow();
+    expect(() => checkPiconero("-5")).toThrow();
+  });
+});

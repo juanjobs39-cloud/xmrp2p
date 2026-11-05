@@ -3,7 +3,7 @@ key: wallet
 lang: zh
 title: "MoneroP2P Wallet：浏览器中的非托管门罗币（XMR）钱包"
 description: "适用于 Chrome、Brave、Edge 和 Firefox 的免费扩展。门罗币私钥从不离开你的设备；无需离开钱包即可用 USDT 或本地货币购买 XMR。"
-updated: 2026-11-04
+updated: 2026-11-05
 keywords:
   - 门罗币钱包
   - XMR 钱包
@@ -16,7 +16,7 @@ faq:
   - q: "如果我丢了设备或卸载了扩展怎么办？"
     a: "用 25 个单词的助记词在 MoneroP2P Wallet 或任何兼容的门罗币钱包（如 Cake Wallet、Feather 或官方钱包）中恢复。"
   - q: "收费吗？"
-    a: "免费且开源（AGPL-3.0）。只在发送时支付门罗币网络费。"
+    a: "扩展本身免费且开源（AGPL-3.0）。每次发送 XMR 需支付门罗币网络费和 0.25% 的 MoneroP2P 手续费，确认前会单独列出。收款以及发送到你自己的地址不收 MoneroP2P 手续费。"
 ---
 
 **MoneroP2P Wallet** 是一款以浏览器扩展形式运行的门罗币（XMR）钱包。你的密钥在你的设备上生成并保留，用你的密码加密。在同一个钱包里，你可以通过 MoneroP2P 的服务用 USDT 或本地货币购买 XMR。
@@ -27,6 +27,7 @@ faq:
 - **收款**时每次使用新的子地址并附带二维码，别人无法把你的收款关联起来。
 - **发送**前查看确切的网络费和清晰的收款方摘要。
 - **探索：**一键打开 [USDT 换 XMR](/zh/app/)（已自动填入你的地址）和 [P2P Fiat](https://fiat.monerop2p.app/en/app/)，用银行转账、现金或其他本地方式购买。
+- **Arbitrum 上的 USDT 和 ETH：**同一份助记词生成一个 Arbitrum One 账户。在 monerop2p.app 和 P2P Fiat 上，钱包会自动连接（无需 MetaMask）并填入你的门罗币地址；每次签名或转账都需要你在扩展窗口中批准。
 
 ## 它如何保护你
 

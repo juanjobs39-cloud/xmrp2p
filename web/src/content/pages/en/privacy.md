@@ -3,7 +3,7 @@ key: privacy
 lang: en
 title: Privacy policy
 description: "What data MoneroP2P processes (almost none), what is public on-chain, what the node proxy sees and how to reduce exposure."
-updated: 2026-11-04
+updated: 2026-11-05
 ---
 
 **Short answer:** we have no accounts, use no cookies or analytics and do not store your keys. Some data is public by nature (transactions on the USDT chain) and our servers process minimal technical data to work. The exception is instant exchanges via Trocador, explained below.
@@ -48,6 +48,8 @@ The app stores an **encrypted** copy of the swap in progress in your browser, wi
 ## MoneroP2P Wallet extension
 
 The extension **does not collect or send any personal data**: no accounts, analytics or telemetry. Your seed, keys and history are stored **encrypted only in your browser** (Argon2id and XChaCha20-Poly1305) and never leave it. To sync, the extension connects to the Monero node you choose (by default, our proxy, described above); that node sees blockchain queries and the already-signed transactions you send, not your keys. Uninstalling the extension deletes all of its data.
+
+For the Arbitrum account, the extension queries Arbitrum's public RPC (arb1.arbitrum.io; sepolia-rollup.arbitrum.io for testing), which sees your public Arbitrum address and signed transactions, never your keys. On monerop2p.app and fiat.monerop2p.app it only shares your account or a Monero address with the site if you approve it, and you can disconnect it in Settings.
 
 ## Contact
 

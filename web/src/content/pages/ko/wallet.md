@@ -3,7 +3,7 @@ key: wallet
 lang: ko
 title: "MoneroP2P Wallet: 브라우저용 비수탁 모네로(XMR) 지갑"
 description: "Chrome, Brave, Edge, Firefox용 무료 확장 프로그램. 모네로 키는 기기 밖으로 나가지 않으며, 지갑에서 바로 USDT나 법정화폐로 XMR을 살 수 있습니다."
-updated: 2026-11-04
+updated: 2026-11-05
 keywords:
   - 모네로 지갑
   - XMR 지갑
@@ -16,7 +16,7 @@ faq:
   - q: "기기를 잃어버리거나 확장 프로그램을 삭제하면요?"
     a: "25단어 시드로 MoneroP2P Wallet이나 Cake Wallet, Feather, 공식 지갑 같은 호환 모네로 지갑에서 복구하면 됩니다."
   - q: "비용이 드나요?"
-    a: "무료이며 오픈 소스(AGPL-3.0)입니다. 보낼 때 모네로 네트워크 수수료만 냅니다."
+    a: "확장 프로그램은 무료 오픈 소스(AGPL-3.0)입니다. XMR을 보낼 때마다 모네로 네트워크 수수료와 0.25% MoneroP2P 수수료가 붙으며, 확인 전에 따로 표시됩니다. 받기와 본인 주소로 보내기에는 MoneroP2P 수수료가 없습니다."
 ---
 
 **MoneroP2P Wallet**은 브라우저 확장 프로그램으로 작동하는 모네로(XMR) 지갑입니다. 키는 기기에서 만들어지고 비밀번호로 암호화되어 기기에 남습니다. 같은 지갑에서 MoneroP2P 서비스를 통해 USDT나 현지 통화로 XMR을 살 수 있습니다.
@@ -27,6 +27,7 @@ faq:
 - 결제마다 새 서브주소와 QR 코드로 **받기**. 아무도 결제를 서로 연결할 수 없습니다.
 - 확인 전에 정확한 수수료와 받는 사람 요약을 보고 **보내기**.
 - **탐색:** [USDT→XMR 교환](/ko/app/)(주소 자동 입력)과 [P2P Fiat](https://fiat.monerop2p.app/en/app/)를 한 번에 열어 계좌이체, 현금 등으로 구매.
+- **Arbitrum의 USDT와 ETH:** 같은 시드에서 Arbitrum One 계정이 만들어집니다. monerop2p.app과 P2P Fiat에서는 지갑이 자동으로 연결되고(MetaMask 불필요) 모네로 주소를 채워 줍니다. 서명이나 전송마다 확장 프로그램 창에서 승인을 요청합니다.
 
 ## 보호 방식
 

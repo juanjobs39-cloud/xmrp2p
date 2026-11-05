@@ -3,7 +3,7 @@ key: privacy
 lang: pt
 title: Política de privacidade
 description: "Quais dados o MoneroP2P processa (quase nenhum), o que é público na blockchain, o que o proxy de nós vê e como reduzir a exposição."
-updated: 2026-11-04
+updated: 2026-11-05
 ---
 
 **Resposta curta:** não temos contas, não usamos cookies nem analytics e não guardamos suas chaves. Alguns dados são públicos por natureza (as transações na rede do USDT) e nossos servidores processam dados técnicos mínimos para funcionar. A exceção são as exchanges instantâneas via Trocador, explicadas abaixo.
@@ -48,6 +48,8 @@ O app guarda no seu navegador uma cópia **criptografada** do swap em andamento,
 ## Extensão MoneroP2P Wallet
 
 A extensão **não coleta nem envia dados pessoais**: não tem contas, analytics nem telemetria. Sua semente, suas chaves e seu histórico ficam **cifrados só no seu navegador** (Argon2id e XChaCha20-Poly1305) e nunca saem dele. Para sincronizar, a extensão se conecta ao nó Monero que você escolher (por padrão, nosso proxy, descrito acima); esse nó vê as consultas à blockchain e as transações já assinadas que você envia, não suas chaves. Ao desinstalar a extensão, todos os dados dela são apagados.
+
+Para a conta da Arbitrum, a extensão consulta o RPC público da Arbitrum (arb1.arbitrum.io; sepolia-rollup.arbitrum.io em testes), que vê seu endereço público da Arbitrum e as transações assinadas, nunca suas chaves. Na monerop2p.app e na fiat.monerop2p.app ela só compartilha sua conta ou um endereço de Monero com o site se você aprovar, e você pode desconectá-lo em Ajustes.
 
 ## Contato
 
