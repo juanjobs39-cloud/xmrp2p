@@ -508,12 +508,13 @@ async function openAndSync(): Promise<void> {
   busy(t("opening"));
   opening = true;
   ready = new Promise((r) => (markReady = r));
+  // La cuenta de Arbitrum primero: el inicio la espera (evmReady) aunque se dibuje desde el caché.
+  void loadEvm();
   try {
     const c = await loadCache();
     recent = c?.meta.recent ?? [];
     snapshot = c?.meta.snap ?? null;
     if (snapshot) homeView();
-    void loadEvm();
     await engine.openWallet(secret!, node(), c ? { keysData: c.keysData, cacheData: c.cacheData } : undefined);
     // Que wallet2 vigile también las subdirecciones que se dieron a sitios desde la ventana de aprobación.
     const next = (await getLocal("subNext")) ?? 1;
@@ -655,7 +656,8 @@ function homeView(): void {
       h(
         "section",
         { class: "card arb" },
-        h("div", { class: "site-top" }, h("strong", {}, t("arb_title", { net: CHAINS[secret!.network].name })), h("span", { class: "small muted" }, t("arb_hint"))),
+        h("strong", {}, CHAINS[secret!.network].name),
+        h("span", { class: "small muted" }, t("arb_hint")),
         h("p", { class: "arb-bal", id: "arb-bal" }, "…"),
         h(
           "div",
@@ -993,7 +995,7 @@ function evmSendView(prefill?: EvmDraft): void {
         h("label", {}, t("asset"), asset),
         h("label", {}, t("to"), to),
         warn,
-        h("label", {}, t("amount"), amt),
+        h("label", {}, t("amount_plain"), amt),
         err,
         btn,
       ),
@@ -1150,7 +1152,7 @@ function settingsView(): void {
   );
 
   const seedBox = h("div", {});
-  const seedPw = h("input", { type: "password", autocomplete: "current-password" });
+  const seedPw = h("input", { type: "password", autocomplete: "current-password", placeholder: t("password"), "aria-label": t("password") });
   const seedErr = errorBox();
   const seedBtn = h("button", { class: "secondary", type: "button" }, t("show_seed"));
   seedBtn.addEventListener("click", async () => {
@@ -1187,7 +1189,7 @@ function settingsView(): void {
   const arbAddr = h("p", { class: "addr small", translate: "no" }, "…");
   void evmReady.then((a) => (arbAddr.textContent = a ?? t("arb_offline")));
   const keyBox = h("div", {});
-  const keyPw = h("input", { type: "password", autocomplete: "current-password" });
+  const keyPw = h("input", { type: "password", autocomplete: "current-password", placeholder: t("password"), "aria-label": t("password") });
   const keyErr = errorBox();
   const keyBtn = h("button", { class: "secondary", type: "button" }, t("export_key"));
   keyBtn.addEventListener("click", async () => {
