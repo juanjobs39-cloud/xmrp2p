@@ -2,7 +2,7 @@
 
 Wallet de Monero sin custodia en forma de extensión de navegador (Manifest V3) para Chrome, Brave, Edge, Opera y Firefox. Página pública: https://monerop2p.app/es/wallet/
 
-**Estado:** versión 0.2.0, fase 2 (Monero + USDT/ETH en Arbitrum). Sin auditoría externa todavía.
+**Estado:** versión 0.2.0, fase 2 (Monero + USDT/ETH en Arbitrum).
 
 ## Qué hace
 

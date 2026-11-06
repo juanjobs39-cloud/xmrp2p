@@ -37,7 +37,7 @@ faq:
   - q: "¿Existe una extensión de Monero para Chrome?"
     a: "Sí. MoneroP2P Wallet funciona en Chrome y en los navegadores basados en Chromium (Brave, Edge, Opera), y también en Firefox. Corre la wallet oficial de Monero (wallet2) compilada a WebAssembly dentro del navegador."
   - q: "¿Es segura una wallet de Monero en el navegador?"
-    a: "Las llaves se guardan cifradas con Argon2id y XChaCha20-Poly1305, la wallet se bloquea sola a los 15 minutos y la extensión no carga código remoto ni tiene analítica. Todavía no tiene auditoría externa, así que conviene usarla con montos pequeños y guardar la semilla en papel."
+    a: "Las llaves se guardan cifradas con Argon2id y XChaCha20-Poly1305, la wallet se bloquea sola a los 15 minutos y la extensión no carga código remoto ni tiene analítica. Guarda la semilla en papel: es la única forma de recuperar tus fondos."
   - q: "¿Cuánto cuesta?"
     a: "La extensión es gratis. Cada envío de XMR en la red principal paga la comisión de la red de Monero y una comisión de MoneroP2P de 0.25 %, que se muestra aparte antes de confirmar. Recibir, enviar a tus propias direcciones y los envíos en Arbitrum no pagan comisión de MoneroP2P."
   - q: "¿Puedo usar mi semilla en otras wallets?"
@@ -78,7 +78,7 @@ MoneroP2P Wallet junta las dos cosas en una extensión: tu Monero y tu cuenta de
 | Antienvenenamiento | Avisa si pegas una dirección parecida a una que ya usaste pero distinta. |
 | Verificable | Código abierto (AGPL-3.0) y paquete reproducible con su SHA-256. |
 
-**Todavía no tiene auditoría externa.** Mientras tanto, úsala con montos que puedas permitirte perder y guarda la semilla en papel.
+**Guarda la semilla en papel.** Es la única forma de recuperar tus fondos si pierdes o cambias de equipo.
 
 ## Comparación con otras wallets de Monero
 
@@ -116,7 +116,7 @@ Una wallet de Monero sin custodia en forma de extensión para Chrome, Brave, Edg
 Sí. MoneroP2P Wallet funciona en Chrome y en los navegadores basados en Chromium, y también en Firefox. Corre wallet2, la wallet oficial de Monero, compilada a WebAssembly.
 
 ### ¿Es segura una wallet de Monero en el navegador?
-Las llaves van cifradas, la wallet se bloquea sola y la extensión no carga código remoto. Todavía no tiene auditoría externa: úsala con montos pequeños.
+Las llaves van cifradas, la wallet se bloquea sola y la extensión no carga código remoto.
 
 ### ¿Cuánto cuesta?
 Es gratis. Los envíos de XMR pagan la comisión de red más 0.25 % de MoneroP2P, que se muestra antes de confirmar.

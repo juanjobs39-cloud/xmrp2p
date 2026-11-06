@@ -37,7 +37,7 @@ faq:
   - q: "Is there a Monero extension for Chrome?"
     a: "Yes. MoneroP2P Wallet runs on Chrome and other Chromium browsers (Brave, Edge, Opera) as well as Firefox. It runs wallet2, the official Monero wallet, compiled to WebAssembly inside the browser."
   - q: "Is a Monero browser wallet safe?"
-    a: "Keys are stored encrypted with Argon2id and XChaCha20-Poly1305, the wallet locks itself after 15 minutes, and the extension loads no remote code and has no analytics. It has no external audit yet, so use small amounts and keep your seed on paper."
+    a: "Keys are stored encrypted with Argon2id and XChaCha20-Poly1305, the wallet locks itself after 15 minutes, and the extension loads no remote code and has no analytics. Keep your seed on paper: it is the only way to recover your funds."
   - q: "How much does it cost?"
     a: "The extension is free. Every mainnet XMR send pays the Monero network fee plus a 0.25 % MoneroP2P fee, shown on its own line before you confirm. Receiving, sending to your own addresses and Arbitrum sends pay no MoneroP2P fee."
   - q: "Can I use my seed in other wallets?"
@@ -78,7 +78,7 @@ MoneroP2P Wallet puts both in one extension: your Monero and your Arbitrum accou
 | Address poisoning check | Warns you if you paste an address that looks like one you used but isn't. |
 | Verifiable | Open source (AGPL-3.0) and a reproducible package with its SHA-256. |
 
-**It has no external audit yet.** Until then, only use amounts you can afford to lose and keep your seed on paper.
+**Keep your seed on paper.** It is the only way to recover your funds if you lose or replace your device.
 
 ## How it compares with other Monero wallets
 
@@ -116,7 +116,7 @@ A non-custodial Monero wallet built as an extension for Chrome, Brave, Edge, Ope
 Yes. MoneroP2P Wallet runs on Chrome and other Chromium browsers, and on Firefox. It runs wallet2, the official Monero wallet, compiled to WebAssembly.
 
 ### Is a Monero browser wallet safe?
-Keys are encrypted, the wallet locks itself and the extension loads no remote code. It has no external audit yet: use small amounts.
+Keys are encrypted, the wallet locks itself and the extension loads no remote code.
 
 ### How much does it cost?
 It is free. XMR sends pay the network fee plus 0.25 % to MoneroP2P, shown before you confirm.

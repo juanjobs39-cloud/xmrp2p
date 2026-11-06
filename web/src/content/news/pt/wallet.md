@@ -37,7 +37,7 @@ faq:
   - q: "Existe extensão de Monero para Chrome?"
     a: "Sim. A MoneroP2P Wallet funciona no Chrome e nos navegadores baseados em Chromium (Brave, Edge, Opera), e também no Firefox. Ela roda a wallet2, a carteira oficial do Monero, compilada para WebAssembly dentro do navegador."
   - q: "Uma carteira de Monero no navegador é segura?"
-    a: "As chaves ficam cifradas com Argon2id e XChaCha20-Poly1305, a carteira se bloqueia sozinha após 15 minutos e a extensão não carrega código remoto nem tem analytics. Ainda não tem auditoria externa, então use valores pequenos e guarde a semente no papel."
+    a: "As chaves ficam cifradas com Argon2id e XChaCha20-Poly1305, a carteira se bloqueia sozinha após 15 minutos e a extensão não carrega código remoto nem tem analytics. Guarde a semente no papel: é a única forma de recuperar seus fundos."
   - q: "Quanto custa?"
     a: "A extensão é gratuita. Cada envio de XMR na rede principal paga a taxa da rede Monero e uma taxa da MoneroP2P de 0,25 %, mostrada à parte antes de confirmar. Receber, enviar para seus próprios endereços e envios na Arbitrum não pagam taxa da MoneroP2P."
   - q: "Posso usar minha semente em outras carteiras?"
@@ -78,7 +78,7 @@ A MoneroP2P Wallet junta tudo numa extensão: seu Monero e sua conta da Arbitrum
 | Anti-envenenamento | Avisa se você colar um endereço parecido com um que já usou, mas diferente. |
 | Verificável | Código aberto (AGPL-3.0) e pacote reproduzível com seu SHA-256. |
 
-**Ainda não tem auditoria externa.** Até lá, use só valores que você pode perder e guarde a semente no papel.
+**Guarde a semente no papel.** É a única forma de recuperar seus fundos se você perder ou trocar de dispositivo.
 
 ## Comparação com outras carteiras de Monero
 
@@ -116,7 +116,7 @@ Uma carteira de Monero sem custódia em forma de extensão para Chrome, Brave, E
 Sim. A MoneroP2P Wallet funciona no Chrome e nos navegadores Chromium, e também no Firefox. Ela roda a wallet2, a carteira oficial do Monero, compilada para WebAssembly.
 
 ### Uma carteira de Monero no navegador é segura?
-As chaves ficam cifradas, a carteira se bloqueia sozinha e a extensão não carrega código remoto. Ainda não tem auditoria externa: use valores pequenos.
+As chaves ficam cifradas, a carteira se bloqueia sozinha e a extensão não carrega código remoto.
 
 ### Quanto custa?
 É gratuita. Os envios de XMR pagam a taxa da rede mais 0,25 % da MoneroP2P, mostrada antes de confirmar.

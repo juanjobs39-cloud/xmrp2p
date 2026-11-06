@@ -280,7 +280,6 @@ function welcomeView(): void {
       h("button", { class: "primary block", type: "button", onclick: () => passwordView("create", net.value as engine.Net) }, t("create")),
       h("button", { class: "secondary block", type: "button", onclick: () => restoreView(net.value as engine.Net) }, t("restore")),
       h("details", { class: "adv" }, h("summary", {}, t("advanced")), h("label", {}, t("network"), net)),
-      h("p", { class: "msg warn small" }, t("beta")),
     ),
   );
 }
