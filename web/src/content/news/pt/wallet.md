@@ -37,7 +37,7 @@ faq:
   - q: "Existe extensão de Monero para Chrome?"
     a: "Sim. A MoneroP2P Wallet funciona no Chrome e nos navegadores baseados em Chromium (Brave, Edge, Opera), e também no Firefox. Ela roda a wallet2, a carteira oficial do Monero, compilada para WebAssembly dentro do navegador."
   - q: "Uma carteira de Monero no navegador é segura?"
-    a: "As chaves ficam cifradas com Argon2id e XChaCha20-Poly1305, a carteira se bloqueia sozinha após 15 minutos e a extensão não carrega código remoto nem tem analytics. É uma beta ainda sem auditoria externa, então use valores pequenos e guarde a semente no papel."
+    a: "As chaves ficam cifradas com Argon2id e XChaCha20-Poly1305, a carteira se bloqueia sozinha após 15 minutos e a extensão não carrega código remoto nem tem analytics. Ainda não tem auditoria externa, então use valores pequenos e guarde a semente no papel."
   - q: "Quanto custa?"
     a: "A extensão é gratuita. Cada envio de XMR na rede principal paga a taxa da rede Monero e uma taxa da MoneroP2P de 0,25 %, mostrada à parte antes de confirmar. Receber, enviar para seus próprios endereços e envios na Arbitrum não pagam taxa da MoneroP2P."
   - q: "Posso usar minha semente em outras carteiras?"
@@ -46,7 +46,7 @@ faq:
     a: "Por enquanto em inglês e espanhol. Este site e o P2P Fiat estão em português."
 ---
 
-**Em resumo:** em **5 de novembro de 2026** lançamos a **MoneroP2P Wallet 0.2.0**, uma **carteira de Monero sem custódia para o navegador** que funciona no Chrome, Brave, Edge, Opera e Firefox. Com uma só semente de 25 palavras você guarda **XMR** e uma conta da **Arbitrum One com USDT e ETH**, e troca USDT por Monero na MoneroP2P **sem MetaMask** e sem copiar e colar endereços. É gratuita, de código aberto e está em beta.
+**Em resumo:** em **5 de novembro de 2026** lançamos a **MoneroP2P Wallet 0.2.0**, uma **carteira de Monero sem custódia para o navegador** que funciona no Chrome, Brave, Edge, Opera e Firefox. Com uma só semente de 25 palavras você guarda **XMR** e uma conta da **Arbitrum One com USDT e ETH**, e troca USDT por Monero na MoneroP2P **sem MetaMask** e sem copiar e colar endereços. É gratuita e de código aberto.
 
 [Ver a MoneroP2P Wallet →](/pt/wallet/)
 
@@ -78,7 +78,7 @@ A MoneroP2P Wallet junta tudo numa extensão: seu Monero e sua conta da Arbitrum
 | Anti-envenenamento | Avisa se você colar um endereço parecido com um que já usou, mas diferente. |
 | Verificável | Código aberto (AGPL-3.0) e pacote reproduzível com seu SHA-256. |
 
-**É uma beta sem auditoria externa.** Até lá, use só valores que você pode perder e guarde a semente no papel.
+**Ainda não tem auditoria externa.** Até lá, use só valores que você pode perder e guarde a semente no papel.
 
 ## Comparação com outras carteiras de Monero
 
@@ -116,7 +116,7 @@ Uma carteira de Monero sem custódia em forma de extensão para Chrome, Brave, E
 Sim. A MoneroP2P Wallet funciona no Chrome e nos navegadores Chromium, e também no Firefox. Ela roda a wallet2, a carteira oficial do Monero, compilada para WebAssembly.
 
 ### Uma carteira de Monero no navegador é segura?
-As chaves ficam cifradas, a carteira se bloqueia sozinha e a extensão não carrega código remoto. Ainda é uma beta sem auditoria externa: use valores pequenos.
+As chaves ficam cifradas, a carteira se bloqueia sozinha e a extensão não carrega código remoto. Ainda não tem auditoria externa: use valores pequenos.
 
 ### Quanto custa?
 É gratuita. Os envios de XMR pagam a taxa da rede mais 0,25 % da MoneroP2P, mostrada antes de confirmar.

@@ -250,6 +250,6 @@
   "Chrome, Brave and Opera": "Chrome・Brave・Opera",
   "Coming soon": "近日公開",
   "Version": "バージョン",
-  "Beta: not externally audited yet. Don't keep more than you're willing to risk.": "ベータ版：外部監査はまだです。失ってもよい額以上は保管しないでください。",
+  "Not externally audited yet. Don't keep more than you're willing to risk.": "外部監査はまだです。失ってもよい額以上は保管しないでください。",
   "Source code and verifiable build": "ソースコードと検証可能なビルド"
 }
