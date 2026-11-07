@@ -3,3 +3,18 @@
 /google2117c9cebfcc77ed.html /google-site-verification.txt 200
 
 # La raíz (/) no se redirige aquí: su página elige el idioma del navegador y abre la app.
+
+# La antigua página P2P (/<idioma>/p2p/) se mudó a fiat.monerop2p.app el 2026-11-03.
+# 301 para que Google pase su posicionamiento al sitio nuevo en vez de verla como 404.
+/es/p2p/* https://fiat.monerop2p.app/es/ 301
+/en/p2p/* https://fiat.monerop2p.app/en/ 301
+/pt/p2p/* https://fiat.monerop2p.app/pt/ 301
+/ru/p2p/* https://fiat.monerop2p.app/ru/ 301
+/uk/p2p/* https://fiat.monerop2p.app/en/ 301
+/zh/p2p/* https://fiat.monerop2p.app/en/ 301
+/ja/p2p/* https://fiat.monerop2p.app/en/ 301
+/ko/p2p/* https://fiat.monerop2p.app/en/ 301
+/hi/p2p/* https://fiat.monerop2p.app/en/ 301
+/fa/p2p/* https://fiat.monerop2p.app/en/ 301
+/es/p2p https://fiat.monerop2p.app/es/ 301
+/en/p2p https://fiat.monerop2p.app/en/ 301
