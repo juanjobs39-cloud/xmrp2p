@@ -2,7 +2,9 @@
 # Google exige respuesta directa, así que se sirve el mismo contenido sin redirigir.
 /google2117c9cebfcc77ed.html /google-site-verification.txt 200
 
-# La raíz (/) no se redirige aquí: su página elige el idioma del navegador y abre la app.
+# La raíz manda con 301 a la portada en inglés (la que Google posicionó para «monero p2p»);
+# los demás idiomas quedan enlazados con hreflang y la portada tiene botón grande a la app.
+/ /en/ 301
 
 # La antigua página P2P (/<idioma>/p2p/) se mudó a fiat.monerop2p.app el 2026-11-03.
 # 301 para que Google pase su posicionamiento al sitio nuevo en vez de verla como 404.

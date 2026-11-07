@@ -1,10 +1,9 @@
 ---
-// Raíz: abre la app de swaps (Trocador + atómicos) en el idioma del navegador; si no se reconoce, inglés.
-// Sin JavaScript, va a la app en inglés. La portada informativa sigue en /<idioma>/ (enlazada con hreflang).
-import { LANG_INFO, LANGS, ROUTES, SITE } from "../site";
-// Canónica = destino de la redirección: Google la trata como redirección a la app (sin noindex).
-const en = new URL(ROUTES.app.en, Astro.site).href;
-const apps = Object.fromEntries(LANGS.map((l) => [l, ROUTES.app[l]]));
+// Raíz: public/_redirects la manda con 301 a /en/. Esta página solo es respaldo: abre la portada
+// en el idioma del navegador (o en inglés) y apunta canonical e idiomas a las portadas /<idioma>/.
+import { LANG_INFO, LANGS, SITE } from "../site";
+const en = new URL("/en/", Astro.site).href;
+const apps = Object.fromEntries(LANGS.map((l) => [l, `/${l}/`]));
 const pick = `(function(){var a=${JSON.stringify(apps)},L=navigator.languages||[navigator.language||"en"];for(var i=0;i<L.length;i++){var c=String(L[i]).toLowerCase().split("-")[0];if(a[c]){location.replace(a[c]+location.search+location.hash);return}}location.replace(a.en+location.search+location.hash)})()`;
 ---
 <!doctype html>
@@ -18,12 +17,12 @@ const pick = `(function(){var a=${JSON.stringify(apps)},L=navigator.languages||[
     <link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <script is:inline set:html={pick} />
-    <noscript><meta http-equiv="refresh" content={`0; url=${ROUTES.app.en}`} /></noscript>
+    <noscript><meta http-equiv="refresh" content={`0; url=/en/`} /></noscript>
     <link rel="canonical" href={en} />
-    {LANGS.map((l) => <link rel="alternate" hreflang={l} href={new URL(ROUTES.app[l], Astro.site).href} />)}
+    {LANGS.map((l) => <link rel="alternate" hreflang={l} href={new URL(`/${l}/`, Astro.site).href} />)}
     <link rel="alternate" hreflang="x-default" href={en} />
   </head>
   <body>
-    <ul>{LANGS.map((l) => <li><a href={ROUTES.app[l]} lang={l}>{LANG_INFO[l].name}</a></li>)}</ul>
+    <ul>{LANGS.map((l) => <li><a href={`/${l}/`} lang={l}>{LANG_INFO[l].name}</a></li>)}</ul>
   </body>
 </html>
