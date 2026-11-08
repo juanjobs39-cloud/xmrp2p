@@ -1,6 +1,6 @@
 import { HttpError, json, randomId, readJson } from "../env";
 import { normalizeMethod, requireCountry, requireFiat, xmrPrice, type Method } from "./catalog";
-import { activeUser, fiatAmount, fromPico, getUser, isOnline, now, publicUser, requireXmrAddress, settings, signer, text, toPico, type P2PEnv } from "./common";
+import { activeUser, fiatAmount, fromPico, getUser, isOnline, now, publicUser, requireXmrAddress, settings, STALE_SECS, signer, text, toPico, type P2PEnv } from "./common";
 
 const MAX_ACTIVE_ADS = 10;
 
@@ -213,6 +213,7 @@ export async function updateAd(req: Request, env: P2PEnv, path: string, adId: st
  * side=sell: anuncios de quien vende XMR (los ve quien quiere comprar), del más barato al más caro.
  * side=buy: anuncios de quien compra XMR, del que paga más al que paga menos.
  * Primero los anunciantes en línea (el escrow se arma con los dos navegadores abiertos). online=1: solo ellos.
+ * Los anuncios de quien lleva más de 24 h sin conectarse no aparecen (vuelven al reconectarse).
  */
 export async function listAds(env: P2PEnv, url: URL): Promise<Response> {
   const sp = url.searchParams;
@@ -227,10 +228,10 @@ export async function listAds(env: P2PEnv, url: URL): Promise<Response> {
   const rows = await env.DB.prepare(
     "SELECT a.*, u.nickname, u.orders_done, u.orders_total, u.release_secs, u.releases, u.deposit_secs, u.deposits, u.positive, u.negative, u.last_seen" +
       " FROM p2p_ads a JOIN p2p_users u ON u.id = a.user_id" +
-      " WHERE a.status = 'active' AND a.side = ? AND a.fiat = ? AND u.banned = 0 AND (? IS NULL OR a.country IS NULL OR a.country = ?)" +
+      " WHERE a.status = 'active' AND a.side = ? AND a.fiat = ? AND u.banned = 0 AND u.last_seen >= ? AND (? IS NULL OR a.country IS NULL OR a.country = ?)" +
       " LIMIT 300",
   )
-    .bind(side, fiat, country, country)
+    .bind(side, fiat, t - STALE_SECS, country, country)
     .all<Ad & { nickname: string; orders_done: number; orders_total: number; release_secs: number; releases: number; deposit_secs: number; deposits: number; positive: number; negative: number; last_seen: number }>();
   const mkt = await market(fiat);
   const ads = rows.results

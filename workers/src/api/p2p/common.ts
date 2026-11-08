@@ -103,6 +103,8 @@ export interface User {
 
 /** Se cuenta «en línea» a quien tuvo actividad (o latido de la app) en los últimos 10 minutos. */
 export const ONLINE_SECS = 600;
+/** Tras 24 h sin conectarse, sus anuncios dejan de verse en el mercado; vuelven solos al reconectarse. */
+export const STALE_SECS = 24 * 3600;
 export const isOnline = (lastSeen: number, t = now()) => t - lastSeen < ONLINE_SECS;
 
 export async function getUser(env: P2PEnv, id: string): Promise<User | null> {

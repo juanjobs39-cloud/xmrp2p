@@ -349,6 +349,19 @@ describe("P2P Fiat", () => {
     expect((await signed(buyer, "POST", "/v1/p2p/orders", { ad_id: ad.id, fiat_amount: "100", xmr_address: STAGENET("B") })).status).toBe(201);
   });
 
+  it("los anuncios de quien lleva más de 24 h desconectado no salen en el mercado y vuelven al reconectarse", async () => {
+    const seller = await newUser();
+    const ad = (await signed(seller, "POST", "/v1/p2p/ads", sellAd({ fiat: "EUR", country: null, price: "181" }))).body;
+    const list = async () => (await call("/v1/p2p/ads?side=sell&fiat=EUR")).body.ads.find((a: { id: string }) => a.id === ad.id);
+    const ago = (h: number) => DB.prepare("UPDATE p2p_users SET last_seen = ? WHERE id = ?").bind(Math.floor(Date.now() / 1000) - h * 3600, seller.address.toLowerCase()).run();
+    await ago(23);
+    expect(await list()).toBeDefined();
+    await ago(25);
+    expect(await list()).toBeUndefined();
+    await signed(seller, "POST", "/v1/p2p/me/ping", {});
+    expect(await list()).toBeDefined();
+  });
+
   it("2 depósitos vencidos en 24 h pausan los anuncios de venta; el tiempo de depósito cuenta en la reputación", async () => {
     const seller = await newUser();
     const buyer = await newUser();
