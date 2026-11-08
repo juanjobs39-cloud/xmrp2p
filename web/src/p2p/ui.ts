@@ -60,3 +60,14 @@ export function pct(d: number): string {
   const r = Math.round(d * 100) / 100;
   return r === 0 ? "0.00%" : `${r > 0 ? "+" : "−"}${Math.abs(r).toFixed(2)}%`;
 }
+
+const OFF_PLATFORM: Record<string, string> = {
+  es: "⚠️ Nunca operes por fuera de MoneroP2P Fiat. Si alguien te pide escribirle por WhatsApp, Telegram u otro medio, o pagar o enviar XMR fuera de una orden, es una estafa: podrías perder tu dinero o tu XMR y no podremos ayudarte a recuperarlo. Solo el escrow de la orden te protege.",
+  en: "⚠️ Never trade outside MoneroP2P Fiat. If someone asks you to contact them on WhatsApp, Telegram or anywhere else, or to pay or send XMR outside an order, it is a scam: you could lose your money or your XMR and we won't be able to help you get it back. Only the order's escrow protects you.",
+  pt: "⚠️ Nunca negocie fora do MoneroP2P Fiat. Se alguém pedir para você chamar no WhatsApp, Telegram ou outro meio, ou pagar ou enviar XMR fora de uma ordem, é golpe: você pode perder seu dinheiro ou seu XMR e não poderemos ajudar a recuperá-lo. Só o escrow da ordem protege você.",
+  ru: "⚠️ Никогда не проводите сделки вне MoneroP2P Fiat. Если вас просят написать в WhatsApp, Telegram или куда-то ещё либо заплатить или отправить XMR вне ордера — это мошенничество: вы можете потерять деньги или XMR, и мы не сможем помочь их вернуть. Защищает только эскроу ордера.",
+};
+
+/** Advertencia contra operar por fuera de la plataforma (comprador y vendedor). */
+export const offPlatformWarning = (lang: string) =>
+  h("p", { class: "notice danger p2p-offplatform", role: "note" }, OFF_PLATFORM[lang] ?? OFF_PLATFORM.en);

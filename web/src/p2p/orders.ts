@@ -3,7 +3,7 @@ import { EscrowDriver, type EscrowNote } from "./escrow";
 import { open, seal } from "./identity";
 import type { P2PApp } from "./p2p-app";
 import { moneroWallet } from "../app/wallet-provider";
-import { clock, fmtFiat, fmtXmr, h, kids, nowS, statusTone, type Child } from "./ui";
+import { clock, fmtFiat, fmtXmr, h, kids, nowS, offPlatformWarning, statusTone, type Child } from "./ui";
 
 export async function myAdsView(app: P2PApp) {
   const t = app.t;
@@ -351,6 +351,7 @@ export async function orderView(app: P2PApp, id: string) {
         "section",
         { class: "card p2p-chat" },
         h("h3", {}, "💬 ", app.t("Chat", "Chat"), h("small", { class: "muted" }, " · " + app.t("cifrado de punta a punta", "end-to-end encrypted"))),
+        offPlatformWarning(app.lang),
         chatBox,
         chatLock,
         chatIn,

@@ -2,7 +2,7 @@
 import { MONERO } from "../app/config";
 import { get, type Ad, type Method, type OrderView, type PublicUser } from "./api";
 import type { P2PApp } from "./p2p-app";
-import { fmtFiat, fmtXmr, h, kids, pct, skeleton } from "./ui";
+import { fmtFiat, fmtXmr, h, kids, offPlatformWarning, pct, skeleton } from "./ui";
 
 type MarketAd = Ad & { user: PublicUser };
 
@@ -207,6 +207,7 @@ function takeSheet(app: P2PApp, ad: MarketAd, wantBuy: boolean, market: number |
       h("dd", {}, `${ad.pay_window_min} min`),
     ),
     ad.terms ? h("div", { class: "p2p-terms" }, h("small", { class: "muted" }, t("Condiciones del anunciante", "Advertiser's terms")), h("p", {}, ad.terms)) : null,
+    offPlatformWarning(app.lang),
     out,
     h("div", { class: "field app" }, h("label", { for: "p2p-amt" }, `${wantBuy ? t("Vas a pagar", "You pay") : t("Vas a recibir", "You receive")} (${ad.fiat})`), h("div", { class: "p2p-suffix" }, amount, max, h("span", {}, ad.fiat))),
     est,

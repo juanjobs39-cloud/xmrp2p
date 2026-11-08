@@ -4,7 +4,7 @@
  */
 import { get, type Method } from "./api";
 import { KINDS, type P2PApp } from "./p2p-app";
-import { fmtFiat, fmtXmr, h, kids, pct } from "./ui";
+import { fmtFiat, fmtXmr, h, kids, offPlatformWarning, pct } from "./ui";
 
 interface Market {
   price: number;
@@ -246,6 +246,7 @@ export async function newAdView(app: P2PApp) {
     h("h3", {}, t("3. Condiciones y revisión", "3. Terms and review")),
     h("div", { class: "p2p-grid" }, app.field(t("Tiempo para pagar", "Time to pay"), windowMin), app.field(t("Órdenes mínimas para métodos reversibles", "Minimum orders for reversible methods"), minRev), app.field(t("País (opcional)", "Country (optional)"), country)),
     app.field(t("Condiciones (opcional)", "Terms (optional)"), terms),
+    offPlatformWarning(app.lang),
     addrF,
     previewBox,
     h("p", { class: "p2p-escrow-note" }, "🔒 ", side === "sell" ? t("No bloqueas XMR al publicar. Cuando alguien abra una orden, tu navegador arma el escrow 2 de 3 y depositas: deja la app abierta mientras tu anuncio esté activo.", "You don't lock XMR when posting. When someone opens an order, your browser sets up the 2-of-3 escrow and you deposit: keep the app open while your ad is active.") : t("Cuando un vendedor tome tu anuncio, él bloquea el XMR en el escrow antes de que pagues.", "When a seller takes your ad, they lock the XMR in escrow before you pay.")),
