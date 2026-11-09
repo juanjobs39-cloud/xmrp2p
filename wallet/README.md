@@ -10,6 +10,7 @@ Wallet de Monero sin custodia en forma de extensión de navegador (Manifest V3) 
 - **Recibir:** una subdirección nueva para cada cobro, con su QR.
 - **Enviar:** primero prepara la transacción sin transmitirla. Muestra la comisión exacta, pide confirmación y solo entonces la transmite.
 - **Historial:** con las confirmaciones de cada movimiento.
+- **Cambiar:** compra o vende XMR por BTC, USDT, ETH, SOL o LTC vía Trocador (a través de api.monerop2p.app). El XMR llega a una subdirección nueva; USDT/ETH de Arbitrum y XMR se pagan desde la propia wallet con la pantalla de confirmación. La lista de intercambios va cifrada con el caché.
 - **Explorar:** abre el exchange (monerop2p.app/app, con `?to=<subdirección>`) y P2P Fiat (fiat.monerop2p.app).
 - **Arbitrum (USDT y ETH):** cuenta derivada de la misma semilla, con saldo, recibir (QR) y enviar con la comisión de red estimada antes de confirmar. La wallet de stagenet usa Arbitrum Sepolia.
 - **Sitios de MoneroP2P:** en monerop2p.app y fiat.monerop2p.app la extensión se anuncia como wallet (EIP-6963) y expone `window.moneroP2P`. El swap y P2P Fiat la usan sin MetaMask y sin copiar y pegar direcciones.

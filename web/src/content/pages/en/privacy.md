@@ -51,6 +51,8 @@ The extension **does not collect or send any personal data**: no accounts, analy
 
 For the Arbitrum account, the extension queries Arbitrum's public RPC (arb1.arbitrum.io; sepolia-rollup.arbitrum.io for testing), which sees your public Arbitrum address and signed transactions, never your keys. On monerop2p.app and fiat.monerop2p.app it only shares your account or a Monero address with the site if you approve it, and you can disconnect it in Settings.
 
+**Swap (optional).** If you use the extension's “Swap” tab, quotes and the exchange are requested from our API (api.monerop2p.app), which talks to Trocador. The same applies as for Trocador exchanges in the app: when the exchange is created we keep your IP, language and browser linked to its ID, as those exchanges require. The list of your exchanges is stored encrypted in your browser. If you don't use “Swap”, the extension doesn't connect to our API.
+
 ## Contact
 
 [EMAIL_CONTACTO]

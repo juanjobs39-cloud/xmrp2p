@@ -51,6 +51,8 @@ MoneroP2P 메이커 중 여러분의 금액을 처리할 수 있는 곳이 없�
 
 Arbitrum 계정을 위해 확장 프로그램은 Arbitrum 공개 RPC(arb1.arbitrum.io, 테스트 시 sepolia-rollup.arbitrum.io)를 조회합니다. RPC는 공개 Arbitrum 주소와 서명된 트랜잭션만 볼 수 있고 키는 볼 수 없습니다. monerop2p.app과 fiat.monerop2p.app에서는 승인한 경우에만 계정이나 모네로 주소를 사이트에 공유하며, 설정에서 연결을 해제할 수 있습니다.
 
+**교환(선택).** 확장 프로그램의 «교환» 탭을 사용하면 시세와 교환은 저희 API(api.monerop2p.app)를 통해 Trocador에 요청됩니다. 앱에서 Trocador를 통한 교환과 동일하게, 교환을 만들 때 해당 거래소의 요구에 따라 IP, 언어, 브라우저 정보를 교환 ID와 연결해 보관합니다. 내 교환 목록은 브라우저에 암호화되어 저장됩니다. «교환»을 사용하지 않으면 확장 프로그램은 저희 API에 연결하지 않습니다.
+
 ## 문의
 
 [EMAIL_CONTACTO]

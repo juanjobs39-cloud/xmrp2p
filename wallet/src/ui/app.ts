@@ -23,6 +23,7 @@ import * as evm from "./evm-engine";
 import { CHAINS, deriveEvmKey, formatUnitsShort, isEvmAddress, parseUnitsStrict, TOKEN_DECIMALS } from "../core/evm";
 import { checkTypedData, type EvmTxParams, type PendingRequest, type TypedData } from "../core/provider";
 import { getLang, setLang, strength, t, type Key } from "./i18n";
+import * as swap from "../core/swap";
 
 declare const __VERSION__: string;
 
@@ -33,6 +34,8 @@ interface Snapshot {
 }
 interface CacheMeta {
   recent: string[];
+  /** Intercambios vía Trocador que la wallet sigue (van cifrados con el resto del caché). */
+  swaps?: swap.SwapRef[];
   savedAt: number;
   /** Último saldo y movimientos, para mostrarlos al instante mientras wallet2 abre. */
   snap?: Snapshot;
@@ -110,6 +113,7 @@ let vaultFile: VaultFile | undefined;
 let secret: engine.Secret | null = null;
 let sessionKey: Uint8Array | null = null;
 let recent: string[] = [];
+let swaps: swap.SwapRef[] = [];
 let syncPct = 0;
 let syncError = false;
 let syncBlocks = "";
@@ -195,7 +199,7 @@ async function saveCache(): Promise<void> {
     const d = await engine.data();
     const i = await engine.info();
     const snap: Snapshot = { balance: i.balance, unlocked: i.unlocked, txs: (await engine.txs()).slice(0, 5) };
-    const meta: CacheMeta = { recent, savedAt: Date.now(), snap };
+    const meta: CacheMeta = { recent, swaps, savedAt: Date.now(), snap };
     await putSealed(key, "cache", pack([d.keysData, d.cacheData, new TextEncoder().encode(JSON.stringify(meta))]));
   })().finally(() => (saving = null));
   return saving;
@@ -512,6 +516,7 @@ async function openAndSync(): Promise<void> {
   try {
     const c = await loadCache();
     recent = c?.meta.recent ?? [];
+    swaps = swap.prune(c?.meta.swaps ?? []);
     snapshot = c?.meta.snap ?? null;
     if (snapshot) homeView();
     await engine.openWallet(secret!, node(), c ? { keysData: c.keysData, cacheData: c.cacheData } : undefined);
@@ -611,7 +616,15 @@ async function buyWithUsdt(): Promise<void> {
 function nav(active: string): HTMLElement {
   const item = (k: Key, icon: string, go: () => void) =>
     h("button", { type: "button", class: active === k ? "on" : "", "aria-current": active === k ? "page" : null, onclick: go }, h("span", { "aria-hidden": "true" }, icon), t(k));
-  return h("nav", { class: "tabs" }, item("balance", "◎", homeView), item("explore", "⧉", exploreView), item("history", "≡", historyView), item("settings", "⚙", settingsView));
+  return h(
+    "nav",
+    { class: "tabs" },
+    item("balance", "◎", homeView),
+    item("swap", "⇄", () => swapView()),
+    item("explore", "⧉", exploreView),
+    item("history", "≡", historyView),
+    item("settings", "⚙", settingsView),
+  );
 }
 
 function topBar(): HTMLElement {
@@ -847,8 +860,9 @@ function sendView(prefill?: { address: string; amount: string; all: boolean }): 
   );
 }
 
-function confirmView(p: engine.Prepared, own: boolean, back: { address: string; amount: string; all: boolean }): void {
-  currentView = () => sendView(back);
+function confirmView(p: engine.Prepared, own: boolean, back: { address: string; amount: string; all: boolean }, after?: { done: (txid: string) => void; cancel: () => void }): void {
+  const goBack = after ? after.cancel : () => sendView(back);
+  currentView = goBack;
   const like = lookalikeOf(p.address, recent);
   const btn = h("button", { class: "primary block", type: "button" }, t("confirm_send"));
   const err = errorBox();
@@ -859,7 +873,8 @@ function confirmView(p: engine.Prepared, own: boolean, back: { address: string; 
       await engine.relay(p);
       recent = [p.address, ...recent.filter((r) => r !== p.address)].slice(0, 20);
       await saveCache().catch(() => {});
-      sentView(p.txid);
+      if (after) after.done(p.txid);
+      else sentView(p.txid);
     } catch (e) {
       btn.disabled = false;
       btn.textContent = t("confirm_send");
@@ -867,7 +882,7 @@ function confirmView(p: engine.Prepared, own: boolean, back: { address: string; 
     }
   });
   render(
-    header(t("confirm_title"), () => sendView(back)),
+    header(t("confirm_title"), goBack),
     h(
       "main",
       {},
@@ -890,7 +905,7 @@ function confirmView(p: engine.Prepared, own: boolean, back: { address: string; 
       own ? h("p", { class: "msg warn" }, t("self_send")) : null,
       err,
       btn,
-      h("button", { class: "secondary block", type: "button", onclick: () => sendView(back) }, t("cancel")),
+      h("button", { class: "secondary block", type: "button", onclick: goBack }, t("cancel")),
     ),
   );
 }
@@ -1002,8 +1017,9 @@ function evmSendView(prefill?: EvmDraft): void {
   );
 }
 
-function evmConfirmView(p: evm.PreparedEvm, back: EvmDraft): void {
-  currentView = () => evmSendView(back);
+function evmConfirmView(p: evm.PreparedEvm, back: EvmDraft, after?: { done: (hash: string) => void; cancel: () => void }): void {
+  const goBack = after ? after.cancel : () => evmSendView(back);
+  currentView = goBack;
   const c = CHAINS[secret!.network];
   const token = back.asset === "token";
   const amount = token ? parseUnitsStrict(back.amount, TOKEN_DECIMALS) : p.value;
@@ -1017,7 +1033,8 @@ function evmConfirmView(p: evm.PreparedEvm, back: EvmDraft): void {
       const hash = await evm.send(p);
       recent = [back.to, ...recent.filter((r) => r !== back.to)].slice(0, 20);
       void saveCache().catch(() => {});
-      evmSentView(hash);
+      if (after) after.done(hash);
+      else evmSentView(hash);
     } catch (e) {
       btn.disabled = false;
       btn.textContent = t("confirm_send");
@@ -1025,7 +1042,7 @@ function evmConfirmView(p: evm.PreparedEvm, back: EvmDraft): void {
     }
   });
   render(
-    header(t("confirm_title"), () => evmSendView(back)),
+    header(t("confirm_title"), goBack),
     h(
       "main",
       {},
@@ -1046,7 +1063,7 @@ function evmConfirmView(p: evm.PreparedEvm, back: EvmDraft): void {
       like ? h("p", { class: "msg error" }, t("lookalike")) : null,
       err,
       btn,
-      h("button", { class: "secondary block", type: "button", onclick: () => evmSendView(back) }, t("cancel")),
+      h("button", { class: "secondary block", type: "button", onclick: goBack }, t("cancel")),
     ),
   );
 }
@@ -1065,6 +1082,368 @@ function evmSentView(hash: string): void {
       h("button", { class: "primary block", type: "button", onclick: homeView }, t("done")),
     ),
   );
+}
+
+// ------------------------------------------------------------------ Cambiar (swaps vía Trocador)
+
+let swapSide: swap.SwapSide = "buy";
+let swapCoinKey = swap.coinKey(swap.SWAP_COINS[0]!);
+let swapAmount = "";
+/** Consulta periódica del estado mientras la vista del intercambio está abierta. */
+let swapPoll: ReturnType<typeof setInterval> | undefined;
+
+function swapCoin(): swap.SwapCoin {
+  return swap.SWAP_COINS.find((c) => swap.coinKey(c) === swapCoinKey) ?? swap.SWAP_COINS[0]!;
+}
+
+function swapErr(e: unknown): string {
+  const m = errText(e);
+  return m === "network" ? t("swap_net_error") : t("error", { m });
+}
+
+function stopSwapPoll(): void {
+  if (swapPoll) clearInterval(swapPoll);
+  swapPoll = undefined;
+}
+
+function swapView(): void {
+  stopSwapPoll();
+  currentView = () => swapView();
+  if (secret!.network !== "mainnet") {
+    render(header(t("swap_title")), h("main", {}, h("p", { class: "msg warn" }, t("swap_mainnet_only"))), nav("swap"));
+    return;
+  }
+  const sideBtn = (s: swap.SwapSide, k: Key) =>
+    h("button", { type: "button", class: swapSide === s ? "on" : "", "aria-pressed": swapSide === s ? "true" : "false", onclick: () => ((swapSide = s), swapView()) }, t(k));
+  const coin = h("select", {}, ...swap.SWAP_COINS.map((c) => h("option", { value: swap.coinKey(c), selected: swap.coinKey(c) === swapCoinKey }, c.label)));
+  const unit = () => (swapSide === "buy" ? swapCoin().ticker.toUpperCase() : "XMR");
+  const amtLabel = h("span", {}, t("swap_amount_in", { coin: unit() }));
+  coin.addEventListener("change", () => {
+    swapCoinKey = coin.value;
+    amtLabel.textContent = t("swap_amount_in", { coin: unit() });
+  });
+  const amt = h("input", { type: "text", inputMode: "decimal", autocomplete: "off", required: true, placeholder: swapSide === "buy" ? "50" : "0.5", value: swapAmount });
+  const err = errorBox();
+  const list = h("ul", { class: "quotes" });
+  const btn = h("button", { class: "primary block", type: "submit" }, t("swap_quotes"));
+  const mine = swaps.length
+    ? h(
+        "section",
+        {},
+        h("h2", {}, t("swap_active")),
+        h(
+          "ul",
+          { class: "txs" },
+          ...swaps.map((r) => {
+            const c = swap.findCoin(r.ticker, r.network);
+            const pair = r.side === "buy" ? `${r.amount} ${r.ticker.toUpperCase()} → XMR` : `${r.amount} XMR → ${r.ticker.toUpperCase()}`;
+            return h(
+              "li",
+              { class: "swap-item", role: "button", tabindex: 0, onclick: () => void swapTradeView(r.id), onkeydown: (e: KeyboardEvent) => e.key === "Enter" && void swapTradeView(r.id) },
+              h("span", { class: "dir", "aria-hidden": "true" }, "⇄"),
+              h("span", { class: "what" }, h("strong", {}, pair), h("span", { class: "small muted" }, c?.label ?? r.network)),
+              h("span", { class: "val small" }, swapStatusLabel(r.status ?? "new", r.side === "buy" ? "XMR" : r.ticker.toUpperCase())),
+            );
+          }),
+        ),
+      )
+    : null;
+  render(
+    header(t("swap_title")),
+    h(
+      "main",
+      {},
+      h("div", { class: "seg" }, sideBtn("buy", "swap_buy"), sideBtn("sell", "swap_sell")),
+      h(
+        "form",
+        {
+          onsubmit: async (e: Event) => {
+            e.preventDefault();
+            err.hidden = true;
+            const a = swap.cleanAmount(amt.value);
+            if (!a) return showError(err, t("swap_bad_amount"));
+            swapAmount = a;
+            const c = swapCoin();
+            btn.disabled = true;
+            btn.textContent = t("swap_loading");
+            list.replaceChildren();
+            try {
+              const r = await swap.rates(a, c, swapSide);
+              if (!r.quotes.length) return showError(err, t("swap_no_quotes"));
+              const gets = swapSide === "buy" ? "XMR" : c.ticker.toUpperCase();
+              list.replaceChildren(
+                ...r.quotes.slice(0, 6).map((q, i) =>
+                  h(
+                    "li",
+                    { class: i === 0 ? "quote best" : "quote" },
+                    h(
+                      "span",
+                      { class: "what" },
+                      h("strong", {}, t("swap_get", { v: fmtSwap(q.amount_to, gets), coin: gets })),
+                      h(
+                        "span",
+                        { class: "small muted" },
+                        [q.provider, q.fixed ? t("swap_fixed") : t("swap_float"), t("swap_kyc", { r: q.kycrating }), q.eta ? t("swap_eta", { n: q.eta }) : ""].filter(Boolean).join(" · "),
+                      ),
+                      i === 0 ? h("span", { class: "small verified" }, t("swap_best")) : null,
+                    ),
+                    h("button", { class: "secondary", type: "button", onclick: () => swapReviewView(r, q, c) }, t("swap_choose")),
+                  ),
+                ),
+              );
+            } catch (e) {
+              showError(err, swapErr(e));
+            } finally {
+              btn.disabled = false;
+              btn.textContent = t("swap_quotes");
+            }
+          },
+        },
+        h("label", {}, t("swap_coin"), coin),
+        h("label", {}, amtLabel, amt),
+        err,
+        btn,
+      ),
+      list,
+      h("p", { class: "small muted" }, t("swap_privacy")),
+      mine,
+    ),
+    nav("swap"),
+  );
+}
+
+/** Monto para mostrar: XMR con 6 decimales; otras monedas, hasta 6 sin ceros de sobra. */
+function fmtSwap(v: string, coin: string): string {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return v;
+  return coin === "XMR" ? n.toFixed(6) : String(Number(n.toFixed(6)));
+}
+
+function swapStatusLabel(status: string, coin: string): string {
+  const k = `swap_st_${status.toLowerCase()}` as Key;
+  try {
+    const s = t(k, { coin });
+    return s && s !== "undefined" ? s : status;
+  } catch {
+    return status;
+  }
+}
+
+/** Revisar: a dónde llega y de dónde sale el reembolso, antes de crear el intercambio. */
+function swapReviewView(r: swap.Rates, q: swap.Quote, c: swap.SwapCoin): void {
+  currentView = () => swapView();
+  const buy = r.side === "buy";
+  const gets = buy ? "XMR" : c.ticker.toUpperCase();
+  const own = evm.address();
+  // Al vender por una moneda de Arbitrum, se recibe en la cuenta de Arbitrum de esta wallet.
+  const dest = !buy && c.arb && own ? null : !buy ? h("input", { type: "text", autocomplete: "off", spellcheck: false, autocapitalize: "off", required: true, autofocus: true }) : null;
+  const err = errorBox();
+  const btn = h("button", { class: "primary block", type: "button" }, t("swap_create"));
+  btn.addEventListener("click", async () => {
+    err.hidden = true;
+    if (Date.now() - r.created_at > 10 * 60_000) return showError(err, t("swap_expired_quote"));
+    btn.disabled = true;
+    btn.textContent = t("swap_creating");
+    try {
+      await ready;
+      let address: string;
+      let refund: string | undefined;
+      if (buy) {
+        const sub = await engine.freshSubaddress(false, "swap");
+        await syncSubNext();
+        address = sub.address;
+        // Reembolso a la cuenta de Arbitrum de esta wallet si la moneda es de Arbitrum.
+        if (c.arb && own) refund = own;
+      } else {
+        address = dest ? dest.value.trim() : own!;
+        const looksOk = address.startsWith("0x") ? isEvmAddress(address) : /^[A-Za-z0-9:_.-]{10,128}$/.test(address);
+        if (!looksOk) throw new UserError(t("swap_bad_dest", { coin: c.label }));
+        refund = (await engine.freshSubaddress(false, "swap-refund")).address;
+        await syncSubNext();
+      }
+      const tr = await swap.create({ rate_id: r.rate_id, provider: q.provider, fixed: q.fixed, amount: r.usdt, ticker: c.ticker, network: c.network, side: r.side, address, ...(refund ? { refund } : {}) });
+      swaps = swap.prune([{ id: tr.trade_id, side: r.side, ticker: c.ticker, network: c.network, amount: tr.amount_from || r.usdt, at: Date.now(), status: tr.status }, ...swaps]);
+      void saveCache().catch(() => {});
+      void swapTradeView(tr.trade_id, tr);
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = t("swap_create");
+      showError(err, e instanceof UserError ? errText(e) : swapErr(e));
+    }
+  });
+  render(
+    header(t("swap_review_title"), () => swapView()),
+    h(
+      "main",
+      {},
+      h(
+        "dl",
+        { class: "summary card" },
+        h("dt", {}, t("swap_you_send")),
+        h("dd", {}, h("strong", {}, `${r.usdt} ${buy ? c.ticker.toUpperCase() : "XMR"}`), buy ? h("span", { class: "small muted" }, ` · ${c.label.split(" · ")[1] ?? c.network}`) : null),
+        h("dt", {}, t("swap_you_get")),
+        h("dd", {}, h("strong", {}, `${fmtSwap(q.amount_to, gets)} ${gets}`), !buy ? h("span", { class: "small muted" }, ` · ${c.label.split(" · ")[1] ?? c.network}`) : null),
+        h("dt", {}, t("swap_via")),
+        h("dd", {}, `${q.provider} · ${q.fixed ? t("swap_fixed") : t("swap_float")}`),
+      ),
+      buy ? h("p", { class: "small" }, "✓ ", t("swap_to_wallet")) : null,
+      !buy && !dest ? h("p", { class: "small" }, "✓ ", t("swap_dest_own"), own ? h("span", { class: "addr small", translate: "no" }, ` ${own.slice(0, 6)}…${own.slice(-4)}`) : null) : null,
+      dest ? h("label", {}, t("swap_dest", { coin: c.label }), dest) : null,
+      buy && !c.arb ? null : h("p", { class: "small muted" }, t("swap_refund_own")),
+      h("p", { class: "small muted" }, t("swap_privacy")),
+      err,
+      btn,
+      h("button", { class: "secondary block", type: "button", onclick: () => swapView() }, t("cancel")),
+    ),
+  );
+}
+
+/** Depósito y estado de un intercambio. Consulta nuestra API cada 15 s mientras está abierta. */
+async function swapTradeView(id: string, first?: swap.Trade): Promise<void> {
+  stopSwapPoll();
+  currentView = () => void swapTradeView(id);
+  const ref = swaps.find((s) => s.id === id);
+  const box = h("div", { id: "swap-trade" }, h("div", { class: "spinner", "aria-hidden": "true" }));
+  render(header(t("swap_title"), () => swapView()), h("main", {}, box), nav("swap"));
+  let expires = 0;
+  let state = "";
+  const timer = h("p", { class: "timer", hidden: true });
+  const tick = () => {
+    const left = expires - Math.floor(Date.now() / 1000);
+    const waiting = state === "new" || state === "waiting";
+    if (!waiting || !expires) return void (timer.hidden = true);
+    timer.hidden = false;
+    timer.className = left > 0 ? "timer" : "timer over";
+    if (left <= 0) return void (timer.textContent = t("swap_timer_over"));
+    const hh = Math.floor(left / 3600);
+    const mm = String(Math.floor((left % 3600) / 60)).padStart(hh ? 2 : 1, "0");
+    timer.textContent = t("swap_timer", { time: `${hh ? `${hh}:` : ""}${mm}:${String(left % 60).padStart(2, "0")}` });
+  };
+  const show = (tr: swap.Trade) => {
+    if (!document.body.contains(box)) return stopSwapPoll();
+    state = (tr.status || "new").toLowerCase();
+    expires = tr.expires_at ?? 0;
+    const buy = tr.ticker_from !== "xmr";
+    const pay = tr.ticker_from.toUpperCase();
+    const gets = (tr.ticker_to || "xmr").toUpperCase();
+    const coin = swap.findCoin(buy ? tr.ticker_from : tr.ticker_to ?? "", buy ? tr.network_from : tr.network_to ?? "");
+    const net = buy ? coin?.label ?? tr.network_from : "Monero";
+    if (ref && ref.status !== state) {
+      ref.status = state;
+      void saveCache().catch(() => {});
+    }
+    const memo = tr.address_provider_memo && tr.address_provider_memo !== "0" ? tr.address_provider_memo : "";
+    const waiting = state === "new" || state === "waiting";
+    // Pagar desde aquí: XMR al vender, o USDT/ETH de Arbitrum al comprar. Solo una vez y mientras espera.
+    const canPay = waiting && !ref?.paid && (!buy || !!coin?.arb) && !memo;
+    const cp = h("button", { class: "secondary", type: "button" }, t("copy"));
+    cp.addEventListener("click", () => void copy(tr.address_provider, cp));
+    const payBtn = canPay ? h("button", { class: "primary block", type: "button" }, t("swap_pay")) : null;
+    const payErr = errorBox();
+    payBtn?.addEventListener("click", () => void swapPay(tr, coin, payBtn, payErr));
+    const step = swap.stepOf(state);
+    const bad = ["failed", "halted", "refunded", "expired"].includes(state);
+    const hint = state === "confirming" ? t("swap_hint_confirming") : state === "sending" ? t("swap_hint_sending", { coin: gets }) : "";
+    const kids: (Node | null)[] = [
+      h("p", { class: "status" }, t("swap_status", { s: swapStatusLabel(state, gets) })),
+      bad
+        ? null
+        : h(
+            "ol",
+            { class: "steps", "aria-hidden": "true" },
+            ...(["swap_step_deposit", "swap_step_confirming", "swap_step_sending", "swap_step_done"] as const).map((k, i) => h("li", { class: i < step ? "done" : i === step ? "now" : "" }, t(k))),
+          ),
+      hint ? h("p", { class: "msg info small" }, hint) : null,
+      waiting
+        ? h(
+            "section",
+            { class: "card deposit" },
+            h("p", {}, t("swap_send_exact"), " ", h("strong", {}, `${tr.amount_from} ${pay}`)),
+            h("p", { class: "small muted" }, t("swap_deposit_net", { net })),
+            timer,
+            qr(tr.address_provider, buy ? "" : "monero:"),
+            h("p", { class: "addr", translate: "no" }, tr.address_provider),
+            memo ? h("p", { class: "small" }, h("strong", {}, t("swap_memo"))) : null,
+            memo ? h("p", { class: "addr", translate: "no" }, memo) : null,
+            cp,
+          )
+        : null,
+      ref?.paid ? h("p", { class: "msg ok small" }, t("swap_paid")) : null,
+      payErr,
+      payBtn,
+      tr.hashout ? h("p", { class: "small" }, h("strong", {}, t("swap_hash"))) : null,
+      tr.hashout ? h("p", { class: "addr small", translate: "no" }, tr.hashout) : null,
+      h("p", { class: "small muted" }, t("swap_id", { p: tr.provider, id: tr.trade_id }), h("br"), t("swap_support")),
+      swap.FINAL.has(state)
+        ? h(
+            "button",
+            {
+              class: "secondary block",
+              type: "button",
+              onclick: () => {
+                swaps = swaps.filter((s) => s.id !== id);
+                void saveCache().catch(() => {});
+                swapView();
+              },
+            },
+            t("swap_remove"),
+          )
+        : null,
+    ];
+    box.replaceChildren(...kids.filter((k): k is Node => !!k));
+    tick();
+    if (swap.FINAL.has(state)) stopSwapPoll();
+  };
+  try {
+    show(first ?? (await swap.trade(id)));
+  } catch (e) {
+    box.replaceChildren(h("p", { class: "msg error" }, swapErr(e)));
+    return;
+  }
+  if (swap.FINAL.has(state)) return;
+  const clock = setInterval(() => (document.body.contains(timer) ? tick() : clearInterval(clock)), 1000);
+  swapPoll = setInterval(() => {
+    if (!document.body.contains(box)) return stopSwapPoll();
+    swap.trade(id).then(show, () => {});
+  }, 15_000);
+}
+
+/** Paga el depósito desde esta wallet, con la pantalla de confirmación de siempre. */
+async function swapPay(tr: swap.Trade, coin: swap.SwapCoin | undefined, btn: HTMLButtonElement, err: HTMLElement): Promise<void> {
+  err.hidden = true;
+  btn.disabled = true;
+  btn.textContent = t("preparing");
+  const back = () => void swapTradeView(tr.trade_id);
+  const done = (hash: string) => {
+    const r = swaps.find((s) => s.id === tr.trade_id);
+    if (r) r.paid = hash;
+    void saveCache().catch(() => {});
+    back();
+  };
+  try {
+    await ready;
+    if (tr.ticker_from === "xmr") {
+      const amount = parseXmr(String(tr.amount_from));
+      if (amount > BigInt((await engine.info()).unlocked)) throw new UserError(t("not_enough"));
+      // El depósito del intercambio no paga la comisión de envío de la wallet: ya se cobra en el cambio.
+      const p = await engine.prepare(tr.address_provider, amount, null);
+      return confirmView(p, false, { address: tr.address_provider, amount: String(tr.amount_from), all: false }, { done, cancel: back });
+    }
+    if (!coin?.arb || !isEvmAddress(tr.address_provider)) throw new UserError(t("error", { m: "?" }));
+    if (!(await evmReady)) throw new UserError(t("arb_offline"));
+    const amount = parseUnitsStrict(String(tr.amount_from), coin.arb === "eth" ? 18 : TOKEN_DECIMALS);
+    const b = await evm.balances();
+    if ((coin.arb === "eth" ? b.eth : b.token) < amount) throw new UserError(t("not_enough"));
+    const p = await evm.prepareSend(coin.arb, tr.address_provider as `0x${string}`, amount);
+    const c = CHAINS[secret!.network];
+    if (b.eth < p.estNetworkFee + (coin.arb === "eth" ? amount : 0n)) throw new UserError(t("need_eth", { net: c.name }));
+    evmConfirmView(p, { asset: coin.arb, to: tr.address_provider, amount: String(tr.amount_from) }, { done, cancel: back });
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = t("swap_pay");
+    const m = errText(e);
+    showError(err, e instanceof UserError ? m : /not enough|insufficient|no unlocked/i.test(m) ? t("not_enough") : t("error", { m }));
+  }
 }
 
 function exploreView(): void {
@@ -1505,6 +1884,7 @@ async function approveXmrTransfer(req: { address: string; amount: string }, site
   try {
     const c = await loadCache();
     recent = c?.meta.recent ?? [];
+    swaps = swap.prune(c?.meta.swaps ?? []);
     await engine.openWallet(secret!, node(), c ? { keysData: c.keysData, cacheData: c.cacheData } : undefined);
     await engine.sync(
       (pct) => (status.textContent = t("syncing", { pct: Math.floor(pct * 100) })),

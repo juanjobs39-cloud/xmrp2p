@@ -51,6 +51,8 @@ updated: 2026-11-05
 
 对于 Arbitrum 账户，扩展会查询 Arbitrum 的公共 RPC（arb1.arbitrum.io；测试时为 sepolia-rollup.arbitrum.io），它能看到你的 Arbitrum 公开地址和已签名的交易，但看不到你的密钥。在 monerop2p.app 和 fiat.monerop2p.app 上，只有在你批准后才会把你的账户或门罗币地址提供给网站，你也可以在设置中断开连接。
 
+**兑换(可选)。** 如果你使用扩展中的“兑换”标签页,报价和兑换会通过我们的 API(api.monerop2p.app)向 Trocador 请求。规则与应用中通过 Trocador 的兑换相同:创建兑换时,应这些交易所的要求,我们会保存与该兑换 ID 关联的 IP、语言和浏览器信息。你的兑换列表以加密形式保存在浏览器中。如果你不使用“兑换”,扩展不会连接我们的 API。
+
 ## 联系我们
 
 [EMAIL_CONTACTO]

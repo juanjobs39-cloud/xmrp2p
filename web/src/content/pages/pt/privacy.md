@@ -51,6 +51,8 @@ A extensão **não coleta nem envia dados pessoais**: não tem contas, analytics
 
 Para a conta da Arbitrum, a extensão consulta o RPC público da Arbitrum (arb1.arbitrum.io; sepolia-rollup.arbitrum.io em testes), que vê seu endereço público da Arbitrum e as transações assinadas, nunca suas chaves. Na monerop2p.app e na fiat.monerop2p.app ela só compartilha sua conta ou um endereço de Monero com o site se você aprovar, e você pode desconectá-lo em Ajustes.
 
+**Trocar (opcional).** Se você usar a aba «Trocar» da extensão, as cotações e a troca são pedidas à nossa API (api.monerop2p.app), que fala com a Trocador. Vale o mesmo que nas trocas pela Trocador no app: ao criar a troca guardamos seu IP, idioma e navegador ligados ao ID dela, por exigência dessas exchanges. A lista das suas trocas fica cifrada no seu navegador. Se você não usar «Trocar», a extensão não se conecta à nossa API.
+
 ## Contato
 
 [EMAIL_CONTACTO]
