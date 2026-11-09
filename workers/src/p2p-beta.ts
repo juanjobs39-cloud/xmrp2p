@@ -6,6 +6,7 @@
 import { Container, getContainer } from "@cloudflare/containers";
 import api, { MakerInbox, P2POrderRoom, SwapRoom } from "./api/index";
 import { p2pEnabled, sweepOrders } from "./api/p2p/index";
+import { sendAdAlerts } from "./api/p2p/alerts";
 import { setupWebhook } from "./api/p2p/telegram";
 import type { P2PEnv } from "./api/p2p/common";
 import type { Env } from "./api/env";
@@ -58,5 +59,6 @@ export default {
     ctx.waitUntil(wakeArbiter(env).catch((e) => console.error("despertar árbitro:", e)));
     if (p2pEnabled(env)) ctx.waitUntil(sweepOrders(env).then((n) => n && console.log("p2p timeouts", n)));
     if (p2pEnabled(env)) ctx.waitUntil(setupWebhook(env).catch((e) => console.error("webhook de telegram:", e)));
+    if (p2pEnabled(env)) ctx.waitUntil(sendAdAlerts(env).then((n) => n && console.log("alertas de anuncios", n)).catch((e) => console.error("alertas de anuncios:", e)));
   },
 } satisfies ExportedHandler<BetaEnv>;

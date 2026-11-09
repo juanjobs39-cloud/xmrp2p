@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { signedMessage } from "../src/api/auth";
 import worker from "../src/api/index";
 import { sweepOrders } from "../src/api/p2p/orders";
+import { sendAdAlerts } from "../src/api/p2p/alerts";
 import { setupWebhook } from "../src/api/p2p/telegram";
 
 // Llaves generadas en cada corrida: ninguna llave privada vive en el repositorio.
@@ -715,6 +716,80 @@ describe("P2P Fiat", () => {
     await away(u, 3600);
     expect((await signed(buyer, "POST", "/v1/p2p/orders", { ad_id: uAd.id, fiat_amount: "200", xmr_address: STAGENET("B") }, tenv)).body.status).toBe("requested");
     expect((await DB.prepare("SELECT COUNT(*) AS n FROM p2p_telegram WHERE chat_id = ?").bind(String(blocked)).first<{ n: number }>())!.n).toBe(0);
+  });
+
+  it("telegram: alertas de anuncios nuevos con filtros, 15 min de espera, 1 cada 6 h y nunca anuncios con contacto externo", async () => {
+    await DB.prepare("INSERT OR REPLACE INTO p2p_settings (key, value) VALUES ('telegram_bot', 'TestFiatBot')").run();
+    await DB.prepare("DELETE FROM p2p_settings WHERE key = 'tg_alerts_cursor'").run();
+    const calls = mockTelegram();
+    // La primera corrida solo fija el cursor: nunca avisa anuncios viejos.
+    expect(await sendAdAlerts(tenv)).toBe(0);
+    await DB.prepare("UPDATE p2p_settings SET value = '{\"t\":1,\"id\":\"\"}' WHERE key = 'tg_alerts_cursor'").run();
+    const drain = async () => {
+      for (let i = 0; i < 20; i++) await sendAdAlerts(tenv);
+    };
+    const age = (id: string, s = 1000) => DB.prepare("UPDATE p2p_ads SET created_at = created_at - ? WHERE id = ?").bind(s, id).run();
+    const tap = (chat: number, data: string) => hook({ callback_query: { id: "q", data, message: { message_id: 9, chat: { id: chat } }, from: { language_code: "es" } } });
+    const base = 5_000_000 + Math.floor(Math.random() * 1e6);
+    const [cBuy, cEur, cSell, cOff] = [base, base + 1, base + 2, base + 3];
+
+    // Suscribirse sin cuenta: menú, «Comprar XMR», monedas por comando y apagar.
+    await hook(msg(cBuy, "/alertas"));
+    expect(calls.at(-1)!.body.text).toContain("apagadas");
+    await tap(cBuy, "al:w:buy");
+    const edit = calls.filter((c) => c.method === "editMessageText").at(-1)!;
+    expect(edit.body.text).toContain("comprar XMR con cualquier moneda");
+    await tap(cBuy, "al:f:MXN");
+    await hook(msg(cEur, "/alertas eur"));
+    expect(calls.at(-1)!.body.text).toContain("con EUR");
+    await hook(msg(cSell, "/start alertas"));
+    await tap(cSell, "al:w:sell");
+    await tap(cOff, "al:w:both");
+    await hook(msg(cOff, "/stop"));
+    expect(calls.at(-1)!.body.text).toContain("Desconectado");
+
+    // El anunciante también tiene alertas: su propio anuncio no le llega.
+    const seller = await newUser(tenv);
+    const sChat = await linkTelegram(seller);
+    await tap(sChat, "al:w:buy");
+    const ad = (await signed(seller, "POST", "/v1/p2p/ads", sellAd(), tenv)).body;
+    const nick = (await signed(seller, "GET", "/v1/p2p/me", undefined, tenv)).body.nickname as string;
+    const got = () => calls.filter((c) => c.method === "sendMessage" && String(c.body.text).includes(nick) && String(c.body.text).startsWith("🆕"));
+
+    await drain();
+    expect(got()).toHaveLength(0); // menos de 15 min
+    await age(ad.id);
+    await drain();
+    expect(got().map((c) => Number(c.body.chat_id))).toEqual([cBuy]);
+    const alert = got()[0]!;
+    expect(alert.body.text).toContain("vende XMR por MXN");
+    expect(alert.body.text).toContain("SPEI, PayPal");
+    expect(alert.body.text).not.toContain("Solo cuentas a mi nombre"); // las condiciones nunca van
+    expect(alert.body.reply_markup.inline_keyboard[0][0].web_app.url).toBe("https://fiat.monerop2p.app/es/app/?tg=1&r=%3Flado%3Dcomprar%26fiat%3DMXN%26todos%3D1");
+
+    // Otro anuncio del mismo anunciante antes de 6 h: no se avisa. Uno de otro con WhatsApp: tampoco.
+    const ad2 = (await signed(seller, "POST", "/v1/p2p/ads", sellAd({ fiat: "EUR", country: null, methods: [{ kind: "bank", name: "SEPA" }] }), tenv)).body;
+    const other = await newUser(tenv);
+    const ad3 = (await signed(other, "POST", "/v1/p2p/ads", sellAd({ terms: "Escríbeme por WhatsApp +1 (207) 977-8730" }), tenv)).body;
+    const nick3 = (await signed(other, "GET", "/v1/p2p/me", undefined, tenv)).body.nickname as string;
+    await age(ad2.id);
+    await age(ad3.id);
+    await drain();
+    expect(got()).toHaveLength(1);
+    expect(calls.some((c) => String(c.body.text ?? "").startsWith("🆕") && String(c.body.text).includes(nick3))).toBe(false);
+
+    // Anuncio de compra en EUR: le llega a quien quiere vender y a quien filtró EUR.
+    const buyer = await newUser(tenv);
+    const ad4 = (await signed(buyer, "POST", "/v1/p2p/ads", sellAd({ side: "buy", fiat: "EUR", country: null, methods: [{ kind: "bank", name: "SEPA" }], xmr_address: STAGENET("B") }), tenv)).body;
+    expect(ad4.id).toBeTruthy();
+    const nick4 = (await signed(buyer, "GET", "/v1/p2p/me", undefined, tenv)).body.nickname as string;
+    await age(ad4.id, 950); // después del cursor (los anteriores se envejecieron 1000 s)
+    await drain();
+    const to4 = calls.filter((c) => c.method === "sendMessage" && String(c.body.text).startsWith("🆕") && String(c.body.text).includes(nick4)).map((c) => Number(c.body.chat_id));
+    expect(to4.sort()).toEqual([cEur, cSell].sort());
+
+    // Quien bloquea el bot (403) pierde sus alertas.
+    expect((await DB.prepare("SELECT count(*) AS n FROM p2p_tg_alerts WHERE chat_id = ?").bind(String(cOff)).first<{ n: number }>())!.n).toBe(0);
   });
 
   it("el árbitro necesita su token", async () => {

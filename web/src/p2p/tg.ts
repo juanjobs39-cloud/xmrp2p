@@ -45,7 +45,9 @@ export function initTelegram(): void {
     /* sin almacenamiento */
   }
   const r = q.get("r");
-  const route = r && /^[a-z]+(\/[0-9a-f]{32})?$/.test(r) ? `#/${r}` : fromHash ? "" : location.hash;
+  // Rutas que manda el bot: una vista (orden/<id>, ordenes…) o el mercado filtrado de una alerta.
+  const ok = r && (/^[a-z]+(\/[0-9a-f]{32})?$/.test(r) || /^\?lado=(comprar|vender)&fiat=[A-Z]{3}&todos=1$/.test(r));
+  const route = ok ? `#/${r}` : fromHash ? "" : location.hash;
   if (q.has("tg") || q.has("r") || fromHash) history.replaceState(null, "", location.pathname + route);
   document.documentElement.classList.add("in-tg");
   post("web_app_ready");

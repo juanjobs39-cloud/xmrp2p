@@ -12,6 +12,7 @@
  */
 import { HttpError, json, randomId, readJson, sha256Hex } from "../env";
 import { activeUser, getUser, now, signer, type P2PEnv } from "./common";
+import { alertsCallback, alertsCommand, dropAlerts } from "./alerts";
 import { acceptRequest, declineRequest, FINAL, getOrder } from "./orders";
 
 export type Lang = "es" | "en";
@@ -89,7 +90,7 @@ const site = (env: P2PEnv) => (env.API_URL || "https://fiat.monerop2p.app").repl
 /** Enlace a la app abierta como Mini App: la ruta va en ?r= porque Telegram usa el # para sus datos. */
 export const miniUrl = (env: P2PEnv, lang: Lang, route = "") => `${site(env)}/${lang}/app/?tg=1${route ? `&r=${encodeURIComponent(route)}` : ""}`;
 const openBtn = (env: P2PEnv, lang: Lang, id: string, text = OPEN[lang]) => ({ text, web_app: { url: miniUrl(env, lang, `orden/${id}`) } });
-const enabled = (env: P2PEnv) => !!env.P2P_TELEGRAM_TOKEN && !!env.P2P_TELEGRAM_WEBHOOK_SECRET;
+export const enabled = (env: P2PEnv) => !!env.P2P_TELEGRAM_TOKEN && !!env.P2P_TELEGRAM_WEBHOOK_SECRET;
 
 type TgResult = { ok: boolean; status: number; result?: Record<string, unknown> };
 
@@ -109,15 +110,16 @@ export async function tg(env: P2PEnv, method: string, body: Record<string, unkno
   }
 }
 
-/** Manda un mensaje; si el usuario bloqueó el bot (403) o el chat ya no existe, borra el vínculo. */
-async function send(env: P2PEnv, chatId: string, text: string, keyboard?: unknown[][]) {
+/** Manda un mensaje; si el usuario bloqueó el bot (403) o el chat ya no existe, borra el vínculo y las alertas. */
+export async function send(env: P2PEnv, chatId: string, text: string, keyboard?: unknown[][]) {
   const r = await tg(env, "sendMessage", {
     chat_id: chatId,
     text,
     disable_web_page_preview: true,
     ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
   });
-  if (r.status === 403) await env.DB.prepare("DELETE FROM p2p_telegram WHERE chat_id = ?").bind(chatId).run();
+  if (r.status === 403)
+    await env.DB.batch([env.DB.prepare("DELETE FROM p2p_telegram WHERE chat_id = ?").bind(chatId), env.DB.prepare("DELETE FROM p2p_tg_alerts WHERE chat_id = ?").bind(chatId)]);
 }
 
 /** Avisa a los usuarios ligados. Solo el evento y el enlace; en «request», botones Aceptar y Rechazar. */
@@ -200,8 +202,8 @@ function sameSecret(a: string, b: string): boolean {
 }
 
 const HELP: Record<Lang, string> = {
-  es: "Este bot manda avisos de tus órdenes de MoneroP2P Fiat y te deja aceptar o rechazar solicitudes. El botón «P2P» abre el mercado dentro de Telegram: tu cuenta y el escrow se firman en tu celular, el bot nunca ve llaves ni datos de pago y nunca te pedirá pagos ni contraseñas. Para recibir avisos: Cuenta → Conectar Telegram. /ordenes lista tus órdenes abiertas; /stop desconecta los avisos.",
-  en: "This bot sends notifications about your MoneroP2P Fiat orders and lets you accept or decline requests. The “P2P” button opens the market inside Telegram: your account and the escrow are signed on your phone, the bot never sees keys or payment details and will never ask you for payments or passwords. To get notifications: Account → Connect Telegram. /orders lists your open orders; /stop disconnects notifications.",
+  es: "Este bot manda avisos de tus órdenes de MoneroP2P Fiat y te deja aceptar o rechazar solicitudes. El botón «P2P» abre el mercado dentro de Telegram: tu cuenta y el escrow se firman en tu celular, el bot nunca ve llaves ni datos de pago y nunca te pedirá pagos ni contraseñas. Para recibir avisos de tus órdenes: Cuenta → Conectar Telegram. /alertas te avisa de anuncios nuevos (no necesitas cuenta); /ordenes lista tus órdenes abiertas; /stop apaga todo.",
+  en: "This bot sends notifications about your MoneroP2P Fiat orders and lets you accept or decline requests. The “P2P” button opens the market inside Telegram: your account and the escrow are signed on your phone, the bot never sees keys or payment details and will never ask you for payments or passwords. To get notifications about your orders: Account → Connect Telegram. /alerts tells you about new ads (no account needed); /orders lists your open orders; /stop turns everything off.",
 };
 const MARKET: Record<Lang, string> = { es: "🛒 Abrir P2P", en: "🛒 Open P2P" };
 
@@ -230,6 +232,8 @@ async function onMessage(env: P2PEnv, m: NonNullable<Update["message"]>) {
   const chat = String(m.chat.id);
   const guess: Lang = (m.from?.language_code ?? "").startsWith("es") ? "es" : "en";
   const text = (m.text ?? "").trim();
+  const alerts = /^\/(?:alertas|alerts)(?:@\w+)?(?:\s+(.*))?$/.exec(text) ?? /^\/start\s+(?:alertas|alerts)$/.exec(text);
+  if (alerts) return alertsCommand(env, chat, guess, alerts[1] ?? "");
   const start = /^\/start(?:\s+([0-9a-f]{32}))?$/.exec(text);
   if (start?.[1]) {
     const t = now();
@@ -254,7 +258,8 @@ async function onMessage(env: P2PEnv, m: NonNullable<Update["message"]>) {
   if (/^\/(ordenes|orders)\b/.test(text)) return openOrders(env, chat, guess);
   if (/^\/stop\b/.test(text)) {
     const r = await env.DB.prepare("DELETE FROM p2p_telegram WHERE chat_id = ?").bind(chat).run();
-    return send(env, chat, r.meta.changes ? (guess === "es" ? "Desconectado. Ya no recibirás avisos aquí." : "Disconnected. You will no longer get notifications here.") : HELP[guess]);
+    const a = await dropAlerts(env, chat);
+    return send(env, chat, r.meta.changes || a ? (guess === "es" ? "Desconectado. Ya no recibirás avisos aquí." : "Disconnected. You will no longer get notifications here.") : HELP[guess]);
   }
   return send(env, chat, HELP[guess], [[{ text: MARKET[guess], web_app: { url: miniUrl(env, guess) } }]]);
 }
@@ -298,6 +303,7 @@ async function openOrders(env: P2PEnv, chat: string, guess: Lang) {
 
 async function onCallback(env: P2PEnv, q: NonNullable<Update["callback_query"]>) {
   const chat = typeof q.message?.chat?.id === "number" ? String(q.message.chat.id) : "";
+  if (chat && q.data?.startsWith("al:")) return alertsCallback(env, chat, (q.from?.language_code ?? "").startsWith("es") ? "es" : "en", q.data, q);
   const m = /^([ad]):([0-9a-f]{32})$/.exec(q.data ?? "");
   const answer = (text: string) => tg(env, "answerCallbackQuery", { callback_query_id: q.id, text, show_alert: true });
   const link = chat ? await env.DB.prepare("SELECT user_id, lang FROM p2p_telegram WHERE chat_id = ?").bind(chat).first<{ user_id: string; lang: Lang }>() : null;
@@ -349,8 +355,8 @@ export const telegramBot = (env: P2PEnv) => (enabled(env) ? botName(env).catch((
 export async function setupWebhook(env: P2PEnv): Promise<void> {
   if (!enabled(env)) return;
   const url = `${site(env)}/v1/p2p/telegram/webhook`;
-  // «v2» cambia cuando cambia lo que se registra (comandos, botón de menú): así se vuelve a registrar.
-  const sig = (await sha256Hex(`v2|${env.P2P_TELEGRAM_TOKEN}|${env.P2P_TELEGRAM_WEBHOOK_SECRET}|${url}`)).slice(0, 32);
+  // «v3» cambia cuando cambia lo que se registra (comandos, botón de menú): así se vuelve a registrar.
+  const sig = (await sha256Hex(`v3|${env.P2P_TELEGRAM_TOKEN}|${env.P2P_TELEGRAM_WEBHOOK_SECRET}|${url}`)).slice(0, 32);
   const cur = await env.DB.prepare("SELECT value FROM p2p_settings WHERE key = 'telegram_hook'").first<{ value: string }>();
   if (cur?.value === sig) return;
   const me = await tg(env, "getMe", {});
@@ -368,9 +374,10 @@ export async function setupWebhook(env: P2PEnv): Promise<void> {
   ]);
   await tg(env, "setMyCommands", {
     commands: [
+      { command: "alertas", description: "Alertas de anuncios nuevos / New ad alerts" },
       { command: "ordenes", description: "Mis órdenes abiertas / My open orders" },
       { command: "help", description: "Qué hace este bot / What this bot does" },
-      { command: "stop", description: "Desconectar avisos / Disconnect notifications" },
+      { command: "stop", description: "Apagar avisos y alertas / Turn notifications and alerts off" },
     ],
   });
   // Botón de menú junto al campo de texto: abre el mercado como Mini App.

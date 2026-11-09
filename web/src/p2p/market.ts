@@ -48,6 +48,13 @@ export async function marketView(app: P2PApp) {
         h("div", { class: "field app" }, h("label", {}, " "), h("button", { class: "btn", type: "button", onclick: () => go() }, t("Buscar", "Search"))),
       ),
       h("label", { class: "p2p-check" }, online, " ", t("Solo anunciantes en línea", "Online advertisers only")),
+      app.cfg.telegram_bot
+        ? h(
+            "a",
+            { class: "p2p-alerts-link", href: `https://t.me/${app.cfg.telegram_bot}?start=alertas`, target: "_blank", rel: "noopener noreferrer" },
+            "🔔 " + t("Avísame de anuncios nuevos por Telegram", "Alert me about new ads on Telegram"),
+          )
+        : null,
     ),
     strip,
     list,

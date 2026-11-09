@@ -291,6 +291,7 @@ a.p2p-tab { text-align: center; text-decoration: none; }
 .p2p-push { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
 .p2p-push small { flex: 1 1 14rem; }
 .p2p-tg + .p2p-push { margin-top: 0.75rem; }
+.p2p-alerts-link { display: inline-block; margin-top: 0.5rem; font-size: 0.9rem; }
 .p2p-qr-box { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin: 0.75rem 0; }
 .p2p-qr-box > div { flex: 1 1 14rem; }
 .p2p-qr { width: 11rem; height: 11rem; border-radius: 6px; flex: none; }
