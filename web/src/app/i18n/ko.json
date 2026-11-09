@@ -75,7 +75,7 @@
   "troc_bad_refund": "환불 주소가 {coin}에 맞지 않습니다(비워 둬도 됩니다).",
   "troc_status_new": "생성됨",
   "troc_status_waiting": "입금을 기다리는 중",
-  "troc_status_confirming": "입금을 확인하는 중",
+  "troc_status_confirming": "입금 확인됨 ✓ · 네트워크 컨펌 중",
   "troc_status_sending": "{coin}을 보내는 중",
   "troc_status_finished": "완료: {coin} 전송됨",
   "troc_status_failed": "실패: ID와 함께 지원팀에 문의하세요",
@@ -96,5 +96,14 @@
   "troc_timer": "입금까지 남은 시간: {time}",
   "troc_timer_over": "입금 시간이 지났습니다. 이 주소로 아무것도 보내지 마세요. 새 교환을 만드세요.",
   "troc_hash": "지급 거래(해시):",
-  "troc_copy_hash": "해시 복사"
+  "troc_copy_hash": "해시 복사",
+  "troc_step_deposit": "입금",
+  "troc_step_confirming": "컨펌",
+  "troc_step_sending": "전송",
+  "troc_step_done": "완료",
+  "troc_hint_confirming": "입금이 도착했습니다. 이제 네트워크 컨펌을 기다리면 됩니다. Monero는 약 20분(10블록), 다른 네트워크는 1~30분 걸립니다. 따로 할 일은 없으며 페이지를 닫거나 새로고침해도 됩니다.",
+  "troc_hint_sending": "거래소가 {coin}을(를) 보내는 중입니다. 몇 분 안에 도착합니다.",
+  "troc_close": "이 교환 닫기",
+  "troc_close_confirm": "이 화면을 닫아도 교환은 Trocador에서 계속됩니다. ID를 저장하셨나요?",
+  "troc_resumed": "진행 중인 교환을 다시 불러왔습니다."
 }

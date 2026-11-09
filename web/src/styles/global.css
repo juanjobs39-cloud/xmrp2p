@@ -225,6 +225,11 @@ nav .nav-new { margin-inline-start: 0.2rem; padding: 0 0.35rem; border-radius: 9
 body:not(.chosen) .later { display: none !important; }
 .troc-timer { font-weight: 700; font-variant-numeric: tabular-nums; }
 .troc-timer.over { background: var(--danger-bg); color: var(--danger-fg); padding: 0.6rem 0.8rem; border-radius: 10px; }
+/* Pasos del intercambio de Trocador: depósito → confirmaciones → envío → listo. */
+.troc-steps { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.3rem; padding: 0; margin: 0.4rem 0 0.8rem; counter-reset: s; }
+.troc-steps li { counter-increment: s; font-size: 0.8rem; text-align: center; color: var(--muted); border-top: 4px solid var(--line); padding-top: 0.35rem; }
+.troc-steps li.done { color: inherit; border-color: var(--accent); }
+.troc-steps li.now { color: inherit; font-weight: 700; border-color: var(--accent); border-top-style: dashed; }
 .troc-addr code { display: block; word-break: break-all; font-size: 0.95rem; padding: 0.6rem 0.8rem; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; }
 #form-troc input { font: inherit; padding: 0.6rem 0.8rem; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); }
 #troc-deposit[hidden], #form-troc[hidden] { display: none; }

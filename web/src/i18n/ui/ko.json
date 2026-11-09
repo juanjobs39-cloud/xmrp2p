@@ -53,7 +53,7 @@
   "Copy address": "주소 복사",
   "Status:": "상태:",
   "Exchange:": "교환소:",
-  "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes every minute.": "ID를 보관하세요. 문제가 생기면 그 ID로 Trocador 지원팀(텔레그램 @TrocadorSupportBot 또는 support@trocador.app)에 문의하세요. 상태는 1분마다 새로 고쳐집니다.",
+  "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes by itself, and if you reload the page the exchange comes back.": "ID를 저장하세요. 문제가 생기면 이 ID와 함께 Trocador 고객지원(텔레그램 @TrocadorSupportBot 또는 support@trocador.app)에 문의하세요. 상태는 자동으로 갱신되며, 페이지를 새로고침해도 교환이 다시 표시됩니다.",
   "Quotes from instant exchanges via Trocador. The exchange happens at the provider you choose, outside MoneroP2P.": "Trocador를 통한 즉시 교환소 견적입니다. 교환은 MoneroP2P 밖, 여러분이 고른 업체에서 이뤄집니다.",
   "Practice mode: Arbitrum Sepolia + Monero stagenet. Funds have no value.": "연습 모드: Arbitrum Sepolia + Monero stagenet. 자금에 가치가 없습니다.",
   "Real money (Arbitrum One + Monero). Maximum 100 USDT per swap.": "실제 자금(Arbitrum One + Monero). 스왑 1회당 최대 100 USDT.",

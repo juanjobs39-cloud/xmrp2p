@@ -53,7 +53,7 @@
   "Copy address": "Скопіювати адресу",
   "Status:": "Статус:",
   "Exchange:": "Обмінник:",
-  "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes every minute.": "Збережіть ID. Якщо щось піде не так, напишіть у підтримку Trocador (@TrocadorSupportBot у Telegram або support@trocador.app) і вкажіть цей ID. Статус оновлюється щохвилини.",
+  "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes by itself, and if you reload the page the exchange comes back.": "Збережіть ID. Якщо щось піде не так, напишіть у підтримку Trocador (@TrocadorSupportBot у Telegram або support@trocador.app) з цим ID. Статус оновлюється сам, а якщо перезавантажити сторінку, обмін з’явиться знову.",
   "Quotes from instant exchanges via Trocador. The exchange happens at the provider you choose, outside MoneroP2P.": "Котирування миттєвих обмінників через Trocador. Обмін відбувається в обраного вами провайдера, поза MoneroP2P.",
   "Practice mode: Arbitrum Sepolia + Monero stagenet. Funds have no value.": "Режим практики: Arbitrum Sepolia + Monero stagenet. Кошти нічого не варті.",
   "Real money (Arbitrum One + Monero). Maximum 100 USDT per swap.": "Реальні гроші (Arbitrum One + Monero). Максимум 100 USDT за своп.",

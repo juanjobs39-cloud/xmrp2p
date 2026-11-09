@@ -53,7 +53,7 @@
   "Copy address": "کپی آدرس",
   "Status:": "وضعیت:",
   "Exchange:": "صرافی:",
-  "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes every minute.": "شناسه را نگه دارید. اگر مشکلی پیش آمد، با همین شناسه با پشتیبانی Trocador (@TrocadorSupportBot در تلگرام یا support@trocador.app) تماس بگیرید. وضعیت هر دقیقه به‌روز می‌شود.",
+  "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes by itself, and if you reload the page the exchange comes back.": "شناسه را نگه دارید. اگر مشکلی پیش آمد، با همین شناسه به پشتیبانی Trocador (‎@TrocadorSupportBot در تلگرام یا support@trocador.app) پیام دهید. وضعیت خودکار به‌روز می‌شود و اگر صفحه را دوباره بارگذاری کنید، معامله دوباره نمایش داده می‌شود.",
   "Quotes from instant exchanges via Trocador. The exchange happens at the provider you choose, outside MoneroP2P.": "پیشنهادهای قیمت صرافی‌های فوری از طریق Trocador. تبدیل نزد ارائه‌دهنده‌ای که انتخاب می‌کنید و بیرون از MoneroP2P انجام می‌شود.",
   "Practice mode: Arbitrum Sepolia + Monero stagenet. Funds have no value.": "حالت تمرین: Arbitrum Sepolia + Monero stagenet. دارایی‌ها ارزشی ندارند.",
   "Real money (Arbitrum One + Monero). Maximum 100 USDT per swap.": "پول واقعی (Arbitrum One + Monero). حداکثر ۱۰۰ USDT در هر سواپ.",

@@ -75,7 +75,7 @@
   "troc_bad_refund": "O endereço de reembolso não é válido para {coin} (ou deixe em branco).",
   "troc_status_new": "Criada",
   "troc_status_waiting": "Aguardando seu depósito",
-  "troc_status_confirming": "Confirmando seu depósito",
+  "troc_status_confirming": "Depósito recebido ✓ · confirmando na rede",
   "troc_status_sending": "Enviando seu {coin}",
   "troc_status_finished": "Concluída: {coin} enviado",
   "troc_status_failed": "Falhou: fale com o suporte informando o ID",
@@ -96,5 +96,14 @@
   "troc_timer": "Tempo para enviar seu depósito: {time}",
   "troc_timer_over": "O tempo para depositar acabou. Não envie nada para este endereço: crie uma nova troca.",
   "troc_hash": "Transação do pagamento (hash):",
-  "troc_copy_hash": "Copiar hash"
+  "troc_copy_hash": "Copiar hash",
+  "troc_step_deposit": "Depósito",
+  "troc_step_confirming": "Confirmações",
+  "troc_step_sending": "Envio",
+  "troc_step_done": "Pronto",
+  "troc_hint_confirming": "Seu depósito chegou. Falta a rede confirmá-lo: com Monero leva cerca de 20 minutos (10 blocos) e em outras redes de 1 a 30 minutos. Você não precisa fazer nada; pode fechar ou recarregar a página.",
+  "troc_hint_sending": "A exchange já está enviando seu {coin}. Chega em alguns minutos.",
+  "troc_close": "Fechar esta troca",
+  "troc_close_confirm": "A troca continua na Trocador mesmo se você fechar esta tela. Você guardou o ID?",
+  "troc_resumed": "Retomamos sua troca em andamento."
 }

@@ -1,7 +1,7 @@
 import { env as baseEnv } from "cloudflare:workers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import worker from "../src/api/index";
-import { parseQuotes, unixTime } from "../src/api/trocador";
+import { parseQuotes, statusGap, unixTime } from "../src/api/trocador";
 
 const XMR = "4" + "A".repeat(94);
 const env = { ...(baseEnv as object), TROCADOR_API_KEY: "k-test", TROCADOR_WEBHOOK_KEY: "wh-test", TROCADOR_LIMITER: undefined } as never;
@@ -114,5 +114,46 @@ describe("Trocador", () => {
     const s = (await (await call("/v1/trocador/trades/tr1")).json()) as Record<string, unknown>;
     // El webhook no trae el vencimiento: se conserva el que ya teníamos, y llega el hash del pago.
     expect(s).toMatchObject({ status: "finished", address_provider: "0xdeposit", hashout: "ab12cd34ef56", expires_at: Date.UTC(2026, 10, 3, 12, 30) / 1000 });
+  });
+
+  it("consulta de respaldo: cada 90 s las primeras 3 horas, luego cada 10 min", () => {
+    expect(statusGap(0, 60_000)).toBe(90_000);
+    expect(statusGap(0, 3 * 3600_000 - 1)).toBe(90_000);
+    expect(statusGap(0, 3 * 3600_000)).toBe(600_000);
+  });
+
+  it("sin webhook pregunta a Trocador una sola vez aunque haya varias pestañas", async () => {
+    const { seen } = mockTrocador();
+    await call("/v1/trocador/trades", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ rate_id: "rate123", provider: "Best", fixed: true, usdt: "50", address: XMR }),
+    });
+    const DB = (baseEnv as { DB: D1Database }).DB;
+    // Hace 2 minutos que no hay noticias (ni webhook ni consulta).
+    await DB.prepare("UPDATE trocador_trades SET status='waiting', updated_at = ?1 WHERE trade_id='tr1'").bind(Date.now() - 120_000).run();
+    const before = seen.filter((u) => u.pathname === "/trade").length;
+    const [a, b] = await Promise.all([call("/v1/trocador/trades/tr1"), call("/v1/trocador/trades/tr1")]);
+    const statuses = [((await a.json()) as { status: string }).status, ((await b.json()) as { status: string }).status];
+    expect(seen.filter((u) => u.pathname === "/trade").length - before).toBe(1);
+    expect(statuses).toContain("finished");
+    // Recién consultado: no vuelve a preguntar.
+    await DB.prepare("UPDATE trocador_trades SET status='waiting' WHERE trade_id='tr1'").run();
+    await call("/v1/trocador/trades/tr1");
+    expect(seen.filter((u) => u.pathname === "/trade").length - before).toBe(1);
+  });
+
+  it("registra cada webhook", async () => {
+    mockTrocador();
+    await call("/v1/trocador/trades", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ rate_id: "rate123", provider: "Best", fixed: true, usdt: "50", address: XMR }),
+    });
+    await (baseEnv as { DB: D1Database }).DB.prepare("UPDATE trocador_trades SET hooks = NULL WHERE trade_id='tr1'").run();
+    for (const status of ["confirming", "sending"])
+      await call("/v1/trocador/webhook", { method: "POST", headers: { "webhook-key": "wh-test", "content-type": "application/json" }, body: JSON.stringify({ trade_id: "tr1", status }) });
+    const row = await (baseEnv as { DB: D1Database }).DB.prepare("SELECT hooks FROM trocador_trades WHERE trade_id='tr1'").first<{ hooks: string }>();
+    expect(row!.hooks).toMatch(/^confirming@\d+;sending@\d+;$/);
   });
 });

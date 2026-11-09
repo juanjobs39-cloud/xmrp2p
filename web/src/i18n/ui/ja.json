@@ -53,7 +53,7 @@
   "Copy address": "アドレスをコピー",
   "Status:": "状態：",
   "Exchange:": "交換所：",
-  "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes every minute.": "IDを保管してください。問題が起きたら、そのIDを添えてTrocadorのサポート（Telegramの@TrocadorSupportBotまたはsupport@trocador.app）に連絡してください。状態は1分ごとに更新されます。",
+  "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes by itself, and if you reload the page the exchange comes back.": "ID を保存してください。問題があれば、その ID を添えて Trocador のサポート(Telegram の @TrocadorSupportBot または support@trocador.app)に連絡してください。状態は自動で更新され、ページを再読み込みしても交換は再表示されます。",
   "Quotes from instant exchanges via Trocador. The exchange happens at the provider you choose, outside MoneroP2P.": "Trocador経由のインスタント交換所の見積もりです。交換はMoneroP2Pの外、あなたが選んだ事業者で行われます。",
   "Practice mode: Arbitrum Sepolia + Monero stagenet. Funds have no value.": "練習モード：Arbitrum Sepolia + Monero stagenet。資金に価値はありません。",
   "Real money (Arbitrum One + Monero). Maximum 100 USDT per swap.": "実際の資金（Arbitrum One + Monero）。1回のスワップは最大100 USDT。",

@@ -62,6 +62,8 @@ export interface TrocadorTrade {
   trade_id: string;
   ticker_from: string;
   network_from: string;
+  ticker_to?: string;
+  network_to?: string;
   provider: string;
   status: string;
   amount_from: string;

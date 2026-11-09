@@ -53,7 +53,7 @@
   "Copy address": "复制地址",
   "Status:": "状态：",
   "Exchange:": "兑换平台：",
-  "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes every minute.": "请保存好 ID。如果出现问题，请凭该 ID 联系 Trocador 客服（Telegram 上的 @TrocadorSupportBot 或 support@trocador.app）。状态每分钟刷新一次。",
+  "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes by itself, and if you reload the page the exchange comes back.": "请保存此 ID。如果出现问题,请带着该 ID 联系 Trocador 客服(Telegram 上的 @TrocadorSupportBot 或 support@trocador.app)。状态会自动更新;刷新页面后,兑换会重新显示。",
   "Quotes from instant exchanges via Trocador. The exchange happens at the provider you choose, outside MoneroP2P.": "来自 Trocador 即时兑换平台的报价。兑换在你选择的服务商处进行，不在 MoneroP2P 内。",
   "Practice mode: Arbitrum Sepolia + Monero stagenet. Funds have no value.": "练习模式：Arbitrum Sepolia + Monero stagenet。资金没有价值。",
   "Real money (Arbitrum One + Monero). Maximum 100 USDT per swap.": "真实资金（Arbitrum One + Monero）。每笔兑换最多 100 USDT。",

@@ -129,12 +129,15 @@ const softwareLd = {
             </div>
             <button id="troc-copy" class="btn secondary" type="button">{t("Copiar dirección", "Copy address")}</button>
             <p>{t("Estado:", "Status:")} <strong id="troc-status"></strong></p>
+            <ol id="troc-steps" class="troc-steps" aria-hidden="true"><li></li><li></li><li></li><li></li></ol>
+            <p id="troc-hint" class="notice" hidden></p>
             <div id="troc-hash-box" hidden>
               <p><strong id="troc-hash-label"></strong></p>
               <p class="troc-addr"><code id="troc-hash"></code></p>
               <button id="troc-hash-copy" class="btn secondary small" type="button"></button>
             </div>
-            <p class="meta">{t("Exchange:", "Exchange:")} <span id="troc-provider"></span> · ID <code id="troc-id"></code><br />{t("Guarda el ID. Si algo falla, escribe al soporte de Trocador (@TrocadorSupportBot en Telegram o support@trocador.app) con ese ID. El estado se actualiza solo cada minuto.", "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes every minute.")}</p>
+            <p class="meta">{t("Exchange:", "Exchange:")} <span id="troc-provider"></span> · ID <code id="troc-id"></code><br />{t("Guarda el ID. Si algo falla, escribe al soporte de Trocador (@TrocadorSupportBot en Telegram o support@trocador.app) con ese ID. El estado se actualiza solo, y si recargas la página el intercambio vuelve a aparecer.", "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes by itself, and if you reload the page the exchange comes back.")}</p>
+            <button id="troc-close" class="btn secondary small" type="button"></button>
           </div>
         </div>
         <div id="quick-trocador" class="only-real" hidden>

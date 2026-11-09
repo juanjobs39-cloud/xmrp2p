@@ -4,7 +4,8 @@
  *
  * Acuerdo con Trocador:
  *  - Pocas peticiones: cotizar solo cuando el usuario lo pide, con caché de 2 minutos por monto,
- *    sin refresco automático; el estado llega por webhook, no por consultas repetidas.
+ *    sin refresco automático; el estado llega por webhook, y solo si no llega se consulta, como mucho
+ *    cada 90 s durante las primeras 3 horas (ver statusGap).
  *  - Conservación de datos: como las peticiones salen de nuestro servidor, guardamos la IP, el idioma
  *    y el navegador del usuario ligados al ID del intercambio (solo en intercambios por Trocador),
  *    para responder solicitudes de autoridades que Trocador nos reenvíe. Lo dice la política de privacidad.
@@ -76,8 +77,15 @@ async function coinFrom(env: Env, ticker: unknown, network: unknown): Promise<{ 
 }
 
 const RATE_CACHE_S = 120;
-/** Cada cuánto, como mucho, se pregunta el estado a Trocador si el webhook no ha llegado. */
-const STATUS_FALLBACK_MS = 10 * 60_000;
+/**
+ * Cada cuánto, como mucho, se pregunta el estado a Trocador si el webhook no ha llegado.
+ * Durante las primeras 3 horas (cuando el usuario espera el depósito y las confirmaciones) cada 90 s,
+ * y solo si alguien tiene la página abierta; después, cada 10 minutos.
+ */
+const STATUS_FAST_MS = 90_000;
+const STATUS_FAST_WINDOW_MS = 3 * 3600_000;
+const STATUS_SLOW_MS = 10 * 60_000;
+export const statusGap = (createdAt: number, now: number): number => (now - createdAt < STATUS_FAST_WINDOW_MS ? STATUS_FAST_MS : STATUS_SLOW_MS);
 const FINAL = new Set(["finished", "failed", "refunded", "expired", "halted", "paid partially"]);
 
 export interface TrocadorQuote {
@@ -337,14 +345,17 @@ async function createTrade(req: Request, env: Env): Promise<Response> {
 
 /** GET /v1/trocador/trades/:id — estado desde nuestra base (lo actualiza el webhook). */
 async function getTrade(env: Env, id: string): Promise<Response> {
-  const row = await env.DB.prepare("SELECT status, updated_at, data FROM trocador_trades WHERE trade_id = ?1")
+  const row = await env.DB.prepare("SELECT status, created_at, updated_at, data FROM trocador_trades WHERE trade_id = ?1")
     .bind(id)
-    .first<{ status: string; updated_at: number; data: string }>();
+    .first<{ status: string; created_at: number; updated_at: number; data: string }>();
   if (!row) throw new HttpError(404, "intercambio no encontrado");
   let trade = JSON.parse(row.data) as ReturnType<typeof publicTrade>;
-  // Respaldo por si el webhook no llega: como mucho una consulta a Trocador cada 10 minutos.
-  if (!FINAL.has(row.status) && Date.now() - row.updated_at > STATUS_FALLBACK_MS && env.TROCADOR_API_KEY) {
-    await env.DB.prepare("UPDATE trocador_trades SET updated_at = ?2 WHERE trade_id = ?1").bind(id, Date.now()).run();
+  // Respaldo por si el webhook no llega (ver statusGap). La marca se pone antes de consultar,
+  // así varias pestañas abiertas no multiplican las peticiones a Trocador.
+  const now = Date.now();
+  if (!FINAL.has(row.status) && now - row.updated_at > statusGap(row.created_at, now) && env.TROCADOR_API_KEY) {
+    const claimed = await env.DB.prepare("UPDATE trocador_trades SET updated_at = ?2 WHERE trade_id = ?1 AND updated_at = ?3").bind(id, now, row.updated_at).run();
+    if (!claimed.meta.changes) return json(trade);
     try {
       const body = await trocador(env, "trade", { id });
       trade = await saveStatus(env, Array.isArray(body) ? (body[0] as Record<string, unknown>) : body, trade);
@@ -380,6 +391,9 @@ async function webhook(req: Request, env: Env): Promise<Response> {
   const row = await env.DB.prepare("SELECT data FROM trocador_trades WHERE trade_id = ?1").bind(id).first<{ data: string }>();
   if (!row) return json({ ok: true, ignored: true });
   await saveStatus(env, data, JSON.parse(row.data));
+  // Registro corto de cada aviso, para saber en qué pasos avisa Trocador.
+  const mark = `${str(data.status, 30) || "?"}@${Math.floor(Date.now() / 1000)};`;
+  await env.DB.prepare("UPDATE trocador_trades SET hooks = substr(coalesce(hooks, '') || ?2, -500) WHERE trade_id = ?1").bind(id, mark).run();
   return json({ ok: true });
 }
 

@@ -75,7 +75,7 @@
   "troc_bad_refund": "返金アドレスが{coin}に対して正しくありません（空欄でも可）。",
   "troc_status_new": "作成済み",
   "troc_status_waiting": "入金を待っています",
-  "troc_status_confirming": "入金を確認しています",
+  "troc_status_confirming": "入金を受け取りました ✓ · ネットワークで確認中",
   "troc_status_sending": "{coin}を送っています",
   "troc_status_finished": "完了：{coin}を送りました",
   "troc_status_failed": "失敗：IDを添えてサポートに連絡してください",
@@ -96,5 +96,14 @@
   "troc_timer": "入金までの残り時間：{time}",
   "troc_timer_over": "入金の期限が過ぎました。このアドレスには何も送らないでください。新しい交換を作成してください。",
   "troc_hash": "支払いトランザクション（ハッシュ）：",
-  "troc_copy_hash": "ハッシュをコピー"
+  "troc_copy_hash": "ハッシュをコピー",
+  "troc_step_deposit": "入金",
+  "troc_step_confirming": "承認",
+  "troc_step_sending": "送金",
+  "troc_step_done": "完了",
+  "troc_hint_confirming": "入金が届きました。あとはネットワークの承認待ちです。Monero は約 20 分(10 ブロック)、他のネットワークは 1〜30 分です。操作は不要で、ページを閉じたり再読み込みしたりしても大丈夫です。",
+  "troc_hint_sending": "取引所があなたの {coin} を送金中です。数分で届きます。",
+  "troc_close": "この交換を閉じる",
+  "troc_close_confirm": "この画面を閉じても、交換は Trocador で続きます。ID を保存しましたか?",
+  "troc_resumed": "進行中の交換を再開しました。"
 }

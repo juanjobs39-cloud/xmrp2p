@@ -53,7 +53,7 @@
   "Copy address": "पता कॉपी करें",
   "Status:": "स्थिति:",
   "Exchange:": "एक्सचेंज:",
-  "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes every minute.": "ID संभालकर रखें. कुछ गड़बड़ हो तो उसी ID के साथ Trocador सपोर्ट (Telegram पर @TrocadorSupportBot या support@trocador.app) से संपर्क करें. स्थिति हर मिनट अपडेट होती है.",
+  "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes by itself, and if you reload the page the exchange comes back.": "ID सँभालकर रखें। कुछ गड़बड़ हो तो उसी ID के साथ Trocador सपोर्ट (Telegram पर @TrocadorSupportBot या support@trocador.app) से संपर्क करें। स्थिति अपने-आप अपडेट होती है, और पेज रीलोड करने पर एक्सचेंज फिर से दिखेगा।",
   "Quotes from instant exchanges via Trocador. The exchange happens at the provider you choose, outside MoneroP2P.": "Trocador के ज़रिए इंस्टेंट एक्सचेंजों के कोटेशन. बदलाव आपके चुने हुए प्रदाता पर होता है, MoneroP2P के बाहर.",
   "Practice mode: Arbitrum Sepolia + Monero stagenet. Funds have no value.": "अभ्यास मोड: Arbitrum Sepolia + Monero stagenet. फ़ंड की कोई क़ीमत नहीं है.",
   "Real money (Arbitrum One + Monero). Maximum 100 USDT per swap.": "असली पैसे (Arbitrum One + Monero). हर स्वैप में अधिकतम 100 USDT.",

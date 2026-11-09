@@ -53,7 +53,7 @@
   "Copy address": "Copiar endereço",
   "Status:": "Status:",
   "Exchange:": "Exchange:",
-  "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes every minute.": "Guarde o ID. Se algo der errado, fale com o suporte do Trocador (@TrocadorSupportBot no Telegram ou support@trocador.app) informando esse ID. O status se atualiza a cada minuto.",
+  "Keep the ID. If something goes wrong, contact Trocador support (@TrocadorSupportBot on Telegram or support@trocador.app) with that ID. The status refreshes by itself, and if you reload the page the exchange comes back.": "Guarde o ID. Se algo der errado, fale com o suporte da Trocador (@TrocadorSupportBot no Telegram ou support@trocador.app) com esse ID. O status se atualiza sozinho e, se você recarregar a página, a troca volta a aparecer.",
   "Quotes from instant exchanges via Trocador. The exchange happens at the provider you choose, outside MoneroP2P.": "Cotações de exchanges instantâneas via Trocador. A troca acontece no provedor que você escolher, fora do MoneroP2P.",
   "Practice mode: Arbitrum Sepolia + Monero stagenet. Funds have no value.": "Modo de prática: Arbitrum Sepolia + Monero stagenet. Os fundos não têm valor.",
   "Real money (Arbitrum One + Monero). Maximum 100 USDT per swap.": "Dinheiro real (Arbitrum One + Monero). Máximo de 100 USDT por swap.",

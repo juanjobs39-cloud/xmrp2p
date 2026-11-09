@@ -75,7 +75,7 @@
   "troc_bad_refund": "آدرس بازپرداخت برای {coin} معتبر نیست (یا خالی بگذارید).",
   "troc_status_new": "ایجاد شد",
   "troc_status_waiting": "در انتظار واریز شما",
-  "troc_status_confirming": "در حال تأیید واریز شما",
+  "troc_status_confirming": "واریز دریافت شد ✓ · در حال تأیید در شبکه",
   "troc_status_sending": "در حال فرستادن {coin} شما",
   "troc_status_finished": "پایان: {coin} فرستاده شد",
   "troc_status_failed": "ناموفق: با شناسه با پشتیبانی تماس بگیرید",
@@ -96,5 +96,14 @@
   "troc_timer": "زمان باقی‌مانده برای واریز: {time}",
   "troc_timer_over": "زمان واریز تمام شد. چیزی به این آدرس نفرستید: یک تبادل جدید بسازید.",
   "troc_hash": "تراکنش پرداخت (هش):",
-  "troc_copy_hash": "کپی هش"
+  "troc_copy_hash": "کپی هش",
+  "troc_step_deposit": "واریز",
+  "troc_step_confirming": "تأییدها",
+  "troc_step_sending": "ارسال",
+  "troc_step_done": "انجام شد",
+  "troc_hint_confirming": "واریز شما رسید. حالا باید شبکه آن را تأیید کند: برای Monero حدود ۲۰ دقیقه (۱۰ بلاک) و در شبکه‌های دیگر ۱ تا ۳۰ دقیقه. لازم نیست کاری بکنید؛ می‌توانید صفحه را ببندید یا دوباره بارگذاری کنید.",
+  "troc_hint_sending": "صرافی در حال ارسال {coin} شماست. چند دقیقه دیگر می‌رسد.",
+  "troc_close": "بستن این معامله",
+  "troc_close_confirm": "حتی اگر این صفحه را ببندید، معامله در Trocador ادامه دارد. شناسه را ذخیره کردید؟",
+  "troc_resumed": "معامله در جریان شما بازیابی شد."
 }

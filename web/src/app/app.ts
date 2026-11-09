@@ -53,6 +53,19 @@ interface SwapState {
 }
 
 const STORAGE_KEY = "xmrp2p:swap";
+/** Intercambio de Trocador en curso (sin datos secretos), para retomarlo al recargar la página. */
+const TROC_KEY = "xmrp2p:trocador";
+const TROC_RESUME_MS = 24 * 3600_000;
+const TROC_FINAL = new Set(["finished", "failed", "refunded", "expired", "halted"]);
+interface TrocView {
+  id: string;
+  amount: string;
+  pay: string;
+  net: string;
+  gets: string;
+  /** Cuándo se creó (ms), para no retomarlo después de 24 h. */
+  at: number;
+}
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const hex32 = () => `0x${[...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, "0")).join("")}` as Hex;
@@ -117,6 +130,7 @@ export class SwapApp {
     }
     // La vista simple se conecta antes de cargar ofertas: un clic temprano no debe recargar la página.
     if (DRAFT_UI) this.mountQuick();
+    if (DRAFT_UI) void this.trocResume();
     await this.loadOffers();
     this.applyDeepLink();
     void this.attachWallet();
@@ -141,6 +155,7 @@ export class SwapApp {
     });
     $("troc-copy").addEventListener("click", () => void navigator.clipboard?.writeText($("troc-addr").textContent ?? ""));
     $("troc-hash-copy").addEventListener("click", () => void navigator.clipboard?.writeText($("troc-hash").textContent ?? ""));
+    $("troc-close").addEventListener("click", () => this.trocClose());
     this.xmrAddressLabel = $("troc-address-label").textContent ?? "";
     this.coinRefundLabel = $("troc-refund-label").textContent ?? "";
     const pick = (c: Coin) => {
@@ -322,11 +337,31 @@ export class SwapApp {
       ...(refund ? { refund } : {}),
     });
     this.trocRates = null; // la cotización ya se usó
+    const view: TrocView = {
+      id: trade.trade_id,
+      amount: trade.amount_from || rates.usdt,
+      // Lo que el usuario deposita: la moneda al comprar XMR, o XMR al venderlo.
+      pay: sell ? "XMR" : coin.ticker.toUpperCase(),
+      net: sell ? "Monero" : networkName(coin),
+      gets: sell ? coin.ticker.toUpperCase() : "XMR",
+      at: Date.now(),
+    };
+    try {
+      localStorage.setItem(TROC_KEY, JSON.stringify(view));
+    } catch {
+      /* sin almacenamiento: el intercambio sigue, solo no se retoma al recargar */
+    }
+    this.trocShow(trade, view);
+  }
+
+  /** Muestra el panel de depósito y estado de un intercambio de Trocador (nuevo o retomado). */
+  private trocShow(trade: TrocadorTrade, view: TrocView): void {
+    $("quick-results").hidden = true;
+    $("quick-troc-pay").hidden = false;
     $("form-troc").hidden = true;
-    $("troc-amount").textContent = trade.amount_from || rates.usdt;
-    // Lo que el usuario deposita: la moneda al comprar XMR, o XMR al venderlo.
-    $("troc-ticker").textContent = sell ? "XMR" : coin.ticker.toUpperCase();
-    $("troc-net").textContent = sell ? "Monero" : networkName(coin);
+    $("troc-amount").textContent = trade.amount_from || view.amount;
+    $("troc-ticker").textContent = view.pay;
+    $("troc-net").textContent = view.net;
     const depositMemo = trade.address_provider_memo && trade.address_provider_memo !== "0" ? trade.address_provider_memo : "";
     $("troc-memo").textContent = depositMemo;
     $("troc-memo-box").hidden = !depositMemo;
@@ -335,16 +370,81 @@ export class SwapApp {
     $("troc-id").textContent = trade.trade_id;
     $("troc-deposit").hidden = false;
     $("troc-hash-box").hidden = true;
+    $("troc-close").textContent = t(this.lang, "troc_close");
+    const steps = $("troc-steps").children;
+    (["troc_step_deposit", "troc_step_confirming", "troc_step_sending", "troc_step_done"] as const).forEach((k, i) => (steps[i]!.textContent = t(this.lang, k)));
     this.trocExpires = 0;
-    this.trocGets = sell ? coin.ticker.toUpperCase() : "XMR";
-    this.trocStatus(trade);
+    this.trocGets = view.gets;
     if (this.trocClock) clearInterval(this.trocClock);
     this.trocClock = setInterval(() => this.trocTick(), 1000);
-    // Nuestro servidor guarda el estado que manda el webhook de Trocador: consultarlo no les cuesta peticiones.
     if (this.trocTimer) clearInterval(this.trocTimer);
-    this.trocTimer = setInterval(() => {
-      api.trocadorTrade(trade.trade_id).then((tr) => this.trocStatus(tr), () => {});
-    }, 60_000);
+    this.trocTimer = null;
+    this.trocStatus(trade);
+    // Nuestro servidor guarda el estado que manda el webhook de Trocador (y, si no llega, le pregunta
+    // como mucho cada 90 s): consultarlo cada 15 s no le cuesta peticiones a Trocador.
+    if (!TROC_FINAL.has((trade.status || "").toLowerCase()))
+      this.trocTimer = setInterval(() => {
+        api.trocadorTrade(trade.trade_id).then((tr) => this.trocStatus(tr), () => {});
+      }, 15_000);
+  }
+
+  /**
+   * Al abrir la página retoma el intercambio de Trocador guardado (o el de ?trade=ID) mientras siga
+   * vigente: esperando el depósito antes de que venza, o confirmando o enviando (hasta 24 h).
+   */
+  private async trocResume(): Promise<void> {
+    const param = new URLSearchParams(location.search).get("trade");
+    let view: TrocView | null = null;
+    try {
+      view = JSON.parse(localStorage.getItem(TROC_KEY) ?? "null") as TrocView | null;
+    } catch {
+      view = null;
+    }
+    if (param && /^[A-Za-z0-9_-]{2,100}$/.test(param) && view?.id !== param) view = { id: param, amount: "", pay: "", net: "", gets: "", at: Date.now() };
+    if (!view?.id) return;
+    if (Date.now() - view.at > TROC_RESUME_MS) return this.trocForget();
+    let trade: TrocadorTrade;
+    try {
+      trade = await api.trocadorTrade(view.id);
+    } catch (e) {
+      // Si el servidor no lo conoce se olvida; si fue un error de red, se intenta en la próxima visita.
+      if (/404|no encontrado|not found/i.test(String(e))) this.trocForget();
+      return;
+    }
+    const s = (trade.status || "").toLowerCase();
+    const waiting = s === "new" || s === "waiting";
+    // Venció sin depósito: ya no sirve, se olvida sin mostrarlo.
+    if (s === "expired" || (waiting && trade.expires_at && trade.expires_at * 1000 < Date.now())) return this.trocForget();
+    const up = (x?: string) => (x ?? "").toUpperCase();
+    this.trocShow(trade, {
+      ...view,
+      pay: view.pay || up(trade.ticker_from),
+      net: view.net || (trade.ticker_from === "xmr" ? "Monero" : trade.network_from),
+      gets: view.gets || up(trade.ticker_to) || "XMR",
+    });
+    $("troc-chosen").textContent = TROC_FINAL.has(s) ? "" : t(this.lang, "troc_resumed");
+    $("quick-troc-pay").scrollIntoView({ block: "start" });
+  }
+
+  private trocForget(): void {
+    try {
+      localStorage.removeItem(TROC_KEY);
+    } catch {
+      /* nada que borrar */
+    }
+  }
+
+  /** «Cerrar este intercambio»: deja de seguirlo aquí (en Trocador sigue su curso). */
+  private trocClose(): void {
+    if (!TROC_FINAL.has(this.trocState) && !window.confirm(t(this.lang, "troc_close_confirm"))) return;
+    this.trocForget();
+    if (this.trocTimer) clearInterval(this.trocTimer);
+    if (this.trocClock) clearInterval(this.trocClock);
+    this.trocTimer = this.trocClock = null;
+    $("troc-deposit").hidden = true;
+    $("quick-troc-pay").hidden = true;
+    $("form-troc").hidden = false;
+    $("form-quick").scrollIntoView({ block: "start", behavior: "smooth" });
   }
 
   private trocStatus(trade: TrocadorTrade): void {
@@ -360,10 +460,19 @@ export class SwapApp {
       $("troc-hash").textContent = trade.hashout;
       $("troc-hash-box").hidden = false;
     }
+    // Barra de pasos y explicación de lo que falta.
+    const step = s === "confirming" ? 1 : s === "sending" ? 2 : s === "finished" ? 4 : 0;
+    [...$("troc-steps").children].forEach((li, i) => (li.className = i < step ? "done" : i === step ? "now" : ""));
+    $("troc-steps").hidden = ["failed", "halted", "refunded", "expired"].includes(s);
+    const hint = s === "confirming" ? t(this.lang, "troc_hint_confirming") : s === "sending" ? t(this.lang, "troc_hint_sending", { coin: this.trocGets }) : "";
+    $("troc-hint").textContent = hint;
+    $("troc-hint").hidden = !hint;
     this.trocTick();
-    if (["finished", "failed", "refunded", "expired", "halted"].includes(s) && this.trocTimer) {
-      clearInterval(this.trocTimer);
+    // Terminado o fallido: se deja de consultar y ya no se retoma al recargar.
+    if (TROC_FINAL.has(s)) {
+      if (this.trocTimer) clearInterval(this.trocTimer);
       this.trocTimer = null;
+      this.trocForget();
     }
   }
 
