@@ -1,3 +1,5 @@
+import { moneroUri, qrSvg } from "./qr";
+import { inTelegram } from "./tg";
 import { get, type Ad, type OrderView, type PublicUser, type RoomMessage } from "./api";
 import { EscrowDriver, type EscrowNote } from "./escrow";
 import { open, seal } from "./identity";
@@ -297,7 +299,11 @@ export async function orderView(app: P2PApp, id: string) {
         ),
       );
     if (["setup", "awaiting_deposit", "releasing", "refunding", "resolving"].includes(o.status))
-      ek.push(h("p", { class: "notice warn" }, app.t("Deja esta pestaña abierta: tu navegador firma su parte del escrow.", "Keep this tab open: your browser signs its part of the escrow.")));
+      ek.push(
+        h("p", { class: "notice warn" }, inTelegram()
+          ? app.t("No cierres esta ventana: tu celular firma su parte del escrow.", "Don't close this window: your phone signs its part of the escrow.")
+          : app.t("Deja esta pestaña abierta: tu navegador firma su parte del escrow.", "Keep this tab open: your browser signs its part of the escrow.")),
+      );
     if (note?.kind === "deposit") {
       const depAddr = note.address;
       ek.push(
@@ -305,6 +311,7 @@ export async function orderView(app: P2PApp, id: string) {
           h("p", {}, h("strong", {}, app.t(`Deposita exactamente ${o.deposit_required_xmr} XMR`, `Deposit exactly ${o.deposit_required_xmr} XMR`))),
           h("div", { class: "p2p-copy" }, h("code", { class: "p2p-addr" }, note.address), h("button", { class: "btn secondary small", type: "button", onclick: (e: Event) => void navigator.clipboard?.writeText(depAddr).then(() => ((e.target as HTMLElement).textContent = app.t("¡Copiada!", "Copied!"))) }, app.t("Copiar", "Copy"))),
           payWithWallet(app, depAddr, o.deposit_required_xmr),
+          depositShortcuts(app, depAddr, o.deposit_required_xmr),
           h("small", {}, app.t("Incluye el XMR de la orden, la comisión y una pequeña reserva para la comisión de red. Si depositas de más, o sobra de la reserva, se te devuelve automáticamente a tu dirección de reembolso al cerrar la orden. Si depositas de menos, la orden se cancela y se te reembolsa (menos la comisión de red); si te faltó, manda la diferencia a esta misma dirección antes de que venza el plazo. Tu navegador calculó esta dirección.", "Includes the order XMR, the fee and a small reserve for the network fee. If you deposit more, or part of the reserve is left over, it is returned automatically to your refund address when the order closes. If you deposit too little, the order is cancelled and refunded to you (minus the network fee); if you are short, send the difference to this same address before the deadline. Your browser computed this address.")),
         ),
       );
@@ -465,6 +472,24 @@ function toPiconero(xmr: string): string | null {
 }
 
 /** Con MoneroP2P Wallet: depositar en el escrow desde la wallet (muestra su propia confirmación). */
+/** QR y enlace monero: con la dirección y el monto exactos, más copiar el monto. */
+function depositShortcuts(app: P2PApp, address: string, xmr: string): HTMLElement {
+  const uri = moneroUri(address, xmr);
+  const copyAmt = h("button", { class: "btn secondary small", type: "button" }, app.t("Copiar monto", "Copy amount"));
+  copyAmt.onclick = () => void navigator.clipboard?.writeText(xmr).then(() => (copyAmt.textContent = app.t("¡Copiado!", "Copied!")));
+  return h(
+    "div",
+    { class: "p2p-qr-box" },
+    qrSvg(uri, app.t(`QR para depositar ${xmr} XMR`, `QR to deposit ${xmr} XMR`)),
+    h(
+      "div",
+      {},
+      h("p", {}, h("small", {}, app.t("Escanéalo con tu wallet (Cake, Feather, Monerujo…) o toca el botón si la wallet está en este mismo equipo: abre con la dirección y el monto ya puestos. Revisa que la dirección coincida antes de enviar.", "Scan it with your wallet (Cake, Feather, Monerujo…) or tap the button if the wallet is on this same device: it opens with the address and amount filled in. Check the address matches before sending."))),
+      h("p", { class: "row wrap" }, inTelegram() ? null : h("a", { class: "btn small", href: uri }, app.t("Abrir en mi wallet", "Open in my wallet")), copyAmt),
+    ),
+  );
+}
+
 function payWithWallet(app: P2PApp, address: string, xmr: string): HTMLElement | null {
   const w = moneroWallet();
   const amount = toPiconero(xmr);

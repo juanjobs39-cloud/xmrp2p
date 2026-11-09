@@ -263,6 +263,7 @@ export async function handleArbiter(req: Request, env: P2PEnv, url: URL): Promis
         o = await transition(env, o, ["awaiting_deposit"], "confirming", { deposit_txid: id, deadline_at: null });
         // Tiempo de depósito del vendedor (desde que se abrió la orden o se aceptó la solicitud), para su reputación.
         await env.DB.prepare("UPDATE p2p_users SET deposit_secs = deposit_secs + ?, deposits = deposits + 1 WHERE id = ?").bind(Math.max(0, now() - (o.accepted_at ?? o.created_at)), o.seller).run();
+        await notify(env, { kind: "deposit_seen", orderId: o.id }, o.buyer, o.seller);
       }
       break;
     }

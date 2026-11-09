@@ -7,6 +7,7 @@ import type { PrivateKeyAccount } from "viem";
 import { MONERO, XMR_MAINNET } from "../app/config";
 import type { RecoveryFile } from "../app/recovery";
 import { moneroWallet, walletAddressButton } from "../app/wallet-provider";
+import { closingConfirmation, initTelegram, inTelegram } from "./tg";
 import { ApiError, get, signed, type Ad, type Method, type OrderView, type P2PConfig, type PublicUser, type RoomMessage } from "./api";
 import { EscrowDriver, type EscrowNote } from "./escrow";
 import { account, encPublic, hasVault, newVault, open, openVault, saveVault, seal, type P2PVault, type SavedMethod } from "./identity";
@@ -51,6 +52,7 @@ export class P2PApp {
   // ------------------------------------------------------------ arranque
 
   async mount() {
+    initTelegram();
     try {
       [this.cfg, this.fiats] = await Promise.all([get<P2PConfig>("/v1/p2p/config"), get<typeof this.fiats>("/v1/p2p/fiats")]);
     } catch {
@@ -59,6 +61,8 @@ export class P2PApp {
     }
     if (this.cfg.xmr_network === "mainnet") this.node = XMR_MAINNET.defaultNode;
     window.addEventListener("hashchange", () => void this.route());
+    // En Telegram: pedir confirmación al cerrar mientras el navegador firma un escrow.
+    if (inTelegram()) setInterval(() => closingConfirmation(this.drivers.size > 0), 3000);
     window.addEventListener("beforeunload", (e) => {
       if (this.drivers.size) {
         e.preventDefault();

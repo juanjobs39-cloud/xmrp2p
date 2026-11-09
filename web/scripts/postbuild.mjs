@@ -86,14 +86,14 @@ await writeFile(
   Cross-Origin-Opener-Policy: same-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains
 
-/*/app/*
-  Content-Security-Policy: frame-ancestors 'none'
-  Cache-Control: no-store
-
-/*/maker/*
-  Content-Security-Policy: frame-ancestors 'none'
-  Cache-Control: no-store
-
+${["/:lang/app/", "/:lang/app/*", "/:lang/maker/", "/:lang/maker/*"]
+  .map((r) =>
+    // La app de P2P Fiat puede abrirse dentro de Telegram Web (iframe de web.telegram.org); lo demás, sin marcos.
+    fiat && r.includes("/app/")
+      ? `${r}\n  ! X-Frame-Options\n  Content-Security-Policy: frame-ancestors https://web.telegram.org\n  Cache-Control: no-store\n`
+      : `${r}\n  Content-Security-Policy: frame-ancestors 'none'\n  Cache-Control: no-store\n`,
+  )
+  .join("\n")}
 /vendor/*
   Cache-Control: public, max-age=31536000, immutable
 `,

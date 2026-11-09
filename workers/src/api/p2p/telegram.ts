@@ -6,11 +6,13 @@
  * de pago. El administrador recibe además avisos con detalle (apelaciones, anuncios, usuarios nuevos y
  * órdenes completadas), que son datos que ya ve en su panel.
  *
- * Desde Telegram solo se puede aceptar o rechazar una solicitud: el escrow siempre se arma en la web.
+ * Desde el chat solo se puede aceptar o rechazar una solicitud. Los botones «Abrir orden» abren la app
+ * como Mini App dentro de Telegram: es la misma web, así que el escrow lo firma el celular del usuario y
+ * ninguna llave pasa por el bot ni por el servidor.
  */
 import { HttpError, json, randomId, readJson, sha256Hex } from "../env";
 import { activeUser, getUser, now, signer, type P2PEnv } from "./common";
-import { acceptRequest, declineRequest, getOrder } from "./orders";
+import { acceptRequest, declineRequest, FINAL, getOrder } from "./orders";
 
 export type Lang = "es" | "en";
 
@@ -23,6 +25,7 @@ export type EventKind =
   | "expired"
   | "cancelled"
   | "escrow_ready"
+  | "deposit_seen"
   | "funded"
   | "paid"
   | "releasing"
@@ -63,7 +66,11 @@ const TEXT: Record<EventKind, Record<Lang, (e: NotifyEvent) => string>> = {
   expired: { es: () => "⌛ Tu solicitud venció sin respuesta. No pagaste nada.", en: () => "⌛ Your request expired without a reply. You paid nothing." },
   cancelled: { es: () => "La orden se canceló.", en: () => "The order was cancelled." },
   escrow_ready: { es: () => "🔐 Escrow listo: deposita el XMR.", en: () => "🔐 Escrow ready: deposit the XMR." },
-  funded: { es: () => "🔒 El XMR está en el escrow: ya puedes pagar.", en: () => "🔒 The XMR is in escrow: you can pay now." },
+  deposit_seen: {
+    es: () => "👀 Depósito visto en el escrow: faltan 10 confirmaciones (~20 min). Comprador: todavía no pagues.",
+    en: () => "👀 Deposit seen in the escrow: 10 confirmations to go (~20 min). Buyer: do not pay yet.",
+  },
+  funded: { es: () => "🔒 El XMR está en el escrow con 10 confirmaciones: ya puedes pagar.", en: () => "🔒 The XMR is in escrow with 10 confirmations: you can pay now." },
   paid: {
     es: () => "💸 El comprador marcó «Ya pagué». Revisa TU cuenta y libera solo si recibiste el dinero.",
     en: () => "💸 The buyer marked “I have paid”. Check YOUR account and release only if you received the money.",
@@ -71,7 +78,7 @@ const TEXT: Record<EventKind, Record<Lang, (e: NotifyEvent) => string>> = {
   releasing: { es: () => "🚀 El vendedor liberó: el XMR va en camino.", en: () => "🚀 The seller released: the XMR is on its way." },
   dispute: { es: () => "⚖️ Abrieron una apelación en tu orden. Soporte revisará el chat.", en: () => "⚖️ An appeal was opened on your order. Support will review the chat." },
   resolved: { es: () => "⚖️ Soporte resolvió la apelación de tu orden.", en: () => "⚖️ Support resolved the appeal on your order." },
-  released: { es: () => "✅ Orden completada.", en: () => "✅ Order completed." },
+  released: { es: () => "✅ Orden completada: el XMR salió del escrow a la wallet del comprador.", en: () => "✅ Order completed: the XMR left the escrow to the buyer's wallet." },
   refunded: { es: () => "↩️ Orden reembolsada al vendedor.", en: () => "↩️ Order refunded to the seller." },
   timeout: { es: () => "⌛ Se acabó el tiempo de un paso de la orden.", en: () => "⌛ Time ran out on an order step." },
 };
@@ -79,7 +86,9 @@ const TEXT: Record<EventKind, Record<Lang, (e: NotifyEvent) => string>> = {
 const OPEN: Record<Lang, string> = { es: "Abrir orden", en: "Open order" };
 
 const site = (env: P2PEnv) => (env.API_URL || "https://fiat.monerop2p.app").replace(/\/$/, "");
-const orderUrl = (env: P2PEnv, lang: Lang, id: string) => `${site(env)}/${lang}/app/#/orden/${id}`;
+/** Enlace a la app abierta como Mini App: la ruta va en ?r= porque Telegram usa el # para sus datos. */
+export const miniUrl = (env: P2PEnv, lang: Lang, route = "") => `${site(env)}/${lang}/app/?tg=1${route ? `&r=${encodeURIComponent(route)}` : ""}`;
+const openBtn = (env: P2PEnv, lang: Lang, id: string, text = OPEN[lang]) => ({ text, web_app: { url: miniUrl(env, lang, `orden/${id}`) } });
 const enabled = (env: P2PEnv) => !!env.P2P_TELEGRAM_TOKEN && !!env.P2P_TELEGRAM_WEBHOOK_SECRET;
 
 type TgResult = { ok: boolean; status: number; result?: Record<string, unknown> };
@@ -120,7 +129,7 @@ export async function telegramNotify(env: P2PEnv, ev: NotifyEvent, users: string
   await Promise.all(
     rows.results.map((r) => {
       const lang: Lang = r.lang === "en" ? "en" : "es";
-      const kb: unknown[][] = [[{ text: OPEN[lang], url: orderUrl(env, lang, ev.orderId) }]];
+      const kb: unknown[][] = [[openBtn(env, lang, ev.orderId)]];
       if (ev.kind === "request")
         kb.unshift([
           { text: lang === "es" ? "✅ Aceptar" : "✅ Accept", callback_data: `a:${ev.orderId}` },
@@ -140,7 +149,7 @@ export async function telegramAdmin(env: P2PEnv, text: string, orderId?: string)
       .first<{ chat_id: string; lang: Lang }>();
     if (!row) return;
     const lang: Lang = row.lang === "en" ? "en" : "es";
-    await send(env, row.chat_id, `🛡 ${text}`.slice(0, 4000), orderId ? [[{ text: "Admin", url: `${site(env)}/${lang}/app/#/admin/${orderId}` }]] : undefined);
+    await send(env, row.chat_id, `🛡 ${text}`.slice(0, 4000), orderId ? [[{ text: "Admin", web_app: { url: miniUrl(env, lang, `admin/${orderId}`) } }]] : undefined);
   } catch (e) {
     console.log("aviso admin falló:", String(e));
   }
@@ -191,9 +200,10 @@ function sameSecret(a: string, b: string): boolean {
 }
 
 const HELP: Record<Lang, string> = {
-  es: "Este bot solo manda avisos de tus órdenes de MoneroP2P Fiat y te deja aceptar o rechazar solicitudes. Nunca te pedirá pagos, contraseñas ni datos de pago. Para conectarlo, entra a fiat.monerop2p.app → Cuenta → Conectar Telegram. /stop lo desconecta.",
-  en: "This bot only sends notifications about your MoneroP2P Fiat orders and lets you accept or decline requests. It will never ask you for payments, passwords or payment details. To connect it, go to fiat.monerop2p.app → Account → Connect Telegram. /stop disconnects it.",
+  es: "Este bot manda avisos de tus órdenes de MoneroP2P Fiat y te deja aceptar o rechazar solicitudes. El botón «P2P» abre el mercado dentro de Telegram: tu cuenta y el escrow se firman en tu celular, el bot nunca ve llaves ni datos de pago y nunca te pedirá pagos ni contraseñas. Para recibir avisos: Cuenta → Conectar Telegram. /ordenes lista tus órdenes abiertas; /stop desconecta los avisos.",
+  en: "This bot sends notifications about your MoneroP2P Fiat orders and lets you accept or decline requests. The “P2P” button opens the market inside Telegram: your account and the escrow are signed on your phone, the bot never sees keys or payment details and will never ask you for payments or passwords. To get notifications: Account → Connect Telegram. /orders lists your open orders; /stop disconnects notifications.",
 };
+const MARKET: Record<Lang, string> = { es: "🛒 Abrir P2P", en: "🛒 Open P2P" };
 
 type Update = {
   message?: { text?: string; chat?: { id?: number; type?: string }; from?: { language_code?: string } };
@@ -241,11 +251,49 @@ async function onMessage(env: P2PEnv, m: NonNullable<Update["message"]>) {
         : `Conectado como ${user.nickname}. Aquí te avisaremos de tus órdenes y solicitudes. /stop lo desconecta.`,
     );
   }
+  if (/^\/(ordenes|orders)\b/.test(text)) return openOrders(env, chat, guess);
   if (/^\/stop\b/.test(text)) {
     const r = await env.DB.prepare("DELETE FROM p2p_telegram WHERE chat_id = ?").bind(chat).run();
     return send(env, chat, r.meta.changes ? (guess === "es" ? "Desconectado. Ya no recibirás avisos aquí." : "Disconnected. You will no longer get notifications here.") : HELP[guess]);
   }
-  return send(env, chat, HELP[guess]);
+  return send(env, chat, HELP[guess], [[{ text: MARKET[guess], web_app: { url: miniUrl(env, guess) } }]]);
+}
+
+const STATUS: Record<string, [string, string]> = {
+  requested: ["solicitud pendiente", "pending request"],
+  setup: ["armando el escrow", "setting up the escrow"],
+  awaiting_deposit: ["esperando el depósito", "waiting for the deposit"],
+  confirming: ["depósito confirmándose", "deposit confirming"],
+  awaiting_payment: ["esperando el pago", "waiting for the payment"],
+  paid: ["pago marcado: revisar y liberar", "marked as paid: check and release"],
+  releasing: ["liberando el XMR", "releasing the XMR"],
+  refunding: ["reembolsando", "refunding"],
+  disputed: ["en apelación", "under appeal"],
+  resolving: ["soporte resolviendo", "support resolving"],
+};
+
+/** /ordenes: tus órdenes abiertas (solo estado y si compras o vendes, sin montos). */
+async function openOrders(env: P2PEnv, chat: string, guess: Lang) {
+  const link = await env.DB.prepare("SELECT user_id, lang FROM p2p_telegram WHERE chat_id = ?").bind(chat).first<{ user_id: string; lang: Lang }>();
+  if (!link) return send(env, chat, HELP[guess], [[{ text: MARKET[guess], web_app: { url: miniUrl(env, guess) } }]]);
+  const lang: Lang = link.lang === "en" ? "en" : "es";
+  const rows = await env.DB.prepare(
+    `SELECT id, status, buyer FROM p2p_orders WHERE (buyer = ? OR seller = ?) AND status NOT IN (${FINAL.map(() => "?").join(", ")}) ORDER BY created_at DESC LIMIT 8`,
+  )
+    .bind(link.user_id, link.user_id, ...FINAL)
+    .all<{ id: string; status: string; buyer: string }>();
+  if (!rows.results.length) return send(env, chat, lang === "es" ? "No tienes órdenes abiertas." : "You have no open orders.", [[{ text: MARKET[lang], web_app: { url: miniUrl(env, lang) } }]]);
+  const lines = rows.results.map((o) => {
+    const side = o.buyer === link.user_id ? (lang === "es" ? "Compras" : "Buying") : lang === "es" ? "Vendes" : "Selling";
+    const st = STATUS[o.status]?.[lang === "es" ? 0 : 1] ?? o.status;
+    return `• ${o.id.slice(0, 8)} · ${side} · ${st}`;
+  });
+  return send(
+    env,
+    chat,
+    (lang === "es" ? "Tus órdenes abiertas:\n" : "Your open orders:\n") + lines.join("\n"),
+    rows.results.map((o) => [openBtn(env, lang, o.id, `${OPEN[lang]} ${o.id.slice(0, 8)}`)]),
+  );
 }
 
 async function onCallback(env: P2PEnv, q: NonNullable<Update["callback_query"]>) {
@@ -279,9 +327,9 @@ async function onCallback(env: P2PEnv, q: NonNullable<Update["callback_query"]>)
       chat_id: chat,
       message_id: q.message.message_id,
       text: accept
-        ? t("✅ Aceptaste la solicitud. Abre la orden en los próximos 60 min para armar el escrow.", "✅ You accepted the request. Open the order within 60 min to set up the escrow.")
+        ? t("✅ Aceptaste la solicitud. Abre la orden (aquí mismo en Telegram) en los próximos 60 min para armar el escrow.", "✅ You accepted the request. Open the order (right here in Telegram) within 60 min to set up the escrow.")
         : t("✖ Rechazaste la solicitud.", "✖ You declined the request."),
-      reply_markup: { inline_keyboard: [[{ text: OPEN[lang], url: orderUrl(env, lang, o.id) }]] },
+      reply_markup: { inline_keyboard: [[openBtn(env, lang, o.id)]] },
     });
 }
 
@@ -301,7 +349,8 @@ export const telegramBot = (env: P2PEnv) => (enabled(env) ? botName(env).catch((
 export async function setupWebhook(env: P2PEnv): Promise<void> {
   if (!enabled(env)) return;
   const url = `${site(env)}/v1/p2p/telegram/webhook`;
-  const sig = (await sha256Hex(`${env.P2P_TELEGRAM_TOKEN}|${env.P2P_TELEGRAM_WEBHOOK_SECRET}|${url}`)).slice(0, 32);
+  // «v2» cambia cuando cambia lo que se registra (comandos, botón de menú): así se vuelve a registrar.
+  const sig = (await sha256Hex(`v2|${env.P2P_TELEGRAM_TOKEN}|${env.P2P_TELEGRAM_WEBHOOK_SECRET}|${url}`)).slice(0, 32);
   const cur = await env.DB.prepare("SELECT value FROM p2p_settings WHERE key = 'telegram_hook'").first<{ value: string }>();
   if (cur?.value === sig) return;
   const me = await tg(env, "getMe", {});
@@ -319,9 +368,12 @@ export async function setupWebhook(env: P2PEnv): Promise<void> {
   ]);
   await tg(env, "setMyCommands", {
     commands: [
+      { command: "ordenes", description: "Mis órdenes abiertas / My open orders" },
       { command: "help", description: "Qué hace este bot / What this bot does" },
       { command: "stop", description: "Desconectar avisos / Disconnect notifications" },
     ],
   });
+  // Botón de menú junto al campo de texto: abre el mercado como Mini App.
+  await tg(env, "setChatMenuButton", { menu_button: { type: "web_app", text: "P2P", web_app: { url: miniUrl(env, "es") } } });
   console.log("telegram: webhook registrado para @" + name);
 }

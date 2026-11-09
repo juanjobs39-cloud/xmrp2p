@@ -570,6 +570,7 @@ describe("P2P Fiat", () => {
     await setupWebhook(tenv);
     const set = calls.find((c) => c.method === "setWebhook")!;
     expect(set.body).toMatchObject({ url: "https://fiat.monerop2p.app/v1/p2p/telegram/webhook", secret_token: TG_SECRET, allowed_updates: ["message", "callback_query"] });
+    expect(calls.find((c) => c.method === "setChatMenuButton")!.body.menu_button).toMatchObject({ type: "web_app", web_app: { url: "https://fiat.monerop2p.app/es/app/?tg=1" } });
     expect((await call("/v1/p2p/config", {}, tenv)).body.telegram_bot).toBe("TestFiatBot");
     const before = calls.length;
     await setupWebhook(tenv);
@@ -637,7 +638,8 @@ describe("P2P Fiat", () => {
     expect(toSeller.body.text).not.toMatch(/400|MXN|SPEI|user_/);
     const kb = toSeller.body.reply_markup.inline_keyboard;
     expect(kb[0].map((b: any) => b.callback_data)).toEqual([`a:${o1.id}`, `d:${o1.id}`]);
-    expect(kb[1][0].url).toBe(`https://fiat.monerop2p.app/es/app/#/orden/${o1.id}`);
+    // «Abrir orden» abre la app como Mini App de Telegram, con la ruta en ?r=.
+    expect(kb[1][0].web_app.url).toBe(`https://fiat.monerop2p.app/es/app/?tg=1&r=orden%2F${o1.id}`);
 
     const press = (chat: number, data: string) => hook({ callback_query: { id: "q1", data, message: { message_id: 9, chat: { id: chat } } } });
     // El comprador no puede aceptar su propia solicitud desde su chat.
@@ -663,6 +665,22 @@ describe("P2P Fiat", () => {
     expect(acc.status).toBe("setup");
     expect(acc.accepted_at).not.toBeNull();
     expect(calls.filter((c) => c.body.chat_id === String(bChat)).at(-1)!.body.text).toContain("Aceptaron tu solicitud");
+    // Seguimiento del depósito: los dos se enteran de que el XMR llegó al escrow.
+    const arb = (path: string, body: unknown) => call(path, { method: "POST", body: JSON.stringify(body), headers: { authorization: `Bearer ${ARBITER}` } }, tenv);
+    await arb(`/v1/p2p/arbiter/orders/${o2.id}/escrow`, { multisig_address: STAGENET("M") });
+    expect((await arb(`/v1/p2p/arbiter/orders/${o2.id}/deposit`, { txid: TXID("c") })).body.status).toBe("confirming");
+    for (const chat of [sChat, bChat]) expect(calls.filter((c) => c.body.chat_id === String(chat)).at(-1)!.body.text).toContain("Depósito visto");
+    // /ordenes: estado y lado, con botón a cada orden, sin montos.
+    await hook(msg(sChat, "/ordenes"));
+    const list = calls.at(-1)!.body;
+    expect(list.text).toContain(`${o2.id.slice(0, 8)} · Vendes · depósito confirmándose`);
+    expect(list.text).not.toContain(o1.id.slice(0, 8));
+    expect(list.reply_markup.inline_keyboard[0][0].web_app.url).toContain(`r=orden%2F${o2.id}`);
+    await hook(msg(bChat, "/ordenes"));
+    expect(calls.at(-1)!.body.text).toContain(`${o2.id.slice(0, 8)} · Compras`);
+    // Sin cuenta ligada: ayuda con el botón para abrir el mercado.
+    await hook(msg(424242, "/ordenes"));
+    expect(calls.at(-1)!.body.reply_markup.inline_keyboard[0][0].web_app.url).toBe("https://fiat.monerop2p.app/es/app/?tg=1");
     // Ningún mensaje a usuarios lleva montos ni apodos.
     for (const c of calls.filter((c) => c.method === "sendMessage" && c.body.chat_id !== undefined && !String(c.body.text).startsWith("Conectado")))
       expect(c.body.text).not.toMatch(/400|MXN|SPEI|PayPal|user_/);
