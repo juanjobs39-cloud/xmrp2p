@@ -2,7 +2,7 @@
 import { MONERO } from "../app/config";
 import { get, type Ad, type Method, type OrderView, type PublicUser } from "./api";
 import type { P2PApp } from "./p2p-app";
-import { fmtFiat, fmtXmr, h, kids, offPlatformWarning, pct, skeleton } from "./ui";
+import { fmtFiat, fmtWait, fmtXmr, h, kids, offPlatformWarning, pct, skeleton } from "./ui";
 
 type MarketAd = Ad & { user: PublicUser };
 
@@ -114,11 +114,13 @@ function adRow(app: P2PApp, ad: MarketAd, wantBuy: boolean, market: number | nul
   const t = app.t;
   const own = !!app.acct && ad.user_id.toLowerCase() === app.acct.address.toLowerCase();
   const on = app.isOn(ad.user);
+  // Fuera de línea pero acepta solicitudes: la orden lo espera.
+  const canReq = !on && !!ad.request_window_h;
   const delta = market && ad.price ? ((ad.price - market) / market) * 100 : null;
   const take = h(
     "button",
-    { class: "btn " + (wantBuy ? "buy" : "sell"), type: "button", disabled: !on && !own },
-    own ? t("Tu anuncio", "Your ad") : !on ? t("Desconectado", "Offline") : wantBuy ? t("Comprar XMR", "Buy XMR") : t("Vender XMR", "Sell XMR"),
+    { class: "btn " + (wantBuy ? "buy" : "sell"), type: "button", disabled: !on && !own && !canReq },
+    own ? t("Tu anuncio", "Your ad") : canReq ? t("Enviar solicitud", "Send request") : !on ? t("Desconectado", "Offline") : wantBuy ? t("Comprar XMR", "Buy XMR") : t("Vender XMR", "Sell XMR"),
   );
   take.onclick = () => {
     if (own) return void (location.hash = "#/anuncios");
@@ -143,8 +145,14 @@ function adRow(app: P2PApp, ad: MarketAd, wantBuy: boolean, market: number | nul
       h("span", {}, h("small", { class: "muted" }, t("Pagar en", "Pay within") + " "), `${ad.pay_window_min} min`),
     ),
     h("div", { class: "p2p-cell methods", role: "cell" }, h("div", { class: "p2p-tags" }, ad.methods.map((m) => app.methodTag(m)))),
-    h("div", { class: "p2p-cell act", role: "cell" }, take),
+    h("div", { class: "p2p-cell act", role: "cell" }, take, canReq ? h("small", { class: "muted p2p-reply" }, replyHint(app, ad)) : null),
   );
+}
+
+/** «Suele responder en ~2 h» (o el plazo máximo si todavía no hay historial). */
+function replyHint(app: P2PApp, ad: MarketAd): string {
+  const avg = ad.user.avg_accept_min;
+  return avg != null ? app.t(`Suele responder en ~${fmtWait(avg)}`, `Usually replies in ~${fmtWait(avg)}`) : app.t(`Responde en máx. ${ad.request_window_h} h`, `Replies within ${ad.request_window_h} h`);
 }
 
 /** Panel lateral (hoja inferior en celular) con el resumen y el formulario para abrir la orden. */
@@ -171,13 +179,16 @@ function takeSheet(app: P2PApp, ad: MarketAd, wantBuy: boolean, market: number |
   const method = h("select", { id: "p2p-m" }, ad.methods.map((m, i) => h("option", { value: String(i) }, m.name + (m.reversible ? " ⚠" : ""))));
   const addr = h("input", { id: "p2p-addr", type: "text", spellcheck: false, autocomplete: "off", placeholder: MONERO.addressPrefixes[0] + "…" });
   app.walletFill(addr);
-  const go = h("button", { class: "btn big " + (wantBuy ? "buy" : "sell"), type: "button" }, wantBuy ? t("Comprar XMR", "Buy XMR") : t("Vender XMR", "Sell XMR"));
+  const isReq = !app.isOn(ad.user) && !!ad.request_window_h;
+  const notifyMe = h("input", { id: "p2p-notify", type: "checkbox", checked: app.pushSupported() });
+  const go = h("button", { class: "btn big " + (wantBuy ? "buy" : "sell"), type: "button" }, isReq ? t("Enviar solicitud", "Send request") : wantBuy ? t("Comprar XMR", "Buy XMR") : t("Vender XMR", "Sell XMR"));
   go.onclick = () =>
     void app.busy(
       go,
       async () => {
         if (!app.me) throw new Error(t("Primero elige un apodo en Cuenta.", "First choose a nickname in Account."));
-        app.askNotify();
+        if (isReq && notifyMe.checked) await app.enablePush().catch(() => false);
+        else app.askNotify();
         const o = await app.req<OrderView>("POST", "/v1/p2p/orders", { ad_id: ad.id, fiat_amount: amount.value.trim().replace(",", "."), method_index: Number(method.value), xmr_address: addr.value.trim() });
         close();
         location.hash = `#/orden/${o.id}`;
@@ -207,6 +218,22 @@ function takeSheet(app: P2PApp, ad: MarketAd, wantBuy: boolean, market: number |
       h("dd", {}, `${ad.pay_window_min} min`),
     ),
     ad.terms ? h("div", { class: "p2p-terms" }, h("small", { class: "muted" }, t("Condiciones del anunciante", "Advertiser's terms")), h("p", {}, ad.terms)) : null,
+    isReq
+      ? h(
+          "div",
+          { class: "notice" },
+          h(
+            "p",
+            {},
+            t(
+              `El anunciante está fuera de línea. Tu orden entra como solicitud: tiene hasta ${ad.request_window_h} h para aceptarla (${replyHint(app, ad).toLowerCase()}). No pagas nada hasta que el XMR esté en el escrow.`,
+              `The advertiser is offline. Your order goes in as a request: they have up to ${ad.request_window_h} h to accept it (${replyHint(app, ad).toLowerCase()}). You pay nothing until the XMR is in escrow.`,
+            ),
+          ),
+          h("p", {}, h("small", {}, t("Cuando acepte, vuelve a la orden: tu navegador también firma el escrow.", "When they accept, come back to the order: your browser also signs the escrow."))),
+          app.pushSupported() ? h("label", { class: "p2p-check" }, notifyMe, " ", t("Avisarme cuando acepte (notificación del navegador)", "Notify me when they accept (browser notification)")) : null,
+        )
+      : null,
     offPlatformWarning(app.lang),
     out,
     h("div", { class: "field app" }, h("label", { for: "p2p-amt" }, `${wantBuy ? t("Vas a pagar", "You pay") : t("Vas a recibir", "You receive")} (${ad.fiat})`), h("div", { class: "p2p-suffix" }, amount, max, h("span", {}, ad.fiat))),

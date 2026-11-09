@@ -3,6 +3,7 @@ import { createAd, getAd, getMe, getProfile, listAds, myAds, publicAd, putMe, up
 import { FIATS, POPULAR_FIATS, requireFiat, suggestedMethods, xmrPrice } from "./catalog";
 import { activeUser, settings, signer, text, xmrNetwork, type P2PEnv } from "./common";
 import { handleAdmin, handleArbiter } from "./admin";
+import { subscribe, unsubscribe } from "./push";
 import { createOrder, FINAL, getOrder, getOrderView, myOrders, orderAction, roleOf, roomEvent, sweepOrders } from "./orders";
 
 export { sweepOrders };
@@ -29,6 +30,8 @@ export async function handleP2P(req: Request, env: P2PEnv, url: URL): Promise<Re
       dispute_after_min: Number(s.dispute_after_min),
       admin_address: env.P2P_ADMIN_ADDRESS?.toLowerCase() || null,
       fee_address: env.P2P_FEE_ADDRESS || null,
+      accept_setup_min: Number(s.accept_setup_min ?? 60),
+      vapid_public: env.P2P_VAPID_PUBLIC || null,
     });
   }
   if (p === "/v1/p2p/fiats" && get) return json({ popular: POPULAR_FIATS, all: FIATS }, 200, { "cache-control": "public, max-age=86400" });
@@ -54,6 +57,10 @@ export async function handleP2P(req: Request, env: P2PEnv, url: URL): Promise<Re
   if (p === "/v1/p2p/me") {
     if (req.method === "PUT") return putMe(req, env, p);
     if (get) return getMe(req, env, p);
+  }
+  if (p === "/v1/p2p/push") {
+    if (req.method === "PUT") return subscribe(req, env, p);
+    if (req.method === "DELETE") return unsubscribe(req, env, p);
   }
   if (p === "/v1/p2p/ads" && req.method === "POST") return createAd(req, env, p);
   if (adGet && req.method === "PATCH") return updateAd(req, env, p, adGet[1]!);

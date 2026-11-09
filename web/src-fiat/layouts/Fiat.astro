@@ -18,9 +18,11 @@ export interface Props {
   noindex?: boolean;
   /** el título ya incluye la marca */
   bareTitle?: boolean;
+  /** Manifest de la app instalable (solo en la página del mercado). */
+  manifest?: string;
 }
 
-const { lang, title, description, route, jsonLd = [], breadcrumbs, csp, noindex, bareTitle } = Astro.props;
+const { lang, title, description, route, jsonLd = [], breadcrumbs, csp, noindex, bareTitle, manifest } = Astro.props;
 const t = tr(lang);
 const site = Astro.site!;
 const path = Astro.url.pathname;
@@ -82,6 +84,7 @@ const nav: [RouteKey, string][] = [
     <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml" />
     <link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    {manifest && <link rel="manifest" href={manifest} />}
     <link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt" />
     <meta name="theme-color" content="#e2591b" />
     {ld.map((o) => <script type="application/ld+json" set:html={JSON.stringify(o)} />)}

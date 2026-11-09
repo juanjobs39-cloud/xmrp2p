@@ -29,7 +29,7 @@ howto:
     - name: "Abre el mercado P2P"
       text: "Entra a fiat.monerop2p.app, elige tu moneda (pesos, dólares, reales, euros…) y tu método de pago. Crea tu cuenta con una contraseña: no pide correo ni identificación."
     - name: "Elige un vendedor conectado"
-      text: "Compara precio, límites, métodos de pago y reputación. Los anuncios de quien lleva más de 24 horas sin conectarse se ocultan solos."
+      text: "Compara precio, límites, métodos de pago y reputación. Si el anunciante está fuera de línea y acepta solicitudes, tu orden lo espera; los anuncios abandonados se ocultan solos."
     - name: "Espera a que el XMR quede en el escrow"
       text: "El vendedor deposita el XMR en un multisig 2 de 3. Tras 10 confirmaciones (unos 20 minutos) se abren el chat cifrado y sus datos de pago."
     - name: "Paga y marca «Ya pagué»"
@@ -89,7 +89,7 @@ Funciona como lo recuerdas: buscas un anuncio en tu moneda, abres una orden, pag
 - **Sin KYC ni correo.** Tu cuenta es una llave que genera tu navegador, protegida con contraseña.
 - **Comisiones claras.** Comprar no cuesta nada. El vendedor paga **0.5 %** al liberar, más la comisión de la red.
 - **Límites.** Hasta 1000 USD (o su equivalente) por orden y 3 órdenes abiertas por usuario.
-- **Anuncios vivos.** Si un anunciante lleva más de 24 horas sin conectarse, sus anuncios se ocultan solos, para que no pierdas tiempo con cuentas abandonadas.
+- **Anuncios vivos.** Si el anunciante está fuera de línea y su anuncio acepta solicitudes, tu orden lo espera (de 1 a 12 horas) y le llega un aviso; no pagas nada hasta que el XMR esté en el escrow. Los anuncios de quien lleva más de 24 horas sin conectarse se ocultan solos (7 días si aceptan solicitudes).
 - **Apelaciones.** Si pagaste y el vendedor no libera, abres una apelación a los 15 minutos; soporte revisa los comprobantes y firma con quien tiene la razón.
 
 ¿Vendías en LocalMonero? **Publicar anuncios es gratis**: eliges tu margen sobre el precio de mercado, tus métodos de pago y tus límites. Sé de los primeros en tu moneda.

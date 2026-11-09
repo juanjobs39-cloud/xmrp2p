@@ -382,6 +382,148 @@ describe("P2P Fiat", () => {
     expect(re.body).toMatchObject({ status: "active", paused_reason: null });
   });
 
+  // ---------- Solicitudes con el anunciante fuera de línea ----------
+
+  const away = (k: Key, secs: number) => DB.prepare("UPDATE p2p_users SET last_seen = ? WHERE id = ?").bind(Math.floor(Date.now() / 1000) - secs, k.address.toLowerCase()).run();
+
+  it("solicitudes: con el anunciante fuera de línea la orden espera a que acepte", async () => {
+    const seller = await newUser();
+    const buyer = await newUser();
+    const plain = (await signed(seller, "POST", "/v1/p2p/ads", sellAd())).body;
+    const ad = (await signed(seller, "POST", "/v1/p2p/ads", sellAd({ request_window_h: 3 }))).body;
+    expect(ad.request_window_h).toBe(3);
+    expect((await signed(seller, "POST", "/v1/p2p/ads", sellAd({ request_window_h: 2 }))).status).toBe(400);
+    await away(seller, 3600);
+    // Sin solicitudes: igual que antes.
+    expect((await signed(buyer, "POST", "/v1/p2p/orders", { ad_id: plain.id, fiat_amount: "400", xmr_address: STAGENET("B") })).status).toBe(409);
+    const t0 = Math.floor(Date.now() / 1000);
+    const o = (await signed(buyer, "POST", "/v1/p2p/orders", { ad_id: ad.id, fiat_amount: "400", xmr_address: STAGENET("B") })).body;
+    expect(o).toMatchObject({ status: "requested", is_maker: false, accepted_at: null });
+    expect(o.deadline_at).toBeGreaterThanOrEqual(t0 + 3 * 3600);
+    expect((await call(`/v1/p2p/ads/${ad.id}`)).body.available_xmr).toBe("1.9");
+    // El árbitro no ve las solicitudes: no hay escrow que armar.
+    expect((await arbiter(`/v1/p2p/arbiter/orders/${o.id}/escrow`, { multisig_address: STAGENET("M") })).status).toBe(409);
+    // Solo el anunciante acepta.
+    expect((await signed(buyer, "POST", `/v1/p2p/orders/${o.id}/accept`, {})).status).toBe(403);
+    const mine = (await signed(seller, "GET", "/v1/p2p/my/orders?open=1")).body.orders.find((x: { id: string }) => x.id === o.id);
+    expect(mine).toMatchObject({ status: "requested", is_maker: true });
+    const acc = (await signed(seller, "POST", `/v1/p2p/orders/${o.id}/accept`, {})).body;
+    expect(acc).toMatchObject({ status: "setup", is_maker: true });
+    expect(acc.accepted_at).toBeGreaterThanOrEqual(t0);
+    expect(acc.deadline_at).toBeGreaterThanOrEqual(acc.accepted_at + 60 * 60);
+    expect((await call(`/v1/p2p/users/${seller.address}`)).body.avg_accept_min).not.toBeNull();
+    // Después todo sigue igual que una orden normal.
+    await fund(o.id);
+    expect((await signed(buyer, "GET", `/v1/p2p/orders/${o.id}`)).body.status).toBe("awaiting_payment");
+  });
+
+  it("solicitudes: rechazar o cancelar devuelven el XMR sin afectar la reputación; tope de 5 por anuncio", async () => {
+    const seller = await newUser();
+    const ad = (await signed(seller, "POST", "/v1/p2p/ads", sellAd({ request_window_h: 1 }))).body;
+    await away(seller, 3600);
+    const buyers = await Promise.all([1, 2, 3, 4, 5, 6].map(() => newUser()));
+    const req = (k: Key) => signed(k, "POST", "/v1/p2p/orders", { ad_id: ad.id, fiat_amount: "200", xmr_address: STAGENET("B") });
+    const os: any[] = [];
+    for (const b of buyers.slice(0, 5)) os.push((await req(b)).body);
+    expect((await req(buyers[5]!)).status).toBe(429);
+    expect((await call(`/v1/p2p/ads/${ad.id}`)).body.available_xmr).toBe("1.75");
+    expect((await signed(seller, "POST", `/v1/p2p/orders/${os[0].id}/decline`, {})).body).toMatchObject({ status: "cancelled", cancel_reason: "declined" });
+    expect((await signed(buyers[1]!, "POST", `/v1/p2p/orders/${os[1].id}/cancel`, {})).body).toMatchObject({ status: "cancelled", cancel_reason: "cancelled_by_buyer" });
+    expect((await signed(buyers[1]!, "POST", `/v1/p2p/orders/${os[1].id}/decline`, {})).status).toBe(403);
+    expect((await call(`/v1/p2p/ads/${ad.id}`)).body.available_xmr).toBe("1.85");
+    expect((await call(`/v1/p2p/users/${seller.address}`)).body).toMatchObject({ orders_done: 0, completion_pct: null });
+    expect((await call(`/v1/p2p/users/${buyers[1]!.address}`)).body.completion_pct).toBeNull();
+    // Ya hay lugar para otra solicitud (rechazar lo marcó en línea; vuelve a irse).
+    await away(seller, 3600);
+    expect((await req(buyers[5]!)).body.status).toBe("requested");
+  });
+
+  it("solicitudes: vencidas se cancelan, 3 en 7 días pausan los anuncios; escrow sin armar tras aceptar no culpa a nadie", async () => {
+    const seller = await newUser();
+    const ad = (await signed(seller, "POST", "/v1/p2p/ads", sellAd({ request_window_h: 6 }))).body;
+    await away(seller, 3600);
+    const buyers = await Promise.all([1, 2, 3, 4].map(() => newUser()));
+    const os: any[] = [];
+    for (const b of buyers) os.push((await signed(b, "POST", "/v1/p2p/orders", { ad_id: ad.id, fiat_amount: "200", xmr_address: STAGENET("B") })).body);
+    // Una se acepta y el escrow no se arma a tiempo.
+    await signed(seller, "POST", `/v1/p2p/orders/${os[3].id}/accept`, {});
+    await DB.prepare("UPDATE p2p_orders SET deadline_at = 1 WHERE id IN (?, ?)").bind(os[0].id, os[3].id).run();
+    await sweepOrders(env);
+    expect((await signed(buyers[0]!, "GET", `/v1/p2p/orders/${os[0].id}`)).body).toMatchObject({ status: "cancelled", cancel_reason: "timeout_request" });
+    expect((await signed(buyers[3]!, "GET", `/v1/p2p/orders/${os[3].id}`)).body).toMatchObject({ status: "cancelled", cancel_reason: "timeout_setup" });
+    expect((await call(`/v1/p2p/users/${seller.address}`)).body.completion_pct).toBeNull();
+    expect((await call(`/v1/p2p/ads/${ad.id}`)).body.status).toBe("active");
+    await DB.prepare("UPDATE p2p_orders SET deadline_at = 1 WHERE id IN (?, ?)").bind(os[1].id, os[2].id).run();
+    await sweepOrders(env);
+    expect((await call(`/v1/p2p/ads/${ad.id}`)).body).toMatchObject({ status: "paused", paused_reason: "missed_requests", available_xmr: "2" });
+  });
+
+  it("mercado: los anuncios con solicitudes siguen visibles hasta 7 días y van antes que los que no aceptan", async () => {
+    const a = await newUser();
+    const b = await newUser();
+    const req = (await signed(a, "POST", "/v1/p2p/ads", sellAd({ fiat: "USD", country: null, price: "210", request_window_h: 12 }))).body;
+    const plain = (await signed(b, "POST", "/v1/p2p/ads", sellAd({ fiat: "USD", country: null, price: "190" }))).body;
+    const ids = async () => (await call("/v1/p2p/ads?side=sell&fiat=USD")).body.ads.map((x: { id: string }) => x.id).filter((id: string) => id === req.id || id === plain.id);
+    await away(a, 3600);
+    await away(b, 3600);
+    // Aunque es más caro, va primero: se le puede mandar solicitud.
+    expect(await ids()).toEqual([req.id, plain.id]);
+    await away(a, 25 * 3600);
+    await away(b, 25 * 3600);
+    expect(await ids()).toEqual([req.id]);
+    await away(a, 6 * 86400);
+    expect(await ids()).toEqual([req.id]);
+    await away(a, 8 * 86400);
+    expect(await ids()).toEqual([]);
+  });
+
+  it("avisos push: suscripción solo a servicios conocidos, firma VAPID y borra las suscripciones muertas", async () => {
+    // Llaves VAPID generadas en la prueba: ninguna llave vive en el repositorio.
+    const kp = (await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"])) as CryptoKeyPair;
+    const jwk = (await crypto.subtle.exportKey("jwk", kp.privateKey)) as JsonWebKey;
+    const raw = new Uint8Array((await crypto.subtle.exportKey("raw", kp.publicKey)) as ArrayBuffer);
+    const b64u = (b: Uint8Array) => btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    const penv = { ...(env as object), P2P_VAPID_PUBLIC: b64u(raw), P2P_VAPID_PRIVATE: jwk.d } as never;
+    expect((await call("/v1/p2p/config", {}, penv)).body.vapid_public).toBe(b64u(raw));
+
+    const seller = await newUser();
+    const buyer = await newUser();
+    const ok = "https://fcm.googleapis.com/fcm/send/abc";
+    const dead = "https://updates.push.services.mozilla.com/wpush/v2/dead";
+    expect((await signed(seller, "PUT", "/v1/p2p/push", { endpoint: "https://evil.example/push" }, penv)).status).toBe(400);
+    expect((await signed(seller, "PUT", "/v1/p2p/push", { endpoint: "http://fcm.googleapis.com/x" }, penv)).status).toBe(400);
+    expect((await signed(seller, "PUT", "/v1/p2p/push", { endpoint: ok }, penv)).body).toEqual({ ok: true });
+    expect((await signed(seller, "PUT", "/v1/p2p/push", { endpoint: dead }, penv)).body).toEqual({ ok: true });
+
+    const sent: { url: string; auth: string; body: unknown }[] = [];
+    const prices = globalThis.fetch;
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+      const u = String(input instanceof Request ? input.url : input);
+      if (u === ok || u === dead) {
+        sent.push({ url: u, auth: new Headers(init?.headers).get("authorization") ?? "", body: init?.body });
+        return new Response(null, { status: u === ok ? 201 : 410 });
+      }
+      return prices(input, init);
+    });
+    const ad = (await signed(seller, "POST", "/v1/p2p/ads", sellAd({ request_window_h: 1 }), penv)).body;
+    await away(seller, 3600);
+    expect((await signed(buyer, "POST", "/v1/p2p/orders", { ad_id: ad.id, fiat_amount: "200", xmr_address: STAGENET("B") }, penv)).body.status).toBe("requested");
+    expect(sent.map((s) => s.url).sort()).toEqual([ok, dead].sort());
+    expect(sent.every((s) => !s.body)).toBe(true);
+    // La firma VAPID es válida para el origen del servicio de push.
+    const m = /^vapid t=([^.]+)\.([^.]+)\.([^,]+), k=(.+)$/.exec(sent.find((s) => s.url === ok)!.auth)!;
+    expect(m[4]).toBe(b64u(raw));
+    const dec = (s: string) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), (c) => c.charCodeAt(0));
+    expect(JSON.parse(new TextDecoder().decode(dec(m[2]!))).aud).toBe("https://fcm.googleapis.com");
+    const valid = await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, kp.publicKey, dec(m[3]!), new TextEncoder().encode(`${m[1]}.${m[2]}`));
+    expect(valid).toBe(true);
+    // La suscripción muerta (410) se borró; la buena sigue.
+    const left = await DB.prepare("SELECT endpoint FROM p2p_push WHERE user_id = ?").bind(seller.address.toLowerCase()).all<{ endpoint: string }>();
+    expect(left.results.map((r) => r.endpoint)).toEqual([ok]);
+    expect((await signed(seller, "DELETE", "/v1/p2p/push", { endpoint: ok }, penv)).body).toEqual({ ok: true });
+    expect((await DB.prepare("SELECT COUNT(*) AS n FROM p2p_push WHERE user_id = ?").bind(seller.address.toLowerCase()).first<{ n: number }>())!.n).toBe(0);
+  });
+
   it("el árbitro necesita su token", async () => {
     expect((await call("/v1/p2p/arbiter/tasks")).status).toBe(401);
     expect((await call("/v1/p2p/arbiter/tasks", { headers: { authorization: "Bearer otro" } })).status).toBe(401);

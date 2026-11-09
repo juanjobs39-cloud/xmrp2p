@@ -71,3 +71,8 @@ const OFF_PLATFORM: Record<string, string> = {
 /** Advertencia contra operar por fuera de la plataforma (comprador y vendedor). */
 export const offPlatformWarning = (lang: string) =>
   h("p", { class: "notice danger p2p-offplatform", role: "note" }, OFF_PLATFORM[lang] ?? OFF_PLATFORM.en);
+
+/** Minutos → «25 min» o «3 h». */
+export function fmtWait(min: number): string {
+  return min < 60 ? `${Math.max(1, Math.round(min))} min` : `${Math.round(min / 60)} h`;
+}

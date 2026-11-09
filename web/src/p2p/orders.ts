@@ -3,13 +3,14 @@ import { EscrowDriver, type EscrowNote } from "./escrow";
 import { open, seal } from "./identity";
 import type { P2PApp } from "./p2p-app";
 import { moneroWallet } from "../app/wallet-provider";
-import { clock, fmtFiat, fmtXmr, h, kids, nowS, offPlatformWarning, statusTone, type Child } from "./ui";
+import { clock, fmtFiat, fmtXmr, h, kids, nowS, offPlatformWarning, pct, statusTone, type Child } from "./ui";
 
 export async function myAdsView(app: P2PApp) {
   const t = app.t;
   const r = await app.req<{ ads: Ad[] }>("GET", "/v1/p2p/my/ads");
   const out = h("div");
   const autoPaused = r.ads.filter((a) => a.status === "paused" && a.paused_reason === "missed_deposits");
+  const reqPaused = r.ads.filter((a) => a.status === "paused" && a.paused_reason === "missed_requests");
   const statusLabel: Record<string, string> = { active: t("Activo", "Active"), paused: t("En pausa", "Paused"), hidden: t("Oculto por soporte", "Hidden by support") };
   const row = (ad: Ad) => {
     const set = (status: string, label: string, cls = "secondary") => {
@@ -20,6 +21,16 @@ export async function myAdsView(app: P2PApp) {
       };
       return b;
     };
+    const win = h(
+      "select",
+      { id: `rw-${ad.id}`, "aria-label": t("Solicitudes fuera de línea", "Requests while offline"), disabled: ad.status === "hidden" },
+      [0, 1, 3, 6, 12].map((n) => h("option", { value: String(n), selected: (ad.request_window_h ?? 0) === n }, n ? t(`Solicitudes: ${n} h`, `Requests: ${n} h`) : t("Sin solicitudes", "No requests"))),
+    );
+    win.onchange = () =>
+      void app.req("PATCH", `/v1/p2p/ads/${ad.id}`, { request_window_h: Number(win.value) || null }).then(
+        () => app.route(),
+        (e) => out.replaceChildren(app.error(e)),
+      );
     return h(
       "article",
       { class: "p2p-row mine", role: "row" },
@@ -42,6 +53,7 @@ export async function myAdsView(app: P2PApp) {
         { class: "p2p-cell act", role: "cell" },
         h("span", { class: "badge " + (ad.status === "active" ? "ok" : ad.status === "hidden" ? "danger" : "warn") }, statusLabel[ad.status] ?? ad.status),
         ad.status === "hidden" ? null : h("div", { class: "row wrap" }, ad.status === "active" ? set("paused", t("Pausar", "Pause")) : set("active", t("Activar", "Activate"), ""), set("closed", t("Cerrar", "Close"))),
+        ad.status === "hidden" ? null : win,
       ),
     );
   };
@@ -58,19 +70,43 @@ export async function myAdsView(app: P2PApp) {
           ),
         )
       : null,
+    reqPaused.length
+      ? h(
+          "p",
+          { class: "notice warn" },
+          t(
+            "Pausamos tus anuncios porque dejaste vencer 3 solicitudes en los últimos 7 días. Actívalos cuando puedas responder, o baja el plazo de solicitudes.",
+            "We paused your ads because you let 3 requests expire in the last 7 days. Activate them when you can reply, or turn off requests.",
+          ),
+        )
+      : null,
     r.ads.length
       ? h("div", { class: "p2p-table", role: "table" }, r.ads.map(row))
       : h("div", { class: "p2p-empty" }, h("p", { class: "p2p-empty-ico", "aria-hidden": "true" }, "▤"), h("p", {}, t("Aún no tienes anuncios.", "You have no ads yet.")), h("p", {}, h("a", { class: "btn", href: "#/nuevo" }, t("Publicar mi primer anuncio", "Post my first ad")))),
-    r.ads.some((a) => a.side === "sell" && a.status === "active")
-      ? h("p", { class: "p2p-escrow-note" }, "🔔 ", t("Mientras tengas anuncios de venta activos, deja esta app abierta: te avisamos con sonido y notificación cuando alguien abra una orden.", "While you have active sell ads, keep this app open: we alert you with a sound and a notification when someone opens an order."))
+    r.ads.some((a) => a.status === "active")
+      ? h(
+          "div",
+          { class: "p2p-escrow-note" },
+          h(
+            "p",
+            {},
+            "🔔 ",
+            t(
+              "Con la app abierta te avisamos con sonido cuando alguien abra una orden. Activa los avisos para enterarte también con la app cerrada (sirve con las solicitudes fuera de línea).",
+              "With the app open we alert you with a sound when someone opens an order. Turn on notifications to find out with the app closed too (useful with offline requests).",
+            ),
+          ),
+          app.pushButton(),
+        )
       : null,
   );
 }
 
 export async function ordersView(app: P2PApp) {
   const t = app.t;
-  const r = await app.req<{ orders: { id: string; role: string; status: string; fiat: string; fiat_amount: string; xmr: string; price: string; created_at: number }[] }>("GET", "/v1/p2p/my/orders");
-  const open = r.orders.filter((o) => !FINAL.includes(o.status));
+  const r = await app.req<{ orders: { id: string; role: string; status: string; fiat: string; fiat_amount: string; xmr: string; price: string; created_at: number; is_maker?: boolean }[] }>("GET", "/v1/p2p/my/orders");
+  const asks = r.orders.filter((o) => o.status === "requested" && o.is_maker);
+  const open = r.orders.filter((o) => !FINAL.includes(o.status) && !asks.includes(o));
   const done = r.orders.filter((o) => FINAL.includes(o.status));
   const rows = (list: typeof r.orders) =>
     h(
@@ -92,6 +128,13 @@ export async function ordersView(app: P2PApp) {
     h("h2", {}, t("Mis órdenes", "My orders")),
     ...(r.orders.length
       ? [
+          ...(asks.length
+            ? [
+                h("h3", { class: "p2p-sub" }, `${t("Solicitudes para ti", "Requests for you")} (${asks.length})`),
+                h("p", { class: "muted" }, t("Alguien quiere operar con tu anuncio mientras no estabas. Ábrela para aceptarla o rechazarla.", "Someone wants to trade on your ad while you were away. Open it to accept or decline.")),
+                rows(asks),
+              ]
+            : []),
           h("h3", { class: "p2p-sub" }, `${t("En curso", "In progress")} (${open.length})`),
           open.length ? rows(open) : h("p", { class: "muted" }, t("No tienes órdenes en curso.", "You have no orders in progress.")),
           ...(done.length ? [h("h3", { class: "p2p-sub" }, `${t("Terminadas", "Finished")} (${done.length})`), rows(done)] : []),
@@ -127,6 +170,8 @@ export async function orderView(app: P2PApp, id: string) {
     ),
   );
   let o!: OrderView;
+  /** Precio de mercado de ahora (para comparar con el de una solicitud). */
+  let marketNow: number | null = null;
 
   const recipients = () => [o.buyer?.enc_pubkey, o.seller?.enc_pubkey, adminEnc ?? ""].filter(Boolean) as string[];
   send.onclick = () =>
@@ -165,7 +210,12 @@ export async function orderView(app: P2PApp, id: string) {
     const pay = `${fmtFiat(o.fiat_amount, app.lang)} ${o.fiat}`;
     // Qué toca hacer ahora (la frase grande de la orden).
     const nextStep: Record<string, string> = {
-      setup: t("Armando el escrow 2 de 3… deja esta pestaña abierta.", "Setting up the 2-of-3 escrow… keep this tab open."),
+      requested: o.is_maker
+        ? t("Solicitud nueva. Revisa el precio y acéptala para armar el escrow, o recházala.", "New request. Check the price and accept it to set up the escrow, or decline it.")
+        : t("Esperando que el anunciante acepte tu solicitud. No pagues nada todavía.", "Waiting for the advertiser to accept your request. Do not pay anything yet."),
+      setup: o.accepted_at
+        ? t("Solicitud aceptada. Armando el escrow 2 de 3: las dos partes deben tener esta orden abierta.", "Request accepted. Setting up the 2-of-3 escrow: both parties must have this order open.")
+        : t("Armando el escrow 2 de 3… deja esta pestaña abierta.", "Setting up the 2-of-3 escrow… keep this tab open."),
       awaiting_deposit: me === "seller" ? t("Deposita el XMR en el escrow.", "Deposit the XMR into the escrow.") : t("Esperando que el vendedor deposite. Todavía no pagues.", "Waiting for the seller to deposit. Do not pay yet."),
       confirming: t("Depósito visto: esperando 10 confirmaciones (~20 min). Todavía no pagues.", "Deposit seen: waiting for 10 confirmations (~20 min). Do not pay yet."),
       awaiting_payment: me === "buyer" ? t(`El XMR ya está bloqueado. Paga ${pay} con ${o.method.name} y marca «Ya pagué».`, `The XMR is locked. Pay ${pay} with ${o.method.name} and mark “I have paid”.`) : t("El XMR está bloqueado. Esperando el pago del comprador.", "The XMR is locked. Waiting for the buyer's payment."),
@@ -211,6 +261,40 @@ export async function orderView(app: P2PApp, id: string) {
 
     // Escrow y avisos
     const ek: Child[] = [];
+    if (o.status === "requested" && o.is_maker)
+      ek.push(
+        h(
+          "div",
+          { class: "card p2p-pay" },
+          h("h3", {}, t("Precio de la solicitud", "Request price")),
+          h(
+            "p",
+            {},
+            t(`Se fijó al enviarla: ${fmtFiat(o.price, app.lang)} ${o.fiat}/XMR.`, `Fixed when it was sent: ${fmtFiat(o.price, app.lang)} ${o.fiat}/XMR.`),
+            marketNow ? h("br") : null,
+            marketNow
+              ? t(`Mercado ahora: ${fmtFiat(marketNow, app.lang)} ${o.fiat}/XMR (${pct((Number(o.price) / marketNow - 1) * 100)}).`, `Market now: ${fmtFiat(marketNow, app.lang)} ${o.fiat}/XMR (${pct((Number(o.price) / marketNow - 1) * 100)}).`)
+              : null,
+          ),
+          h(
+            "small",
+            {},
+            t(
+              `Al aceptar hay ${app.cfg.accept_setup_min ?? 60} min para armar el escrow${me === "seller" ? " y depositar" : ""}. Te avisamos a la otra parte para que vuelva.`,
+              `Once you accept there are ${app.cfg.accept_setup_min ?? 60} min to set up the escrow${me === "seller" ? " and deposit" : ""}. We notify the other party to come back.`,
+            ),
+          ),
+        ),
+      );
+    if (o.status === "requested" && !o.is_maker)
+      ek.push(
+        h(
+          "div",
+          { class: "card p2p-pay" },
+          h("p", {}, t("Cuando acepte, vuelve a esta orden: tu navegador también firma el escrow. Si no responde a tiempo, la solicitud se cancela sola y no pierdes nada.", "When they accept, come back to this order: your browser also signs the escrow. If they don't reply in time, the request is cancelled automatically and you lose nothing.")),
+          app.pushButton(),
+        ),
+      );
     if (["setup", "awaiting_deposit", "releasing", "refunding", "resolving"].includes(o.status))
       ek.push(h("p", { class: "notice warn" }, app.t("Deja esta pestaña abierta: tu navegador firma su parte del escrow.", "Keep this tab open: your browser signs its part of the escrow.")));
     if (note?.kind === "deposit") {
@@ -250,11 +334,17 @@ export async function orderView(app: P2PApp, id: string) {
       return b;
     };
     const post = (action: string, body: Record<string, unknown> = {}) => app.req<OrderView>("POST", `/v1/p2p/orders/${id}/${action}`, body);
+    if (o.status === "requested" && o.is_maker) {
+      act.push(btn(app.t("Aceptar solicitud", "Accept request"), me === "seller" ? "sell" : "buy", () => post("accept")));
+      act.push(btn(app.t("Rechazar", "Decline"), "secondary", () => post("decline"), app.t("¿Rechazar la solicitud?", "Decline the request?")));
+    }
     if (me === "buyer" && o.status === "awaiting_payment")
       act.push(btn(app.t("Ya pagué", "I have paid"), "buy", () => post("paid"), app.t("¿Ya hiciste el pago completo? Marcarlo sin pagar es fraude.", "Have you made the full payment? Marking it without paying is fraud.")));
     if (me === "seller" && ["awaiting_payment", "paid", "disputed"].includes(o.status))
       act.push(btn(app.t("Liberar XMR", "Release XMR"), "sell", () => post("release"), app.t("¿Ya ves el dinero en TU cuenta? Libera solo si lo recibiste. No se puede deshacer.", "Do you see the money in YOUR account? Release only if you received it. This cannot be undone.")));
-    const canCancel = me === "buyer" ? ["setup", "awaiting_deposit", "confirming", "awaiting_payment"].includes(o.status) : ["setup", "awaiting_deposit"].includes(o.status);
+    const canCancel =
+      (o.status === "requested" && !o.is_maker) ||
+      (me === "buyer" ? ["setup", "awaiting_deposit", "confirming", "awaiting_payment"].includes(o.status) : ["setup", "awaiting_deposit"].includes(o.status));
     if (canCancel) act.push(btn(app.t("Cancelar orden", "Cancel order"), "secondary", () => post("cancel"), app.t("¿Cancelar la orden?", "Cancel the order?")));
     if (o.status === "paid") {
       if (o.dispute_available_at && nowS() < o.dispute_available_at)
@@ -299,6 +389,8 @@ export async function orderView(app: P2PApp, id: string) {
         after = Math.max(after, m.seq);
         if (m.body.type === "message" && m.body.ciphertext) plain.set(m.seq, await open(m.body.ciphertext, app.vault!).catch(() => app.t("[no se pudo descifrar]", "[could not decrypt]")));
       }
+      if (o.status === "requested" && o.is_maker && marketNow === null)
+        marketNow = (await get<{ price: number }>(`/v1/p2p/price?fiat=${o.fiat}`).catch(() => null))?.price ?? null;
       if (adminEnc === undefined)
         adminEnc = app.cfg.admin_address ? ((await get<PublicUser>(`/v1/p2p/users/${app.cfg.admin_address}`).catch(() => null))?.enc_pubkey ?? null) : null;
       if (o.role === "buyer" && o.enc_payment && !paymentText) paymentText = await open(o.enc_payment, app.vault!).catch(() => null);
@@ -333,8 +425,9 @@ export async function orderView(app: P2PApp, id: string) {
     if (!el) return;
     const dl = Number(el.dataset.deadline || 0);
     const left = dl - nowS();
-    if (!dl || !o || !["setup", "awaiting_deposit", "awaiting_payment"].includes(o.status)) return void (el.textContent = "");
-    const label = o.status === "awaiting_payment" ? app.t("para pagar", "to pay") : app.t("para depositar", "to deposit");
+    if (!dl || !o || !["requested", "setup", "awaiting_deposit", "awaiting_payment"].includes(o.status)) return void (el.textContent = "");
+    const label =
+      o.status === "awaiting_payment" ? app.t("para pagar", "to pay") : o.status === "requested" ? app.t("para responder", "to reply") : app.t("para depositar", "to deposit");
     el.textContent = left > 0 ? `⏱ ${clock(left)} ${label}` : app.t("Tiempo agotado", "Time is up");
     el.classList.toggle("late", left < 300);
   }

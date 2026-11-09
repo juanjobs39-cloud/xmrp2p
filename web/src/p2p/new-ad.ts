@@ -152,6 +152,7 @@ export async function newAdView(app: P2PApp) {
   const terms = h("textarea", { id: "na-terms", rows: 3, maxLength: 1000, placeholder: t("Ej.: solo transferencias desde una cuenta a tu nombre.", "E.g. only transfers from an account in your name.") });
   terms.oninput = () => preview();
   const minRev = h("input", { id: "na-minrev", type: "text", inputMode: "numeric", value: "0" });
+  const reqWin = h("select", { id: "na-reqwin" }, [0, 1, 3, 6, 12].map((n) => h("option", { value: String(n), selected: n === 0 }, n ? t(`Sí, responder en ${n} h`, `Yes, reply within ${n} h`) : t("No", "No"))));
   const country = h("input", { id: "na-country", type: "text", maxLength: 2, placeholder: t("opcional", "optional") });
   const addr = h("input", { id: "na-addr", type: "text", spellcheck: false, autocomplete: "off" });
   app.walletFill(addr);
@@ -245,11 +246,19 @@ export async function newAdView(app: P2PApp) {
     { class: "card p2p-form" },
     h("h3", {}, t("3. Condiciones y revisión", "3. Terms and review")),
     h("div", { class: "p2p-grid" }, app.field(t("Tiempo para pagar", "Time to pay"), windowMin), app.field(t("Órdenes mínimas para métodos reversibles", "Minimum orders for reversible methods"), minRev), app.field(t("País (opcional)", "Country (optional)"), country)),
+    app.field(
+      t("Aceptar solicitudes cuando estoy fuera de línea", "Accept requests while I'm offline"),
+      reqWin,
+      t(
+        "Si no estás conectado, la orden te espera ese tiempo y te avisamos. Al aceptar armas el escrow y depositas. Tu anuncio sigue visible hasta 7 días sin conectarte (si no, 24 h).",
+        "If you are not connected, the order waits for you that long and we notify you. When you accept, you set up the escrow and deposit. Your ad stays visible up to 7 days without connecting (otherwise 24 h).",
+      ),
+    ),
     app.field(t("Condiciones (opcional)", "Terms (optional)"), terms),
     offPlatformWarning(app.lang),
     addrF,
     previewBox,
-    h("p", { class: "p2p-escrow-note" }, "🔒 ", side === "sell" ? t("No bloqueas XMR al publicar. Cuando alguien abra una orden, tu navegador arma el escrow 2 de 3 y depositas: deja la app abierta mientras tu anuncio esté activo.", "You don't lock XMR when posting. When someone opens an order, your browser sets up the 2-of-3 escrow and you deposit: keep the app open while your ad is active.") : t("Cuando un vendedor tome tu anuncio, él bloquea el XMR en el escrow antes de que pagues.", "When a seller takes your ad, they lock the XMR in escrow before you pay.")),
+    h("p", { class: "p2p-escrow-note" }, "🔒 ", side === "sell" ? t("No bloqueas XMR al publicar. Cuando alguien abra una orden, tu navegador arma el escrow 2 de 3 y depositas: deja la app abierta mientras tu anuncio esté activo, o acepta solicitudes fuera de línea y activa los avisos.", "You don't lock XMR when posting. When someone opens an order, your browser sets up the 2-of-3 escrow and you deposit: keep the app open while your ad is active, or accept requests while offline and turn on notifications.") : t("Cuando un vendedor tome tu anuncio, él bloquea el XMR en el escrow antes de que pagues.", "When a seller takes your ad, they lock the XMR in escrow before you pay.")),
   );
   const back = h("button", { class: "btn secondary", type: "button" }, t("Atrás", "Back"));
   const next = h("button", { class: "btn", type: "button" }, t("Siguiente", "Next"));
@@ -312,6 +321,7 @@ export async function newAdView(app: P2PApp) {
           terms: terms.value,
           min_orders_reversible: Number(minRev.value) || 0,
           xmr_address: addr.value.trim(),
+          request_window_h: Number(reqWin.value) || null,
         });
         if (side === "sell") {
           for (const m of chosen) app.remember({ fiat: fiat.value, kind: m.kind, name: m.name, country: m.country ?? undefined, details: m.details!.trim() });

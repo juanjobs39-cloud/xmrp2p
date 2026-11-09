@@ -29,7 +29,7 @@ howto:
     - name: "Abra o mercado P2P"
       text: "Acesse fiat.monerop2p.app, escolha sua moeda (reais, dólares, euros, pesos…) e seu método de pagamento. Crie sua conta com uma senha: sem e-mail nem documento."
     - name: "Escolha um vendedor online"
-      text: "Compare preço, limites, métodos de pagamento e reputação. Os anúncios de quem está há mais de 24 horas sem se conectar ficam ocultos automaticamente."
+      text: "Compare preço, limites, métodos de pagamento e reputação. Se o anunciante está offline e aceita solicitações, sua ordem espera por ele; anúncios abandonados ficam ocultos automaticamente."
     - name: "Espere o XMR entrar no escrow"
       text: "O vendedor deposita o XMR num multisig 2 de 3. Após 10 confirmações (cerca de 20 minutos) abrem-se o chat cifrado e os dados de pagamento dele."
     - name: "Pague e marque «Já paguei»"
@@ -89,7 +89,7 @@ Funciona como você lembra: procura um anúncio na sua moeda, abre uma ordem, pa
 - **Sem KYC nem e-mail.** Sua conta é uma chave gerada pelo seu navegador, protegida por senha.
 - **Taxas claras.** Comprar não custa nada. O vendedor paga **0,5 %** ao liberar, mais a taxa da rede.
 - **Limites.** Até 1000 USD (ou o equivalente) por ordem e 3 ordens abertas por usuário.
-- **Anúncios ativos.** Se um anunciante está há mais de 24 horas sem se conectar, seus anúncios ficam ocultos automaticamente, para você não perder tempo com contas abandonadas.
+- **Anúncios ativos.** Se o anunciante está offline e o anúncio dele aceita solicitações, sua ordem espera por ele (de 1 a 12 horas) e ele recebe um aviso; você não paga nada até o XMR estar no escrow. Os anúncios de quem está há mais de 24 horas sem se conectar ficam ocultos automaticamente (7 dias se aceitam solicitações).
 - **Apelações.** Se você pagou e o vendedor não libera, abre uma apelação após 15 minutos; o suporte analisa os comprovantes e assina com quem tem razão.
 
 Você vendia no LocalMonero? **Publicar anúncios é grátis**: você escolhe sua margem sobre o preço de mercado, seus métodos de pagamento e seus limites. Seja um dos primeiros na sua moeda.

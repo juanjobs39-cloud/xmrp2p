@@ -615,8 +615,8 @@ export function faq(lang: L): { q: string; a: string }[] {
     {
       q: t("¿Por qué no puedo tomar algunos anuncios?", "Why can't I take some ads?"),
       a: t(
-        `Porque el anunciante no está en línea. Solo se pueden tomar anuncios de quien estuvo activo en los últimos ${f.onlineMin} minutos, para que la orden no se quede esperando.`,
-        `Because the advertiser is not online. You can only take ads from people active in the last ${f.onlineMin} minutes, so the order does not get stuck waiting.`,
+        "Porque el anunciante no está en línea y su anuncio no acepta solicitudes. Si el anuncio acepta solicitudes, puedes enviarle una: la orden lo espera el tiempo que él eligió (de 1 a 12 horas), no pagas nada hasta que el XMR esté en el escrow y, si no responde, se cancela sola.",
+        "Because the advertiser is not online and their ad does not accept requests. If the ad accepts requests, you can send one: the order waits for the advertiser for the time they chose (1 to 12 hours), you pay nothing until the XMR is in escrow, and if they don't reply it is cancelled automatically.",
       ),
     },
     {

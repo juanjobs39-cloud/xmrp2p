@@ -58,6 +58,8 @@ export interface PublicUser {
   avg_release_min: number | null;
   /** Minutos promedio que tarda en depositar al escrow (como vendedor). */
   avg_deposit_min?: number | null;
+  /** Minutos promedio que tarda en aceptar una solicitud hecha mientras estaba fuera de línea. */
+  avg_accept_min?: number | null;
   /** Actividad en los últimos 10 minutos (la app manda un latido mientras está abierta). */
   online?: boolean;
   positive: number;
@@ -84,6 +86,8 @@ export interface Ad {
   status: string;
   /** missed_deposits: la plataforma lo pausó por depósitos vencidos. */
   paused_reason?: string | null;
+  /** Horas para responder solicitudes cuando está fuera de línea (null: no acepta). */
+  request_window_h?: number | null;
   user?: PublicUser;
 }
 export interface P2PConfig {
@@ -94,11 +98,16 @@ export interface P2PConfig {
   dispute_after_min: number;
   admin_address: string | null;
   fee_address: string | null;
+  accept_setup_min?: number;
+  /** Llave pública VAPID para los avisos push (null: sin avisos push). */
+  vapid_public?: string | null;
 }
 export interface OrderView {
   id: string;
   ad_id: string;
   role: "buyer" | "seller";
+  /** Soy el dueño del anuncio (el que acepta o rechaza una solicitud). */
+  is_maker?: boolean;
   status: string;
   fiat: string;
   method: Method;
@@ -121,6 +130,7 @@ export interface OrderView {
   dispute_available_at: number | null;
   cancel_reason: string | null;
   created_at: number;
+  accepted_at?: number | null;
   paid_at: number | null;
   funded_at: number | null;
   closed_at: number | null;

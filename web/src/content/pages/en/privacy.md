@@ -3,7 +3,7 @@ key: privacy
 lang: en
 title: Privacy policy
 description: "What data MoneroP2P processes (almost none), what is public on-chain, what the node proxy sees and how to reduce exposure."
-updated: 2026-11-05
+updated: 2026-11-09
 ---
 
 **Short answer:** we have no accounts, use no cookies or analytics and do not store your keys. Some data is public by nature (transactions on the USDT chain) and our servers process minimal technical data to work. The exception is instant exchanges via Trocador, explained below.
@@ -52,6 +52,10 @@ The extension **does not collect or send any personal data**: no accounts, analy
 For the Arbitrum account, the extension queries Arbitrum's public RPC (arb1.arbitrum.io; sepolia-rollup.arbitrum.io for testing), which sees your public Arbitrum address and signed transactions, never your keys. On monerop2p.app and fiat.monerop2p.app it only shares your account or a Monero address with the site if you approve it, and you can disconnect it in Settings.
 
 **Swap (optional).** If you use the extension's “Swap” tab, quotes and the exchange are requested from our API (api.monerop2p.app), which talks to Trocador. The same applies as for Trocador exchanges in the app: when the exchange is created we keep your IP, language and browser linked to its ID, as those exchanges require. The list of your exchanges is stored encrypted in your browser. If you don't use “Swap”, the extension doesn't connect to our API.
+
+## P2P Fiat notifications (optional)
+
+If you turn on notifications at fiat.monerop2p.app, we store the subscription address your browser gives us, linked to your P2P account, to tell you about requests and changes to your orders while the app is closed. The notification goes through your browser's push service (Google, Mozilla, Apple or Microsoft) and is empty: it carries no amounts, nicknames or order details; the text is added by the site. You can turn it off at any time and the subscription is deleted. If you don't turn them on, nothing is stored.
 
 ## Contact
 

@@ -13,6 +13,10 @@ export interface P2PEnv extends Env {
   /** Dirección de Monero donde cobra la plataforma (la comisión de cada orden). */
   P2P_FEE_ADDRESS?: string;
   P2P_ORDER_ROOM: DurableObjectNamespace;
+  /** Llave pública VAPID (base64url, 65 bytes) para los avisos push. Vacía: sin avisos push. */
+  P2P_VAPID_PUBLIC?: string;
+  /** Llave privada VAPID (componente «d» de la JWK, base64url). Secreto de Cloudflare. */
+  P2P_VAPID_PRIVATE?: string;
 }
 
 export const now = () => Math.floor(Date.now() / 1000);
@@ -97,6 +101,8 @@ export interface User {
   releases: number;
   deposit_secs?: number;
   deposits?: number;
+  accept_secs?: number;
+  accepts?: number;
   positive: number;
   negative: number;
 }
@@ -105,6 +111,8 @@ export interface User {
 export const ONLINE_SECS = 600;
 /** Tras 24 h sin conectarse, sus anuncios dejan de verse en el mercado; vuelven solos al reconectarse. */
 export const STALE_SECS = 24 * 3600;
+/** Los anuncios que aceptan solicitudes fuera de línea siguen visibles hasta 7 días sin conectarse. */
+export const STALE_REQUEST_SECS = 7 * 86400;
 export const isOnline = (lastSeen: number, t = now()) => t - lastSeen < ONLINE_SECS;
 
 export async function getUser(env: P2PEnv, id: string): Promise<User | null> {
@@ -134,6 +142,7 @@ export function publicUser(u: User) {
     completion_pct: u.orders_total ? Math.round((u.orders_done / u.orders_total) * 1000) / 10 : null,
     avg_release_min: u.releases ? Math.round(u.release_secs / u.releases / 6) / 10 : null,
     avg_deposit_min: u.deposits ? Math.round((u.deposit_secs ?? 0) / u.deposits / 6) / 10 : null,
+    avg_accept_min: u.accepts ? Math.round((u.accept_secs ?? 0) / u.accepts / 6) / 10 : null,
     positive: u.positive,
     negative: u.negative,
   };

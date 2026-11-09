@@ -115,11 +115,13 @@ export class P2PApp {
     const watch = async () => {
       if (!this.me) return;
       try {
-        const r = await this.req<{ orders: { id: string; role: string; status: string; fiat: string; fiat_amount: string; xmr: string }[] }>("GET", "/v1/p2p/my/orders");
-        const needs = (o: { role: string; status: string }) =>
-          (o.role === "seller" && ["setup", "awaiting_deposit", "paid"].includes(o.status)) || (o.role === "buyer" && ["setup", "awaiting_payment"].includes(o.status));
+        const r = await this.req<{ orders: { id: string; role: string; status: string; fiat: string; fiat_amount: string; xmr: string; is_maker?: boolean }[] }>("GET", "/v1/p2p/my/orders");
+        const needs = (o: { role: string; status: string; is_maker?: boolean }) =>
+          (o.status === "requested" && !!o.is_maker) ||
+          (o.role === "seller" && ["setup", "awaiting_deposit", "paid"].includes(o.status)) ||
+          (o.role === "buyer" && ["setup", "awaiting_payment"].includes(o.status));
         const pending = r.orders.filter(needs);
-        const fresh = this.seenOrders ? pending.filter((o) => !this.seenOrders!.has(o.id) && ["setup", "awaiting_deposit"].includes(o.status)) : [];
+        const fresh = this.seenOrders ? pending.filter((o) => !this.seenOrders!.has(o.id) && ["requested", "setup", "awaiting_deposit"].includes(o.status)) : [];
         this.seenOrders = new Set(r.orders.map((o) => o.id));
         if (pending.length !== this.pending) {
           this.pending = pending.length;
@@ -132,6 +134,7 @@ export class P2PApp {
     };
     ping();
     void watch();
+    void this.syncPush();
     this.beat = setInterval(ping, 120_000);
     setInterval(() => void watch(), 30_000);
   }
@@ -174,6 +177,86 @@ export class P2PApp {
   /** Pide permiso de notificaciones (solo tras un clic del usuario). */
   askNotify() {
     if ("Notification" in window && Notification.permission === "default") void Notification.requestPermission().catch(() => {});
+  }
+
+  // ------------------------------------------------------------ avisos push (con la app cerrada)
+
+  pushSupported(): boolean {
+    return !!this.cfg.vapid_public && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+  }
+
+  /** iPhone/iPad sin instalar: Safari solo permite push en la app agregada a la pantalla de inicio. */
+  private iosNeedsInstall(): boolean {
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    return ios && !(navigator as Navigator & { standalone?: boolean }).standalone && !matchMedia("(display-mode: standalone)").matches;
+  }
+
+  private async pushReg(): Promise<ServiceWorkerRegistration> {
+    const app = location.pathname.match(/^\/[a-z]{2}\/app\//)?.[0] ?? "/en/app/";
+    return navigator.serviceWorker.register(`/p2p-sw.js?app=${encodeURIComponent(app)}`, { scope: "/" });
+  }
+
+  private async currentSub(): Promise<PushSubscription | null> {
+    if (!this.pushSupported()) return null;
+    const reg = await navigator.serviceWorker.getRegistration("/");
+    return (await reg?.pushManager.getSubscription()) ?? null;
+  }
+
+  /** Activa los avisos: pide permiso, suscribe este navegador y lo registra en tu cuenta. */
+  async enablePush(): Promise<boolean> {
+    if (!this.pushSupported() || this.iosNeedsInstall()) return false;
+    if ((await Notification.requestPermission()) !== "granted") return false;
+    const reg = await this.pushReg();
+    await navigator.serviceWorker.ready;
+    const key = Uint8Array.from(atob(this.cfg.vapid_public!.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+    const sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }));
+    await this.req("PUT", "/v1/p2p/push", { endpoint: sub.endpoint });
+    return true;
+  }
+
+  async disablePush() {
+    const sub = await this.currentSub();
+    if (!sub) return;
+    await this.req("DELETE", "/v1/p2p/push", { endpoint: sub.endpoint }).catch(() => {});
+    await sub.unsubscribe();
+  }
+
+  /** Al entrar: si este navegador ya tenía avisos, los liga a la cuenta abierta. */
+  private async syncPush() {
+    try {
+      const sub = Notification.permission === "granted" ? await this.currentSub() : null;
+      if (sub) await this.req("PUT", "/v1/p2p/push", { endpoint: sub.endpoint });
+    } catch {
+      /* sin avisos push */
+    }
+  }
+
+  /** Botón para activar o desactivar los avisos con la app cerrada. */
+  pushButton(): HTMLElement | null {
+    if (!this.pushSupported()) return null;
+    const box = h("div", { class: "p2p-push" });
+    const draw = async () => {
+      if (this.iosNeedsInstall())
+        return void box.replaceChildren(
+          h("small", {}, this.t("En iPhone, para recibir avisos agrega esta página a tu pantalla de inicio (Compartir → Agregar a inicio) y ábrela desde ahí.", "On iPhone, to get notifications add this page to your home screen (Share → Add to Home Screen) and open it from there.")),
+        );
+      if (Notification.permission === "denied")
+        return void box.replaceChildren(h("small", {}, this.t("Bloqueaste las notificaciones de este sitio: actívalas en los ajustes del navegador.", "You blocked notifications for this site: allow them in your browser settings.")));
+      const on = !!(await this.currentSub().catch(() => null)) && Notification.permission === "granted";
+      const b = h("button", { class: "btn small " + (on ? "secondary" : ""), type: "button" }, on ? this.t("Desactivar avisos", "Turn off notifications") : "🔔 " + this.t("Activar avisos", "Turn on notifications"));
+      b.onclick = () =>
+        void this.busy(b, async () => {
+          if (on) await this.disablePush();
+          else if (!(await this.enablePush())) throw new Error(this.t("No se pudieron activar los avisos en este navegador.", "Could not turn on notifications in this browser."));
+          await draw();
+        }, box);
+      box.replaceChildren(
+        b,
+        h("small", { class: "muted" }, on ? this.t("Avisos activos en este navegador.", "Notifications on in this browser.") : this.t("El aviso no lleva montos ni datos de la orden.", "The notification carries no amounts or order details.")),
+      );
+    };
+    void draw();
+    return box;
   }
 
   show(...nodes: Child[]) {
@@ -412,12 +495,12 @@ export class P2PApp {
 
   statusName(s: string): string {
     const es: Record<string, string> = {
-      setup: "Armando escrow", awaiting_deposit: "Esperando depósito", confirming: "Confirmando depósito", awaiting_payment: "Esperando pago",
+      requested: "Solicitud pendiente", setup: "Armando escrow", awaiting_deposit: "Esperando depósito", confirming: "Confirmando depósito", awaiting_payment: "Esperando pago",
       paid: "Pagado, por liberar", releasing: "Liberando", released: "Completada", cancelled: "Cancelada", refunding: "Reembolsando",
       refunded: "Reembolsada", disputed: "En apelación", resolving: "Resolviendo", resolved_buyer: "Resuelta a favor del comprador", resolved_seller: "Resuelta a favor del vendedor",
     };
     const en: Record<string, string> = {
-      setup: "Setting up escrow", awaiting_deposit: "Waiting for deposit", confirming: "Confirming deposit", awaiting_payment: "Waiting for payment",
+      requested: "Pending request", setup: "Setting up escrow", awaiting_deposit: "Waiting for deposit", confirming: "Confirming deposit", awaiting_payment: "Waiting for payment",
       paid: "Paid, to release", releasing: "Releasing", released: "Completed", cancelled: "Cancelled", refunding: "Refunding",
       refunded: "Refunded", disputed: "Under appeal", resolving: "Resolving", resolved_buyer: "Resolved for the buyer", resolved_seller: "Resolved for the seller",
     };

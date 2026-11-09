@@ -3,7 +3,7 @@ key: privacy
 lang: es
 title: Política de privacidad
 description: "Qué datos procesa MoneroP2P (casi ninguno), qué es público en las cadenas, qué ve el proxy de nodos y cómo reducir lo que se expone."
-updated: 2026-11-05
+updated: 2026-11-09
 ---
 
 **Respuesta corta:** no tenemos cuentas, no usamos cookies ni analítica y no guardamos tus llaves. Algunos datos son públicos por naturaleza (las transacciones en la cadena del USDT) y nuestros servidores procesan datos técnicos mínimos para funcionar. La excepción son los intercambios instantáneos vía Trocador, explicados abajo.
@@ -52,6 +52,10 @@ La extensión **no recoge ni envía datos personales**: no tiene cuentas, analí
 Para la cuenta de Arbitrum, la extensión consulta el RPC público de Arbitrum (arb1.arbitrum.io; sepolia-rollup.arbitrum.io en pruebas), que ve tu dirección pública de Arbitrum y las transacciones firmadas, nunca tus llaves. En monerop2p.app y fiat.monerop2p.app solo comparte tu cuenta o una dirección de Monero con el sitio si tú lo apruebas, y puedes desconectarlo en Ajustes.
 
 **Cambiar (opcional).** Si usas la pestaña «Cambiar» de la extensión, las cotizaciones y el intercambio se piden a nuestra API (api.monerop2p.app), que habla con Trocador. Aplica lo mismo que en los intercambios por Trocador de la app: al crear el intercambio guardamos tu IP, idioma y navegador ligados a su ID, por exigencia de esos exchanges. La lista de tus intercambios se guarda cifrada en tu navegador. Si no usas «Cambiar», la extensión no se conecta a nuestra API.
+
+## Avisos de P2P Fiat (opcionales)
+
+Si activas los avisos en fiat.monerop2p.app, guardamos la dirección de suscripción que da tu navegador, ligada a tu cuenta P2P, para avisarte de solicitudes y cambios en tus órdenes con la app cerrada. El aviso pasa por el servicio de push de tu navegador (Google, Mozilla, Apple o Microsoft) y va vacío: no lleva montos, apodos ni datos de la orden; el texto lo pone el sitio. Puedes desactivarlo cuando quieras y se borra la suscripción. Si no los activas, no se guarda nada.
 
 ## Contacto
 

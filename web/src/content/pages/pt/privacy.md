@@ -3,7 +3,7 @@ key: privacy
 lang: pt
 title: Política de privacidade
 description: "Quais dados o MoneroP2P processa (quase nenhum), o que é público na blockchain, o que o proxy de nós vê e como reduzir a exposição."
-updated: 2026-11-05
+updated: 2026-11-09
 ---
 
 **Resposta curta:** não temos contas, não usamos cookies nem analytics e não guardamos suas chaves. Alguns dados são públicos por natureza (as transações na rede do USDT) e nossos servidores processam dados técnicos mínimos para funcionar. A exceção são as exchanges instantâneas via Trocador, explicadas abaixo.
@@ -52,6 +52,10 @@ A extensão **não coleta nem envia dados pessoais**: não tem contas, analytics
 Para a conta da Arbitrum, a extensão consulta o RPC público da Arbitrum (arb1.arbitrum.io; sepolia-rollup.arbitrum.io em testes), que vê seu endereço público da Arbitrum e as transações assinadas, nunca suas chaves. Na monerop2p.app e na fiat.monerop2p.app ela só compartilha sua conta ou um endereço de Monero com o site se você aprovar, e você pode desconectá-lo em Ajustes.
 
 **Trocar (opcional).** Se você usar a aba «Trocar» da extensão, as cotações e a troca são pedidas à nossa API (api.monerop2p.app), que fala com a Trocador. Vale o mesmo que nas trocas pela Trocador no app: ao criar a troca guardamos seu IP, idioma e navegador ligados ao ID dela, por exigência dessas exchanges. A lista das suas trocas fica cifrada no seu navegador. Se você não usar «Trocar», a extensão não se conecta à nossa API.
+
+## Avisos do P2P Fiat (opcionais)
+
+Se você ativar os avisos em fiat.monerop2p.app, guardamos o endereço de inscrição que o seu navegador fornece, ligado à sua conta P2P, para avisar sobre solicitações e mudanças nas suas ordens com o app fechado. O aviso passa pelo serviço de push do seu navegador (Google, Mozilla, Apple ou Microsoft) e vai vazio: não leva valores, apelidos nem dados da ordem; o texto é colocado pelo site. Você pode desativar quando quiser e a inscrição é apagada. Se não ativar, nada é guardado.
 
 ## Contato
 

@@ -1,6 +1,7 @@
 import { HttpError, json, readJson } from "../env";
 import { fromPico, getUser, now, publicUser, settings, signer, text, toPico, type P2PEnv } from "./common";
 import { applyStats, depositRequired, FINAL, getOrder, roomEvent, transition, type Order, type Status } from "./orders";
+import { notify } from "./push";
 
 // ---------- Administrador (tú): cada petición va firmada con la llave de P2P_ADMIN_ADDRESS ----------
 
@@ -124,6 +125,7 @@ export async function handleAdmin(req: Request, env: P2PEnv, url: URL): Promise<
       if (!r.meta.changes) throw new HttpError(409, "la queja ya está resuelta o no existe");
       const updated = await transition(env, o, ["disputed"], "resolving");
       await roomEvent(env, o.id, "admin", { type: "decision", winner, note });
+      await notify(env, o.buyer, o.seller);
       return json({ order_id: updated.id, status: updated.status, winner });
     }
     if (ord[2] === "message" && req.method === "POST") {
@@ -176,7 +178,7 @@ async function requireArbiter(req: Request, env: P2PEnv): Promise<void> {
 async function tasks(env: P2PEnv) {
   const r = await env.DB.prepare(
     "SELECT o.*, d.winner, d.decision_auth FROM p2p_orders o LEFT JOIN p2p_disputes d ON d.order_id = o.id" +
-      " WHERE o.status IN ('setup', 'awaiting_deposit', 'confirming', 'releasing', 'refunding', 'resolving') ORDER BY o.updated_at ASC LIMIT 200",
+      " WHERE o.status IN ('requested', 'setup', 'awaiting_deposit', 'confirming', 'releasing', 'refunding', 'resolving') ORDER BY o.updated_at ASC LIMIT 200",
   ).all<Order & { winner: string | null; decision_auth: string | null }>();
   return r.results.map((o) => {
     const base = { order_id: o.id, status: o.status, buyer: o.buyer, seller: o.seller, multisig_address: o.multisig_address };
@@ -248,6 +250,7 @@ export async function handleArbiter(req: Request, env: P2PEnv, url: URL): Promis
       const addr = typeof data.multisig_address === "string" ? data.multisig_address : "";
       if (!/^[1-9A-HJ-NP-Za-km-z]{95}$/.test(addr)) throw new HttpError(400, "multisig_address inválida");
       o = await transition(env, o, ["setup"], "awaiting_deposit", { multisig_address: addr });
+      await notify(env, o.seller);
       break;
     }
     case "deposit": {
@@ -257,8 +260,8 @@ export async function handleArbiter(req: Request, env: P2PEnv, url: URL): Promis
         o = await transition(env, o, ["cancelled"], "refunding", { deposit_txid: id, cancel_reason: "late_deposit", closed_at: null });
       } else {
         o = await transition(env, o, ["awaiting_deposit"], "confirming", { deposit_txid: id, deadline_at: null });
-        // Tiempo de depósito del vendedor (desde que se abrió la orden), para su reputación.
-        await env.DB.prepare("UPDATE p2p_users SET deposit_secs = deposit_secs + ?, deposits = deposits + 1 WHERE id = ?").bind(Math.max(0, now() - o.created_at), o.seller).run();
+        // Tiempo de depósito del vendedor (desde que se abrió la orden o se aceptó la solicitud), para su reputación.
+        await env.DB.prepare("UPDATE p2p_users SET deposit_secs = deposit_secs + ?, deposits = deposits + 1 WHERE id = ?").bind(Math.max(0, now() - (o.accepted_at ?? o.created_at)), o.seller).run();
       }
       break;
     }
@@ -272,6 +275,7 @@ export async function handleArbiter(req: Request, env: P2PEnv, url: URL): Promis
         await applyStats(env, o, "refunding", "seller");
       } else {
         o = await transition(env, o, ["confirming"], "awaiting_payment", { funded_at: t, deadline_at: t + o.pay_window_min * 60 });
+        await notify(env, o.buyer);
       }
       break;
     }
@@ -286,6 +290,7 @@ export async function handleArbiter(req: Request, env: P2PEnv, url: URL): Promis
       }
       o = await transition(env, o, [o.status], to, { payout_txid: id, closed_at: t });
       if (to !== "refunded") await applyStats(env, o, to);
+      await notify(env, o.buyer, o.seller);
       break;
     }
     case "message": {

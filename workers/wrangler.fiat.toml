@@ -5,7 +5,7 @@
 # Primera vez (solo con aprobación del dueño):
 #   env -u NODE_USE_SYSTEM_CA npx wrangler d1 create xmrp2p-fiat                → copia el database_id abajo
 #   env -u NODE_USE_SYSTEM_CA npx wrangler d1 migrations apply xmrp2p-fiat --remote -c wrangler.fiat.toml
-#   secretos (nunca en el repo): P2P_ARBITER_TOKEN y ARBITER_STATE_KEY (wrangler secret put … -c wrangler.fiat.toml)
+#   secretos (nunca en el repo): P2P_ARBITER_TOKEN, ARBITER_STATE_KEY y P2P_VAPID_PRIVATE (wrangler secret put … -c wrangler.fiat.toml)
 #   ARBITER_STATE_KEY cifra la llave del árbitro: el dueño guarda una copia; sin ella no se resuelven apelaciones.
 # Construir y desplegar:
 #   cd ../web && PUBLIC_SITE=fiat npm run build
@@ -40,6 +40,8 @@ P2P_ADMIN_ADDRESS = "0x63261e0810aad5a0367a286fb963405436fc8847"
 # Wallet de Monero del dueño donde cae la comisión (subdirección de mainnet; dirección pública).
 P2P_FEE_ADDRESS = "8AfP2xg6N4WW67y3C6KvHrWBh4vUStzyHdNAMaQb5oK8FjNd2obui1FAD7kei25CRnQYjBLq8dSxhGpieM4ACJ3EQhL7eyr"
 MONERO_NODE = "https://nodo-xmr.monerop2p.app"
+# Llave pública VAPID de los avisos push (la privada es el secreto P2P_VAPID_PRIVATE).
+P2P_VAPID_PUBLIC = "BF-0Xb09HD61aQ-ibtsSqu8P_uZH9JcPwaAw70cZSB1hlL7nDTBAZdnOSSWhBsKbqrIErGU4Nzl-qG0Jw5uHqOw"
 
 [triggers]
 crons = ["* * * * *"]

@@ -1,8 +1,11 @@
 import { HttpError, json, randomId, readJson } from "../env";
 import { normalizeMethod, requireCountry, requireFiat, xmrPrice, type Method } from "./catalog";
-import { activeUser, fiatAmount, fromPico, getUser, isOnline, now, publicUser, requireXmrAddress, settings, STALE_SECS, signer, text, toPico, type P2PEnv } from "./common";
+import { activeUser, fiatAmount, fromPico, getUser, isOnline, now, publicUser, requireXmrAddress, settings, STALE_REQUEST_SECS, STALE_SECS, signer, text, toPico, type P2PEnv } from "./common";
 
 const MAX_ACTIVE_ADS = 10;
+
+/** Plazos permitidos para responder solicitudes (horas). */
+export const REQUEST_WINDOWS = [1, 3, 6, 12];
 
 export interface Ad {
   id: string;
@@ -23,6 +26,8 @@ export interface Ad {
   xmr_address: string;
   status: "active" | "paused" | "closed" | "hidden";
   paused_reason?: string | null;
+  /** Horas para responder una solicitud con el anunciante fuera de línea (null: no acepta). */
+  request_window_h?: number | null;
   created_at: number;
   updated_at: number;
 }
@@ -101,7 +106,11 @@ function validateAd(env: P2PEnv, d: Record<string, unknown>, blocked: string[]) 
   if (!Number.isInteger(min_orders_reversible) || min_orders_reversible < 0 || min_orders_reversible > 1000)
     throw new HttpError(400, "min_orders_reversible inválido");
   const xmr_address = requireXmrAddress(env, d.xmr_address, "xmr_address");
-  return { side, fiat, country, price_type, price, margin_pct, min_fiat, max_fiat, remaining_pico, methods, pay_window_min, terms, min_orders_reversible, xmr_address };
+  const rw = d.request_window_h;
+  const request_window_h = rw === undefined || rw === null || rw === 0 ? null : Number(rw);
+  if (request_window_h !== null && !REQUEST_WINDOWS.includes(request_window_h))
+    throw new HttpError(400, `request_window_h debe ser ${REQUEST_WINDOWS.join(", ")} o null`);
+  return { side, fiat, country, price_type, price, margin_pct, min_fiat, max_fiat, remaining_pico, methods, pay_window_min, terms, min_orders_reversible, xmr_address, request_window_h };
 }
 
 /** Precio efectivo (fiat por XMR) de un anuncio: el fijo, o el de mercado con el margen. */
@@ -130,6 +139,7 @@ export function publicAd(ad: Ad, market: number | null) {
     min_orders_reversible: ad.min_orders_reversible,
     status: ad.status,
     paused_reason: ad.paused_reason ?? null,
+    request_window_h: ad.request_window_h ?? null,
     updated_at: ad.updated_at,
   };
 }
@@ -159,10 +169,10 @@ export async function createAd(req: Request, env: P2PEnv, path: string): Promise
   if ((n?.n ?? 0) >= MAX_ACTIVE_ADS) throw new HttpError(400, `máximo ${MAX_ACTIVE_ADS} anuncios activos o en pausa`);
   const ad: Ad = { id: randomId(), user_id: id, ...v, methods: JSON.stringify(v.methods), status: "active", created_at: now(), updated_at: now() } as Ad;
   await env.DB.prepare(
-    "INSERT INTO p2p_ads (id, user_id, side, fiat, country, price_type, price, margin_pct, min_fiat, max_fiat, remaining_pico, methods, pay_window_min, terms, min_orders_reversible, xmr_address, status, created_at, updated_at)" +
-      " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO p2p_ads (id, user_id, side, fiat, country, price_type, price, margin_pct, min_fiat, max_fiat, remaining_pico, methods, pay_window_min, terms, min_orders_reversible, xmr_address, request_window_h, status, created_at, updated_at)" +
+      " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
   )
-    .bind(ad.id, ad.user_id, ad.side, ad.fiat, ad.country, ad.price_type, ad.price, ad.margin_pct, ad.min_fiat, ad.max_fiat, ad.remaining_pico, ad.methods, ad.pay_window_min, ad.terms, ad.min_orders_reversible, ad.xmr_address, ad.status, ad.created_at, ad.updated_at)
+    .bind(ad.id, ad.user_id, ad.side, ad.fiat, ad.country, ad.price_type, ad.price, ad.margin_pct, ad.min_fiat, ad.max_fiat, ad.remaining_pico, ad.methods, ad.pay_window_min, ad.terms, ad.min_orders_reversible, ad.xmr_address, ad.request_window_h, ad.status, ad.created_at, ad.updated_at)
     .run();
   return json(publicAd(ad, await market(ad.fiat)), 201);
 }
@@ -193,6 +203,7 @@ export async function updateAd(req: Request, env: P2PEnv, path: string, adId: st
     terms: ad.terms,
     min_orders_reversible: ad.min_orders_reversible,
     xmr_address: ad.xmr_address,
+    request_window_h: ad.request_window_h ?? null,
     ...data,
   };
   delete (merged as Record<string, unknown>).status;
@@ -200,9 +211,9 @@ export async function updateAd(req: Request, env: P2PEnv, path: string, adId: st
   if ("side" in data && data.side !== ad.side) throw new HttpError(400, "no se puede cambiar side");
   const v = validateAd(env, merged, JSON.parse(s.blocked_methods ?? "[]"));
   await env.DB.prepare(
-    "UPDATE p2p_ads SET fiat = ?, country = ?, price_type = ?, price = ?, margin_pct = ?, min_fiat = ?, max_fiat = ?, remaining_pico = ?, methods = ?, pay_window_min = ?, terms = ?, min_orders_reversible = ?, xmr_address = ?, status = ?, paused_reason = NULL, updated_at = ? WHERE id = ?",
+    "UPDATE p2p_ads SET fiat = ?, country = ?, price_type = ?, price = ?, margin_pct = ?, min_fiat = ?, max_fiat = ?, remaining_pico = ?, methods = ?, pay_window_min = ?, terms = ?, min_orders_reversible = ?, xmr_address = ?, request_window_h = ?, status = ?, paused_reason = NULL, updated_at = ? WHERE id = ?",
   )
-    .bind(v.fiat, v.country, v.price_type, v.price, v.margin_pct, v.min_fiat, v.max_fiat, v.remaining_pico, JSON.stringify(v.methods), v.pay_window_min, v.terms, v.min_orders_reversible, v.xmr_address, status, now(), ad.id)
+    .bind(v.fiat, v.country, v.price_type, v.price, v.margin_pct, v.min_fiat, v.max_fiat, v.remaining_pico, JSON.stringify(v.methods), v.pay_window_min, v.terms, v.min_orders_reversible, v.xmr_address, v.request_window_h, status, now(), ad.id)
     .run();
   const updated = await getAd(env, ad.id);
   return json(publicAd(updated, await market(updated.fiat)));
@@ -212,8 +223,10 @@ export async function updateAd(req: Request, env: P2PEnv, path: string, adId: st
  * GET /v1/p2p/ads?side=sell&fiat=MXN[&country=MX][&method=SPEI][&amount=500]
  * side=sell: anuncios de quien vende XMR (los ve quien quiere comprar), del más barato al más caro.
  * side=buy: anuncios de quien compra XMR, del que paga más al que paga menos.
- * Primero los anunciantes en línea (el escrow se arma con los dos navegadores abiertos). online=1: solo ellos.
- * Los anuncios de quien lleva más de 24 h sin conectarse no aparecen (vuelven al reconectarse).
+ * Primero los anunciantes en línea (el escrow se arma con los dos navegadores abiertos), luego los que
+ * aceptan solicitudes fuera de línea, y al final el resto. online=1: solo los que están en línea.
+ * Los anuncios de quien lleva más de 24 h sin conectarse no aparecen (7 días si aceptan solicitudes);
+ * vuelven al reconectarse.
  */
 export async function listAds(env: P2PEnv, url: URL): Promise<Response> {
   const sp = url.searchParams;
@@ -226,14 +239,16 @@ export async function listAds(env: P2PEnv, url: URL): Promise<Response> {
   const onlyOnline = sp.get("online") === "1";
   const t = now();
   const rows = await env.DB.prepare(
-    "SELECT a.*, u.nickname, u.orders_done, u.orders_total, u.release_secs, u.releases, u.deposit_secs, u.deposits, u.positive, u.negative, u.last_seen" +
+    "SELECT a.*, u.nickname, u.orders_done, u.orders_total, u.release_secs, u.releases, u.deposit_secs, u.deposits, u.accept_secs, u.accepts, u.positive, u.negative, u.last_seen" +
       " FROM p2p_ads a JOIN p2p_users u ON u.id = a.user_id" +
-      " WHERE a.status = 'active' AND a.side = ? AND a.fiat = ? AND u.banned = 0 AND u.last_seen >= ? AND (? IS NULL OR a.country IS NULL OR a.country = ?)" +
+      " WHERE a.status = 'active' AND a.side = ? AND a.fiat = ? AND u.banned = 0 AND u.last_seen >= (CASE WHEN a.request_window_h IS NULL THEN ? ELSE ? END) AND (? IS NULL OR a.country IS NULL OR a.country = ?)" +
       " LIMIT 300",
   )
-    .bind(side, fiat, t - STALE_SECS, country, country)
-    .all<Ad & { nickname: string; orders_done: number; orders_total: number; release_secs: number; releases: number; deposit_secs: number; deposits: number; positive: number; negative: number; last_seen: number }>();
+    .bind(side, fiat, t - STALE_SECS, t - STALE_REQUEST_SECS, country, country)
+    .all<Ad & { nickname: string; orders_done: number; orders_total: number; release_secs: number; releases: number; deposit_secs: number; deposits: number; accept_secs: number; accepts: number; positive: number; negative: number; last_seen: number }>();
   const mkt = await market(fiat);
+  // 2: en línea (orden directa), 1: fuera de línea pero acepta solicitudes, 0: hay que esperar a que vuelva.
+  const reach = (a: { user: { last_seen: number }; request_window_h: number | null }) => (isOnline(a.user.last_seen, t) ? 2 : a.request_window_h ? 1 : 0);
   const ads = rows.results
     .map((r) => {
       const ad = publicAd(r, mkt);
@@ -249,7 +264,7 @@ export async function listAds(env: P2PEnv, url: URL): Promise<Response> {
     .filter((a) => !method || a.methods.some((m) => m.name.toLowerCase().includes(method)))
     .filter((a) => amount === null || (amount >= Number(a.min_fiat) && amount <= Number(a.max_fiat)))
     .filter((a) => !onlyOnline || isOnline(a.user.last_seen, t))
-    .sort((a, b) => Number(isOnline(b.user.last_seen, t)) - Number(isOnline(a.user.last_seen, t)) || (side === "sell" ? a.price! - b.price! : b.price! - a.price!))
+    .sort((a, b) => reach(b) - reach(a) || (side === "sell" ? a.price! - b.price! : b.price! - a.price!))
     .slice(0, 100);
   return json({ side, fiat, market_price: mkt, ads });
 }

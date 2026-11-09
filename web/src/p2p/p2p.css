@@ -285,3 +285,9 @@ a.p2p-tab { text-align: center; text-decoration: none; }
 
 #p2p-root [hidden], .p2p-sheet [hidden] { display: none !important; }
 .p2p-chat-lock { margin: 0; padding: 0.7rem 0.9rem; border-radius: 10px; background: var(--p2p-info-bg); color: var(--p2p-info-fg); font-size: 0.9rem; }
+
+/* Solicitudes fuera de línea y avisos push */
+.p2p-reply { display: block; margin-top: 0.3rem; font-size: 0.78rem; text-align: center; }
+.p2p-push { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
+.p2p-push small { flex: 1 1 14rem; }
+.p2p-escrow-note p { margin: 0; }
