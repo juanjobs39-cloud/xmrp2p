@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { signedMessage } from "../src/api/auth";
 import worker from "../src/api/index";
 import { sweepOrders } from "../src/api/p2p/orders";
+import { setupWebhook } from "../src/api/p2p/telegram";
 
 // Llaves generadas en cada corrida: ninguna llave privada vive en el repositorio.
 const newKey = () => privateKeyToAccount(generatePrivateKey());
@@ -47,9 +48,9 @@ const arbiter = (path: string, body?: unknown) =>
   call(path, { method: body === undefined ? "GET" : "POST", body: body === undefined ? undefined : JSON.stringify(body), headers: { authorization: `Bearer ${ARBITER}` } });
 
 let n = 0;
-async function newUser(): Promise<Key> {
+async function newUser(e = env): Promise<Key> {
   const k = newKey();
-  const r = await signed(k, "PUT", "/v1/p2p/me", { nickname: `user_${++n}_${k.address.slice(2, 8)}`, enc_pubkey: "02" + "ab".repeat(32) });
+  const r = await signed(k, "PUT", "/v1/p2p/me", { nickname: `user_${++n}_${k.address.slice(2, 8)}`, enc_pubkey: "02" + "ab".repeat(32) }, e);
   expect(r.status).toBe(201);
   return k;
 }
@@ -522,6 +523,180 @@ describe("P2P Fiat", () => {
     expect(left.results.map((r) => r.endpoint)).toEqual([ok]);
     expect((await signed(seller, "DELETE", "/v1/p2p/push", { endpoint: ok }, penv)).body).toEqual({ ok: true });
     expect((await DB.prepare("SELECT COUNT(*) AS n FROM p2p_push WHERE user_id = ?").bind(seller.address.toLowerCase()).first<{ n: number }>())!.n).toBe(0);
+  });
+
+  // ---------- Telegram ----------
+
+  const TG_SECRET = "s".repeat(40);
+  const tenv = { ...(env as object), API_URL: "https://fiat.monerop2p.app", P2P_TELEGRAM_TOKEN: "123:abc", P2P_TELEGRAM_WEBHOOK_SECRET: TG_SECRET } as never;
+  type TgCall = { method: string; body: Record<string, any> };
+
+  /** Simula la API de Telegram; los mensajes enviados quedan en la lista. */
+  function mockTelegram(status: (c: TgCall) => number = () => 200): TgCall[] {
+    const calls: TgCall[] = [];
+    const prices = globalThis.fetch;
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+      const u = String(input instanceof Request ? input.url : input);
+      const m = /^https:\/\/api\.telegram\.org\/bot123:abc\/(\w+)$/.exec(u);
+      if (!m) return prices(input, init);
+      const c = { method: m[1]!, body: JSON.parse(String(init?.body ?? "{}")) };
+      calls.push(c);
+      const st = status(c);
+      if (st !== 200) return Response.json({ ok: false }, { status: st });
+      return Response.json({ ok: true, result: c.method === "getMe" ? { username: "TestFiatBot" } : true });
+    });
+    return calls;
+  }
+
+  const hook = (update: unknown, secret = TG_SECRET) =>
+    call("/v1/p2p/telegram/webhook", { method: "POST", body: JSON.stringify(update), headers: { "content-type": "application/json", "x-telegram-bot-api-secret-token": secret } }, tenv);
+  const msg = (chat: number, text: string) => ({ message: { text, chat: { id: chat, type: "private" }, from: { language_code: "es" } } });
+  let chatN = 1000;
+
+  /** Liga una cuenta a un chat nuevo como lo haría el usuario: código desde la app y /start en el bot. */
+  async function linkTelegram(k: Key): Promise<number> {
+    const r = await signed(k, "POST", "/v1/p2p/telegram/link", { lang: "es" }, tenv);
+    expect(r.status).toBe(200);
+    const code = /\?start=([0-9a-f]{32})$/.exec(r.body.url)![1]!;
+    const chat = ++chatN + Math.floor(Math.random() * 1e6);
+    await hook(msg(chat, `/start ${code}`));
+    return chat;
+  }
+
+  it("telegram: el webhook se registra solo y una vez; config expone el bot", async () => {
+    await DB.prepare("DELETE FROM p2p_settings WHERE key IN ('telegram_bot', 'telegram_hook')").run();
+    expect((await call("/v1/p2p/config", {}, tenv)).body.telegram_bot).toBeNull();
+    const calls = mockTelegram();
+    await setupWebhook(tenv);
+    const set = calls.find((c) => c.method === "setWebhook")!;
+    expect(set.body).toMatchObject({ url: "https://fiat.monerop2p.app/v1/p2p/telegram/webhook", secret_token: TG_SECRET, allowed_updates: ["message", "callback_query"] });
+    expect((await call("/v1/p2p/config", {}, tenv)).body.telegram_bot).toBe("TestFiatBot");
+    const before = calls.length;
+    await setupWebhook(tenv);
+    expect(calls.length).toBe(before);
+    // Sin token no hay Telegram.
+    expect((await call("/v1/p2p/config")).body.telegram_bot).toBeNull();
+  });
+
+  it("telegram: ligar con código de un solo uso, /stop y el webhook exige su secreto", async () => {
+    await DB.prepare("INSERT OR REPLACE INTO p2p_settings (key, value) VALUES ('telegram_bot', 'TestFiatBot')").run();
+    const calls = mockTelegram();
+    const u = await newUser();
+    expect((await signed(u, "POST", "/v1/p2p/telegram/link", {})).status).toBe(503);
+    expect((await hook(msg(5, "/help"), "otro")).status).toBe(401);
+    expect((await hook(msg(5, "/help"), "")).status).toBe(401);
+    expect((await signed(u, "GET", "/v1/p2p/me", undefined, tenv)).body.telegram).toBe(false);
+
+    const r = await signed(u, "POST", "/v1/p2p/telegram/link", { lang: "es" }, tenv);
+    expect(r.body.url).toMatch(/^https:\/\/t\.me\/TestFiatBot\?start=[0-9a-f]{32}$/);
+    const code = r.body.url.split("=")[1];
+    const chat = 777000 + Math.floor(Math.random() * 1000);
+    expect((await hook(msg(chat, `/start ${code}`))).status).toBe(200);
+    expect(calls.at(-1)!.body).toMatchObject({ chat_id: String(chat) });
+    expect(calls.at(-1)!.body.text).toContain("Conectado como user_");
+    expect((await signed(u, "GET", "/v1/p2p/me", undefined, tenv)).body.telegram).toBe(true);
+    // El código ya se usó: otro chat no puede robar el vínculo.
+    await hook(msg(chat + 1, `/start ${code}`));
+    expect(calls.at(-1)!.body.text).toContain("no es válido");
+    // Un código vencido tampoco sirve.
+    const r2 = await signed(u, "POST", "/v1/p2p/telegram/link", { lang: "es" }, tenv);
+    await DB.prepare("UPDATE p2p_telegram_codes SET expires_at = 1").run();
+    await hook(msg(chat + 2, `/start ${r2.body.url.split("=")[1]}`));
+    expect(calls.at(-1)!.body.text).toContain("no es válido");
+    // Los grupos se ignoran.
+    const n = calls.length;
+    await hook({ message: { text: "/stop", chat: { id: chat, type: "group" } } });
+    expect(calls.length).toBe(n);
+    await hook(msg(chat, "/stop"));
+    expect(calls.at(-1)!.body.text).toContain("Desconectado");
+    expect((await signed(u, "GET", "/v1/p2p/me", undefined, tenv)).body.telegram).toBe(false);
+    // Desligar desde la app.
+    await linkTelegram(u);
+    expect((await signed(u, "DELETE", "/v1/p2p/telegram", {}, tenv)).body).toEqual({ ok: true });
+    expect((await signed(u, "GET", "/v1/p2p/me", undefined, tenv)).body.telegram).toBe(false);
+  });
+
+  it("telegram: solicitud con Aceptar/Rechazar solo desde el chat del anunciante; avisos sin montos", async () => {
+    await DB.prepare("INSERT OR REPLACE INTO p2p_settings (key, value) VALUES ('telegram_bot', 'TestFiatBot')").run();
+    const calls = mockTelegram();
+    const seller = await newUser();
+    const buyer = await newUser();
+    const sChat = await linkTelegram(seller);
+    const bChat = await linkTelegram(buyer);
+    const ad = (await signed(seller, "POST", "/v1/p2p/ads", sellAd({ request_window_h: 3 }), tenv)).body;
+    await away(seller, 3600);
+    // En el mercado el anuncio aparece como «recibe avisos».
+    const listed = (await call("/v1/p2p/ads?side=sell&fiat=MXN", {}, tenv)).body.ads.find((a: { id: string }) => a.id === ad.id);
+    expect(listed.user.notifiable).toBe(true);
+
+    const req = () => signed(buyer, "POST", "/v1/p2p/orders", { ad_id: ad.id, fiat_amount: "400", xmr_address: STAGENET("B") }, tenv);
+    const o1 = (await req()).body;
+    const toSeller = calls.filter((c) => c.method === "sendMessage" && c.body.chat_id === String(sChat)).at(-1)!;
+    expect(toSeller.body.text).toContain("Nueva solicitud");
+    expect(toSeller.body.text).toContain("3 h");
+    expect(toSeller.body.text).not.toMatch(/400|MXN|SPEI|user_/);
+    const kb = toSeller.body.reply_markup.inline_keyboard;
+    expect(kb[0].map((b: any) => b.callback_data)).toEqual([`a:${o1.id}`, `d:${o1.id}`]);
+    expect(kb[1][0].url).toBe(`https://fiat.monerop2p.app/es/app/#/orden/${o1.id}`);
+
+    const press = (chat: number, data: string) => hook({ callback_query: { id: "q1", data, message: { message_id: 9, chat: { id: chat } } } });
+    // El comprador no puede aceptar su propia solicitud desde su chat.
+    await press(bChat, `a:${o1.id}`);
+    expect(calls.at(-1)).toMatchObject({ method: "answerCallbackQuery" });
+    expect(calls.at(-1)!.body.text).toContain("Solo el anunciante");
+    await press(99, `a:${o1.id}`);
+    expect(calls.at(-1)!.body.text).toContain("no está conectado");
+    expect((await signed(buyer, "GET", `/v1/p2p/orders/${o1.id}`, undefined, tenv)).body.status).toBe("requested");
+    // Rechazar desde Telegram.
+    await press(sChat, `d:${o1.id}`);
+    expect((await signed(buyer, "GET", `/v1/p2p/orders/${o1.id}`, undefined, tenv)).body).toMatchObject({ status: "cancelled", cancel_reason: "declined" });
+    expect(calls.find((c) => c.method === "editMessageText")!.body.text).toContain("Rechazaste");
+    expect(calls.filter((c) => c.body.chat_id === String(bChat)).at(-1)!.body.text).toContain("Rechazaron tu solicitud");
+    // Ya no está pendiente.
+    await press(sChat, `a:${o1.id}`);
+    expect(calls.at(-1)!.body.text).toContain("ya no está pendiente");
+    // Aceptar desde Telegram arranca el plazo para armar el escrow.
+    await away(seller, 3600);
+    const o2 = (await req()).body;
+    await press(sChat, `a:${o2.id}`);
+    const acc = (await signed(buyer, "GET", `/v1/p2p/orders/${o2.id}`, undefined, tenv)).body;
+    expect(acc.status).toBe("setup");
+    expect(acc.accepted_at).not.toBeNull();
+    expect(calls.filter((c) => c.body.chat_id === String(bChat)).at(-1)!.body.text).toContain("Aceptaron tu solicitud");
+    // Ningún mensaje a usuarios lleva montos ni apodos.
+    for (const c of calls.filter((c) => c.method === "sendMessage" && c.body.chat_id !== undefined && !String(c.body.text).startsWith("Conectado")))
+      expect(c.body.text).not.toMatch(/400|MXN|SPEI|PayPal|user_/);
+  });
+
+  it("telegram: el admin recibe usuarios, anuncios, apelaciones y órdenes completadas con detalle; 403 borra el vínculo", async () => {
+    await DB.prepare("INSERT OR REPLACE INTO p2p_settings (key, value) VALUES ('telegram_bot', 'TestFiatBot')").run();
+    let blocked = 0;
+    const calls = mockTelegram((c) => (c.method === "sendMessage" && Number(c.body.chat_id) === blocked ? 403 : 200));
+    await signed(admin, "PUT", "/v1/p2p/me", { nickname: "soporte_" + admin.address.slice(2, 8), enc_pubkey: "02" + "cd".repeat(32) });
+    const aChat = await linkTelegram(admin);
+    const toAdmin = () => calls.filter((c) => c.method === "sendMessage" && c.body.chat_id === String(aChat)).map((c) => String(c.body.text));
+    const seller = await newUser(tenv);
+    expect(toAdmin().some((t) => t.startsWith("🛡 Usuario nuevo: user_"))).toBe(true);
+    const ad = (await signed(seller, "POST", "/v1/p2p/ads", sellAd({ terms: "Solo SPEI a mi nombre" }), tenv)).body;
+    const adMsg = toAdmin().find((t) => t.includes("Anuncio nuevo"))!;
+    expect(adMsg).toContain("vende XMR por MXN");
+    expect(adMsg).toContain("SPEI, PayPal");
+    expect(adMsg).toContain("Solo SPEI a mi nombre");
+    // Pausar no avisa; editar las condiciones sí.
+    const before = toAdmin().length;
+    await signed(seller, "PATCH", `/v1/p2p/ads/${ad.id}`, { status: "paused" }, tenv);
+    expect(toAdmin().length).toBe(before);
+    await signed(seller, "PATCH", `/v1/p2p/ads/${ad.id}`, { terms: "Escríbeme por WhatsApp" }, tenv);
+    expect(toAdmin().at(-1)).toContain("Anuncio editado");
+    expect(toAdmin().at(-1)).toContain("WhatsApp");
+    // Si alguien bloquea el bot, se borra su vínculo.
+    const u = await newUser();
+    const buyer = await newUser();
+    const uAd = (await signed(u, "POST", "/v1/p2p/ads", sellAd({ request_window_h: 1 }), tenv)).body;
+    blocked = await linkTelegram(u);
+    await away(u, 3600);
+    expect((await signed(buyer, "POST", "/v1/p2p/orders", { ad_id: uAd.id, fiat_amount: "200", xmr_address: STAGENET("B") }, tenv)).body.status).toBe("requested");
+    expect((await DB.prepare("SELECT COUNT(*) AS n FROM p2p_telegram WHERE chat_id = ?").bind(String(blocked)).first<{ n: number }>())!.n).toBe(0);
   });
 
   it("el árbitro necesita su token", async () => {

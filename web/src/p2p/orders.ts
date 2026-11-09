@@ -96,6 +96,7 @@ export async function myAdsView(app: P2PApp) {
               "With the app open we alert you with a sound when someone opens an order. Turn on notifications to find out with the app closed too (useful with offline requests).",
             ),
           ),
+          app.telegramButton(),
           app.pushButton(),
         )
       : null,

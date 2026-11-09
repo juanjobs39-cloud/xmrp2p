@@ -4,6 +4,7 @@ import { FIATS, POPULAR_FIATS, requireFiat, suggestedMethods, xmrPrice } from ".
 import { activeUser, settings, signer, text, xmrNetwork, type P2PEnv } from "./common";
 import { handleAdmin, handleArbiter } from "./admin";
 import { subscribe, unsubscribe } from "./push";
+import { link, telegramBot, unlink, webhook } from "./telegram";
 import { createOrder, FINAL, getOrder, getOrderView, myOrders, orderAction, roleOf, roomEvent, sweepOrders } from "./orders";
 
 export { sweepOrders };
@@ -32,6 +33,7 @@ export async function handleP2P(req: Request, env: P2PEnv, url: URL): Promise<Re
       fee_address: env.P2P_FEE_ADDRESS || null,
       accept_setup_min: Number(s.accept_setup_min ?? 60),
       vapid_public: env.P2P_VAPID_PUBLIC || null,
+      telegram_bot: await telegramBot(env),
     });
   }
   if (p === "/v1/p2p/fiats" && get) return json({ popular: POPULAR_FIATS, all: FIATS }, 200, { "cache-control": "public, max-age=86400" });
@@ -47,6 +49,9 @@ export async function handleP2P(req: Request, env: P2PEnv, url: URL): Promise<Re
   const prof = /^\/v1\/p2p\/users\/(0x[0-9a-fA-F]{40})$/.exec(p);
   if (prof && get) return getProfile(env, prof[1]!);
 
+  // ---- Telegram (el webhook lo autentica su propio secreto) ----
+  if (p === "/v1/p2p/telegram/webhook" && req.method === "POST") return webhook(req, env);
+
   // ---- Firmadas por el usuario ----
   if (p === "/v1/p2p/me/ping" && req.method === "POST") {
     // Latido de la app abierta: marca al usuario «en línea».
@@ -58,6 +63,8 @@ export async function handleP2P(req: Request, env: P2PEnv, url: URL): Promise<Re
     if (req.method === "PUT") return putMe(req, env, p);
     if (get) return getMe(req, env, p);
   }
+  if (p === "/v1/p2p/telegram/link" && req.method === "POST") return link(req, env, p);
+  if (p === "/v1/p2p/telegram" && req.method === "DELETE") return unlink(req, env, p);
   if (p === "/v1/p2p/push") {
     if (req.method === "PUT") return subscribe(req, env, p);
     if (req.method === "DELETE") return unsubscribe(req, env, p);

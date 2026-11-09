@@ -2,6 +2,8 @@ import { HttpError, json, randomId, readJson } from "../env";
 import { normalizeMethod, requireCountry, requireFiat, xmrPrice, type Method } from "./catalog";
 import { activeUser, fiatAmount, fromPico, getUser, isOnline, now, publicUser, requireXmrAddress, settings, STALE_REQUEST_SECS, STALE_SECS, signer, text, toPico, type P2PEnv } from "./common";
 
+import { isLinked, telegramAdmin } from "./telegram";
+
 const MAX_ACTIVE_ADS = 10;
 
 /** Plazos permitidos para responder solicitudes (horas). */
@@ -51,6 +53,7 @@ export async function putMe(req: Request, env: P2PEnv, path: string): Promise<Re
       await env.DB.prepare("INSERT INTO p2p_users (id, nickname, enc_pubkey, created_at, last_seen) VALUES (?, ?, ?, ?, ?)")
         .bind(id, nickname, enc, now(), now())
         .run();
+      await telegramAdmin(env, `Usuario nuevo: ${nickname}`);
     }
   } catch (e) {
     if (String(e).includes("UNIQUE")) throw new HttpError(409, "ese apodo ya está en uso");
@@ -63,7 +66,7 @@ export async function getMe(req: Request, env: P2PEnv, path: string): Promise<Re
   const id = await signer(req, env, path, "");
   const u = await getUser(env, id);
   if (!u) throw new HttpError(404, "sin perfil");
-  return json(publicUser(u));
+  return json({ ...publicUser(u), telegram: await isLinked(env, id) });
 }
 
 export async function getProfile(env: P2PEnv, id: string): Promise<Response> {
@@ -174,6 +177,7 @@ export async function createAd(req: Request, env: P2PEnv, path: string): Promise
   )
     .bind(ad.id, ad.user_id, ad.side, ad.fiat, ad.country, ad.price_type, ad.price, ad.margin_pct, ad.min_fiat, ad.max_fiat, ad.remaining_pico, ad.methods, ad.pay_window_min, ad.terms, ad.min_orders_reversible, ad.xmr_address, ad.request_window_h, ad.status, ad.created_at, ad.updated_at)
     .run();
+  await telegramAdmin(env, `Anuncio nuevo\n${await adSummary(env, ad)}`);
   return json(publicAd(ad, await market(ad.fiat)), 201);
 }
 
@@ -216,7 +220,23 @@ export async function updateAd(req: Request, env: P2PEnv, path: string, adId: st
     .bind(v.fiat, v.country, v.price_type, v.price, v.margin_pct, v.min_fiat, v.max_fiat, v.remaining_pico, JSON.stringify(v.methods), v.pay_window_min, v.terms, v.min_orders_reversible, v.xmr_address, v.request_window_h, status, now(), ad.id)
     .run();
   const updated = await getAd(env, ad.id);
+  // Al admin solo le interesan los cambios de contenido, no pausar o activar.
+  if (Object.keys(data).some((k) => !["status", "nonce", "request_window_h"].includes(k)) && status !== "closed")
+    await telegramAdmin(env, `Anuncio editado\n${await adSummary(env, updated)}`);
   return json(publicAd(updated, await market(updated.fiat)));
+}
+
+/** Resumen de un anuncio para el admin (para moderar condiciones o métodos sospechosos). */
+async function adSummary(env: P2PEnv, ad: Ad): Promise<string> {
+  const u = await getUser(env, ad.user_id);
+  const methods = (JSON.parse(ad.methods) as Method[]).map((m) => m.name).join(", ");
+  const price = ad.price_type === "fixed" ? `${ad.price} ${ad.fiat}/XMR` : `mercado ${(ad.margin_pct ?? 0) > 0 ? "+" : ""}${ad.margin_pct ?? 0}%`;
+  return [
+    `${u?.nickname ?? ad.user_id} ${ad.side === "sell" ? "vende" : "compra"} XMR por ${ad.fiat}${ad.country ? ` (${ad.country})` : ""}`,
+    `Precio: ${price} · Límites: ${ad.min_fiat}–${ad.max_fiat} ${ad.fiat} · ${fromPico(ad.remaining_pico)} XMR`,
+    `Métodos: ${methods}`,
+    ad.terms ? `Condiciones: ${ad.terms.slice(0, 600)}` : "Sin condiciones",
+  ].join("\n");
 }
 
 /**
@@ -239,16 +259,19 @@ export async function listAds(env: P2PEnv, url: URL): Promise<Response> {
   const onlyOnline = sp.get("online") === "1";
   const t = now();
   const rows = await env.DB.prepare(
-    "SELECT a.*, u.nickname, u.orders_done, u.orders_total, u.release_secs, u.releases, u.deposit_secs, u.deposits, u.accept_secs, u.accepts, u.positive, u.negative, u.last_seen" +
+    "SELECT a.*, u.nickname, u.orders_done, u.orders_total, u.release_secs, u.releases, u.deposit_secs, u.deposits, u.accept_secs, u.accepts, u.positive, u.negative, u.last_seen," +
+      " (EXISTS (SELECT 1 FROM p2p_telegram t WHERE t.user_id = u.id) OR EXISTS (SELECT 1 FROM p2p_push p WHERE p.user_id = u.id)) AS notifiable" +
       " FROM p2p_ads a JOIN p2p_users u ON u.id = a.user_id" +
       " WHERE a.status = 'active' AND a.side = ? AND a.fiat = ? AND u.banned = 0 AND u.last_seen >= (CASE WHEN a.request_window_h IS NULL THEN ? ELSE ? END) AND (? IS NULL OR a.country IS NULL OR a.country = ?)" +
       " LIMIT 300",
   )
     .bind(side, fiat, t - STALE_SECS, t - STALE_REQUEST_SECS, country, country)
-    .all<Ad & { nickname: string; orders_done: number; orders_total: number; release_secs: number; releases: number; deposit_secs: number; deposits: number; accept_secs: number; accepts: number; positive: number; negative: number; last_seen: number }>();
+    .all<Ad & { nickname: string; orders_done: number; orders_total: number; release_secs: number; releases: number; deposit_secs: number; deposits: number; accept_secs: number; accepts: number; notifiable: number; positive: number; negative: number; last_seen: number }>();
   const mkt = await market(fiat);
-  // 2: en línea (orden directa), 1: fuera de línea pero acepta solicitudes, 0: hay que esperar a que vuelva.
-  const reach = (a: { user: { last_seen: number }; request_window_h: number | null }) => (isOnline(a.user.last_seen, t) ? 2 : a.request_window_h ? 1 : 0);
+  // 3: en línea (orden directa); 2: fuera de línea, acepta solicitudes y recibe avisos (Telegram o push);
+  // 1: acepta solicitudes sin avisos; 0: hay que esperar a que vuelva.
+  const reach = (a: { user: { last_seen: number; notifiable: boolean }; request_window_h: number | null }) =>
+    isOnline(a.user.last_seen, t) ? 3 : a.request_window_h ? (a.user.notifiable ? 2 : 1) : 0;
   const ads = rows.results
     .map((r) => {
       const ad = publicAd(r, mkt);

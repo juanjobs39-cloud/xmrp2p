@@ -620,6 +620,13 @@ export function faq(lang: L): { q: string; a: string }[] {
       ),
     },
     {
+      q: t("¿Puedo recibir los avisos en Telegram?", "Can I get notifications on Telegram?"),
+      a: t(
+        "Sí. En «Cuenta» toca «Conectar Telegram» y luego «Iniciar» en el bot. Te avisa de solicitudes, órdenes nuevas, pagos marcados y apelaciones aunque no tengas la web abierta, y si aceptas solicitudes en tus anuncios puedes aceptarlas o rechazarlas desde el mismo mensaje. Los mensajes solo dicen qué pasó y traen el enlace a la orden: nunca montos ni datos de pago. El escrow y el depósito se hacen siempre en la web. El bot nunca te pedirá pagos, contraseñas ni datos de pago; /stop lo desconecta.",
+        "Yes. In \"Account\" tap \"Connect Telegram\" and then \"Start\" in the bot. It tells you about requests, new orders, payments marked and appeals even when the web is closed, and if your ads accept requests you can accept or decline them from the message itself. Messages only say what happened and include the order link: never amounts or payment details. The escrow and the deposit are always done on the web. The bot will never ask you for payments, passwords or payment details; /stop disconnects it.",
+      ),
+    },
+    {
       q: t("¿Por qué el chat está cerrado al abrir la orden?", "Why is the chat closed when the order opens?"),
       a: t(
         "Para protegerte. El chat se abre cuando el XMR del vendedor ya está bloqueado en el escrow; antes nadie puede escribirte ni mandarte datos de pago. Si alguien te pide pagar antes, por la plataforma o por otro medio, es una estafa.",

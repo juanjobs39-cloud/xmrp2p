@@ -259,6 +259,65 @@ export class P2PApp {
     return box;
   }
 
+  // ------------------------------------------------------------ avisos por Telegram
+
+  /** Conectar o desconectar el bot de avisos. El bot solo recibe el evento y el enlace, nunca montos. */
+  telegramButton(): HTMLElement | null {
+    if (!this.cfg.telegram_bot || !this.me) return null;
+    const box = h("div", { class: "p2p-push p2p-tg" });
+    let poll = 0;
+    const draw = () => {
+      clearInterval(poll);
+      if (this.me?.telegram) {
+        const off = h("button", { class: "btn small secondary", type: "button" }, this.t("Desconectar Telegram", "Disconnect Telegram"));
+        off.onclick = () =>
+          void this.busy(off, async () => {
+            await this.req("DELETE", "/v1/p2p/telegram", {});
+            this.me = { ...this.me!, telegram: false };
+            draw();
+          }, box);
+        return void box.replaceChildren(
+          off,
+          h("small", { class: "muted" }, this.t(
+            "✈ Telegram conectado: ahí te llegan tus órdenes y puedes aceptar o rechazar solicitudes. Activa «Aceptar solicitudes» en tus anuncios para recibir órdenes aunque no estés en la web.",
+            "✈ Telegram connected: your orders arrive there and you can accept or decline requests. Turn on “Accept requests” on your ads to get orders even when you're not on the web.",
+          )),
+        );
+      }
+      const on = h("button", { class: "btn small", type: "button" }, "✈ " + this.t("Conectar Telegram", "Connect Telegram"));
+      on.onclick = () =>
+        void this.busy(on, async () => {
+          const r = await this.req<{ url: string; expires_at: number }>("POST", "/v1/p2p/telegram/link", { lang: this.lang });
+          window.open(r.url, "_blank", "noopener");
+          box.replaceChildren(
+            h("a", { class: "btn small", href: r.url, target: "_blank", rel: "noopener" }, this.t("Abrir Telegram", "Open Telegram")),
+            h("small", { class: "muted" }, this.t(
+              `Toca «Iniciar» en @${this.cfg.telegram_bot}. Esta página se actualiza sola cuando quede conectado (el enlace vence en 10 min).`,
+              `Tap “Start” in @${this.cfg.telegram_bot}. This page updates itself once it's connected (the link expires in 10 min).`,
+            )),
+          );
+          // Revisa cada 3 s hasta que el bot confirme el vínculo o venza el código.
+          poll = window.setInterval(async () => {
+            if (!box.isConnected || Date.now() / 1000 > r.expires_at) return void (clearInterval(poll), box.isConnected && draw());
+            const me = await this.req<PublicUser>("GET", "/v1/p2p/me").catch(() => null);
+            if (me?.telegram) {
+              this.me = me;
+              draw();
+            }
+          }, 3000);
+        }, box);
+      box.replaceChildren(
+        on,
+        h("small", { class: "muted" }, this.t(
+          "Avisos en Telegram aunque cierres la web. El bot solo recibe el tipo de aviso y el enlace a la orden: nunca montos, apodos ni datos de pago.",
+          "Notifications on Telegram even with the web closed. The bot only gets the kind of notice and the order link: never amounts, nicknames or payment details.",
+        )),
+      );
+    };
+    draw();
+    return box;
+  }
+
   show(...nodes: Child[]) {
     this.root.replaceChildren(...(nodes.filter(Boolean) as Node[]));
   }
@@ -470,6 +529,9 @@ export class P2PApp {
         h("p", { class: "row wrap" }, save, backup, lock),
         h("p", {}, h("small", {}, this.t("El respaldo incluye las llaves de tus escrows abiertos. Descárgalo de nuevo después de cada orden.", "The backup includes the keys of your open escrows. Download it again after each order."))),
       ),
+      this.me && (this.cfg.telegram_bot || this.pushSupported())
+        ? h("section", { class: "card p2p-box" }, h("h2", {}, this.t("Avisos", "Notifications")), this.telegramButton(), this.pushButton())
+        : null,
     );
   }
 

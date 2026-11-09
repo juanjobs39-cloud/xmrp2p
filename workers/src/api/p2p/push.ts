@@ -7,6 +7,9 @@
  */
 import { HttpError, json, readJson } from "../env";
 import { activeUser, now, signer, type P2PEnv } from "./common";
+import { telegramNotify, type NotifyEvent } from "./telegram";
+
+export type { NotifyEvent };
 
 /** Suscripciones como máximo por usuario (navegadores o equipos). */
 const MAX_PER_USER = 5;
@@ -87,12 +90,17 @@ export async function vapidAuth(env: P2PEnv, endpoint: string): Promise<string |
 }
 
 /**
- * Avisa a los usuarios (a todos sus navegadores suscritos). Nunca falla: un aviso que no llega no
- * debe romper la orden. Las suscripciones que el servicio da por muertas (404/410) se borran.
+ * Avisa a los usuarios: push vacío a todos sus navegadores suscritos y, si ligaron Telegram, el evento
+ * con un enlace a la orden. Nunca falla: un aviso que no llega no debe romper la orden. Las
+ * suscripciones que el servicio da por muertas (404/410) se borran.
  */
-export async function notify(env: P2PEnv, ...users: string[]): Promise<void> {
+export async function notify(env: P2PEnv, ev: NotifyEvent, ...users: string[]): Promise<void> {
+  const ids = [...new Set(users.filter(Boolean).map((u) => u.toLowerCase()))];
+  await Promise.all([webPush(env, ids), telegramNotify(env, ev, ids).catch((e) => console.log("telegram notify:", String(e)))]);
+}
+
+async function webPush(env: P2PEnv, ids: string[]): Promise<void> {
   try {
-    const ids = [...new Set(users.filter(Boolean).map((u) => u.toLowerCase()))];
     if (!ids.length || !env.P2P_VAPID_PUBLIC || !env.P2P_VAPID_PRIVATE) return;
     const subs = await env.DB.prepare(`SELECT endpoint FROM p2p_push WHERE user_id IN (${ids.map(() => "?").join(", ")})`)
       .bind(...ids)

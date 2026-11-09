@@ -290,4 +290,6 @@ a.p2p-tab { text-align: center; text-decoration: none; }
 .p2p-reply { display: block; margin-top: 0.3rem; font-size: 0.78rem; text-align: center; }
 .p2p-push { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
 .p2p-push small { flex: 1 1 14rem; }
+.p2p-tg + .p2p-push { margin-top: 0.75rem; }
+.p2p-notif { display: block; color: var(--ok, #2e9d5b); font-size: 0.75rem; }
 .p2p-escrow-note p { margin: 0; }

@@ -17,6 +17,10 @@ export interface P2PEnv extends Env {
   P2P_VAPID_PUBLIC?: string;
   /** Llave privada VAPID (componente «d» de la JWK, base64url). Secreto de Cloudflare. */
   P2P_VAPID_PRIVATE?: string;
+  /** Token del bot de Telegram (secreto de Cloudflare). Vacío: sin avisos por Telegram. */
+  P2P_TELEGRAM_TOKEN?: string;
+  /** Secreto que Telegram manda en cada webhook (secreto de Cloudflare). */
+  P2P_TELEGRAM_WEBHOOK_SECRET?: string;
 }
 
 export const now = () => Math.floor(Date.now() / 1000);
@@ -103,6 +107,8 @@ export interface User {
   deposits?: number;
   accept_secs?: number;
   accepts?: number;
+  /** Calculado en algunas consultas: tiene Telegram o push. */
+  notifiable?: number;
   positive: number;
   negative: number;
 }
@@ -142,6 +148,7 @@ export function publicUser(u: User) {
     completion_pct: u.orders_total ? Math.round((u.orders_done / u.orders_total) * 1000) / 10 : null,
     avg_release_min: u.releases ? Math.round(u.release_secs / u.releases / 6) / 10 : null,
     avg_deposit_min: u.deposits ? Math.round((u.deposit_secs ?? 0) / u.deposits / 6) / 10 : null,
+    notifiable: !!u.notifiable,
     avg_accept_min: u.accepts ? Math.round((u.accept_secs ?? 0) / u.accepts / 6) / 10 : null,
     positive: u.positive,
     negative: u.negative,

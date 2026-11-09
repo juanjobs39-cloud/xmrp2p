@@ -2,6 +2,7 @@ import { HttpError, json, readJson } from "../env";
 import { fromPico, getUser, now, publicUser, settings, signer, text, toPico, type P2PEnv } from "./common";
 import { applyStats, depositRequired, FINAL, getOrder, roomEvent, transition, type Order, type Status } from "./orders";
 import { notify } from "./push";
+import { telegramAdmin } from "./telegram";
 
 // ---------- Administrador (tú): cada petición va firmada con la llave de P2P_ADMIN_ADDRESS ----------
 
@@ -125,7 +126,7 @@ export async function handleAdmin(req: Request, env: P2PEnv, url: URL): Promise<
       if (!r.meta.changes) throw new HttpError(409, "la queja ya está resuelta o no existe");
       const updated = await transition(env, o, ["disputed"], "resolving");
       await roomEvent(env, o.id, "admin", { type: "decision", winner, note });
-      await notify(env, o.buyer, o.seller);
+      await notify(env, { kind: "resolved", orderId: o.id }, o.buyer, o.seller);
       return json({ order_id: updated.id, status: updated.status, winner });
     }
     if (ord[2] === "message" && req.method === "POST") {
@@ -250,7 +251,7 @@ export async function handleArbiter(req: Request, env: P2PEnv, url: URL): Promis
       const addr = typeof data.multisig_address === "string" ? data.multisig_address : "";
       if (!/^[1-9A-HJ-NP-Za-km-z]{95}$/.test(addr)) throw new HttpError(400, "multisig_address inválida");
       o = await transition(env, o, ["setup"], "awaiting_deposit", { multisig_address: addr });
-      await notify(env, o.seller);
+      await notify(env, { kind: "escrow_ready", orderId: o.id }, o.seller);
       break;
     }
     case "deposit": {
@@ -275,7 +276,7 @@ export async function handleArbiter(req: Request, env: P2PEnv, url: URL): Promis
         await applyStats(env, o, "refunding", "seller");
       } else {
         o = await transition(env, o, ["confirming"], "awaiting_payment", { funded_at: t, deadline_at: t + o.pay_window_min * 60 });
-        await notify(env, o.buyer);
+        await notify(env, { kind: "funded", orderId: o.id }, o.buyer);
       }
       break;
     }
@@ -290,7 +291,9 @@ export async function handleArbiter(req: Request, env: P2PEnv, url: URL): Promis
       }
       o = await transition(env, o, [o.status], to, { payout_txid: id, closed_at: t });
       if (to !== "refunded") await applyStats(env, o, to);
-      await notify(env, o.buyer, o.seller);
+      await notify(env, { kind: to === "refunded" ? "refunded" : to === "released" ? "released" : "resolved", orderId: o.id }, o.buyer, o.seller);
+      if (to === "released")
+        await telegramAdmin(env, `Orden completada · ${fromPico(o.xmr_pico)} XMR por ${o.fiat_amount} ${o.fiat} · comisión ${fromPico(o.fee_pico)} XMR`, o.id);
       break;
     }
     case "message": {

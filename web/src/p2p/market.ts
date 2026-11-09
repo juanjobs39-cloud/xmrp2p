@@ -145,7 +145,13 @@ function adRow(app: P2PApp, ad: MarketAd, wantBuy: boolean, market: number | nul
       h("span", {}, h("small", { class: "muted" }, t("Pagar en", "Pay within") + " "), `${ad.pay_window_min} min`),
     ),
     h("div", { class: "p2p-cell methods", role: "cell" }, h("div", { class: "p2p-tags" }, ad.methods.map((m) => app.methodTag(m)))),
-    h("div", { class: "p2p-cell act", role: "cell" }, take, canReq ? h("small", { class: "muted p2p-reply" }, replyHint(app, ad)) : null),
+    h(
+      "div",
+      { class: "p2p-cell act", role: "cell" },
+      take,
+      canReq ? h("small", { class: "muted p2p-reply" }, replyHint(app, ad)) : null,
+      canReq && ad.user.notifiable ? h("small", { class: "p2p-notif", title: app.t("Le llegan avisos fuera de la web (Telegram o el navegador).", "Gets notifications outside the web (Telegram or the browser).") }, "🔔 " + app.t("Recibe avisos", "Gets notified")) : null,
+    ),
   );
 }
 

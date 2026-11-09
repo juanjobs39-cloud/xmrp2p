@@ -62,6 +62,10 @@ export interface PublicUser {
   avg_accept_min?: number | null;
   /** Actividad en los últimos 10 minutos (la app manda un latido mientras está abierta). */
   online?: boolean;
+  /** Recibe avisos fuera de la web (Telegram o push): responde más rápido a las solicitudes. */
+  notifiable?: boolean;
+  /** Solo en tu propio perfil: si ligaste Telegram. */
+  telegram?: boolean;
   positive: number;
   negative: number;
   last_seen: number;
@@ -101,6 +105,8 @@ export interface P2PConfig {
   accept_setup_min?: number;
   /** Llave pública VAPID para los avisos push (null: sin avisos push). */
   vapid_public?: string | null;
+  /** Usuario del bot de avisos por Telegram (null: sin Telegram). */
+  telegram_bot?: string | null;
 }
 export interface OrderView {
   id: string;

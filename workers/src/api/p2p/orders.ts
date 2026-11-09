@@ -2,6 +2,7 @@ import { HttpError, json, randomId, readJson } from "../env";
 import { adPrice, getAd } from "./ads";
 import { xmrPrice, type Method } from "./catalog";
 import { notify } from "./push";
+import { telegramAdmin } from "./telegram";
 import { activeUser, fiatAmount, fromPico, getUser, isOnline, now, PICO, publicUser, requireXmrAddress, settings, signer, text, type P2PEnv } from "./common";
 
 /**
@@ -302,7 +303,7 @@ export async function createOrder(req: Request, env: P2PEnv, path: string): Prom
   const room = env.P2P_ORDER_ROOM.get(env.P2P_ORDER_ROOM.idFromName(o.id));
   await room.fetch("https://room/init", { method: "POST", body: JSON.stringify({ order_id: o.id }) });
   await roomEvent(env, o.id, "system", { type: "status", status: o.status });
-  await notify(env, o.maker);
+  await notify(env, o.status === "requested" ? { kind: "request", orderId: o.id, hours: ad.request_window_h ?? 1 } : { kind: "order_new", orderId: o.id }, o.maker);
   return json(await view(env, o, takerIsBuyer ? "buyer" : "seller"), 201);
 }
 
@@ -338,6 +339,25 @@ export async function myOrders(req: Request, env: P2PEnv, path: string, url: URL
   });
 }
 
+/** El anunciante acepta una solicitud (desde la web o desde Telegram): pasa a armar el escrow. */
+export async function acceptRequest(env: P2PEnv, o: Order, t: number): Promise<Order> {
+  if (o.status !== "requested") throw new HttpError(409, "esta orden no es una solicitud pendiente");
+  const s = await settings(env);
+  const c = await transition(env, o, ["requested"], "setup", { accepted_at: t, deadline_at: t + Number(s.accept_setup_min ?? 60) * 60 });
+  await env.DB.prepare("UPDATE p2p_users SET accept_secs = accept_secs + ?, accepts = accepts + 1 WHERE id = ?").bind(Math.max(0, t - c.created_at), c.maker).run();
+  await notify(env, { kind: "accepted", orderId: c.id }, c.maker === c.buyer ? c.seller : c.buyer);
+  return c;
+}
+
+/** El anunciante rechaza una solicitud: se cancela sin afectar la reputación y el XMR vuelve al anuncio. */
+export async function declineRequest(env: P2PEnv, o: Order, t: number): Promise<Order> {
+  if (o.status !== "requested") throw new HttpError(409, "esta orden no es una solicitud pendiente");
+  const c = await transition(env, o, ["requested"], "cancelled", { cancel_reason: "declined", closed_at: t, deadline_at: null });
+  await restoreAd(env, c);
+  await notify(env, { kind: "declined", orderId: c.id }, c.maker === c.buyer ? c.seller : c.buyer);
+  return c;
+}
+
 /** POST /v1/p2p/orders/:id/:action — acciones de las partes. */
 export async function orderAction(req: Request, env: P2PEnv, path: string, id: string, action: string): Promise<Response> {
   const { raw, data } = await readJson<Record<string, unknown>>(req);
@@ -354,26 +374,24 @@ export async function orderAction(req: Request, env: P2PEnv, path: string, id: s
   switch (action) {
     case "accept": {
       if (user !== o.maker) throw new HttpError(403, "solo el anunciante acepta la solicitud");
-      if (o.status !== "requested") throw new HttpError(409, "esta orden no es una solicitud pendiente");
-      o = await transition(env, o, ["requested"], "setup", { accepted_at: t, deadline_at: t + Number(s.accept_setup_min ?? 60) * 60 });
-      await env.DB.prepare("UPDATE p2p_users SET accept_secs = accept_secs + ?, accepts = accepts + 1 WHERE id = ?").bind(Math.max(0, t - o.created_at), o.maker).run();
-      await notify(env, other);
+      o = await acceptRequest(env, o, t);
       break;
     }
     case "decline": {
       if (user !== o.maker) throw new HttpError(403, "solo el anunciante rechaza la solicitud");
-      if (o.status !== "requested") throw new HttpError(409, "esta orden no es una solicitud pendiente");
-      o = await transition(env, o, ["requested"], "cancelled", { cancel_reason: "declined", closed_at: t, deadline_at: null });
-      await restoreAd(env, o);
-      await notify(env, other);
+      o = await declineRequest(env, o, t);
       break;
     }
     case "cancel": {
       if (o.status === "requested") {
         // Nadie depositó ni pagó: se cancela sin afectar la reputación de nadie.
-        o = await transition(env, o, ["requested"], "cancelled", { cancel_reason: user === o.maker ? "declined" : `cancelled_by_${role}`, closed_at: t, deadline_at: null });
+        if (user === o.maker) {
+          o = await declineRequest(env, o, t);
+          break;
+        }
+        o = await transition(env, o, ["requested"], "cancelled", { cancel_reason: `cancelled_by_${role}`, closed_at: t, deadline_at: null });
         await restoreAd(env, o);
-        await notify(env, other);
+        await notify(env, { kind: "cancelled", orderId: o.id }, other);
         break;
       }
       // Comprador: hasta antes de «Ya pagué». Vendedor: solo antes de depositar.
@@ -385,7 +403,7 @@ export async function orderAction(req: Request, env: P2PEnv, path: string, id: s
       else o = await transition(env, o, ["confirming", "awaiting_payment"], "refunding", { cancel_reason: reason, deadline_at: null });
       await restoreAd(env, o);
       await applyStats(env, o, o.status, role as "buyer" | "seller");
-      await notify(env, other);
+      await notify(env, { kind: "cancelled", orderId: o.id }, other);
       break;
     }
     case "paid": {
@@ -393,7 +411,7 @@ export async function orderAction(req: Request, env: P2PEnv, path: string, id: s
       if (o.status !== "awaiting_payment") throw new HttpError(409, "todavía no se puede marcar como pagada");
       if (o.deadline_at && t > o.deadline_at) throw new HttpError(409, "se acabó el tiempo para pagar");
       o = await transition(env, o, ["awaiting_payment"], "paid", { paid_at: t, deadline_at: null });
-      await notify(env, o.seller);
+      await notify(env, { kind: "paid", orderId: o.id }, o.seller);
       break;
     }
     case "release": {
@@ -412,7 +430,7 @@ export async function orderAction(req: Request, env: P2PEnv, path: string, id: s
       o = await transition(env, o, ["awaiting_payment", "paid", "disputed"], "releasing", { release_auth: auth, deadline_at: null, paid_at: o.paid_at ?? t });
       if (wasDisputed)
         await env.DB.prepare("UPDATE p2p_disputes SET status = 'resolved', winner = 'buyer', note = 'el vendedor liberó', resolved_at = ? WHERE order_id = ?").bind(t, o.id).run();
-      await notify(env, o.buyer);
+      await notify(env, { kind: "releasing", orderId: o.id }, o.buyer);
       break;
     }
     case "dispute": {
@@ -422,7 +440,12 @@ export async function orderAction(req: Request, env: P2PEnv, path: string, id: s
       const reason = text(data.reason, "reason", 1000, 5);
       o = await transition(env, o, ["paid"], "disputed");
       await env.DB.prepare("INSERT INTO p2p_disputes (order_id, opened_by, reason, opened_at, status) VALUES (?, ?, ?, ?, 'open')").bind(o.id, role, reason, t).run();
-      await notify(env, other);
+      await notify(env, { kind: "dispute", orderId: o.id }, other);
+      await telegramAdmin(
+        env,
+        `Apelación nueva · orden ${o.id.slice(0, 8)} · ${fromPico(o.xmr_pico)} XMR por ${o.fiat_amount} ${o.fiat} (${JSON.parse(o.method).name}) · abrió: ${role === "buyer" ? "comprador" : "vendedor"}\nMotivo: ${reason}`,
+        o.id,
+      );
       break;
     }
     case "payment-details": {
@@ -483,11 +506,11 @@ export async function sweepOrders(env: P2PEnv): Promise<number> {
   const t = now();
   // Recordatorio al anunciante cuando falta 1 h para que venza una solicitud (la tarea corre cada minuto).
   const soon = await env.DB.prepare(
-    "SELECT maker FROM p2p_orders WHERE status = 'requested' AND deadline_at > ? AND deadline_at <= ? AND created_at < deadline_at - 3660 LIMIT 100",
+    "SELECT id, maker FROM p2p_orders WHERE status = 'requested' AND deadline_at > ? AND deadline_at <= ? AND created_at < deadline_at - 3660 LIMIT 100",
   )
     .bind(t + 3540, t + 3600)
-    .all<{ maker: string }>();
-  if (soon.results.length) await notify(env, ...soon.results.map((r) => r.maker));
+    .all<{ id: string; maker: string }>();
+  for (const r of soon.results) await notify(env, { kind: "request_soon", orderId: r.id }, r.maker);
 
   const due = await env.DB.prepare(
     "SELECT * FROM p2p_orders WHERE deadline_at IS NOT NULL AND deadline_at < ? AND status IN ('requested', 'setup', 'awaiting_deposit', 'awaiting_payment') LIMIT 100",
@@ -502,25 +525,25 @@ export async function sweepOrders(env: P2PEnv): Promise<number> {
         const c = await transition(env, o, ["requested"], "cancelled", { cancel_reason: "timeout_request", closed_at: t, deadline_at: null });
         await restoreAd(env, c);
         await pauseIfMissedRequests(env, c.maker, t);
-        await notify(env, c.maker === c.buyer ? c.seller : c.buyer);
+        await notify(env, { kind: "expired", orderId: c.id }, c.maker === c.buyer ? c.seller : c.buyer);
       } else if (o.status === "setup" && o.accepted_at) {
         // Solicitud aceptada pero el escrow no se armó a tiempo (falta una de las dos pestañas): sin culpables.
         const c = await transition(env, o, ["setup"], "cancelled", { cancel_reason: "timeout_setup", closed_at: t, deadline_at: null });
         await restoreAd(env, c);
-        await notify(env, c.buyer, c.seller);
+        await notify(env, { kind: "timeout", orderId: c.id }, c.buyer, c.seller);
       } else if (NO_DEPOSIT.includes(o.status)) {
         // Nadie depositó a tiempo: se cancela; cuenta en contra del vendedor.
         const c = await transition(env, o, NO_DEPOSIT, "cancelled", { cancel_reason: "timeout_deposit", closed_at: t, deadline_at: null });
         await restoreAd(env, c);
         await applyStats(env, c, "cancelled", "seller");
         await pauseIfMissed(env, c.seller, t);
-        await notify(env, c.buyer, c.seller);
+        await notify(env, { kind: "timeout", orderId: c.id }, c.buyer, c.seller);
       } else {
         // El comprador no marcó «Ya pagué» a tiempo: el XMR regresa al vendedor.
         const c = await transition(env, o, ["awaiting_payment"], "refunding", { cancel_reason: "timeout_payment", deadline_at: null });
         await restoreAd(env, c);
         await applyStats(env, c, "refunding", "buyer");
-        await notify(env, c.buyer, c.seller);
+        await notify(env, { kind: "timeout", orderId: c.id }, c.buyer, c.seller);
       }
       n++;
     } catch (e) {

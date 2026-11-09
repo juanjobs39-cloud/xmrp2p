@@ -57,6 +57,8 @@ Para a conta da Arbitrum, a extensão consulta o RPC público da Arbitrum (arb1.
 
 Se você ativar os avisos em fiat.monerop2p.app, guardamos o endereço de inscrição que o seu navegador fornece, ligado à sua conta P2P, para avisar sobre solicitações e mudanças nas suas ordens com o app fechado. O aviso passa pelo serviço de push do seu navegador (Google, Mozilla, Apple ou Microsoft) e vai vazio: não leva valores, apelidos nem dados da ordem; o texto é colocado pelo site. Você pode desativar quando quiser e a inscrição é apagada. Se não ativar, nada é guardado.
 
+Você também pode conectar o bot de Telegram do P2P Fiat em «Conta». Guardamos só o identificador do chat com o bot e o idioma, ligados à sua conta P2P. As mensagens dizem o tipo de aviso (por exemplo, «nova solicitação» ou «o comprador marcou que pagou») e trazem o link da ordem: nunca valores, apelidos nem dados de pagamento. O Telegram, como serviço de mensagens, vê que você usa o bot e essas mensagens. Se você responder a uma solicitação com os botões «Aceitar» ou «Recusar», o bot registra igual à web. Com /stop no bot, ou «Desconectar Telegram» no app, o vínculo é apagado; bloquear o bot também apaga.
+
 ## Contato
 
 [EMAIL_CONTACTO]
