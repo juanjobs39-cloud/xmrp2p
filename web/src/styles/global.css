@@ -496,3 +496,18 @@ main.prose article .guide-list li:hover { border-color: rgb(255 106 19 / 0.55); 
 .stats .card h3 { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.76rem; font-weight: 700; }
 .pill { border: 1px solid transparent; }
 .pill[data-state="live"] { border-color: rgb(43 211 143 / 0.3); }
+
+/* ---------- Fase 5: pulido ---------- */
+html { scrollbar-color: var(--line-strong) var(--bg); }
+a, button, summary, label { -webkit-tap-highlight-color: transparent; }
+button, .btn { touch-action: manipulation; }
+::placeholder { color: #6b7385; opacity: 1; }
+header.site nav a, footer.site a, .breadcrumbs a { transition: color 0.15s ease, background 0.15s ease; }
+.fiat-grid a:focus-visible, .card:focus-within { border-color: rgb(255 106 19 / 0.55); }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+  /* Solo las tarjetas decorativas: el titular no se anima para no retrasar el pintado principal. */
+  .hero-card, .fiat-escrow { animation: rise 0.5s ease 0.05s both; }
+  details[open] > :not(summary) { animation: rise 0.2s ease both; }
+}

@@ -1,31 +1,91 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- Imagen para redes (1200×630), con el estilo oscuro del sitio. Se convierte a public/og.png con:
+       node -e "require('sharp')('scripts/og.svg',{density:144}).resize(1200,630).png({compressionLevel:9}).toFile('public/og.png')" -->
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#161616"/>
-      <stop offset="1" stop-color="#2b1709"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="0.22" cy="0.45" r="0.45">
-      <stop offset="0" stop-color="#ff6600" stop-opacity="0.22"/>
-      <stop offset="1" stop-color="#ff6600" stop-opacity="0"/>
+    <radialGradient id="glow" cx="0.82" cy="0.05" r="0.75">
+      <stop offset="0" stop-color="#ff6a13" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#ff6a13" stop-opacity="0"/>
     </radialGradient>
+    <radialGradient id="blue" cx="0.02" cy="0" r="0.6">
+      <stop offset="0" stop-color="#4868ff" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#4868ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b2130"/>
+      <stop offset="1" stop-color="#12161f"/>
+    </linearGradient>
+    <linearGradient id="btn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff8233"/>
+      <stop offset="1" stop-color="#f25c05"/>
+    </linearGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0.3" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#c3c9d6"/>
+    </linearGradient>
   </defs>
-  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="#090b10"/>
+  <rect width="1200" height="630" fill="url(#blue)"/>
   <rect width="1200" height="630" fill="url(#glow)"/>
 
-  <!-- Logo de Monero con la etiqueta P2P -->
-  <g transform="translate(95 130) scale(14)">
+  <!-- Marca -->
+  <g transform="translate(72 64) scale(3.2)">
     <circle cx="10" cy="10" r="10" fill="#fff"/>
     <path d="M10.002 0C4.47713 0 0 4.42485 0 9.88032C0 10.9706 0.177312 12.0211 0.507757 13H3.49788V4.68748L10.002 11.1099L16.5021 4.68748V13H19.4922C19.8227 12.0171 20 10.9706 20 9.88032C20.004 4.42485 15.5269 0 10.002 0Z" fill="#FF6600"/>
     <path d="M8.42574 12.8093L5.43847 10V15.2434H1C2.85007 18.0966 6.18953 20 10 20C13.8105 20 17.1499 18.0966 19 15.2434H14.5615V10L11.5743 12.8093L10 14.2897L8.42574 12.8093Z" fill="#5E5E5E"/>
   </g>
-  <text x="235" y="400" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="84" font-weight="900" fill="#fff" stroke="#222" stroke-width="15" stroke-linejoin="round" paint-order="stroke" letter-spacing="2">P2P</text>
+  <text x="152" y="110" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="40" font-weight="700" fill="#eef0f5" letter-spacing="-0.6">MoneroP2P</text>
 
-  <!-- Texto -->
-  <text x="500" y="230" font-family="Arial, Helvetica, sans-serif" font-size="86" font-weight="700" fill="#fff">MoneroP2P</text>
-  <text x="502" y="300" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="700" fill="#ff7a1a">Swap USDT &amp; crypto for Monero</text>
-  <text x="502" y="362" font-family="Arial, Helvetica, sans-serif" font-size="30" fill="#d8d8d8">Non-custodial atomic swaps for USDT.</text>
-  <text x="502" y="404" font-family="Arial, Helvetica, sans-serif" font-size="30" fill="#d8d8d8">Any other crypto via instant exchanges.</text>
-  <text x="502" y="446" font-family="Arial, Helvetica, sans-serif" font-size="30" fill="#d8d8d8">No account · Open source · 10 languages.</text>
-  <rect x="502" y="490" width="300" height="56" rx="28" fill="#ff6600"/>
-  <text x="652" y="527" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" fill="#fff">monerop2p.app</text>
+  <!-- Titular -->
+  <text font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="88" font-weight="800" letter-spacing="-2.5" fill="url(#title)">
+    <tspan x="70" y="270">Buy <tspan fill="#ff6a13">Monero</tspan></tspan>
+    <tspan x="70" y="366">without KYC</tspan>
+  </text>
+  <text font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="29" fill="#9aa3b4">
+    <tspan x="72" y="428">P2P with local currency · USDT atomic swaps</tspan>
+    <tspan x="72" y="468">Swaps from BTC and 2,500+ coins</tspan>
+  </text>
+
+  <!-- Sellos -->
+  <g font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="22" font-weight="600" fill="#cfd4de">
+    <rect x="72" y="518" width="216" height="46" rx="23" fill="#ffffff" fill-opacity="0.04" stroke="#323b50"/>
+    <path d="M94 541l7 7l13-14" fill="none" stroke="#2bd38f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="126" y="549">Non-custodial</text>
+    <rect x="302" y="518" width="200" height="46" rx="23" fill="#ffffff" fill-opacity="0.04" stroke="#323b50"/>
+    <path d="M324 541l7 7l13-14" fill="none" stroke="#2bd38f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="356" y="549">Open source</text>
+    <rect x="516" y="518" width="196" height="46" rx="23" fill="#ffffff" fill-opacity="0.04" stroke="#323b50"/>
+    <path d="M538 541l7 7l13-14" fill="none" stroke="#2bd38f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="570" y="549">No accounts</text>
+  </g>
+
+  <!-- Tarjeta de cambio -->
+  <rect x="770" y="118" width="360" height="412" rx="30" fill="#ff6a13" fill-opacity="0.10"/>
+  <rect x="762" y="110" width="360" height="412" rx="30" fill="url(#card)" stroke="#323b50" stroke-width="1.5"/>
+  <g font-family="Inter, 'Segoe UI', Arial, sans-serif">
+    <text x="792" y="160" font-size="17" font-weight="700" fill="#9aa3b4" letter-spacing="1.4">YOU SEND</text>
+    <rect x="792" y="176" width="300" height="78" rx="18" fill="#0e1117" stroke="#212737"/>
+    <text x="814" y="229" font-family="'JetBrains Mono', Consolas, monospace" font-size="38" font-weight="600" fill="#eef0f5">100</text>
+    <rect x="968" y="196" width="108" height="38" rx="19" fill="#181d28" stroke="#323b50"/>
+    <circle cx="988" cy="215" r="11" fill="#26a17b"/>
+    <text x="988" y="221" text-anchor="middle" font-size="15" font-weight="800" fill="#fff">₮</text>
+    <text x="1006" y="222" font-size="19" font-weight="700" fill="#eef0f5">USDT</text>
+
+    <circle cx="942" cy="282" r="20" fill="#181d28" stroke="#323b50"/>
+    <path d="M942 272v20M934 285l8 8l8-8" fill="none" stroke="#ff9550" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <text x="792" y="330" font-size="17" font-weight="700" fill="#9aa3b4" letter-spacing="1.4">YOU GET</text>
+    <rect x="792" y="346" width="300" height="72" rx="18" fill="#0e1117" stroke="#212737"/>
+    <g transform="translate(812 368) scale(1.4)">
+      <circle cx="10" cy="10" r="10" fill="#fff"/>
+      <path d="M10.002 0C4.47713 0 0 4.42485 0 9.88032C0 10.9706 0.177312 12.0211 0.507757 13H3.49788V4.68748L10.002 11.1099L16.5021 4.68748V13H19.4922C19.8227 12.0171 20 10.9706 20 9.88032C20.004 4.42485 15.5269 0 10.002 0Z" fill="#FF6600"/>
+      <path d="M8.42574 12.8093L5.43847 10V15.2434H1C2.85007 18.0966 6.18953 20 10 20C13.8105 20 17.1499 18.0966 19 15.2434H14.5615V10L11.5743 12.8093L10 14.2897L8.42574 12.8093Z" fill="#5E5E5E"/>
+    </g>
+    <text x="854" y="391" font-size="26" font-weight="700" fill="#eef0f5">Monero</text>
+    <text x="1072" y="390" text-anchor="end" font-family="'JetBrains Mono', Consolas, monospace" font-size="18" font-weight="600" fill="#9aa3b4">XMR</text>
+
+    <rect x="792" y="438" width="300" height="58" rx="16" fill="url(#btn)"/>
+    <text x="942" y="475" text-anchor="middle" font-size="23" font-weight="700" fill="#170c03">Compare quotes</text>
+  </g>
+
+  <text x="1128" y="582" text-anchor="end" font-family="'JetBrains Mono', Consolas, monospace" font-size="24" font-weight="600" fill="#ff9550">monerop2p.app</text>
 </svg>
