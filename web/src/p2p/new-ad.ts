@@ -4,7 +4,7 @@
  */
 import { get, type Method } from "./api";
 import { KINDS, type P2PApp } from "./p2p-app";
-import { fmtFiat, fmtXmr, h, kids, offPlatformWarning, pct } from "./ui";
+import { fmtFiat, fmtXmr, h, icon, kids, offPlatformWarning, pct } from "./ui";
 
 interface Market {
   price: number;
@@ -117,7 +117,7 @@ export async function newAdView(app: P2PApp) {
         return h(
           "div",
           { class: "p2p-chosen" },
-          h("div", { class: "row between" }, app.methodTag(m), h("button", { class: "p2p-x", type: "button", "aria-label": t("Quitar", "Remove"), onclick: () => (chosen.splice(i, 1), renderChosen(), preview()) }, "✕")),
+          h("div", { class: "row between" }, app.methodTag(m), h("button", { class: "p2p-x", type: "button", "aria-label": t("Quitar", "Remove"), onclick: () => (chosen.splice(i, 1), renderChosen(), preview()) }, icon("x"))),
           side === "sell" ? app.field(t("Tus datos para recibir el pago (se envían cifrados solo al comprador)", "Your details to get paid (sent encrypted only to the buyer)"), det) : null,
         );
       }),
@@ -258,7 +258,7 @@ export async function newAdView(app: P2PApp) {
     offPlatformWarning(app.lang),
     addrF,
     previewBox,
-    h("p", { class: "p2p-escrow-note" }, "🔒 ", side === "sell" ? t("No bloqueas XMR al publicar. Cuando alguien abra una orden, tu navegador arma el escrow 2 de 3 y depositas: deja la app abierta mientras tu anuncio esté activo, o acepta solicitudes fuera de línea y activa los avisos.", "You don't lock XMR when posting. When someone opens an order, your browser sets up the 2-of-3 escrow and you deposit: keep the app open while your ad is active, or accept requests while offline and turn on notifications.") : t("Cuando un vendedor tome tu anuncio, él bloquea el XMR en el escrow antes de que pagues.", "When a seller takes your ad, they lock the XMR in escrow before you pay.")),
+    h("p", { class: "p2p-escrow-note" }, icon("lock"), side === "sell" ? t("No bloqueas XMR al publicar. Cuando alguien abra una orden, tu navegador arma el escrow 2 de 3 y depositas: deja la app abierta mientras tu anuncio esté activo, o acepta solicitudes fuera de línea y activa los avisos.", "You don't lock XMR when posting. When someone opens an order, your browser sets up the 2-of-3 escrow and you deposit: keep the app open while your ad is active, or accept requests while offline and turn on notifications.") : t("Cuando un vendedor tome tu anuncio, él bloquea el XMR en el escrow antes de que pagues.", "When a seller takes your ad, they lock the XMR in escrow before you pay.")),
   );
   const back = h("button", { class: "btn secondary", type: "button" }, t("Atrás", "Back"));
   const next = h("button", { class: "btn", type: "button" }, t("Siguiente", "Next"));

@@ -15,6 +15,36 @@ export function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Record<s
   return el;
 }
 
+const ICONS = {
+  market: "M7 4v14M3.500 14.500L7 18l3.500-3.500M17 20V6M13.500 9.500L17 6l3.500 3.500",
+  plus: "M12 5v14M5 12h14",
+  orders: "M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01",
+  ads: "M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7",
+  user: "M12 12a4 4 0 1 0 0-8a4 4 0 0 0 0 8M4.500 20.500c1-3.600 4-5.500 7.500-5.500s6.500 1.900 7.500 5.500",
+  shield: "M12 3l7.500 3v5.500c0 4.600-3.100 8.200-7.500 9.500c-4.400-1.300-7.500-4.900-7.500-9.500V6zM8.800 12.200l2.300 2.300l4.200-4.600",
+  lock: "M6 11h12v9H6zM8.500 11V8a3.500 3.500 0 0 1 7 0v3",
+  bell: "M6 16v-5a6 6 0 0 1 12 0v5l1.500 2h-15zM10 20.500a2 2 0 0 0 4 0",
+  chat: "M5 5h14v10h-8.500L6 19v-4H5z",
+  x: "M6 6l12 12M18 6L6 18",
+  send: "M21 3L3 10.500l7 2.500l2.500 7zM10 13l5-5",
+  up: "M7 11v9H4v-9zM7 11l4-8a2.500 2.500 0 0 1 2.500 3L13 9.500h5.500a2 2 0 0 1 2 2.400l-1.300 6.500A2 2 0 0 1 17.200 20H7",
+  down: "M7 13V4H4v9zM7 13l4 8a2.500 2.500 0 0 0 2.500-3L13 14.500h5.500a2 2 0 0 0 2-2.400l-1.300-6.500A2 2 0 0 0 17.200 4H7",
+} as const;
+
+/** Ícono de línea en SVG (decorativo). Se arma con el DOM: la CSP de la app no admite HTML en línea. */
+export function icon(name: keyof typeof ICONS): SVGSVGElement {
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("class", "ico");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("focusable", "false");
+  const path = document.createElementNS(NS, "path");
+  path.setAttribute("d", ICONS[name]);
+  svg.append(path);
+  return svg;
+}
+
 export const fmtXmr = (x: string | number) => String(Number(x).toFixed(6)).replace(/\.?0+$/, "");
 export const nowS = () => Math.floor(Date.now() / 1000);
 

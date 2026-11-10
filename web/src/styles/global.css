@@ -470,3 +470,29 @@ main.prose article > aside a:hover { text-decoration: underline; }
 main.prose article .guide-list li { margin: 0; padding: 0.95rem 1.15rem; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); color: var(--muted); font-size: 0.98rem; transition: border-color 0.15s ease; }
 main.prose article .guide-list li:hover { border-color: rgb(255 106 19 / 0.55); }
 .guide-list a { display: block; margin-bottom: 0.15rem; text-decoration: none; font-size: 1.05rem; }
+
+/* ---------- Fase 4: exchange y maker ---------- */
+.coin-caret { display: inline-grid; color: var(--muted); transition: transform 0.18s ease; }
+.coin-btn[aria-expanded="true"] .coin-caret { transform: rotate(180deg); color: var(--accent-2); }
+.quick-flip { display: grid; place-items: center; }
+.quick-flip .ico { width: 1.25rem; height: 1.25rem; }
+.quick-list { gap: 0.7rem; }
+.quick-item { padding: 0.95rem 1.15rem; }
+.quick-item.best { box-shadow: 0 0 0 3px rgb(255 106 19 / 0.1); }
+#quick-results > h2, #quick-troc-pay > h2 { font-size: 1.3rem; margin-top: 1.8rem; }
+.troc-steps { gap: 0.4rem; margin: 0.6rem 0 1rem; }
+.troc-steps li { border-top: 0; padding-top: 0.75rem; position: relative; }
+.troc-steps li::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; border-radius: 999px; background: var(--line-strong); }
+.troc-steps li.done::before { background: linear-gradient(90deg, #ff8233, #f25c05); }
+.troc-steps li.now::before { background: linear-gradient(90deg, #ff8233 0 50%, var(--line-strong) 50%); }
+.troc-addr code { display: block; padding: 0.7rem 0.85rem; border-radius: 12px; font-size: 0.86rem; line-height: 1.5; }
+.troc-timer { font-size: 1.15rem; }
+.stepper { gap: 0.4rem; }
+.stepper li { border-top: 0; position: relative; padding-top: 0.75rem; }
+.stepper li::after { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; border-radius: 999px; background: var(--line-strong); }
+.stepper li.done::after { background: rgb(255 106 19 / 0.5); }
+.stepper li[aria-current="step"]::after { background: linear-gradient(90deg, #ff8233, #f25c05); }
+.stats .card { padding: 1rem 1.15rem; }
+.stats .card h3 { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.76rem; font-weight: 700; }
+.pill { border: 1px solid transparent; }
+.pill[data-state="live"] { border-color: rgb(43 211 143 / 0.3); }

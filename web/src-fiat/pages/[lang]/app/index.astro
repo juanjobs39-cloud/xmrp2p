@@ -1,6 +1,7 @@
 ---
 // Mercado P2P (la app): anuncios, publicar, órdenes con escrow 2 de 3 y chat. Vistas por hash (#/…).
 import Fiat from "../../../layouts/Fiat.astro";
+import Icon from "../../../../src/components/Icon.astro";
 import { FIAT_LANGS, REAL, ROUTES, tr, type L } from "../../../content";
 
 export function getStaticPaths() {
@@ -58,10 +59,10 @@ const app = {
         )}</p>
       </div>
       <ul class="p2p-trust">
-        <li><b>🔒</b> {t("Escrow 2 de 3, sin custodia", "2-of-3 escrow, non-custodial")}</li>
-        <li><b>🙈</b> {t("Sin KYC ni correo", "No KYC, no email")}</li>
-        <li><b>💬</b> {t("Chat cifrado", "Encrypted chat")}</li>
-        <li><b>%</b> {t("0.5% solo para quien vende", "0.5% fee, seller only")}</li>
+        <li><Icon name="lock" /> {t("Escrow 2 de 3, sin custodia", "2-of-3 escrow, non-custodial")}</li>
+        <li><Icon name="eyeoff" /> {t("Sin KYC ni correo", "No KYC, no email")}</li>
+        <li><Icon name="chat" /> {t("Chat cifrado", "Encrypted chat")}</li>
+        <li><Icon name="percent" /> {t("0.5% solo para quien vende", "0.5% fee, seller only")}</li>
       </ul>
       {!REAL && <p class="p2p-testnet">{t("Red de prueba (stagenet): no uses dinero real.", "Test network (stagenet): do not use real money.")}</p>}
     </header>

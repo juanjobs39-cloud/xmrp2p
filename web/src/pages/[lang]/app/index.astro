@@ -4,6 +4,7 @@ import Base from "../../../layouts/Base.astro";
 import { fiatHref, LANGS, ROUTES, SITE, type Lang } from "../../../site";
 import NetSwitch from "../../../components/NetSwitch.astro";
 import Verified from "../../../components/Verified.astro";
+import Icon from "../../../components/Icon.astro";
 
 export function getStaticPaths() {
   return LANGS.map((lang) => ({ params: { lang } }));
@@ -76,7 +77,7 @@ const softwareLd = {
           <div id="slot-send"><div class="coin-pick only-real">
             <button type="button" id="coin-btn" class="coin-btn" aria-expanded="false" aria-controls="coin-panel" aria-label={t("Moneda que envías", "Coin you send")}>
               <span class="coin-sel"><span id="coin-icon"><img class="coin-ico" src="/coins/usdt.svg" alt="" width="22" height="22" /></span><strong id="coin-ticker">USDT</strong> <small id="coin-name">Arbitrum One</small></span>
-              <span aria-hidden="true">▾</span>
+              <span class="coin-caret" aria-hidden="true"><Icon name="chevron" /></span>
             </button>
             <div id="coin-panel" class="coin-panel" hidden>
               <input id="coin-search" type="search" autocomplete="off" spellcheck="false" placeholder={t("Busca una moneda o red", "Search a coin or network")} aria-label={t("Busca una moneda o red", "Search a coin or network")} />
@@ -89,7 +90,7 @@ const softwareLd = {
             <span class="quick-unit only-test">USDT <small>Arbitrum Sepolia</small></span>
             <span class="quick-unit only-real"><span class="unit-top"><span id="unit-icon"><img class="coin-ico" src="/coins/usdt.svg" alt="" width="26" height="26" /></span><span id="unit-ticker">USDT</span></span> <small id="unit-net">Arbitrum One</small></span>
           </div>
-          <button type="button" id="quick-flip" class="quick-flip only-real" aria-label={t("Invertir: vender XMR", "Swap direction: sell XMR")} title={t("Invertir dirección", "Swap direction")}>⇅</button>
+          <button type="button" id="quick-flip" class="quick-flip only-real" aria-label={t("Invertir: vender XMR", "Swap direction: sell XMR")} title={t("Invertir dirección", "Swap direction")}><Icon name="swap" /></button>
           <p class="quick-to" id="quick-get-xmr">{t("Recibes", "You get")} <img class="coin-ico" src="/coins/xmr.svg" alt="" width="20" height="20" /> <strong>XMR</strong> <small>Monero</small></p>
           <div id="quick-get-coin" hidden>
             <p class="quick-to">{t("Recibes", "You get")}</p>

@@ -5,7 +5,7 @@ import { EscrowDriver, type EscrowNote } from "./escrow";
 import { open, seal } from "./identity";
 import type { P2PApp } from "./p2p-app";
 import { moneroWallet } from "../app/wallet-provider";
-import { clock, fmtFiat, fmtXmr, h, kids, nowS, offPlatformWarning, pct, statusTone, type Child } from "./ui";
+import { clock, fmtFiat, fmtXmr, h, icon, kids, nowS, offPlatformWarning, pct, statusTone, type Child } from "./ui";
 
 export async function myAdsView(app: P2PApp) {
   const t = app.t;
@@ -84,15 +84,15 @@ export async function myAdsView(app: P2PApp) {
       : null,
     r.ads.length
       ? h("div", { class: "p2p-table", role: "table" }, r.ads.map(row))
-      : h("div", { class: "p2p-empty" }, h("p", { class: "p2p-empty-ico", "aria-hidden": "true" }, "▤"), h("p", {}, t("Aún no tienes anuncios.", "You have no ads yet.")), h("p", {}, h("a", { class: "btn", href: "#/nuevo" }, t("Publicar mi primer anuncio", "Post my first ad")))),
+      : h("div", { class: "p2p-empty" }, h("p", { class: "p2p-empty-ico", "aria-hidden": "true" }, icon("ads")), h("p", {}, t("Aún no tienes anuncios.", "You have no ads yet.")), h("p", {}, h("a", { class: "btn", href: "#/nuevo" }, t("Publicar mi primer anuncio", "Post my first ad")))),
     r.ads.some((a) => a.status === "active")
       ? h(
           "div",
           { class: "p2p-escrow-note" },
           h(
             "p",
-            {},
-            "🔔 ",
+            { class: "p2p-hint" },
+            icon("bell"),
             t(
               "Con la app abierta te avisamos con sonido cuando alguien abra una orden. Activa los avisos para enterarte también con la app cerrada (sirve con las solicitudes fuera de línea).",
               "With the app open we alert you with a sound when someone opens an order. Turn on notifications to find out with the app closed too (useful with offline requests).",
@@ -142,7 +142,7 @@ export async function ordersView(app: P2PApp) {
           open.length ? rows(open) : h("p", { class: "muted" }, t("No tienes órdenes en curso.", "You have no orders in progress.")),
           ...(done.length ? [h("h3", { class: "p2p-sub" }, `${t("Terminadas", "Finished")} (${done.length})`), rows(done)] : []),
         ]
-      : [h("div", { class: "p2p-empty" }, h("p", { class: "p2p-empty-ico", "aria-hidden": "true" }, "☰"), h("p", {}, t("Aún no tienes órdenes.", "You have no orders yet.")), h("p", {}, h("a", { class: "btn", href: "#/" }, t("Ir al mercado", "Go to the market"))))]),
+      : [h("div", { class: "p2p-empty" }, h("p", { class: "p2p-empty-ico", "aria-hidden": "true" }, icon("orders")), h("p", {}, t("Aún no tienes órdenes.", "You have no orders yet.")), h("p", {}, h("a", { class: "btn", href: "#/" }, t("Ir al mercado", "Go to the market"))))]),
   );
 }
 
@@ -167,9 +167,10 @@ export async function orderView(app: P2PApp, id: string) {
   const chatLock = h(
     "p",
     { class: "p2p-chat-lock", hidden: true },
+    icon("lock"),
     app.t(
-      "🔒 El chat se abre cuando el XMR del vendedor quede bloqueado en el escrow. Nunca pagues antes, aunque te lo pidan por otro medio.",
-      "🔒 The chat opens once the seller's XMR is locked in the escrow. Never pay before that, even if someone asks you through another channel.",
+      "El chat se abre cuando el XMR del vendedor quede bloqueado en el escrow. Nunca pagues antes, aunque te lo pidan por otro medio.",
+      "The chat opens once the seller's XMR is locked in the escrow. Never pay before that, even if someone asks you through another channel.",
     ),
   );
   let o!: OrderView;
@@ -365,7 +366,13 @@ export async function orderView(app: P2PApp, id: string) {
     if (o.dispute) act.push(h("p", { class: "notice warn" }, `${app.t("Apelación", "Appeal")}: ${o.dispute.reason}${o.dispute.note ? ` — ${app.t("Resolución", "Decision")}: ${o.dispute.note}` : ""}`));
     if (["released", "resolved_buyer", "resolved_seller"].includes(o.status)) {
       const c = h("input", { id: "p2p-fb", type: "text", maxLength: 300, placeholder: app.t("Comentario (opcional)", "Comment (optional)") });
-      act.push(h("div", { class: "row wrap" }, c, btn("👍", "secondary small", () => post("feedback", { positive: true, comment: c.value })), btn("👎", "secondary small", () => post("feedback", { positive: false, comment: c.value }))));
+      const vote = (positive: boolean) => {
+        const b = btn("", "secondary small p2p-vote", () => post("feedback", { positive, comment: c.value }));
+        b.append(icon(positive ? "up" : "down"));
+        b.setAttribute("aria-label", positive ? app.t("Calificar bien", "Rate positive") : app.t("Calificar mal", "Rate negative"));
+        return b;
+      };
+      act.push(h("div", { class: "row wrap" }, c, vote(true), vote(false)));
     }
     actions.replaceChildren(...act);
 
@@ -451,7 +458,7 @@ export async function orderView(app: P2PApp, id: string) {
       h(
         "section",
         { class: "card p2p-chat" },
-        h("h3", {}, "💬 ", app.t("Chat", "Chat"), h("small", { class: "muted" }, " · " + app.t("cifrado de punta a punta", "end-to-end encrypted"))),
+        h("h3", {}, icon("chat"), " ", app.t("Chat", "Chat"), h("small", { class: "muted" }, " · " + app.t("cifrado de punta a punta", "end-to-end encrypted"))),
         offPlatformWarning(app.lang),
         chatBox,
         chatLock,

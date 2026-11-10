@@ -12,7 +12,7 @@ import { ApiError, get, signed, type Ad, type Method, type OrderView, type P2PCo
 import { EscrowDriver, type EscrowNote } from "./escrow";
 import { account, encPublic, hasVault, newVault, open, openVault, saveVault, seal, type P2PVault, type SavedMethod } from "./identity";
 import "./p2p.css";
-import { avatar, h, fmtXmr, nowS, type Child } from "./ui";
+import { avatar, h, fmtXmr, icon, nowS, type Child } from "./ui";
 import { marketView } from "./market";
 import { newAdView } from "./new-ad";
 import { myAdsView, orderView, ordersView } from "./orders";
@@ -94,21 +94,21 @@ export class P2PApp {
 
   nav(view: string = this.view) {
     this.view = view;
-    const link = (hash: string, icon: string, label: string, key: string, dot = 0) =>
+    const link = (hash: string, ico: Parameters<typeof icon>[0], label: string, key: string, dot = 0) =>
       h(
         "a",
         { href: hash, "aria-current": view === key || (key === "ordenes" && view === "orden") ? "page" : undefined },
-        h("span", { class: "p2p-ico", "aria-hidden": "true" }, icon),
+        h("span", { class: "p2p-ico", "aria-hidden": "true" }, icon(ico)),
         h("span", {}, label),
         dot ? h("b", { class: "p2p-dot", title: this.t("Esperan tu acción", "Waiting for you") }, String(dot)) : null,
       );
     document.getElementById("p2p-nav")!.replaceChildren(
-      link("#/", "⇄", this.t("Mercado", "Market"), ""),
-      link("#/nuevo", "＋", this.t("Publicar", "Post ad"), "nuevo"),
-      link("#/ordenes", "☰", this.t("Mis órdenes", "My orders"), "ordenes", this.pending),
-      link("#/anuncios", "▤", this.t("Mis anuncios", "My ads"), "anuncios"),
-      link("#/cuenta", "◉", this.me ? this.me.nickname : this.t("Cuenta", "Account"), "cuenta"),
-      this.isAdmin ? link("#/admin", "🛡", "Admin", "admin") : "",
+      link("#/", "market", this.t("Mercado", "Market"), ""),
+      link("#/nuevo", "plus", this.t("Publicar", "Post ad"), "nuevo"),
+      link("#/ordenes", "orders", this.t("Mis órdenes", "My orders"), "ordenes", this.pending),
+      link("#/anuncios", "ads", this.t("Mis anuncios", "My ads"), "anuncios"),
+      link("#/cuenta", "user", this.me ? this.me.nickname : this.t("Cuenta", "Account"), "cuenta"),
+      this.isAdmin ? link("#/admin", "shield", "Admin", "admin") : "",
     );
   }
 
@@ -247,7 +247,7 @@ export class P2PApp {
       if (Notification.permission === "denied")
         return void box.replaceChildren(h("small", {}, this.t("Bloqueaste las notificaciones de este sitio: actívalas en los ajustes del navegador.", "You blocked notifications for this site: allow them in your browser settings.")));
       const on = !!(await this.currentSub().catch(() => null)) && Notification.permission === "granted";
-      const b = h("button", { class: "btn small " + (on ? "secondary" : ""), type: "button" }, on ? this.t("Desactivar avisos", "Turn off notifications") : "🔔 " + this.t("Activar avisos", "Turn on notifications"));
+      const b = h("button", { class: "btn small " + (on ? "secondary" : ""), type: "button" }, on ? null : icon("bell"), on ? this.t("Desactivar avisos", "Turn off notifications") : this.t("Activar avisos", "Turn on notifications"));
       b.onclick = () =>
         void this.busy(b, async () => {
           if (on) await this.disablePush();
@@ -283,12 +283,12 @@ export class P2PApp {
         return void box.replaceChildren(
           off,
           h("small", { class: "muted" }, this.t(
-            "✈ Telegram conectado: ahí te llegan tus órdenes y puedes aceptar o rechazar solicitudes. Activa «Aceptar solicitudes» en tus anuncios para recibir órdenes aunque no estés en la web.",
-            "✈ Telegram connected: your orders arrive there and you can accept or decline requests. Turn on “Accept requests” on your ads to get orders even when you're not on the web.",
+            "Telegram conectado: ahí te llegan tus órdenes y puedes aceptar o rechazar solicitudes. Activa «Aceptar solicitudes» en tus anuncios para recibir órdenes aunque no estés en la web.",
+            "Telegram connected: your orders arrive there and you can accept or decline requests. Turn on “Accept requests” on your ads to get orders even when you're not on the web.",
           )),
         );
       }
-      const on = h("button", { class: "btn small", type: "button" }, "✈ " + this.t("Conectar Telegram", "Connect Telegram"));
+      const on = h("button", { class: "btn small", type: "button" }, icon("send"), this.t("Conectar Telegram", "Connect Telegram"));
       on.onclick = () =>
         void this.busy(on, async () => {
           const r = await this.req<{ url: string; expires_at: number }>("POST", "/v1/p2p/telegram/link", { lang: this.lang });
@@ -393,7 +393,7 @@ export class P2PApp {
       h(
         "span",
         { class: "p2p-user-txt" },
-        h("strong", {}, u.nickname, votes ? h("span", { class: "p2p-rate", title: `👍 ${u.positive} · 👎 ${u.negative}` }, ` · 👍 ${Math.round((u.positive / votes) * 100)}%`) : null),
+        h("strong", {}, u.nickname, votes ? h("span", { class: "p2p-rate", title: `+${u.positive} · −${u.negative}` }, " · ", icon("up"), ` ${Math.round((u.positive / votes) * 100)}%`) : null),
         h("small", {}, stats.join(" · ")),
         h("small", { class: on ? "p2p-on" : "p2p-off" }, this.seen(u)),
       ),

@@ -2,7 +2,7 @@
 import { MONERO } from "../app/config";
 import { get, type Ad, type Method, type OrderView, type PublicUser } from "./api";
 import type { P2PApp } from "./p2p-app";
-import { fmtFiat, fmtWait, fmtXmr, h, kids, offPlatformWarning, pct, skeleton } from "./ui";
+import { fmtFiat, fmtWait, fmtXmr, h, icon, kids, offPlatformWarning, pct, skeleton } from "./ui";
 
 type MarketAd = Ad & { user: PublicUser };
 
@@ -52,7 +52,8 @@ export async function marketView(app: P2PApp) {
         ? h(
             "a",
             { class: "p2p-alerts-link", href: `https://t.me/${app.cfg.telegram_bot}?start=alertas`, target: "_blank", rel: "noopener noreferrer" },
-            "🔔 " + t("Avísame de anuncios nuevos por Telegram", "Alert me about new ads on Telegram"),
+            icon("bell"),
+            t("Avísame de anuncios nuevos por Telegram", "Alert me about new ads on Telegram"),
           )
         : null,
     ),
@@ -95,7 +96,7 @@ export async function marketView(app: P2PApp) {
       h(
         "div",
         { class: "p2p-empty" },
-        h("p", { class: "p2p-empty-ico", "aria-hidden": "true" }, "⇄"),
+        h("p", { class: "p2p-empty-ico", "aria-hidden": "true" }, icon("market")),
         h("p", {}, h("strong", {}, t("No hay anuncios con estos filtros.", "No ads match these filters."))),
         h("p", {}, online.checked ? t("Prueba a ver también anunciantes desconectados o cambia el monto.", "Try including offline advertisers or change the amount.") : t("¡Publica el primero!", "Post the first one!")),
         h("p", { class: "row wrap center" }, h("a", { class: "btn", href: "#/nuevo" }, t("Publicar anuncio", "Post an ad"))),
@@ -157,7 +158,7 @@ function adRow(app: P2PApp, ad: MarketAd, wantBuy: boolean, market: number | nul
       { class: "p2p-cell act", role: "cell" },
       take,
       canReq ? h("small", { class: "muted p2p-reply" }, replyHint(app, ad)) : null,
-      canReq && ad.user.notifiable ? h("small", { class: "p2p-notif", title: app.t("Le llegan avisos fuera de la web (Telegram o el navegador).", "Gets notifications outside the web (Telegram or the browser).") }, "🔔 " + app.t("Recibe avisos", "Gets notified")) : null,
+      canReq && ad.user.notifiable ? h("small", { class: "p2p-notif", title: app.t("Le llegan avisos fuera de la web (Telegram o el navegador).", "Gets notifications outside the web (Telegram or the browser).") }, icon("bell"), app.t("Recibe avisos", "Gets notified")) : null,
     ),
   );
 }
@@ -217,7 +218,7 @@ function takeSheet(app: P2PApp, ad: MarketAd, wantBuy: boolean, market: number |
       "div",
       { class: "p2p-sheet-head" },
       h("h2", { id: "p2p-sheet-title" }, wantBuy ? t("Comprar XMR", "Buy XMR") : t("Vender XMR", "Sell XMR")),
-      h("button", { class: "p2p-x", type: "button", "aria-label": t("Cerrar", "Close"), onclick: () => close() }, "✕"),
+      h("button", { class: "p2p-x", type: "button", "aria-label": t("Cerrar", "Close"), onclick: () => close() }, icon("x")),
     ),
     app.userLine(ad.user),
     h(
@@ -260,7 +261,7 @@ function takeSheet(app: P2PApp, ad: MarketAd, wantBuy: boolean, market: number |
     h(
       "p",
       { class: "p2p-escrow-note" },
-      h("span", { "aria-hidden": "true" }, "🔒 "),
+      icon("lock"),
       wantBuy
         ? t("El vendedor bloquea el XMR en un escrow 2 de 3 antes de que pagues. Pagas por fuera de la plataforma y él libera.", "The seller locks the XMR in a 2-of-3 escrow before you pay. You pay off-platform and they release.")
         : t(`Bloquearás el XMR (más ${app.cfg.fee_bps / 100}% de comisión) en un escrow 2 de 3. Libera solo cuando veas el dinero en tu cuenta.`, `You will lock the XMR (plus a ${app.cfg.fee_bps / 100}% fee) in a 2-of-3 escrow. Release only when you see the money in your account.`),
