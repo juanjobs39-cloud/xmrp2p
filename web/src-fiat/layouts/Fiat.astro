@@ -3,6 +3,7 @@
 // JSON-LD) y la misma identidad visual que monerop2p.app.
 import "../../src/styles/global.css";
 import "../fiat.css";
+import Icon from "../../src/components/Icon.astro";
 import { FIAT_LANGS, LANG_NAME, MAIN_SITE, OG_LOCALE, REAL, REPO, ROUTES, tr, type L, type RouteKey } from "../content";
 
 export interface Props {
@@ -86,7 +87,7 @@ const nav: [RouteKey, string][] = [
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     {manifest && <link rel="manifest" href={manifest} />}
     <link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt" />
-    <meta name="theme-color" content="#e2591b" />
+    <meta name="theme-color" content="#090b10" />
     {ld.map((o) => <script type="application/ld+json" set:html={JSON.stringify(o)} />)}
   </head>
   <body>
@@ -103,7 +104,7 @@ const nav: [RouteKey, string][] = [
         </nav>
         {others.length > 0 && (
           <details class="lang">
-            <summary aria-label={`${t("Idioma", "Language")}: ${LANG_NAME[lang]}`} title={LANG_NAME[lang]}><span aria-hidden="true">🌐</span> {lang.toUpperCase()}</summary>
+            <summary aria-label={`${t("Idioma", "Language")}: ${LANG_NAME[lang]}`} title={LANG_NAME[lang]}><Icon name="globe" /> {lang.toUpperCase()}</summary>
             <ul>{others.map((l) => <li><a href={alternates[l]} hreflang={l} lang={l}>{LANG_NAME[l]}</a></li>)}</ul>
           </details>
         )}
@@ -129,18 +130,44 @@ const nav: [RouteKey, string][] = [
               )}{" "}
           <a href={legal.risks}>{t("Aviso de riesgos", "Risk notice")}</a>
         </p>
-        <ul>
-          <li><a href={ROUTES.fees[lang]}>{t("Comisiones y límites", "Fees and limits")}</a></li>
-          <li><a href={ROUTES.countries[lang]}>{t("Países", "Countries")}</a></li>
-          <li><a href={ROUTES.safety[lang]}>{t("Seguridad", "Safety")}</a></li>
-          <li><a href={ROUTES.faq[lang]}>{t("Preguntas frecuentes", "FAQ")}</a></li>
-          <li><a href={legal.terms}>{t("Términos de uso", "Terms of use")}</a></li>
-          <li><a href={legal.privacy}>{t("Privacidad", "Privacy")}</a></li>
-          <li><a href={legal.contact}>{t("Contacto", "Contact")}</a></li>
-          <li><a href={mainPath("", "")}>MoneroP2P</a></li>
-          <li><a href={REPO} rel="noopener">{t("Código fuente (AGPL-3.0)", "Source code (AGPL-3.0)")}</a></li>
-        </ul>
-        <p>{t("El XMR de cada orden queda en un escrow 2 de 3: nadie puede moverlo solo, ni nosotros.", "Each order's XMR sits in a 2-of-3 escrow: nobody can move it alone, not even us.")}</p>
+        <div class="foot-grid">
+          <div class="foot-about">
+            <a class="brand" href={ROUTES.home[lang]}><img src="/favicon.svg?v=3" alt="" width="26" height="26" loading="lazy" />MoneroP2P <span class="fiat-tag">Fiat</span></a>
+            <p>{t("El XMR de cada orden queda en un escrow 2 de 3: nadie puede moverlo solo, ni nosotros.", "Each order's XMR sits in a 2-of-3 escrow: nobody can move it alone, not even us.")}</p>
+          </div>
+          <div class="foot-col">
+            <p class="foot-h">{t("Mercado", "Market")}</p>
+            <ul>
+              <li><a href={ROUTES.fees[lang]}>{t("Comisiones y límites", "Fees and limits")}</a></li>
+              <li><a href={ROUTES.countries[lang]}>{t("Países", "Countries")}</a></li>
+              <li><a href={ROUTES.safety[lang]}>{t("Seguridad", "Safety")}</a></li>
+              <li><a href={ROUTES.faq[lang]}>{t("Preguntas frecuentes", "FAQ")}</a></li>
+            </ul>
+          </div>
+          <div class="foot-col">
+            <p class="foot-h">{t("Proyecto", "Project")}</p>
+            <ul>
+              <li><a href={mainPath("", "")}>MoneroP2P</a></li>
+              <li><a href={legal.contact}>{t("Contacto", "Contact")}</a></li>
+              <li><a href={REPO} rel="noopener">{t("Código fuente (AGPL-3.0)", "Source code (AGPL-3.0)")}</a></li>
+            </ul>
+          </div>
+          <div class="foot-col">
+            <p class="foot-h">Legal</p>
+            <ul>
+              <li><a href={legal.terms}>{t("Términos de uso", "Terms of use")}</a></li>
+              <li><a href={legal.privacy}>{t("Privacidad", "Privacy")}</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="foot-bar">
+          <p>© MoneroP2P</p>
+          <ul class="foot-chips">
+            <li><Icon name="lock" />{t("Escrow 2 de 3", "2-of-3 escrow")}</li>
+            <li><Icon name="user" />{t("Sin KYC", "No KYC")}</li>
+            <li><Icon name="code" />{t("Código abierto", "Open source")}</li>
+          </ul>
+        </div>
       </div>
     </footer>
   </body>

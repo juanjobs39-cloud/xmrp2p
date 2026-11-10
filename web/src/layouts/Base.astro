@@ -1,6 +1,7 @@
 ---
 import { makeT } from "../i18n/ui";
 import "../styles/global.css";
+import Icon from "../components/Icon.astro";
 import { fiatHref, LANG_INFO, LANGS, NAV, ROUTES, SITE, type Lang } from "../site";
 import { newsIndex } from "../lib/content";
 
@@ -82,7 +83,7 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
     <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml" />
     <link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="theme-color" content="#e2591b" />
+    <meta name="theme-color" content="#090b10" />
     {ld.map((o) => <script type="application/ld+json" set:html={JSON.stringify(o)} />)}
   </head>
   <body>
@@ -102,7 +103,7 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
         </nav>
         {others.length > 0 && (
           <details class="lang">
-            <summary aria-label={`${t("Idioma", "Language")}: ${LANG_INFO[lang].name}`} title={LANG_INFO[lang].name}><span aria-hidden="true">🌐</span> {lang.toUpperCase()}</summary>
+            <summary aria-label={`${t("Idioma", "Language")}: ${LANG_INFO[lang].name}`} title={LANG_INFO[lang].name}><Icon name="globe" /> {lang.toUpperCase()}</summary>
             <ul>
               {others.map((l) => (
                 <li><a href={alternates[l]} hreflang={l} lang={l} dir={LANG_INFO[l].rtl ? "rtl" : "ltr"}>{LANG_INFO[l].name}</a></li>
@@ -127,18 +128,44 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
           )}{" "}
           <a href={ROUTES.risks[lang]}>{t("Aviso de riesgos", "Risk notice")}</a>
         </p>
-        <ul>
-          <li><a href={ROUTES.wallet[lang]}>MoneroP2P Wallet</a></li>
-          <li><a href={ROUTES.about[lang]}>{t("Acerca de", "About")}</a></li>
-          <li><a href={ROUTES.contact[lang]}>{t("Contacto", "Contact")}</a></li>
-          <li><a href={ROUTES.terms[lang]}>{t("Términos de uso", "Terms of use")}</a></li>
-          <li><a href={ROUTES.privacy[lang]}>{t("Privacidad", "Privacy")}</a></li>
-          <li><a href={ROUTES.risks[lang]}>{t("Aviso de riesgos", "Risk notice")}</a></li>
-          <li><a href={ROUTES.glossary[lang]}>{t("Glosario", "Glossary")}</a></li>
-          <li><a href={newsIndex(lang)}>{t("Novedades", "News")}</a></li>
-          <li><a href={SITE.repo} rel="noopener">{t("Código fuente (AGPL-3.0)", "Source code (AGPL-3.0)")}</a></li>
-        </ul>
-        <p>{t("Nadie custodia tus fondos: ni nosotros ni los makers.", "Nobody holds your funds: not us, not the makers.")}</p>
+        <div class="foot-grid">
+          <div class="foot-about">
+            <a class="brand" href={ROUTES.home[lang]}><img src="/favicon.svg?v=3" alt="" width="26" height="26" loading="lazy" />{SITE.brand}</a>
+            <p>{t("Nadie custodia tus fondos: ni nosotros ni los makers.", "Nobody holds your funds: not us, not the makers.")}</p>
+          </div>
+          <div class="foot-col">
+            <p class="foot-h">{t("Producto", "Product")}</p>
+            <ul>
+              <li><a href={ROUTES.wallet[lang]}>MoneroP2P Wallet</a></li>
+              <li><a href={newsIndex(lang)}>{t("Novedades", "News")}</a></li>
+              <li><a href={ROUTES.glossary[lang]}>{t("Glosario", "Glossary")}</a></li>
+            </ul>
+          </div>
+          <div class="foot-col">
+            <p class="foot-h">{t("Proyecto", "Project")}</p>
+            <ul>
+              <li><a href={ROUTES.about[lang]}>{t("Acerca de", "About")}</a></li>
+              <li><a href={ROUTES.contact[lang]}>{t("Contacto", "Contact")}</a></li>
+              <li><a href={SITE.repo} rel="noopener">{t("Código fuente (AGPL-3.0)", "Source code (AGPL-3.0)")}</a></li>
+            </ul>
+          </div>
+          <div class="foot-col">
+            <p class="foot-h">Legal</p>
+            <ul>
+              <li><a href={ROUTES.terms[lang]}>{t("Términos de uso", "Terms of use")}</a></li>
+              <li><a href={ROUTES.privacy[lang]}>{t("Privacidad", "Privacy")}</a></li>
+              <li><a href={ROUTES.risks[lang]}>{t("Aviso de riesgos", "Risk notice")}</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="foot-bar">
+          <p>© {SITE.brand}</p>
+          <ul class="foot-chips">
+            <li><Icon name="shield" />{t("Sin custodia", "Non-custodial")}</li>
+            <li><Icon name="code" />{t("Código abierto", "Open source")}</li>
+            <li><Icon name="user" />{t("Sin cuentas", "No accounts")}</li>
+          </ul>
+        </div>
       </div>
     </footer>
   </body>
