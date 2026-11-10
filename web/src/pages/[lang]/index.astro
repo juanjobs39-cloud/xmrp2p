@@ -4,6 +4,7 @@ import Base from "../../layouts/Base.astro";
 import { guidePath, guides } from "../../lib/content";
 import { MAINNET_ON } from "../../app/config";
 import Verified from "../../components/Verified.astro";
+import Icon from "../../components/Icon.astro";
 import { LANGS, ROUTES, SITE, fiatHref, type Lang } from "../../site";
 
 export function getStaticPaths() {
@@ -22,15 +23,41 @@ const list = (await guides(lang)).slice(0, 6);
     "Buy Monero (XMR) without KYC: P2P with local currency and a 2-of-3 escrow, non-custodial USDT atomic swaps or swaps from BTC and 2,500+ coins. Open source.",
   )}
 >
-  <main id="contenido">
-    <section class="wrap">
+  <main id="contenido" class="home">
+    <section class="wrap hero">
+      <div class="hero-copy">
       <h1>{t("Cambia USDT por Monero sin entregarle tus fondos a nadie", "Swap USDT for Monero without handing your funds to anyone")}</h1>
-      <p class="answer">
+      <p class="hero-lead">
         {t(
           `${SITE.brand} es una plataforma P2P donde cambias USDT por XMR mediante un atomic swap: un contrato inteligente retiene tu USDT y solo lo entrega al vendedor cuando tú ya puedes tomar el XMR. Si algo falla, recuperas tu USDT. No hay cuenta, no hay descargas y nadie custodia fondos.`,
           `${SITE.brand} is a P2P platform where you swap USDT for XMR through an atomic swap: a smart contract holds your USDT and only releases it to the seller once you can take the XMR. If anything fails, you get your USDT back. No account, no downloads, nobody holds funds.`,
         )}
       </p>
+      <p class="row wrap hero-cta">
+        <a class="btn big" href={ROUTES.app[lang]}>{t("Abrir la app de swaps →", "Open the swap app →")}</a>
+        <a class="btn big alt" href={fiatHref(lang)}>{t("Comprar con moneda local (P2P)", "Buy with local currency (P2P)")}</a>
+        <a class="btn secondary big" href={ROUTES.how[lang]}>{t("Cómo funciona", "How it works")}</a>
+      </p>
+      <ul class="trustbar">
+        <li><Icon name="shield" />{t("Sin custodia", "Non-custodial")}</li>
+        <li><Icon name="user" />{t("Sin cuentas", "No accounts")}</li>
+        <li><Icon name="code" />{t("Código abierto", "Open source")}</li>
+        {MAINNET_ON && <li><Icon name="check" />{t("Contrato verificado", "Verified contract")}</li>}
+      </ul>
+      </div>
+      <form class="hero-card" action={ROUTES.app[lang]} method="get">
+        <label for="hero-usdt">{t("Envías", "You send")}</label>
+        <div class="quick-row">
+          <input id="hero-usdt" name="usdt" type="number" inputmode="decimal" min="1" step="any" value="100" required />
+          <span class="hero-coin"><img src="/coins/usdt.svg" alt="" width="24" height="24" />USDT</span>
+        </div>
+        <span class="hero-arrow" aria-hidden="true"><Icon name="down" /></span>
+        <p class="hero-get"><span>{t("Recibes", "You get")}</span><strong><img src="/coins/xmr.svg" alt="" width="24" height="24" />Monero <small>XMR</small></strong></p>
+        <button class="btn big" type="submit">{t("Comparar cotizaciones", "Compare quotes")}</button>
+      </form>
+    </section>
+
+    <section class="wrap">
       {MAINNET_ON ? (
         <>
           <p class="notice ok">{t("✅ En funcionamiento con dinero real en Arbitrum One + Monero. Probado de punta a punta con fondos reales (primer swap completado el 26 de octubre de 2026). Máximo 100 USDT por swap.", "✅ Live with real money on Arbitrum One + Monero. Tested end to end with real funds (first swap completed on October 26, 2026). Maximum 100 USDT per swap.")}</p>
@@ -39,18 +66,15 @@ const list = (await guides(lang)).slice(0, 6);
       ) : (
         <p class="notice warn">{t("Estado: pruebas en testnet, sin auditoría. No uses dinero real.", "Status: testnet trials, not audited. Do not use real money.")}</p>
       )}
-      <p class="row wrap">
-        <a class="btn big" href={ROUTES.app[lang]}>{t("Abrir la app de swaps →", "Open the swap app →")}</a>
-        <a class="btn big" href={fiatHref(lang)}>{t("Comprar con moneda local (P2P)", "Buy with local currency (P2P)")}</a>
-        <a class="btn secondary" href={ROUTES.how[lang]}>{t("Cómo funciona", "How it works")}</a>
-      </p>
-      <div class="cards">
+      <div class="cards products">
         <div class="card">
+          <span class="card-ico"><Icon name="swap" /></span>
           <h3>{t("¿Quieres XMR?", "Want XMR?")}</h3>
           <p>{t("Cambia tu USDT por Monero en unos 30–45 minutos, sin cuenta y sin que nadie retenga tus fondos.", "Swap your USDT for Monero in about 30–45 minutes, with no account and nobody holding your funds.")}</p>
           <p><a href={ROUTES.app[lang]}>{t("Abrir la app →", "Open the app →")}</a></p>
         </div>
         <div class="card">
+          <span class="card-ico"><Icon name="wallet" /></span>
           <h3>{t("¿Tienes XMR?", "Have XMR?")}</h3>
           <p>{t("Sé maker: ofrece tu XMR desde el navegador y gana un margen por cada swap. Sin instalar nada y sin registro.", "Be a maker: offer your XMR from your browser and earn a margin on every swap. Nothing to install, no sign-up.")}</p>
           <p><a href={ROUTES.makerApp[lang]}>{t("Ser maker →", "Be a maker →")}</a></p>
@@ -60,7 +84,7 @@ const list = (await guides(lang)).slice(0, 6);
 
     <section class="wrap">
       <h2>{t("Cómo funciona, en 4 pasos", "How it works, in 4 steps")}</h2>
-      <ol>
+      <ol class="timeline">
         <li>{t("Eliges una oferta y escribes tu dirección de Monero.", "Pick an offer and enter your Monero address.")}</li>
         <li>{t("Descargas tu archivo de recuperación cifrado y depositas el USDT en un contrato desde tu wallet (MetaMask o compatible).", "Download your encrypted recovery file and deposit the USDT into a contract from your wallet (MetaMask or compatible).")}</li>
         <li>{t("El vendedor (maker) bloquea el XMR; la app verifica el monto y tú confirmas.", "The seller (maker) locks the XMR; the app verifies the amount and you confirm.")}</li>
@@ -70,7 +94,7 @@ const list = (await guides(lang)).slice(0, 6);
 
     <section class="wrap">
       <h2>{t("Por qué un atomic swap", "Why an atomic swap")}</h2>
-      <table>
+      <table class="compare">
         <thead><tr><td></td><th scope="col">{t("Atomic swap (MoneroP2P)", "Atomic swap (MoneroP2P)")}</th><th scope="col">{t("Exchange centralizado", "Centralized exchange")}</th><th scope="col">{t("P2P con árbitro", "P2P with arbitrator")}</th></tr></thead>
         <tbody>
           <tr><th scope="row">{t("¿Quién tiene tus fondos?", "Who holds your funds?")}</th><td>{t("Nadie: un contrato y tus llaves", "Nobody: a contract and your keys")}</td><td>{t("El exchange", "The exchange")}</td><td>{t("Un escrow y un árbitro", "An escrow and an arbitrator")}</td></tr>
@@ -83,7 +107,7 @@ const list = (await guides(lang)).slice(0, 6);
 
     <section class="wrap">
       <h2>{t("Guías", "Guides")}</h2>
-      <div class="cards">
+      <div class="cards guide-cards">
         {list.map((g) => (
           <div class="card"><h3><a href={guidePath(g)}>{g.data.title}</a></h3><p>{g.data.description}</p></div>
         ))}
@@ -93,7 +117,7 @@ const list = (await guides(lang)).slice(0, 6);
 
     <section class="wrap">
       <h2>{t("Transparencia", "Transparency")}</h2>
-      <ul>
+      <ul class="checks">
         <li>{t("El código es abierto (AGPL-3.0) y la app que descargas se puede verificar contra el código publicado.", "The code is open source (AGPL-3.0) and the app you load can be verified against the published code.")} <a href={SITE.repo}>GitHub</a></li>
         <li>{t("Cobramos una comisión por cada swap completado; el contrato tiene un tope de 1 % que nadie puede subir.", "We charge a fee on each completed swap; the contract has a 1% cap that nobody can raise.")}</li>
         <li>{t("No prometemos ganancias ni tasas: el precio lo fija cada maker y cambia con el mercado.", "We promise no profits or rates: each maker sets the price and it changes with the market.")}</li>

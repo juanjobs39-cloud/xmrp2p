@@ -256,5 +256,8 @@
   "Version": "Версия",
   "Source code and verifiable build": "Исходный код и проверяемая сборка",
   "Open the swap app →": "Открыть приложение для обмена →",
-  "Buy with local currency (P2P)": "Купить за местную валюту (P2P)"
+  "Buy with local currency (P2P)": "Купить за местную валюту (P2P)",
+  "No accounts": "Без аккаунтов",
+  "Compare quotes": "Сравнить котировки",
+  "Verified contract": "Проверенный контракт"
 }

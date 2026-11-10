@@ -252,5 +252,8 @@
   "Version": "버전",
   "Source code and verifiable build": "소스 코드와 검증 가능한 빌드",
   "Open the swap app →": "스왑 앱 열기 →",
-  "Buy with local currency (P2P)": "현지 통화로 구매 (P2P)"
+  "Buy with local currency (P2P)": "현지 통화로 구매 (P2P)",
+  "No accounts": "계정 불필요",
+  "Compare quotes": "견적 비교",
+  "Verified contract": "검증된 컨트랙트"
 }

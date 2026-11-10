@@ -252,5 +252,8 @@
   "Version": "バージョン",
   "Source code and verifiable build": "ソースコードと検証可能なビルド",
   "Open the swap app →": "スワップアプリを開く →",
-  "Buy with local currency (P2P)": "現地通貨で購入（P2P）"
+  "Buy with local currency (P2P)": "現地通貨で購入（P2P）",
+  "No accounts": "アカウント不要",
+  "Compare quotes": "見積もりを比較",
+  "Verified contract": "検証済みコントラクト"
 }

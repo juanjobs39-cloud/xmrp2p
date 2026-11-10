@@ -311,7 +311,7 @@ const anchor = (text: string, i: number, prefix: string) => {
             "Aquí explicamos, en lenguaje claro, cómo cambiar USDT por Monero sin entregar tus fondos a nadie, cómo prepararte y qué hacer si algo sale mal.",
             "Here we explain, in plain language, how to swap USDT for Monero without handing your funds to anyone, how to prepare and what to do if something goes wrong.",
           )}</p>
-          <ul>{list.map((g) => <li><a href={guidePath(g)}><strong>{g.data.title}</strong></a> — {g.data.description}</li>)}</ul>
+          <ul class="guide-list">{list.map((g) => <li><a href={guidePath(g)}><strong>{g.data.title}</strong></a> — {g.data.description}</li>)}</ul>
         </>
       )}
 

@@ -1,6 +1,7 @@
 ---
 // Portada de P2P Fiat: qué es, cómo funciona, métodos y países populares, preguntas frecuentes.
 import Fiat from "../../layouts/Fiat.astro";
+import Icon from "../../../src/components/Icon.astro";
 import { COUNTRIES, FACTS, faq, FIAT_LANGS, marketLink, methodById, METHODS, REAL, ROUTES, tr, type L } from "../../content";
 
 export function getStaticPaths() {
@@ -62,11 +63,11 @@ const faqLd = {
           <a class="btn big sell" href={marketLink(lang, { buy: false })}>{t("Vender XMR", "Sell XMR")}</a>
         </div>
         <ul class="fiat-pills">
-          <li>🔒 {t("Escrow 2 de 3", "2-of-3 escrow")}</li>
-          <li>🙈 {t("Sin KYC", "No KYC")}</li>
-          <li>💬 {t("Chat cifrado", "Encrypted chat")}</li>
-          <li>% {t(`Comprar: 0 % · Vender: ${FACTS.feePct} %`, `Buy: 0% · Sell: ${FACTS.feePct}%`)}</li>
-          {!REAL && <li>🧪 {t("Red de prueba", "Test network")}</li>}
+          <li><Icon name="lock" />{t("Escrow 2 de 3", "2-of-3 escrow")}</li>
+          <li><Icon name="eyeoff" />{t("Sin KYC", "No KYC")}</li>
+          <li><Icon name="chat" />{t("Chat cifrado", "Encrypted chat")}</li>
+          <li><Icon name="percent" />{t(`Comprar: 0 % · Vender: ${FACTS.feePct} %`, `Buy: 0% · Sell: ${FACTS.feePct}%`)}</li>
+          {!REAL && <li><Icon name="flask" />{t("Red de prueba", "Test network")}</li>}
         </ul>
       </div>
       <aside class="fiat-escrow" aria-label={t("Cómo se protege tu orden", "How your order is protected")}>
@@ -76,13 +77,13 @@ const faqLd = {
           <li><div><b>{t("Tú pagas fuera de la plataforma", "You pay off-platform")}</b><span>{t("solo cuando el XMR ya está bloqueado", "only once the XMR is locked")}</span></div></li>
           <li><div><b>{t("El vendedor confirma y libera", "The seller confirms and releases")}</b><span>{t("el XMR llega a tu wallet", "the XMR arrives in your wallet")}</span></div></li>
         </ol>
-        <div class="fiat-keys" role="group" aria-label={t("Llaves del escrow", "Escrow keys")}><span>🔑 {t("Comprador", "Buyer")}</span><span>🔑 {t("Vendedor", "Seller")}</span><span>🔑 {t("Árbitro", "Arbiter")}</span></div>
+        <div class="fiat-keys" role="group" aria-label={t("Llaves del escrow", "Escrow keys")}><span><Icon name="key" />{t("Comprador", "Buyer")}</span><span><Icon name="key" />{t("Vendedor", "Seller")}</span><span><Icon name="key" />{t("Árbitro", "Arbiter")}</span></div>
       </aside>
     </section>
 
     <section class="fiat-section">
       <h2>{t("Cómo funciona", "How it works")}</h2>
-      <ol class="fiat-steps">
+      <ol class="fiat-steps cols">
         <li><h3>{t("Crea tu cuenta en segundos", "Create your account in seconds")}</h3><p>{t("Solo un apodo y una contraseña. La llave de tu cuenta vive en tu navegador.", "Just a nickname and a password. Your account key lives in your browser.")}</p></li>
         <li><h3>{t("Elige un anuncio", "Pick an ad")}</h3><p>{t("Filtra por moneda, monto y método de pago. Solo se pueden tomar anuncios de gente en línea.", "Filter by currency, amount and payment method. Only ads from people online can be taken.")}</p></li>
         <li><h3>{t("El XMR queda en el escrow", "The XMR goes into escrow")}</h3><p>{t(`El vendedor deposita; tras ${FACTS.confirmations} confirmaciones (unos 20 min) ya puedes pagar.`, `The seller deposits; after ${FACTS.confirmations} confirmations (about 20 min) you can pay.`)}</p></li>

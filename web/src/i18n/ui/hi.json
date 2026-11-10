@@ -252,5 +252,8 @@
   "Version": "संस्करण",
   "Source code and verifiable build": "सोर्स कोड और जाँचने योग्य बिल्ड",
   "Open the swap app →": "स्वैप ऐप खोलें →",
-  "Buy with local currency (P2P)": "स्थानीय मुद्रा से खरीदें (P2P)"
+  "Buy with local currency (P2P)": "स्थानीय मुद्रा से खरीदें (P2P)",
+  "No accounts": "कोई खाता नहीं",
+  "Compare quotes": "कोटेशन की तुलना करें",
+  "Verified contract": "सत्यापित कॉन्ट्रैक्ट"
 }
