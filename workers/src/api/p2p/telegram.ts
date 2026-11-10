@@ -202,10 +202,58 @@ function sameSecret(a: string, b: string): boolean {
 }
 
 const HELP: Record<Lang, string> = {
-  es: "Este bot manda avisos de tus órdenes de MoneroP2P Fiat y te deja aceptar o rechazar solicitudes. El botón «P2P» abre el mercado dentro de Telegram: tu cuenta y el escrow se firman en tu celular, el bot nunca ve llaves ni datos de pago y nunca te pedirá pagos ni contraseñas. Para recibir avisos de tus órdenes: Cuenta → Conectar Telegram. /alertas te avisa de anuncios nuevos (no necesitas cuenta); /ordenes lista tus órdenes abiertas; /stop apaga todo.",
-  en: "This bot sends notifications about your MoneroP2P Fiat orders and lets you accept or decline requests. The “P2P” button opens the market inside Telegram: your account and the escrow are signed on your phone, the bot never sees keys or payment details and will never ask you for payments or passwords. To get notifications about your orders: Account → Connect Telegram. /alerts tells you about new ads (no account needed); /orders lists your open orders; /stop turns everything off.",
+  es: "Este bot manda avisos de tus órdenes de MoneroP2P Fiat y te deja aceptar o rechazar solicitudes. El botón «P2P» abre el mercado dentro de Telegram: tu cuenta y el escrow se firman en tu celular, el bot nunca ve llaves ni datos de pago y nunca te pedirá pagos ni contraseñas. Para recibir avisos de tus órdenes: Cuenta → Conectar Telegram. /alertas te avisa de anuncios nuevos (no necesitas cuenta); /swap abre el exchange (cripto ↔ XMR) y te avisa aquí cuando avance; /ordenes lista tus órdenes abiertas; /stop apaga todo.",
+  en: "This bot sends notifications about your MoneroP2P Fiat orders and lets you accept or decline requests. The “P2P” button opens the market inside Telegram: your account and the escrow are signed on your phone, the bot never sees keys or payment details and will never ask you for payments or passwords. To get notifications about your orders: Account → Connect Telegram. /alerts tells you about new ads (no account needed); /swap opens the exchange (crypto ↔ XMR) and tells you here as it progresses; /orders lists your open orders; /stop turns everything off.",
 };
 const MARKET: Record<Lang, string> = { es: "🛒 Abrir P2P", en: "🛒 Open P2P" };
+const EXCHANGE: Record<Lang, string> = { es: "💱 Abrir Exchange", en: "💱 Open Exchange" };
+
+/** Código de aviso: vence a las 48 h y admite 10 avisos. */
+const SWAP_TTL = 48 * 3600;
+const SWAP_MAX = 10;
+
+const exchangeUrl = (env: P2PEnv, lang: Lang, query: string) => `${(env.EXCHANGE_URL || "https://monerop2p.app").replace(/\/$/, "")}/${lang}/app/?tg=1${query}`;
+
+/** Botón que abre el exchange como Mini App, con un código nuevo para avisar del intercambio en este chat. */
+async function exchangeBtn(env: P2PEnv, chat: string, lang: Lang) {
+  const token = randomId(16);
+  const t = now();
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM p2p_tg_swap_tokens WHERE expires_at < ?").bind(t),
+    env.DB.prepare("INSERT INTO p2p_tg_swap_tokens (token, chat_id, lang, expires_at) VALUES (?, ?, ?, ?)").bind(token, chat, lang, t + SWAP_TTL),
+  ]);
+  return { text: EXCHANGE[lang], web_app: { url: exchangeUrl(env, lang, `&n=${token}`) } };
+}
+
+const SWAP_TEXT: Record<string, Record<Lang, string>> = {
+  confirming: { es: "💱 Depósito detectado: se está confirmando.", en: "💱 Deposit detected: it is confirming." },
+  sending: { es: "🔄 Depósito confirmado: el exchange está enviando tus monedas.", en: "🔄 Deposit confirmed: the exchange is sending your coins." },
+  finished: { es: "✅ Intercambio completado: revisa tu wallet.", en: "✅ Swap completed: check your wallet." },
+  expired: { es: "⌛ El intercambio venció sin depósito. No se movió dinero.", en: "⌛ The swap expired without a deposit. No money moved." },
+  refunded: { es: "↩️ El exchange reembolsó tu depósito.", en: "↩️ The exchange refunded your deposit." },
+  failed: { es: "⚠️ El intercambio falló. Ábrelo para ver cómo contactar al exchange.", en: "⚠️ The swap failed. Open it to see how to contact the exchange." },
+  halted: { es: "⚠️ El exchange detuvo el intercambio. Ábrelo para ver cómo contactarlo.", en: "⚠️ The exchange halted the swap. Open it to see how to contact them." },
+};
+
+/**
+ * POST /v1/p2p/telegram/swap {token, trade_id, status} — lo llama la API del exchange cuando Trocador
+ * cambia el estado. El código es la autorización: solo permite mandar estos textos fijos a su chat.
+ */
+export async function swapNotice(req: Request, env: P2PEnv): Promise<Response> {
+  const { data } = await readJson<Record<string, unknown>>(req);
+  const token = String(data.token ?? "");
+  const trade = String(data.trade_id ?? "");
+  const text = SWAP_TEXT[String(data.status ?? "")];
+  if (!enabled(env) || !/^[0-9a-f]{32}$/.test(token) || !/^[A-Za-z0-9_-]{2,100}$/.test(trade)) throw new HttpError(400, "aviso inválido");
+  if (!text) return json({ ok: true, ignored: true });
+  const row = await env.DB.prepare("UPDATE p2p_tg_swap_tokens SET sent = sent + 1 WHERE token = ? AND expires_at >= ? AND sent < ? RETURNING chat_id, lang")
+    .bind(token, now(), SWAP_MAX)
+    .first<{ chat_id: string; lang: Lang }>();
+  if (!row) throw new HttpError(404, "código desconocido o vencido");
+  const lang: Lang = row.lang === "en" ? "en" : "es";
+  await send(env, row.chat_id, text[lang], [[{ text: lang === "es" ? "Ver intercambio" : "See swap", web_app: { url: exchangeUrl(env, lang, `&trade=${trade}`) } }]]);
+  return json({ ok: true });
+}
 
 type Update = {
   message?: { text?: string; chat?: { id?: number; type?: string }; from?: { language_code?: string } };
@@ -256,12 +304,21 @@ async function onMessage(env: P2PEnv, m: NonNullable<Update["message"]>) {
     );
   }
   if (/^\/(ordenes|orders)\b/.test(text)) return openOrders(env, chat, guess);
+  if (/^\/(swap|exchange|cambiar)\b/.test(text))
+    return send(
+      env,
+      chat,
+      guess === "es"
+        ? "💱 Exchange: cambia cripto por XMR, o XMR por cripto, sin cuenta (vía Trocador). Si lo abres con este botón, te aviso aquí cuando tu intercambio avance."
+        : "💱 Exchange: swap crypto for XMR, or XMR for crypto, with no account (via Trocador). If you open it with this button, I'll tell you here as your swap progresses.",
+      [[await exchangeBtn(env, chat, guess)]],
+    );
   if (/^\/stop\b/.test(text)) {
     const r = await env.DB.prepare("DELETE FROM p2p_telegram WHERE chat_id = ?").bind(chat).run();
     const a = await dropAlerts(env, chat);
     return send(env, chat, r.meta.changes || a ? (guess === "es" ? "Desconectado. Ya no recibirás avisos aquí." : "Disconnected. You will no longer get notifications here.") : HELP[guess]);
   }
-  return send(env, chat, HELP[guess], [[{ text: MARKET[guess], web_app: { url: miniUrl(env, guess) } }]]);
+  return send(env, chat, HELP[guess], [[{ text: MARKET[guess], web_app: { url: miniUrl(env, guess) } }], [await exchangeBtn(env, chat, guess)]]);
 }
 
 const STATUS: Record<string, [string, string]> = {
@@ -355,8 +412,8 @@ export const telegramBot = (env: P2PEnv) => (enabled(env) ? botName(env).catch((
 export async function setupWebhook(env: P2PEnv): Promise<void> {
   if (!enabled(env)) return;
   const url = `${site(env)}/v1/p2p/telegram/webhook`;
-  // «v3» cambia cuando cambia lo que se registra (comandos, botón de menú): así se vuelve a registrar.
-  const sig = (await sha256Hex(`v3|${env.P2P_TELEGRAM_TOKEN}|${env.P2P_TELEGRAM_WEBHOOK_SECRET}|${url}`)).slice(0, 32);
+  // «v4» cambia cuando cambia lo que se registra (comandos, botón de menú): así se vuelve a registrar.
+  const sig = (await sha256Hex(`v4|${env.P2P_TELEGRAM_TOKEN}|${env.P2P_TELEGRAM_WEBHOOK_SECRET}|${url}`)).slice(0, 32);
   const cur = await env.DB.prepare("SELECT value FROM p2p_settings WHERE key = 'telegram_hook'").first<{ value: string }>();
   if (cur?.value === sig) return;
   const me = await tg(env, "getMe", {});
@@ -375,6 +432,7 @@ export async function setupWebhook(env: P2PEnv): Promise<void> {
   await tg(env, "setMyCommands", {
     commands: [
       { command: "alertas", description: "Alertas de anuncios nuevos / New ad alerts" },
+      { command: "swap", description: "Exchange: cripto ↔ XMR / Exchange: crypto ↔ XMR" },
       { command: "ordenes", description: "Mis órdenes abiertas / My open orders" },
       { command: "help", description: "Qué hace este bot / What this bot does" },
       { command: "stop", description: "Apagar avisos y alertas / Turn notifications and alerts off" },

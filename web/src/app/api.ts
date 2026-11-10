@@ -118,6 +118,8 @@ export const api = {
     address: string;
     address_memo?: string;
     refund?: string;
+    /** Código del bot de Telegram para avisar del intercambio en el chat (opcional). */
+    notify?: string;
   }) =>
     call<TrocadorTrade>("/v1/trocador/trades", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
   trocadorTrade: (id: string) => call<TrocadorTrade>(`/v1/trocador/trades/${encodeURIComponent(id)}`),

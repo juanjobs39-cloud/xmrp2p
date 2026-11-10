@@ -33,6 +33,7 @@ TAKE_TIMEOUT_MS = "45000"
 MONITOR_FACTORY = ""
 API_URL = "https://fiat.monerop2p.app"
 PUBLIC_API_URL = "https://fiat.monerop2p.app"
+EXCHANGE_URL = "https://monerop2p.app"
 P2P_ENABLED = "on"
 P2P_XMR_NETWORK = "mainnet"
 # Cuenta P2P del dueño (entra al panel 🛡 Admin).

@@ -27,8 +27,11 @@ function post(type: string, data: Record<string, unknown> = {}) {
   }
 }
 
-/** Detecta Telegram, limpia sus datos de la URL y pasa la ruta de ?r= al #. Llamar antes de enrutar. */
-export function initTelegram(): void {
+/**
+ * Detecta Telegram, limpia sus datos de la URL y pasa la ruta de ?r= al #. Llamar antes de enrutar.
+ * `keep`: parámetros propios de la página que se conservan (el exchange enruta por ?trade= y ?usdt=).
+ */
+export function initTelegram(keep: string[] = []): void {
   const q = new URLSearchParams(location.search);
   const fromHash = /(^#|&)tgWebApp(Data|Version|Platform)=/.test(location.hash);
   let remembered = false;
@@ -48,7 +51,10 @@ export function initTelegram(): void {
   // Rutas que manda el bot: una vista (orden/<id>, ordenes…) o el mercado filtrado de una alerta.
   const ok = r && (/^[a-z]+(\/[0-9a-f]{32})?$/.test(r) || /^\?lado=(comprar|vender)&fiat=[A-Z]{3}&todos=1$/.test(r));
   const route = ok ? `#/${r}` : fromHash ? "" : location.hash;
-  if (q.has("tg") || q.has("r") || fromHash) history.replaceState(null, "", location.pathname + route);
+  const kept = new URLSearchParams();
+  for (const k of keep) if (q.has(k)) kept.set(k, q.get(k)!);
+  const query = kept.size ? `?${kept}` : "";
+  if (q.has("tg") || q.has("r") || fromHash) history.replaceState(null, "", location.pathname + query + route);
   document.documentElement.classList.add("in-tg");
   post("web_app_ready");
   post("web_app_expand");

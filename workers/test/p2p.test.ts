@@ -792,6 +792,37 @@ describe("P2P Fiat", () => {
     expect((await DB.prepare("SELECT count(*) AS n FROM p2p_tg_alerts WHERE chat_id = ?").bind(String(cOff)).first<{ n: number }>())!.n).toBe(0);
   });
 
+  it("telegram: /swap abre el exchange con un código y los avisos del intercambio llegan solo con ese código", async () => {
+    const calls = mockTelegram();
+    const chat = 8_000_000 + Math.floor(Math.random() * 1e6);
+    const xenv = { ...(tenv as object), EXCHANGE_URL: "https://monerop2p.app" } as never;
+    const post = (body: unknown) => call("/v1/p2p/telegram/swap", { method: "POST", body: JSON.stringify(body), headers: { "content-type": "application/json" } }, xenv);
+    await call("/v1/p2p/telegram/webhook", { method: "POST", body: JSON.stringify(msg(chat, "/swap")), headers: { "content-type": "application/json", "x-telegram-bot-api-secret-token": TG_SECRET } }, xenv);
+    const url = calls.at(-1)!.body.reply_markup.inline_keyboard[0][0].web_app.url as string;
+    expect(url).toMatch(/^https:\/\/monerop2p\.app\/es\/app\/\?tg=1&n=[0-9a-f]{32}$/);
+    const token = url.split("&n=")[1]!;
+
+    // Sin código válido no se manda nada.
+    const before = calls.length;
+    expect((await post({ token: "cd".repeat(16), trade_id: "tr1", status: "finished" })).status).toBe(404);
+    expect((await post({ token: "x", trade_id: "tr1", status: "finished" })).status).toBe(400);
+    expect((await post({ token, trade_id: "tr 1", status: "finished" })).status).toBe(400);
+    expect((await post({ token, trade_id: "tr1", status: "waiting" })).body).toMatchObject({ ignored: true });
+    expect(calls.length).toBe(before);
+
+    expect((await post({ token, trade_id: "tr1", status: "finished" })).status).toBe(200);
+    const m = calls.at(-1)!;
+    expect(Number(m.body.chat_id)).toBe(chat);
+    expect(m.body.text).toContain("Intercambio completado");
+    expect(m.body.reply_markup.inline_keyboard[0][0].web_app.url).toBe("https://monerop2p.app/es/app/?tg=1&trade=tr1");
+
+    // Tope de 10 avisos por código, y los vencidos no sirven.
+    for (let i = 0; i < 9; i++) expect((await post({ token, trade_id: "tr1", status: "sending" })).status).toBe(200);
+    expect((await post({ token, trade_id: "tr1", status: "sending" })).status).toBe(404);
+    await DB.prepare("UPDATE p2p_tg_swap_tokens SET sent = 0, expires_at = 1 WHERE token = ?").bind(token).run();
+    expect((await post({ token, trade_id: "tr1", status: "finished" })).status).toBe(404);
+  });
+
   it("el árbitro necesita su token", async () => {
     expect((await call("/v1/p2p/arbiter/tasks")).status).toBe(401);
     expect((await call("/v1/p2p/arbiter/tasks", { headers: { authorization: "Bearer otro" } })).status).toBe(401);

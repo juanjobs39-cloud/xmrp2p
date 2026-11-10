@@ -31,8 +31,10 @@ MONITOR_EXPLORER = "https://arbiscan.io"
 API_URL = "https://api.monerop2p.app"
 # Calificación KYC mínima de los exchanges (A = sin KYC … D = puede retener fondos).
 TROCADOR_MIN_KYC = "B"
-# 0 = Trocador comparte la mitad de su comisión con nosotros sin empeorar el precio al usuario.
-TROCADOR_MARKUP = "0"
+# Margen propio (%) incluido en la cotización. 0 = solo la mitad de la comisión de Trocador, sin empeorar el precio.
+TROCADOR_MARKUP = "1"
+# Avisos de intercambios abiertos desde el bot de Telegram (los manda el worker de P2P Fiat).
+TELEGRAM_NOTIFY_URL = "https://fiat.monerop2p.app/v1/p2p/telegram/swap"
 # Días que se guardan IP/idioma/navegador de los intercambios por Trocador. Vacío = indefinido (lo que pide Trocador).
 TROCADOR_RETENTION_DAYS = ""
 # P2P Fiat (XMR ↔ dinero fiat). Apagado: "" (las rutas /v1/p2p responden 404). Solo se enciende en pruebas.

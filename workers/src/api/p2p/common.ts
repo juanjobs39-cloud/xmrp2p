@@ -12,6 +12,8 @@ export interface P2PEnv extends Env {
   P2P_ARBITER_TOKEN?: string;
   /** Dirección de Monero donde cobra la plataforma (la comisión de cada orden). */
   P2P_FEE_ADDRESS?: string;
+  /** Sitio del exchange (Trocador) que el bot abre como Mini App. */
+  EXCHANGE_URL?: string;
   P2P_ORDER_ROOM: DurableObjectNamespace;
   /** Llave pública VAPID (base64url, 65 bytes) para los avisos push. Vacía: sin avisos push. */
   P2P_VAPID_PUBLIC?: string;

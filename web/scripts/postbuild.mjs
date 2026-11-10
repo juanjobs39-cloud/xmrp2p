@@ -88,8 +88,8 @@ await writeFile(
 
 ${["/:lang/app/", "/:lang/app/*", "/:lang/maker/", "/:lang/maker/*"]
   .map((r) =>
-    // La app de P2P Fiat puede abrirse dentro de Telegram Web (iframe de web.telegram.org); lo demás, sin marcos.
-    fiat && r.includes("/app/")
+    // La app (exchange y P2P Fiat) puede abrirse dentro de Telegram Web (iframe de web.telegram.org); lo demás, sin marcos.
+    r.includes("/app/")
       ? `${r}\n  ! X-Frame-Options\n  Content-Security-Policy: frame-ancestors https://web.telegram.org\n  Cache-Control: no-store\n`
       : `${r}\n  Content-Security-Policy: frame-ancestors 'none'\n  Cache-Control: no-store\n`,
   )

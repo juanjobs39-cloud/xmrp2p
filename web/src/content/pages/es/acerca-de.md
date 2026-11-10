@@ -14,7 +14,7 @@ Construimos la app web, el contrato inteligente, el núcleo criptográfico y el 
 
 ## Cómo se financia
 
-El contrato cobra una comisión porcentual cuando un swap se completa. El porcentaje está fijado al desplegar el contrato y tiene un tope de 1 % escrito en el código, que nadie puede cambiar. Los reembolsos no pagan comisión.
+El contrato cobra una comisión porcentual cuando un swap se completa. El porcentaje está fijado al desplegar el contrato y tiene un tope de 1 % escrito en el código, que nadie puede cambiar. Los reembolsos no pagan comisión. Los intercambios instantáneos vía Trocador incluyen un margen de 1 % para MoneroP2P dentro de la cotización que ves; no hay cobros aparte.
 
 ## Estado
 

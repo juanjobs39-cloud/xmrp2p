@@ -17,6 +17,7 @@ import { t, type Key, type Lang } from "./i18n";
 import { decryptRecovery, encryptRecovery, recoveryFilename, type RecoveryFile } from "./recovery";
 import { cryptoLib, xmrLib } from "./libs";
 import { attention, setStage, startLoading, type Stage } from "./ui";
+import { initTelegram } from "../p2p/tg";
 
 interface PublicMessage {
   spend_public_ed25519: string;
@@ -55,6 +56,27 @@ interface SwapState {
 const STORAGE_KEY = "xmrp2p:swap";
 /** Intercambio de Trocador en curso (sin datos secretos), para retomarlo al recargar la página. */
 const TROC_KEY = "xmrp2p:trocador";
+/** Código que da el bot de Telegram al abrir el exchange: con él se avisa del intercambio en el chat. */
+const TG_NOTIFY_KEY = "xmrp2p:tg-notify";
+
+/** Abierto desde el bot: guarda el código de aviso (solo en esta sesión) y limpia la URL de datos de Telegram. */
+function telegramStart(): void {
+  try {
+    const n = new URLSearchParams(location.search).get("n");
+    if (n && /^[0-9a-f]{32}$/.test(n)) sessionStorage.setItem(TG_NOTIFY_KEY, n);
+  } catch {
+    /* sin almacenamiento */
+  }
+  initTelegram(["trade", "usdt"]);
+}
+
+function telegramNotify(): string | null {
+  try {
+    return sessionStorage.getItem(TG_NOTIFY_KEY);
+  } catch {
+    return null;
+  }
+}
 const TROC_RESUME_MS = 24 * 3600_000;
 const TROC_FINAL = new Set(["finished", "failed", "refunded", "expired", "halted"]);
 interface TrocView {
@@ -90,6 +112,7 @@ export class SwapApp {
   // ------------------------------------------------------------------ arranque
 
   async mount(): Promise<void> {
+    telegramStart();
     const net = this.net;
     document.body.dataset.net = net.testnet ? "test" : "real";
     if (!isDeployed(net)) this.banner(t(this.lang, "not_deployed"), "warn");
@@ -335,6 +358,7 @@ export class SwapApp {
       address,
       ...(memo ? { address_memo: memo } : {}),
       ...(refund ? { refund } : {}),
+      ...(telegramNotify() ? { notify: telegramNotify()! } : {}),
     });
     this.trocRates = null; // la cotización ya se usó
     const view: TrocView = {

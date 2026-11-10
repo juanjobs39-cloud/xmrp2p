@@ -14,7 +14,7 @@ The web app, the smart contract, the crypto core and the program makers run. We 
 
 ## How it is funded
 
-The contract charges a percentage fee when a swap completes. The percentage is fixed when the contract is deployed and capped at 1% in the code, which nobody can change. Refunds pay no fee.
+The contract charges a percentage fee when a swap completes. The percentage is fixed when the contract is deployed and capped at 1% in the code, which nobody can change. Refunds pay no fee. Instant swaps via Trocador include a 1% margin for MoneroP2P inside the quote you see; there are no separate charges.
 
 ## Status
 

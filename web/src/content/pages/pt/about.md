@@ -14,7 +14,7 @@ O app web, o contrato inteligente, o núcleo criptográfico e o programa que os 
 
 ## Como se financia
 
-O contrato cobra uma taxa percentual quando um swap é concluído. A porcentagem é fixada quando o contrato é implantado e tem teto de 1% no código, que ninguém pode mudar. Reembolsos não pagam taxa.
+O contrato cobra uma taxa percentual quando um swap é concluído. A porcentagem é fixada quando o contrato é implantado e tem teto de 1% no código, que ninguém pode mudar. Reembolsos não pagam taxa. As trocas instantâneas via Trocador incluem uma margem de 1% para o MoneroP2P dentro da cotação que você vê; não há cobranças à parte.
 
 ## Estado
 

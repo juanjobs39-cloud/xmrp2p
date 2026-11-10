@@ -67,7 +67,7 @@ describe("Trocador", () => {
     expect(a.rate_id).toBe("rate123");
     expect(a.quotes[0]!.provider).toBe("Best");
     const q = seen[0]!.searchParams;
-    expect([q.get("ticker_from"), q.get("network_from"), q.get("ticker_to"), q.get("network_to"), q.get("amount_from"), q.get("markup")]).toEqual(["usdt", "Arbitrum", "xmr", "Mainnet", "50", "0"]);
+    expect([q.get("ticker_from"), q.get("network_from"), q.get("ticker_to"), q.get("network_to"), q.get("amount_from"), q.get("markup")]).toEqual(["usdt", "Arbitrum", "xmr", "Mainnet", "50", "1"]);
     await call("/v1/trocador/rates?usdt=50", { headers: h });
     expect(seen.filter((u) => u.pathname === "/new_rate")).toHaveLength(1);
   });
@@ -155,5 +155,44 @@ describe("Trocador", () => {
       await call("/v1/trocador/webhook", { method: "POST", headers: { "webhook-key": "wh-test", "content-type": "application/json" }, body: JSON.stringify({ trade_id: "tr1", status }) });
     const row = await (baseEnv as { DB: D1Database }).DB.prepare("SELECT hooks FROM trocador_trades WHERE trade_id='tr1'").first<{ hooks: string }>();
     expect(row!.hooks).toMatch(/^confirming@\d+;sending@\d+;$/);
+  });
+
+  it("abierto desde Telegram: guarda el código de aviso y reenvía cada cambio de estado, una sola vez", async () => {
+    const DB = (baseEnv as { DB: D1Database }).DB;
+    const NOTIFY = "https://fiat.test/v1/p2p/telegram/swap";
+    const tenv = { ...(env as object), TELEGRAM_NOTIFY_URL: NOTIFY } as never;
+    const sent: Record<string, unknown>[] = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+      const u = new URL(String(input instanceof Request ? input.url : input));
+      if (u.href === NOTIFY) {
+        sent.push(JSON.parse(String(init?.body)));
+        return Response.json({ ok: true });
+      }
+      if (u.pathname === "/new_trade") return Response.json({ trade_id: "trTg", provider: "Best", status: "waiting", amount_from: 50, amount_to: 0.12, address_provider: "0xdeposit" });
+      if (u.pathname === "/trade") return Response.json([{ trade_id: "trTg", status: "waiting", quotes: { expiresAt: "2026-11-03 12:30:00+00:00" } }]);
+      return new Response("{}", { status: 404 });
+    });
+    const create = (notify: unknown) =>
+      call("/v1/trocador/trades", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ rate_id: "rate123", provider: "Best", fixed: true, usdt: "50", address: XMR, notify }) }, tenv);
+    const hook = (id: string, status: string) =>
+      call("/v1/trocador/webhook", { method: "POST", headers: { "webhook-key": "wh-test", "content-type": "application/json" }, body: JSON.stringify({ trade_id: id, status }) }, tenv);
+    const token = "ab".repeat(16);
+
+    // Un código con otro formato se ignora.
+    expect((await create("no-es-un-codigo")).status).toBe(200);
+    expect((await DB.prepare("SELECT notify FROM trocador_trades WHERE trade_id='trTg'").first<{ notify: string | null }>())!.notify).toBeNull();
+    await hook("trTg", "confirming");
+    expect(sent).toHaveLength(0);
+
+    const r = await create(token);
+    expect(JSON.stringify(await r.json())).not.toContain(token); // el código no vuelve al navegador
+    expect((await DB.prepare("SELECT notify FROM trocador_trades WHERE trade_id='trTg'").first<{ notify: string }>())!.notify).toBe(token);
+    await hook("trTg", "confirming");
+    await hook("trTg", "confirming"); // mismo estado: no se repite
+    await hook("trTg", "finished");
+    expect(sent).toEqual([
+      { token, trade_id: "trTg", status: "confirming" },
+      { token, trade_id: "trTg", status: "finished" },
+    ]);
   });
 });

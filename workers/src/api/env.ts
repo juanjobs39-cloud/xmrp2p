@@ -18,6 +18,8 @@ export interface Env {
   TROCADOR_WEBHOOK_KEY?: string;
   TROCADOR_MIN_KYC?: string;
   TROCADOR_MARKUP?: string;
+  /** Ruta del worker de P2P Fiat que manda los avisos de un intercambio al chat de Telegram. */
+  TELEGRAM_NOTIFY_URL?: string;
   TROCADOR_RETENTION_DAYS?: string;
   TROCADOR_LIMITER?: RateLimit;
 }

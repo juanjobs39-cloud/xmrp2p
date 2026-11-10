@@ -4,7 +4,7 @@ import { FIATS, POPULAR_FIATS, requireFiat, suggestedMethods, xmrPrice } from ".
 import { activeUser, settings, signer, text, xmrNetwork, type P2PEnv } from "./common";
 import { handleAdmin, handleArbiter } from "./admin";
 import { subscribe, unsubscribe } from "./push";
-import { link, telegramBot, unlink, webhook } from "./telegram";
+import { link, swapNotice, telegramBot, unlink, webhook } from "./telegram";
 import { createOrder, FINAL, getOrder, getOrderView, myOrders, orderAction, roleOf, roomEvent, sweepOrders } from "./orders";
 
 export { sweepOrders };
@@ -51,6 +51,7 @@ export async function handleP2P(req: Request, env: P2PEnv, url: URL): Promise<Re
 
   // ---- Telegram (el webhook lo autentica su propio secreto) ----
   if (p === "/v1/p2p/telegram/webhook" && req.method === "POST") return webhook(req, env);
+  if (p === "/v1/p2p/telegram/swap" && req.method === "POST") return swapNotice(req, env);
 
   // ---- Firmadas por el usuario ----
   if (p === "/v1/p2p/me/ping" && req.method === "POST") {

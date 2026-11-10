@@ -211,6 +211,7 @@ interface TradeBody {
   address?: unknown;
   address_memo?: unknown;
   refund?: unknown;
+  notify?: unknown;
 }
 
 const XMR_MAIN = /^[48][1-9A-HJ-NP-Za-km-z]{94}([1-9A-HJ-NP-Za-km-z]{11})?$/;
@@ -271,6 +272,8 @@ async function createTrade(req: Request, env: Env): Promise<Response> {
   const coin = await coinFrom(env, data.ticker, data.network);
   const side = sideOf(data.side);
   const memo = str(data.address_memo, 100).trim();
+  // Código de aviso que da el bot de Telegram al abrir el exchange (opcional).
+  const notify = /^[0-9a-f]{32}$/.test(str(data.notify, 32)) ? str(data.notify, 32) : null;
   if (!/^[A-Za-z0-9_-]{4,100}$/.test(rateId)) throw new HttpError(400, "rate_id inválido");
   if (!/^[\w .()-]{1,60}$/.test(provider)) throw new HttpError(400, "provider inválido");
   // Dirección donde el usuario recibe: XMR al comprar, la otra moneda al vender. El reembolso es de lo que envía.
@@ -323,8 +326,8 @@ async function createTrade(req: Request, env: Env): Promise<Response> {
   const now = Date.now();
   await env.DB.prepare(
     `INSERT OR REPLACE INTO trocador_trades
-       (trade_id, created_at, updated_at, ip, country, lang, user_agent, provider, amount_from, amount_to, status, data)
-     VALUES (?1, ?2, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`,
+       (trade_id, created_at, updated_at, ip, country, lang, user_agent, provider, amount_from, amount_to, status, data, notify)
+     VALUES (?1, ?2, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)`,
   )
     .bind(
       trade.trade_id,
@@ -338,6 +341,7 @@ async function createTrade(req: Request, env: Env): Promise<Response> {
       trade.amount_to,
       trade.status,
       JSON.stringify(trade),
+      notify,
     )
     .run();
   return json(trade);
@@ -345,9 +349,9 @@ async function createTrade(req: Request, env: Env): Promise<Response> {
 
 /** GET /v1/trocador/trades/:id — estado desde nuestra base (lo actualiza el webhook). */
 async function getTrade(env: Env, id: string): Promise<Response> {
-  const row = await env.DB.prepare("SELECT status, created_at, updated_at, data FROM trocador_trades WHERE trade_id = ?1")
+  const row = await env.DB.prepare("SELECT status, created_at, updated_at, data, notify FROM trocador_trades WHERE trade_id = ?1")
     .bind(id)
-    .first<{ status: string; created_at: number; updated_at: number; data: string }>();
+    .first<{ status: string; created_at: number; updated_at: number; data: string; notify: string | null }>();
   if (!row) throw new HttpError(404, "intercambio no encontrado");
   let trade = JSON.parse(row.data) as ReturnType<typeof publicTrade>;
   // Respaldo por si el webhook no llega (ver statusGap). La marca se pone antes de consultar,
@@ -358,7 +362,7 @@ async function getTrade(env: Env, id: string): Promise<Response> {
     if (!claimed.meta.changes) return json(trade);
     try {
       const body = await trocador(env, "trade", { id });
-      trade = await saveStatus(env, Array.isArray(body) ? (body[0] as Record<string, unknown>) : body, trade);
+      trade = await saveStatus(env, Array.isArray(body) ? (body[0] as Record<string, unknown>) : body, trade, row.notify);
     } catch (e) {
       console.warn("trocador status", id, String(e));
     }
@@ -366,13 +370,29 @@ async function getTrade(env: Env, id: string): Promise<Response> {
   return json(trade);
 }
 
-async function saveStatus(env: Env, body: Record<string, unknown>, prev?: ReturnType<typeof publicTrade>) {
+async function saveStatus(env: Env, body: Record<string, unknown>, prev?: ReturnType<typeof publicTrade>, notify?: string | null) {
   const next = publicTrade(body);
   const merged = { ...prev, ...Object.fromEntries(Object.entries(next).filter(([, v]) => v !== "" && v !== false)) } as ReturnType<typeof publicTrade>;
   await env.DB.prepare("UPDATE trocador_trades SET status = ?2, updated_at = ?3, amount_to = ?4, data = ?5 WHERE trade_id = ?1")
     .bind(merged.trade_id, merged.status, Date.now(), merged.amount_to, JSON.stringify(merged))
     .run();
+  if (notify && merged.status !== prev?.status) await tellTelegram(env, notify, merged.trade_id, merged.status);
   return merged;
+}
+
+/** Avisa el cambio de estado al chat de Telegram que abrió el exchange. Solo viajan el código, el ID y el estado. */
+async function tellTelegram(env: Env, token: string, tradeId: string, status: string): Promise<void> {
+  if (!env.TELEGRAM_NOTIFY_URL) return;
+  try {
+    await fetch(env.TELEGRAM_NOTIFY_URL, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token, trade_id: tradeId, status }),
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch (e) {
+    console.warn("aviso de telegram", tradeId, String(e));
+  }
 }
 
 function sameKey(a: string, b: string): boolean {
@@ -388,9 +408,9 @@ async function webhook(req: Request, env: Env): Promise<Response> {
   if (!env.TROCADOR_WEBHOOK_KEY || !sameKey(key, env.TROCADOR_WEBHOOK_KEY)) throw new HttpError(401, "webhook no autorizado");
   const { data } = await readJson<Record<string, unknown>>(req);
   const id = String(data.trade_id ?? "");
-  const row = await env.DB.prepare("SELECT data FROM trocador_trades WHERE trade_id = ?1").bind(id).first<{ data: string }>();
+  const row = await env.DB.prepare("SELECT data, notify FROM trocador_trades WHERE trade_id = ?1").bind(id).first<{ data: string; notify: string | null }>();
   if (!row) return json({ ok: true, ignored: true });
-  await saveStatus(env, data, JSON.parse(row.data));
+  await saveStatus(env, data, JSON.parse(row.data), row.notify);
   // Registro corto de cada aviso, para saber en qué pasos avisa Trocador.
   const mark = `${str(data.status, 30) || "?"}@${Math.floor(Date.now() / 1000)};`;
   await env.DB.prepare("UPDATE trocador_trades SET hooks = substr(coalesce(hooks, '') || ?2, -500) WHERE trade_id = ?1").bind(id, mark).run();
