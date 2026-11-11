@@ -44,11 +44,32 @@ const vendor = {
 const wasmHash = sri(await readFile(join(dist, "vendor/crypto/xmrp2p_crypto_bg.wasm")));
 
 // 0. Marcadores de contenido ([EMAIL_CONTACTO]) en HTML, Markdown y texto plano.
-const contact = process.env.PUBLIC_CONTACT_EMAIL;
+// El valor viene del entorno o, si no está, de web/.env (igual que lo lee astro.config.mjs).
+const fromDotEnv = async () => {
+  try {
+    const m = (await readFile(new URL("../.env", import.meta.url), "utf8")).match(/^PUBLIC_CONTACT_EMAIL=(.*)$/m);
+    return m ? m[1].trim().replace(/^["']|["']$/g, "") : undefined;
+  } catch {
+    return undefined;
+  }
+};
+const contact = process.env.PUBLIC_CONTACT_EMAIL ?? (await fromDotEnv());
 if (contact) {
   for (const f of files.filter((p) => /\.(html|md|txt)$/.test(p))) {
     const t = await readFile(f, "utf8");
     if (t.includes("[EMAIL_CONTACTO]")) await writeFile(f, t.split("[EMAIL_CONTACTO]").join(contact));
+  }
+  // Cloudflare sustituye los correos del HTML por «[email protected]» y agrega un script para
+  // descifrarlos: los rastreadores y quien navega sin JavaScript no verían el correo. Las marcas
+  // email_off le piden dejarlo tal cual. Solo en el texto del <body> (el JSON-LD va en el <head>).
+  if (contact.includes("@")) {
+    for (const f of files.filter((p) => p.endsWith(".html"))) {
+      const t = await readFile(f, "utf8");
+      const at = t.indexOf("<body");
+      if (at < 0 || !t.includes(contact, at)) continue;
+      const body = t.slice(at).replace(/>([^<]+)</g, (m, txt) => (txt.includes(contact) ? `>${txt.split(contact).join(`<!--email_off-->${contact}<!--/email_off-->`)}<` : m));
+      await writeFile(f, t.slice(0, at) + body);
+    }
   }
 }
 
