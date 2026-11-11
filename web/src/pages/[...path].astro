@@ -6,7 +6,7 @@ import { makeT } from "../i18n/ui";
  */
 import { getCollection, render } from "astro:content";
 import Base from "../layouts/Base.astro";
-import { NEWS_LANGS, fmtDate, guideAlternates, guidePath, guides, newsAlternates, newsIndex, newsLang, newsList, newsPath } from "../lib/content";
+import { NEWS_LANGS, fmtDate, guideAlternates, guidePath, guides, newsAlternates, newsIndex, newsLang, newsList, newsPath, plain } from "../lib/content";
 import { LANGS, ROUTES, SITE, WALLET, type Lang } from "../site";
 
 export async function getStaticPaths() {
@@ -55,6 +55,7 @@ let glossaryItems: { term: string; def: string }[] = [];
 let mdAlt: string | undefined;
 let posts: Awaited<ReturnType<typeof newsList>> = [];
 let published: Date | undefined;
+let article: { published: string; modified: string; tags?: string[] } | undefined;
 const newsCrumb = { name: t("Novedades", "News"), href: newsIndex(lang) };
 
 if (kind === "page") {
@@ -164,6 +165,12 @@ if (kind === "page") {
     url: new URL(newsPath(entry), Astro.site).href,
     image: new URL("/og.png?v=3", Astro.site).href,
     isAccessibleForFree: true,
+    articleSection: t("Novedades", "News"),
+    wordCount: plain(entry.body ?? "").split(/\s+/).filter(Boolean).length,
+    // De qué entidad habla la entrada, sin ambigüedad para buscadores y asistentes.
+    about: [{ "@type": "Thing", name: "Monero", alternateName: "XMR", sameAs: "https://en.wikipedia.org/wiki/Monero" }],
+    // El título y el resumen inicial («En resumen») son lo que mejor responde por sí solo.
+    speakable: { "@type": "SpeakableSpecification", cssSelector: ["h1", "article > p:nth-of-type(2)"] },
     isPartOf: { "@type": "Blog", name: t("Novedades de MoneroP2P", "MoneroP2P news"), url: new URL(newsIndex(lang), Astro.site).href },
     ...(n.keywords.length ? { keywords: n.keywords.join(", ") } : {}),
     ...(n.mentions.length
@@ -173,6 +180,7 @@ if (kind === "page") {
     author: org,
     publisher: org,
   });
+  article = { published: n.published.toISOString(), modified: (n.updated ?? n.published).toISOString(), tags: n.keywords };
   if (n.howto) {
     jsonLd.push({
       "@context": "https://schema.org",
@@ -200,6 +208,22 @@ if (kind === "page") {
   alternates = Object.fromEntries(NEWS_LANGS.map((l) => [l, newsIndex(l)]));
   breadcrumbs = [home, newsCrumb];
   posts = await newsList(newsLang(lang));
+  jsonLd.push({
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: title,
+    description,
+    inLanguage: newsLang(lang),
+    url: new URL(newsIndex(lang), Astro.site).href,
+    blogPost: posts.map((p) => ({
+      "@type": "BlogPosting",
+      headline: p.data.title,
+      description: p.data.description,
+      url: new URL(newsPath(p), Astro.site).href,
+      datePublished: p.data.published.toISOString(),
+      dateModified: (p.data.updated ?? p.data.published).toISOString(),
+    })),
+  });
 } else if (kind === "guides") {
   route = "guides";
   title = t("Guías sobre USDT, Monero y atomic swaps", "Guides on USDT, Monero and atomic swaps");
@@ -251,7 +275,7 @@ const anchor = (text: string, i: number, prefix: string) => {
   return id;
 };
 ---
-<Base {lang} {title} {description} {route} {alternates} {breadcrumbs} {jsonLd} ogType={kind === "guide" || kind === "post" ? "article" : "website"} markdownAlternate={mdAlt}>
+<Base {lang} {title} {description} {route} {alternates} {breadcrumbs} {jsonLd} ogType={kind === "guide" || kind === "post" ? "article" : "website"} markdownAlternate={mdAlt} {article}>
   <main id="contenido" class="prose">
     <article>
       <h1>{title}</h1>

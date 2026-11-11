@@ -138,3 +138,5 @@ No pagues antes del escrow, no salgas de la plataforma y paga desde una cuenta a
 Usar cripto tiene riesgos: lee el [aviso de riesgos](/es/aviso-de-riesgos/).
 
 [Comprar Monero con moneda local →](https://fiat.monerop2p.app/es/app/) · [Cambiar cripto por XMR →](/es/app/)
+
+¿Prefieres hacerlo desde el celular? El mercado también se abre dentro de Telegram, con avisos de tus órdenes y alertas de anuncios nuevos: [comprar y vender Monero por Telegram](/es/novedades/comprar-monero-por-telegram-bot/).

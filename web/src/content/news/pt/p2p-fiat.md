@@ -119,3 +119,5 @@ Sim. O LocalMonero fechou em 2024. No P2P Fiat a plataforma não guarda o XMR: e
 Comprar e vender cripto tem riscos: leia o [aviso de riscos](/pt/risk-notice/).
 
 [Abrir o P2P Fiat →](https://fiat.monerop2p.app/en/app/)
+
+Prefere usar o celular? O mercado também abre dentro do Telegram, com avisos das suas ordens e alertas de novos anúncios: [comprar e vender Monero pelo Telegram](/pt/news/buy-monero-on-telegram-bot/).

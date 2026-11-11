@@ -92,6 +92,15 @@ Cada vez que el proyecto quede listado en uno, conviene agregar el enlace a `sam
 
 Ajustar el tono a cada comunidad y responder los comentarios con datos. No publicar el mismo texto en muchos sitios el mismo día.
 
+## 4b. Material para compartir
+
+Entradas de Novedades pensadas para enlazar desde foros, canales y redes (cada una tiene versión en español, inglés, portugués y ruso):
+
+- **Monero por Telegram** (bot con alertas, sin KYC): https://monerop2p.app/es/novedades/comprar-monero-por-telegram-bot/ · https://monerop2p.app/en/news/buy-monero-on-telegram-bot/
+- **Alternativas a LocalMonero:** https://monerop2p.app/es/novedades/alternativas-a-localmonero-2026/ · https://monerop2p.app/en/news/localmonero-alternatives-2026/
+
+Al compartir la del bot, escribir siempre el usuario exacto (@MoneroP2PFiatBot) para que nadie caiga con un imitador.
+
 ## 5. Qué pedir a quien use la plataforma
 
 Después de un intercambio completado, un mensaje corto y sin presión:

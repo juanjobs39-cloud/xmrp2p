@@ -133,3 +133,5 @@ Yes. LocalMonero shut down in 2024. P2P Fiat covers the same use, but the platfo
 More answers in the [P2P Fiat FAQ](https://fiat.monerop2p.app/en/faq/). Buying and selling crypto carries risk: read the [risk notice](/en/risk-notice/).
 
 [Open P2P Fiat →](https://fiat.monerop2p.app/en/app/)
+
+Prefer your phone? The market also opens inside Telegram, with order notifications and alerts for new ads: [buy and sell Monero on Telegram](/en/news/buy-monero-on-telegram-bot/).

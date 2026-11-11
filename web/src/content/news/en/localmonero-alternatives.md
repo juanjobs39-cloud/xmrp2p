@@ -138,3 +138,5 @@ Don't pay before the escrow, don't leave the platform and pay from an account in
 Using crypto carries risk: read the [risk notice](/en/risk-notice/).
 
 [Buy Monero with local currency →](https://fiat.monerop2p.app/en/app/) · [Swap crypto for XMR →](/en/app/)
+
+Prefer your phone? The market also opens inside Telegram, with order notifications and alerts for new ads: [buy and sell Monero on Telegram](/en/news/buy-monero-on-telegram-bot/).
