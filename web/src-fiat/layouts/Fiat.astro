@@ -42,7 +42,8 @@ const legal = {
   contact: mainPath("contacto/", "contact/"),
 };
 
-const org = { "@context": "https://schema.org", "@type": "Organization", name: "MoneroP2P", url: MAIN_SITE + "/", logo: MAIN_SITE + "/favicon-192.png", sameAs: [REPO, MAIN_SITE + "/"], foundingDate: "2026-10-26", contactPoint: { "@type": "ContactPoint", contactType: "security", url: REPO + "/security/advisories/new" }, publishingPrinciples: MAIN_SITE + "/en/is-monerop2p-legit/" };
+const mail = (import.meta.env.PUBLIC_CONTACT_EMAIL as string | undefined) ?? "";
+const org = { ...(mail.includes("@") ? { email: mail } : {}), "@context": "https://schema.org", "@type": "Organization", name: "MoneroP2P", url: MAIN_SITE + "/", logo: MAIN_SITE + "/favicon-192.png", sameAs: [REPO, MAIN_SITE + "/"], foundingDate: "2026-10-26", contactPoint: { "@type": "ContactPoint", contactType: "security", url: REPO + "/security/advisories/new" }, publishingPrinciples: MAIN_SITE + "/en/is-monerop2p-legit/" };
 const website = { "@context": "https://schema.org", "@type": "WebSite", name: brand, url: site.href, inLanguage: FIAT_LANGS, publisher: { "@type": "Organization", name: "MoneroP2P" } };
 const crumbs = breadcrumbs && {
   "@context": "https://schema.org",

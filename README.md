@@ -132,7 +132,7 @@ Copy `web/.env.example` and `maker/maker.example.toml` before running locally. *
 
 ## Security
 
-Found a vulnerability? Please report it privately: see [SECURITY.md](SECURITY.md). Crypto transactions are irreversible; read the [risk notice](https://monerop2p.app/en/risk-notice/) before using the service. MoneroP2P never asks for your seed phrase, private keys or recovery file.
+General questions: **hola@monerop2p.app**. Found a vulnerability? Please report it privately, not by email: see [SECURITY.md](SECURITY.md). Crypto transactions are irreversible; read the [risk notice](https://monerop2p.app/en/risk-notice/) before using the service. MoneroP2P never asks for your seed phrase, private keys or recovery file.
 
 ## License
 

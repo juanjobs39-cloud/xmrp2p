@@ -43,7 +43,11 @@ const org = {
   description: "Open-source, non-custodial platform to buy and swap Monero (XMR): USDT atomic swaps, instant exchanges from 2,500+ coins and a P2P fiat market with a 2-of-3 multisig escrow.",
   foundingDate: "2026-10-26",
   knowsAbout: ["Monero", "XMR", "atomic swaps", "non-custodial exchange", "P2P trading", "multisig escrow"],
-  contactPoint: { "@type": "ContactPoint", contactType: "security", url: `${SITE.repo}/security/advisories/new` },
+  ...(SITE.email.includes("@") ? { email: SITE.email } : {}),
+  contactPoint: [
+    ...(SITE.email.includes("@") ? [{ "@type": "ContactPoint", contactType: "customer support", email: SITE.email, availableLanguage: ["en", "es"] }] : []),
+    { "@type": "ContactPoint", contactType: "security", url: `${SITE.repo}/security/advisories/new` },
+  ],
   publishingPrinciples: new URL(ROUTES.trust.en, site).href,
 };
 const website = {

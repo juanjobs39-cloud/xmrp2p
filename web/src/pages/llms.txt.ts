@@ -45,6 +45,7 @@ Every claim has a public source. The page ${abs(ROUTES.trust.en)} lists each one
 - Contract source (exact match): https://repo.sourcify.dev/42161/0x88fc05Cb07C5b69fbed1F7B1c1F784Cd26e99535
 - Automated verification runs: ${SITE.repo}/actions/workflows/auditoria.yml
 - File hashes of the published site: ${abs("/SHA256SUMS")}
+- Contact: ${SITE.email.includes("@") ? SITE.email : abs(ROUTES.contact.en)}
 - Security policy and official addresses: ${SITE.repo}/blob/main/SECURITY.md · ${abs("/.well-known/security.txt")}
 
 ## When it fits and when it does not

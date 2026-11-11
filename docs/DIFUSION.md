@@ -31,6 +31,8 @@ Cada vez que el proyecto quede listado en uno, conviene agregar el enlace a `sam
 
 **Source code:** https://github.com/juanjobs39-cloud/xmrp2p (AGPL-3.0)
 
+**Contact:** hola@monerop2p.app
+
 **One line (under 160 characters):**
 
 > Buy, sell and swap Monero without KYC: non-custodial USDT atomic swaps, a P2P fiat market with 2-of-3 multisig escrow, and instant exchanges.
@@ -113,5 +115,4 @@ Anotar si lo mencionan, qué fuente citan y qué dicen. Si citan un dato viejo o
 
 1. **Una auditoría externa del contrato.** Es lo primero que revisa cualquier directorio serio. El alcance ya está preparado en [AUDITORIA.md](AUDITORIA.md).
 2. **Tiempo funcionando sin incidentes** y órdenes completadas.
-3. **Un correo de contacto público** en lugar de solo los issues de GitHub.
-4. **Publicar la extensión de la wallet** en las tiendas, que revisan el código y dan una ficha propia.
+3. **Publicar la extensión de la wallet** en las tiendas, que revisan el código y dan una ficha propia.
