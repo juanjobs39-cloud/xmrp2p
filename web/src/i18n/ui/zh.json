@@ -160,7 +160,7 @@
   "See the runs on GitHub": "在 GitHub 上查看运行记录",
   "Full report": "完整报告",
   "Be a maker from your browser": "在浏览器中成为做市方",
-  "Offer XMR for USDT from your browser, with nothing to install and nobody holding your funds. Testnet preview.": "在浏览器中用 XMR 换 USDT，无需安装，也没有人托管你的资金。",
+  "Offer XMR for USDT from your browser and earn a margin, with nothing to install and nobody holding your funds.": "在浏览器中用 XMR 换 USDT，无需安装，也没有人托管你的资金。",
   "Offer your XMR and get paid in USDT with your margin. This tab works as your server while it is open.": "提供你的 XMR，按你设定的差价收取 USDT。此标签页打开期间就是你的服务器。",
   "Your seed and keys are created and stay in this browser.": "你的助记词和密钥在此浏览器中生成并保存在这里。",
   "Paid to your MetaMask": "直接付到你的 MetaMask",
@@ -255,5 +255,10 @@
   "Buy with local currency (P2P)": "用本地货币购买（P2P）",
   "No accounts": "无需账户",
   "Compare quotes": "比较报价",
-  "Verified contract": "合约已验证"
+  "Verified contract": "合约已验证",
+  "Is it legit?": "可靠吗？",
+  "Non-custodial USDT to XMR atomic swaps": "非托管的 USDT 到 XMR 原子交换",
+  "Instant-exchange quotes for 2,500+ coins": "2,500 多种币的即时兑换报价",
+  "No account, no KYC": "无需账户，无需 KYC",
+  "Open source (AGPL-3.0)": "开源 (AGPL-3.0)"
 }

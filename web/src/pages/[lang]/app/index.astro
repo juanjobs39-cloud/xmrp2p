@@ -48,7 +48,15 @@ const softwareLd = {
   operatingSystem: "Web (navegador)",
   isAccessibleForFree: true,
   license: "https://www.gnu.org/licenses/agpl-3.0.html",
-  softwareVersion: "0.1.0 (testnet)",
+  url: new URL(ROUTES.app[lang], Astro.site).href,
+  codeRepository: SITE.repo,
+  softwareHelp: new URL(ROUTES.trust[lang], Astro.site).href,
+  featureList: [
+    t("Atomic swaps de USDT a XMR sin custodia", "Non-custodial USDT to XMR atomic swaps"),
+    t("Cotizaciones de exchanges instantáneos para 2,500+ monedas", "Instant-exchange quotes for 2,500+ coins"),
+    t("Sin cuenta ni KYC", "No account, no KYC"),
+    t("Código abierto (AGPL-3.0)", "Open source (AGPL-3.0)"),
+  ],
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
 };
 ---

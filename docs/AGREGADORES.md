@@ -1,5 +1,7 @@
 # Integrating MoneroP2P in an aggregator
 
+> This guide covers the **USDT → XMR atomic swap**. MoneroP2P also runs a P2P fiat market with its own read-only API (price per currency and live ads): see section 4. Instant-exchange quotes shown in the app come from Trocador and include a 1% margin for MoneroP2P; they are not exposed through this API.
+
 MoneroP2P swaps **USDT (USD₮0, Arbitrum One) → Monero (XMR)** with non-custodial atomic swaps. The buyer finishes the swap in our web app: they keep their own keys, download an encrypted recovery file and sign one deposit with their wallet (MetaMask or compatible). Nobody, including MoneroP2P, holds their funds.
 
 That means the flow is **"quote → open the app"** instead of **"send to a deposit address"**. Aggregators can show our live quotes and send the user to the app with everything pre-filled.
@@ -67,3 +69,25 @@ The app only pre-fills the form. The user still reviews it, sets a password for 
 | Source | https://github.com/juanjobs39-cloud/xmrp2p (AGPL-3.0) |
 
 Contact for partnerships: open an issue on GitHub or see the contact page at https://monerop2p.app/en/contact/.
+
+## 4. P2P Fiat (buy and sell XMR for local currency)
+
+Read-only, no key, CORS enabled. Served from `https://fiat.monerop2p.app`:
+
+```
+GET /v1/p2p/price?fiat=MXN                      market price of XMR in a currency
+GET /v1/p2p/ads?side=sell&fiat=MXN&method=SPEI  live ads (side=sell: where a user can buy)
+GET /v1/p2p/fiats                               supported currencies
+GET /v1/p2p/methods?fiat=COP                    suggested payment methods
+GET /v1/p2p/config                              fee, limits and time windows
+```
+
+Send the user to the market with filters already applied:
+
+```
+https://fiat.monerop2p.app/en/app/#/?lado=comprar&fiat=MXN&metodo=SPEI
+```
+
+`lado=comprar|vender`, `fiat=<ISO 4217>`, `metodo=<method name>`, `pais=<ISO 3166-1 alpha-2>`, `monto=<amount>`.
+
+Facts to show: each order's XMR sits in a 2-of-3 Monero multisig escrow (buyer, seller, arbiter); buying is free and sellers pay 0.5%; orders are capped at 1000 USD; the fiat payment happens outside the platform. Summary for language models: `https://fiat.monerop2p.app/llms.txt`.

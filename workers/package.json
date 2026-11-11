@@ -2,7 +2,7 @@
   "name": "xmrp2p-workers",
   "private": true,
   "type": "module",
-  "description": "Backend de xmrp2p en Cloudflare: libro de órdenes (D1), canal (Durable Objects), proxy de nodos Monero, API pública y MCP de solo lectura",
+  "description": "Backend de MoneroP2P en Cloudflare: libro de órdenes (D1), canal (Durable Objects), proxy de nodos Monero, API pública y MCP de solo lectura, cotizaciones vía Trocador, y la API de P2P Fiat con su bot de Telegram",
   "scripts": {
     "dev": "wrangler dev",
     "dev:proxy": "wrangler dev -c wrangler.node-proxy.toml",

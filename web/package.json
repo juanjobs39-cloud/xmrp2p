@@ -2,7 +2,7 @@
   "name": "xmrp2p-web",
   "private": true,
   "type": "module",
-  "description": "Sitio público (Astro, sin JS en el contenido) y app del swap en el navegador",
+  "description": "MoneroP2P: sitio público (Astro, sin JS en el contenido), app de swaps y maker en el navegador, y el sitio y la app de P2P Fiat",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build && node scripts/postbuild.mjs",

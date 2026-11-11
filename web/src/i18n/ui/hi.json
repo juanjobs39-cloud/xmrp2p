@@ -160,7 +160,7 @@
   "See the runs on GitHub": "GitHub पर रन देखें",
   "Full report": "पूरी रिपोर्ट",
   "Be a maker from your browser": "अपने ब्राउज़र से मेकर बनें",
-  "Offer XMR for USDT from your browser, with nothing to install and nobody holding your funds. Testnet preview.": "अपने ब्राउज़र से USDT के बदले XMR ऑफ़र करें, बिना कुछ इंस्टॉल किए और बिना किसी के आपके फ़ंड रखे.",
+  "Offer XMR for USDT from your browser and earn a margin, with nothing to install and nobody holding your funds.": "अपने ब्राउज़र से USDT के बदले XMR ऑफ़र करें, बिना कुछ इंस्टॉल किए और बिना किसी के आपके फ़ंड रखे.",
   "Offer your XMR and get paid in USDT with your margin. This tab works as your server while it is open.": "अपना XMR ऑफ़र करें और अपने मार्जिन के साथ USDT में भुगतान पाएँ. यह टैब खुला रहने तक आपके सर्वर की तरह काम करता है.",
   "Your seed and keys are created and stay in this browser.": "आपका सीड और कुंजियाँ इसी ब्राउज़र में बनती हैं और यहीं रहती हैं.",
   "Paid to your MetaMask": "भुगतान आपके MetaMask में",
@@ -255,5 +255,10 @@
   "Buy with local currency (P2P)": "स्थानीय मुद्रा से खरीदें (P2P)",
   "No accounts": "कोई खाता नहीं",
   "Compare quotes": "कोटेशन की तुलना करें",
-  "Verified contract": "सत्यापित कॉन्ट्रैक्ट"
+  "Verified contract": "सत्यापित कॉन्ट्रैक्ट",
+  "Is it legit?": "क्या यह भरोसेमंद है?",
+  "Non-custodial USDT to XMR atomic swaps": "USDT से XMR के नॉन-कस्टोडियल एटॉमिक स्वैप",
+  "Instant-exchange quotes for 2,500+ coins": "2,500+ कॉइन के लिए इंस्टेंट एक्सचेंज कोट",
+  "No account, no KYC": "न खाता, न KYC",
+  "Open source (AGPL-3.0)": "ओपन सोर्स (AGPL-3.0)"
 }

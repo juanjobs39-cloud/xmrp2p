@@ -39,7 +39,12 @@ const org = {
   name: SITE.brand,
   url: site.href,
   logo: new URL("/favicon-192.png", site).href,
-  sameAs: [SITE.repo],
+  sameAs: [SITE.repo, SITE.fiatUrl],
+  description: "Open-source, non-custodial platform to buy and swap Monero (XMR): USDT atomic swaps, instant exchanges from 2,500+ coins and a P2P fiat market with a 2-of-3 multisig escrow.",
+  foundingDate: "2026-10-26",
+  knowsAbout: ["Monero", "XMR", "atomic swaps", "non-custodial exchange", "P2P trading", "multisig escrow"],
+  contactPoint: { "@type": "ContactPoint", contactType: "security", url: `${SITE.repo}/security/advisories/new` },
+  publishingPrinciples: new URL(ROUTES.trust.en, site).href,
 };
 const website = {
   "@context": "https://schema.org",
@@ -67,6 +72,7 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
     {Object.entries(alternates).map(([l, href]) => <link rel="alternate" hreflang={l} href={new URL(href!, site).href} />)}
     {(alternates.en ?? alternates.es) && <link rel="alternate" hreflang="x-default" href={new URL((alternates.en ?? alternates.es)!, site).href} />}
     {markdownAlternate && <link rel="alternate" type="text/markdown" href={markdownAlternate} />}
+    <link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt" />
     {noindex && <meta name="robots" content="noindex" />}
     <meta property="og:type" content={ogType} />
     <meta property="og:title" content={fullTitle} />
@@ -145,6 +151,7 @@ const ld = [org, website, ...(crumbs ? [crumbs] : []), ...jsonLd];
             <p class="foot-h">{t("Proyecto", "Project")}</p>
             <ul>
               <li><a href={ROUTES.about[lang]}>{t("Acerca de", "About")}</a></li>
+              <li><a href={ROUTES.trust[lang]}>{t("¿Es confiable?", "Is it legit?")}</a></li>
               <li><a href={ROUTES.contact[lang]}>{t("Contacto", "Contact")}</a></li>
               <li><a href={SITE.repo} rel="noopener">{t("Código fuente (AGPL-3.0)", "Source code (AGPL-3.0)")}</a></li>
             </ul>

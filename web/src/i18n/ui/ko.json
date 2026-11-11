@@ -160,7 +160,7 @@
   "See the runs on GitHub": "GitHub에서 실행 기록 보기",
   "Full report": "전체 보고서",
   "Be a maker from your browser": "브라우저에서 메이커 되기",
-  "Offer XMR for USDT from your browser, with nothing to install and nobody holding your funds. Testnet preview.": "브라우저에서 XMR을 USDT와 교환해 제공하세요. 설치가 필요 없고 아무도 자금을 보관하지 않습니다.",
+  "Offer XMR for USDT from your browser and earn a margin, with nothing to install and nobody holding your funds.": "브라우저에서 XMR을 USDT와 교환해 제공하세요. 설치가 필요 없고 아무도 자금을 보관하지 않습니다.",
   "Offer your XMR and get paid in USDT with your margin. This tab works as your server while it is open.": "XMR을 제공하고 마진을 붙여 USDT로 받으세요. 이 탭은 열려 있는 동안 여러분의 서버 역할을 합니다.",
   "Your seed and keys are created and stay in this browser.": "시드와 키는 이 브라우저에서 만들어지고 여기에만 머뭅니다.",
   "Paid to your MetaMask": "메타마스크로 지급",
@@ -255,5 +255,10 @@
   "Buy with local currency (P2P)": "현지 통화로 구매 (P2P)",
   "No accounts": "계정 불필요",
   "Compare quotes": "견적 비교",
-  "Verified contract": "검증된 컨트랙트"
+  "Verified contract": "검증된 컨트랙트",
+  "Is it legit?": "믿을 수 있나요?",
+  "Non-custodial USDT to XMR atomic swaps": "USDT에서 XMR로의 비수탁형 아토믹 스왑",
+  "Instant-exchange quotes for 2,500+ coins": "2,500개 이상 코인의 즉시 교환 견적",
+  "No account, no KYC": "계정 없음, KYC 없음",
+  "Open source (AGPL-3.0)": "오픈소스 (AGPL-3.0)"
 }

@@ -1,6 +1,14 @@
 # Registro de despliegues
 
-> Testnet (Arbitrum Sepolia + Monero stagenet) y **dinero real en Arbitrum One** desde el 26-oct-2026 (ver la última sección). Cada entrada indica red, fecha, direcciones y commit.
+> **Estado actual (10-nov-2026):** la red activa es **Arbitrum One + Monero mainnet (dinero real)** desde el 26-oct-2026; Arbitrum Sepolia + Monero stagenet siguen disponibles solo como modo de práctica (`?red=prueba`). Las secciones de abajo son el registro histórico: cada entrada indica red, fecha, direcciones y commit, y las primeras describen el despliegue inicial en testnet.
+>
+> | Servicio en producción | Dirección |
+> |---|---|
+> | Sitio y app de swaps | https://monerop2p.app (Cloudflare Pages, proyecto `monerop2p`) |
+> | API de swaps, OpenAPI y MCP | https://api.monerop2p.app |
+> | P2P Fiat: sitio, app y API | https://fiat.monerop2p.app (worker `monerop2p-fiat`, base D1 `xmrp2p-fiat`) |
+> | Nodo Monero (mainnet / stagenet) | https://nodo-xmr.monerop2p.app / https://nodo.monerop2p.app |
+> | Bot de Telegram | [@MoneroP2PFiatBot](https://t.me/MoneroP2PFiatBot) |
 
 ## Backend en Cloudflare — 25-oct-2026
 

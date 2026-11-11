@@ -12,17 +12,17 @@ const TOOLS = [
   {
     name: "list_networks",
     title: "Redes activas",
-    description: "Lista las redes donde xmrp2p acepta swaps USDT → XMR ahora mismo.",
+    description: "Lists the networks where MoneroP2P accepts USDT → XMR atomic swaps right now (arbitrum_one is real money; arbitrum_sepolia is the practice mode).",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     annotations: { readOnlyHint: true, openWorldHint: false },
   },
   {
     name: "list_offers",
     title: "Ofertas de makers",
-    description: "Ofertas vigentes de makers (precio en USDT por XMR, montos mínimo y máximo) en una red.",
+    description: "Live maker offers on a network: price in USDT per XMR and minimum and maximum amounts. Offers disappear when the maker goes offline.",
     inputSchema: {
       type: "object",
-      properties: { network: { type: "string", description: "Red, p. ej. arbitrum_sepolia" } },
+      properties: { network: { type: "string", description: "Network id, e.g. arbitrum_one" } },
       required: ["network"],
       additionalProperties: false,
     },
@@ -32,13 +32,13 @@ const TOOLS = [
     name: "get_quote",
     title: "Cotización USDT → XMR",
     description:
-      "Cotización indicativa: cuánto XMR se recibiría por un monto de USDT con la mejor oferta vigente. " +
-      "La cotización definitiva la da el maker al iniciar el swap. Esta herramienta no ejecuta swaps.",
+      "Indicative quote: how much XMR a USDT amount would get with the best live offer (atomic swaps are capped at 100 USDT). " +
+      "The maker gives the final amount when the swap starts. This tool does not execute swaps.",
     inputSchema: {
       type: "object",
       properties: {
         network: { type: "string" },
-        usdt: { type: "string", description: "Monto en USDT, p. ej. \"100\"" },
+        usdt: { type: "string", description: "Amount in USDT, e.g. \"50\"" },
       },
       required: ["network", "usdt"],
       additionalProperties: false,
@@ -77,10 +77,11 @@ async function handleOne(env: Env, m: RpcReq) {
       return ok(m.id, {
         protocolVersion: PROTOCOL_VERSION,
         capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: "xmrp2p", title: "xmrp2p (solo lectura)", version: "0.1.0" },
+        serverInfo: { name: "xmrp2p", title: "MoneroP2P (read-only)", version: "1.0.0" },
         instructions:
-          "Consulta ofertas y cotizaciones USDT → XMR de xmrp2p. Solo lectura: no puede ejecutar swaps ni mover fondos. " +
-          "Las cotizaciones son indicativas; testnet únicamente mientras no exista auditoría.",
+          "Read-only access to MoneroP2P (https://monerop2p.app): live offers and indicative quotes for non-custodial USDT → XMR atomic swaps. " +
+          "It cannot execute swaps or move funds. Live with real money on Arbitrum One since 2026-10-26, capped at 100 USDT per swap, no external audit yet. " +
+          "To swap, send the user to the app_url of a quote. Fiat market and facts: https://fiat.monerop2p.app/llms.txt and https://monerop2p.app/llms.txt.",
       });
     case "ping":
       return ok(m.id, {});

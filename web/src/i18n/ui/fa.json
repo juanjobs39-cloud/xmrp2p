@@ -160,7 +160,7 @@
   "See the runs on GitHub": "دیدن اجراها در GitHub",
   "Full report": "گزارش کامل",
   "Be a maker from your browser": "از مرورگرتان میکر شوید",
-  "Offer XMR for USDT from your browser, with nothing to install and nobody holding your funds. Testnet preview.": "از مرورگرتان XMR را در برابر USDT عرضه کنید، بدون نصب و بدون اینکه کسی دارایی شما را نگه دارد.",
+  "Offer XMR for USDT from your browser and earn a margin, with nothing to install and nobody holding your funds.": "از مرورگرتان XMR را در برابر USDT عرضه کنید، بدون نصب و بدون اینکه کسی دارایی شما را نگه دارد.",
   "Offer your XMR and get paid in USDT with your margin. This tab works as your server while it is open.": "XMR خود را عرضه کنید و با حاشیه سود خودتان USDT بگیرید. این زبانه تا وقتی باز است نقش سرور شما را دارد.",
   "Your seed and keys are created and stay in this browser.": "سید و کلیدهای شما در همین مرورگر ساخته می‌شوند و همین‌جا می‌مانند.",
   "Paid to your MetaMask": "پرداخت به متامسک شما",
@@ -255,5 +255,10 @@
   "Buy with local currency (P2P)": "خرید با ارز محلی (P2P)",
   "No accounts": "بدون حساب",
   "Compare quotes": "مقایسه قیمت‌ها",
-  "Verified contract": "قرارداد تأییدشده"
+  "Verified contract": "قرارداد تأییدشده",
+  "Is it legit?": "قابل اعتماد است؟",
+  "Non-custodial USDT to XMR atomic swaps": "اتمیک سواپ غیرامانی USDT به XMR",
+  "Instant-exchange quotes for 2,500+ coins": "قیمت صرافی‌های فوری برای بیش از ۲٬۵۰۰ کوین",
+  "No account, no KYC": "بدون حساب، بدون KYC",
+  "Open source (AGPL-3.0)": "متن‌باز (AGPL-3.0)"
 }

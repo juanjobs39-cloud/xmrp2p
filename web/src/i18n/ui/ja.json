@@ -160,7 +160,7 @@
   "See the runs on GitHub": "GitHubで実行結果を見る",
   "Full report": "完全なレポート",
   "Be a maker from your browser": "ブラウザでメイカーになる",
-  "Offer XMR for USDT from your browser, with nothing to install and nobody holding your funds. Testnet preview.": "ブラウザからXMRをUSDTと交換で提供。インストール不要で、誰も資金を預かりません。",
+  "Offer XMR for USDT from your browser and earn a margin, with nothing to install and nobody holding your funds.": "ブラウザからXMRをUSDTと交換で提供。インストール不要で、誰も資金を預かりません。",
   "Offer your XMR and get paid in USDT with your margin. This tab works as your server while it is open.": "XMRを提供し、利ざやを乗せてUSDTで受け取りましょう。このタブは開いている間、あなたのサーバーとして動きます。",
   "Your seed and keys are created and stay in this browser.": "シードと鍵はこのブラウザ内で作成され、ここにとどまります。",
   "Paid to your MetaMask": "MetaMaskに支払い",
@@ -255,5 +255,10 @@
   "Buy with local currency (P2P)": "現地通貨で購入（P2P）",
   "No accounts": "アカウント不要",
   "Compare quotes": "見積もりを比較",
-  "Verified contract": "検証済みコントラクト"
+  "Verified contract": "検証済みコントラクト",
+  "Is it legit?": "信頼できる？",
+  "Non-custodial USDT to XMR atomic swaps": "USDTからXMRへの非カストディ型アトミックスワップ",
+  "Instant-exchange quotes for 2,500+ coins": "2,500種類以上のコインの即時交換見積もり",
+  "No account, no KYC": "アカウント不要、KYC不要",
+  "Open source (AGPL-3.0)": "オープンソース (AGPL-3.0)"
 }

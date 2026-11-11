@@ -1,6 +1,17 @@
 # Arquitectura de xmrp2p (Fase 0)
 
-> Última actualización: 24 de octubre de 2026. Estado: **Fases 0 a 6 implementadas y probadas en local; sin auditoría y sin desplegar** (Fase 7 pendiente: necesita fondos de testnet). Nada de esto está en mainnet.
+> Última actualización: 10 de noviembre de 2026. Estado: **en funcionamiento con dinero real desde el 26 de octubre de 2026** en Arbitrum One + Monero, con tope de 100 USDT por swap. Contrato verificado con Halmos, Aderyn y Slither y publicado en Sourcify; **sin auditoría externa todavía**. Los despliegues están en [DESPLIEGUES.md](DESPLIEGUES.md).
+>
+> Este documento describe el **atomic swap USDT → XMR** y conserva las decisiones de diseño tal como se tomaron (por eso algunas secciones hablan en futuro o de testnet). El resto del producto se construyó después y tiene su propia documentación:
+>
+> | Pieza | Qué es | Dónde está |
+> |---|---|---|
+> | P2P Fiat | Mercado de persona a persona con moneda local y escrow multifirma 2 de 3 de Monero | [PLAN-P2P-FIAT.md](PLAN-P2P-FIAT.md), `web/src-fiat`, `web/src/p2p`, `workers/src/api/p2p` |
+> | Árbitro | Tercera llave del escrow de P2P Fiat; co-firma liberaciones, reembolsos y apelaciones | [`arbiter/README.md`](../arbiter/README.md) |
+> | Exchange instantáneo | Cotizaciones de exchanges de terceros vía Trocador para 2,500+ monedas, con un margen de 1 % | `workers/src/api/trocador.ts`, `web/src/app` |
+> | Bot de Telegram | Avisos de órdenes, alertas de anuncios nuevos y las apps como Mini App | `workers/src/api/p2p/telegram.ts`, `workers/src/api/p2p/alerts.ts` |
+> | MoneroP2P Wallet | Wallet sin custodia como extensión de navegador | [`wallet/README.md`](../wallet/README.md) |
+> | Para integraciones y agentes | API de solo lectura, OpenAPI, servidor MCP y `llms.txt` | [AGREGADORES.md](AGREGADORES.md) |
 
 **Resumen en una frase:** el protocolo de AthanorLabs adaptado a USDT es viable en el navegador con librerías existentes. Las pruebas DLEQ en WASM, el contrato con los tres comportamientos de USDT y monero-ts vía proxy funcionaron. Los dos problemas serios son que **el taker necesita estar en línea antes de t0** y que **verificar el XMR en el navegador hoy tarda ~4 minutos**.
 

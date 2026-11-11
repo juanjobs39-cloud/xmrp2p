@@ -160,7 +160,7 @@
   "See the runs on GitHub": "Ver as execuções no GitHub",
   "Full report": "Relatório completo",
   "Be a maker from your browser": "Seja maker pelo navegador",
-  "Offer XMR for USDT from your browser, with nothing to install and nobody holding your funds. Testnet preview.": "Ofereça XMR por USDT pelo navegador, sem instalar nada e sem ninguém guardando seus fundos.",
+  "Offer XMR for USDT from your browser and earn a margin, with nothing to install and nobody holding your funds.": "Ofereça XMR por USDT pelo navegador, sem instalar nada e sem ninguém guardando seus fundos.",
   "Offer your XMR and get paid in USDT with your margin. This tab works as your server while it is open.": "Ofereça seu XMR e receba em USDT com a sua margem. Esta aba funciona como seu servidor enquanto estiver aberta.",
   "Your seed and keys are created and stay in this browser.": "Sua seed e suas chaves são criadas e ficam neste navegador.",
   "Paid to your MetaMask": "Pagamento na sua MetaMask",
@@ -259,5 +259,10 @@
   "Buy with local currency (P2P)": "Comprar com moeda local (P2P)",
   "No accounts": "Sem contas",
   "Compare quotes": "Comparar cotações",
-  "Verified contract": "Contrato verificado"
+  "Verified contract": "Contrato verificado",
+  "Is it legit?": "É confiável?",
+  "Non-custodial USDT to XMR atomic swaps": "Atomic swaps de USDT para XMR sem custódia",
+  "Instant-exchange quotes for 2,500+ coins": "Cotações de exchanges instantâneas para mais de 2.500 moedas",
+  "No account, no KYC": "Sem conta, sem KYC",
+  "Open source (AGPL-3.0)": "Código aberto (AGPL-3.0)"
 }

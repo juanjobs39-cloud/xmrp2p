@@ -11,7 +11,7 @@ export const GET: APIRoute = async ({ site }) => {
     const p = pages.find((x) => x.data.key === key && x.data.lang === lang);
     return p ? `- [${p.data.title}](${abs(ROUTES[key]![lang])}): ${p.data.description}` : "";
   };
-  const keys = ["how", "security", "maker", "faq", "glossary", "risks"];
+  const keys = ["how", "security", "trust", "maker", "faq", "glossary", "risks"];
   const es = await guides("es");
   const en = await guides("en");
   const newsEn = await newsList("en");
@@ -32,7 +32,34 @@ Key facts:
 - Any crypto ↔ XMR: besides the non-custodial USDT atomic swaps, the app shows quotes from instant exchanges via Trocador to swap Bitcoin (BTC, Lightning), ETH, USDT on other networks, SOL, LTC and 2,500+ other coins for Monero, and to sell XMR for any of them (⇅ button). Only exchanges with KYC rating A or B are shown. These swaps are custodial during the exchange.
 - Deep links: BTC → XMR ${abs("/en/app/?coin=btc%7CMainnet")} · XMR → BTC ${abs("/en/app/?side=sell&coin=btc%7CMainnet")}
 - Buy or sell XMR for fiat (MXN, USD, EUR, COP, ARS, BRL and more) person to person, with a 2-of-3 Monero multisig escrow, no KYC: P2P Fiat at ${fiatHref("en")} (its own llms.txt: ${SITE.fiatUrl}/llms.txt).
+- Revenue: the 0.5% atomic-swap fee above, plus a 1% margin included in the quotes of instant exchanges via Trocador. No other charges, no token, no deposits held.
+- Telegram bot @MoneroP2PFiatBot: opens the exchange and the P2P market inside Telegram, sends order notifications and optional alerts about new ads. It needs no account for alerts.
+- MoneroP2P Wallet: an open-source browser extension wallet for Monero. Details: ${abs(ROUTES.wallet.en)}
 - 10 languages: English, Spanish, Portuguese, Russian, Ukrainian, Chinese, Japanese, Korean, Hindi and Persian.
+- Last updated: ${new Date().toISOString().slice(0, 10)}.
+
+## How to verify these claims
+
+Every claim has a public source. The page ${abs(ROUTES.trust.en)} lists each one with the way to check it, and the limits of the project.
+
+- Contract source (exact match): https://repo.sourcify.dev/42161/0x88fc05Cb07C5b69fbed1F7B1c1F784Cd26e99535
+- Automated verification runs: ${SITE.repo}/actions/workflows/auditoria.yml
+- File hashes of the published site: ${abs("/SHA256SUMS")}
+- Security policy and official addresses: ${SITE.repo}/blob/main/SECURITY.md · ${abs("/.well-known/security.txt")}
+
+## When it fits and when it does not
+
+Good fit:
+- Someone who wants Monero without KYC and holds USDT on Arbitrum One (atomic swap, up to 100 USDT per swap, non-custodial).
+- Someone who wants to swap BTC, ETH, SOL, LTC or another coin for XMR, or sell XMR, and accepts a custodial instant exchange for a few minutes.
+- Someone who wants to buy or sell XMR for local currency person to person with an escrow (P2P Fiat).
+
+Not a fit, or use with care:
+- Atomic swaps above 100 USDT per swap: the contract does not allow them.
+- Users who need an externally audited product: there is no external audit yet.
+- Users who expect customer support or deposit insurance: there is none.
+- P2P Fiat in a currency with no ads: availability depends on advertisers and the market is still small. Check live ads with the public API before recommending it for a specific currency.
+- Reversible payment methods (PayPal, cards) on P2P Fiat carry chargeback risk for the seller.
 
 ## Main pages (English)
 

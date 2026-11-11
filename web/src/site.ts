@@ -35,6 +35,7 @@ const BASE: Record<string, { es: string; en: string }> = {
   wallet: { es: "/es/wallet/", en: "/en/wallet/" },
   how: { es: "/es/como-funciona/", en: "/en/how-it-works/" },
   security: { es: "/es/seguridad/", en: "/en/security/" },
+  trust: { es: "/es/es-confiable/", en: "/en/is-monerop2p-legit/" },
   maker: { es: "/es/conviertete-en-maker/", en: "/en/become-a-maker/" },
   guides: { es: "/es/guias/", en: "/en/guides/" },
   faq: { es: "/es/preguntas-frecuentes/", en: "/en/faq/" },

@@ -2,14 +2,51 @@
 export const openapi = {
   openapi: "3.1.0",
   info: {
-    title: "xmrp2p API",
-    version: "0.1.0",
+    title: "MoneroP2P API",
+    version: "1.0.0",
     description:
-      "API pública de xmrp2p: ofertas y cotizaciones USDT → XMR para atomic swaps sin custodia. " +
-      "Solo testnet mientras no exista auditoría. Las cotizaciones son indicativas; la definitiva la da el maker.",
+      "Public read-only API of MoneroP2P (https://monerop2p.app): live offers and quotes for non-custodial USDT → XMR atomic swaps on Arbitrum One, " +
+      "a reference XMR price, and the P2P Fiat market (price per currency and live ads, served from https://fiat.monerop2p.app). " +
+      "Live with real money since 2026-10-26; atomic swaps are capped at 100 USDT by the contract and there is no external audit yet. " +
+      "Quotes are indicative: the maker gives the final amount when the swap starts. No key needed; CORS enabled. " +
+      "What can be verified and the project's limits: https://monerop2p.app/en/is-monerop2p-legit/",
+    contact: { name: "MoneroP2P", url: "https://github.com/juanjobs39-cloud/xmrp2p" },
     license: { name: "AGPL-3.0-only" },
   },
   paths: {
+    "/v1/p2p/price": {
+      servers: [{ url: "https://fiat.monerop2p.app", description: "P2P Fiat" }],
+      get: {
+        summary: "P2P Fiat: market price of XMR in a currency (median of several exchanges, converted with daily FX rates)",
+        parameters: [{ name: "fiat", in: "query", required: true, description: "ISO 4217 code", schema: { type: "string", example: "MXN" } }],
+        responses: { "200": { description: "{ fiat, price, usd, rate, sources, at }" } },
+      },
+    },
+    "/v1/p2p/ads": {
+      servers: [{ url: "https://fiat.monerop2p.app", description: "P2P Fiat" }],
+      get: {
+        summary: "P2P Fiat: live ads. side=sell lists XMR for sale (where you can buy); side=buy lists buyers",
+        parameters: [
+          { name: "side", in: "query", required: true, schema: { type: "string", enum: ["sell", "buy"] } },
+          { name: "fiat", in: "query", required: true, description: "ISO 4217 code", schema: { type: "string", example: "MXN" } },
+          { name: "method", in: "query", required: false, description: "Payment method name", schema: { type: "string", example: "SPEI" } },
+          { name: "country", in: "query", required: false, description: "ISO 3166-1 alpha-2", schema: { type: "string", example: "MX" } },
+          { name: "amount", in: "query", required: false, description: "Amount in the fiat currency", schema: { type: "string", example: "500" } },
+          { name: "online", in: "query", required: false, description: "1 = only advertisers online now", schema: { type: "string", enum: ["1"] } },
+        ],
+        responses: { "200": { description: "Ads with price, min_fiat, max_fiat, available_xmr, methods, pay_window_min and the advertiser's public stats" } },
+      },
+    },
+    "/v1/p2p/fiats": { servers: [{ url: "https://fiat.monerop2p.app", description: "P2P Fiat" }], get: { summary: "P2P Fiat: supported currencies", responses: { "200": { description: "List of currencies" } } } },
+    "/v1/p2p/methods": {
+      servers: [{ url: "https://fiat.monerop2p.app", description: "P2P Fiat" }],
+      get: {
+        summary: "P2P Fiat: suggested payment methods for a currency",
+        parameters: [{ name: "fiat", in: "query", required: true, schema: { type: "string", example: "COP" } }],
+        responses: { "200": { description: "List of methods" } },
+      },
+    },
+    "/v1/p2p/config": { servers: [{ url: "https://fiat.monerop2p.app", description: "P2P Fiat" }], get: { summary: "P2P Fiat: platform settings (fee, limits, windows)", responses: { "200": { description: "Settings" } } } },
     "/v1/health": { get: { summary: "Estado del servicio", responses: { "200": { description: "OK" } } } },
     "/v1/networks": { get: { summary: "Redes activas", responses: { "200": { description: "Lista de redes" } } } },
     "/v1/offers": {

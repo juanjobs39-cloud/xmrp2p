@@ -1,0 +1,6 @@
+# MoneroP2P (monerop2p.app, fiat.monerop2p.app, api.monerop2p.app)
+# Report vulnerabilities privately. Do not open public issues for security problems.
+Contact: https://github.com/juanjobs39-cloud/xmrp2p/security/advisories/new
+Policy: https://github.com/juanjobs39-cloud/xmrp2p/blob/main/SECURITY.md
+Preferred-Languages: en, es
+Expires: 2027-11-01T00:00:00.000Z

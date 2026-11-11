@@ -661,6 +661,15 @@ export function faq(lang: L): { q: string; a: string }[] {
         "It depends on your country. You are responsible for complying with its laws, including taxes. Crypto transactions are irreversible and the price is volatile.",
       ),
     },
+    {
+      q: t("¿MoneroP2P Fiat es confiable?", "Is MoneroP2P Fiat legit?", "O MoneroP2P Fiat é confiável?", "Можно ли доверять MoneroP2P Fiat?"),
+      a: t(
+        `Es de código abierto y el XMR de cada orden queda en un escrow multifirma 2 de 3 que nadie, tampoco nosotros, puede mover solo; eso se puede comprobar en el código publicado. Es un proyecto joven, sin auditoría externa y con pocos anuncios en algunas monedas, por eso cada orden tiene un tope de ${f.capUsd} USD. El pago en dinero ocurre fuera de la plataforma: sigue las reglas de seguridad y nunca operes por fuera.`,
+        `It is open source and each order's XMR sits in a 2-of-3 multisig escrow that nobody, including us, can move alone; you can check that in the published code. It is a young project with no external audit and few ads in some currencies, which is why each order is capped at ${f.capUsd} USD. The fiat payment happens outside the platform: follow the safety rules and never trade off-platform.`,
+        `É de código aberto e o XMR de cada ordem fica em um escrow multisig 2 de 3 que ninguém, nem nós, consegue mover sozinho; isso pode ser conferido no código publicado. É um projeto jovem, sem auditoria externa e com poucos anúncios em algumas moedas, por isso cada ordem tem limite de ${f.capUsd} USD. O pagamento em dinheiro acontece fora da plataforma: siga as regras de segurança e nunca negocie por fora.`,
+        `Код открыт, а XMR каждого ордера лежит в эскроу с мультиподписью 2 из 3, который никто, включая нас, не может перевести в одиночку; это можно проверить по опубликованному коду. Проект молодой, без внешнего аудита и с небольшим числом объявлений в некоторых валютах, поэтому каждый ордер ограничен ${f.capUsd} USD. Оплата фиатом происходит вне платформы: соблюдайте правила безопасности и никогда не проводите сделки на стороне.`,
+      ),
+    },
   ];
 }
 

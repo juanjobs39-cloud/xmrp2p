@@ -160,7 +160,7 @@
   "See the runs on GitHub": "Запуски на GitHub",
   "Full report": "Повний звіт",
   "Be a maker from your browser": "Станьте мейкером у браузері",
-  "Offer XMR for USDT from your browser, with nothing to install and nobody holding your funds. Testnet preview.": "Пропонуйте XMR за USDT просто з браузера: нічого не треба встановлювати, і ніхто не зберігає ваші кошти.",
+  "Offer XMR for USDT from your browser and earn a margin, with nothing to install and nobody holding your funds.": "Пропонуйте XMR за USDT просто з браузера: нічого не треба встановлювати, і ніхто не зберігає ваші кошти.",
   "Offer your XMR and get paid in USDT with your margin. This tab works as your server while it is open.": "Пропонуйте свої XMR і отримуйте оплату в USDT зі своєю маржею. Поки ця вкладка відкрита, вона працює як ваш сервер.",
   "Your seed and keys are created and stay in this browser.": "Ваш сід і ключі створюються і залишаються в цьому браузері.",
   "Paid to your MetaMask": "Виплати на ваш MetaMask",
@@ -255,5 +255,10 @@
   "Buy with local currency (P2P)": "Купити за місцеву валюту (P2P)",
   "No accounts": "Без акаунтів",
   "Compare quotes": "Порівняти котирування",
-  "Verified contract": "Перевірений контракт"
+  "Verified contract": "Перевірений контракт",
+  "Is it legit?": "Це надійно?",
+  "Non-custodial USDT to XMR atomic swaps": "Некастодіальні атомарні свопи USDT на XMR",
+  "Instant-exchange quotes for 2,500+ coins": "Котирування миттєвих обмінників для 2500+ монет",
+  "No account, no KYC": "Без акаунта і KYC",
+  "Open source (AGPL-3.0)": "Відкритий код (AGPL-3.0)"
 }

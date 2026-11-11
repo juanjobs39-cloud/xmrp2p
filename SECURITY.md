@@ -17,6 +17,8 @@ Only these are official. Anything else claiming to be MoneroP2P is not.
 |---|---|
 | Website | `https://monerop2p.app` |
 | API | `https://api.monerop2p.app` |
+| P2P Fiat (site, app and API) | `https://fiat.monerop2p.app` |
+| Telegram bot | `@MoneroP2PFiatBot` |
 | Monero node proxies | `https://nodo-xmr.monerop2p.app` (mainnet), `https://nodo.monerop2p.app` (stagenet) |
 | SwapFactory (Arbitrum One) | [`0x88fc05Cb07C5b69fbed1F7B1c1F784Cd26e99535`](https://arbiscan.io/address/0x88fc05Cb07C5b69fbed1F7B1c1F784Cd26e99535) |
 | SwapEscrow implementation (Arbitrum One) | [`0xea627C04432e9959eAF15Fe7EE25DE7588bdA341`](https://arbiscan.io/address/0xea627C04432e9959eAF15Fe7EE25DE7588bdA341) |
@@ -46,6 +48,9 @@ Please include the affected component (contract, WASM core, buyer app, in-browse
 | Buyer app and in-browser maker in `web/` (incl. CSP, SRI, script injection) | Yes |
 | Backend `workers/` (API, swap channel, node proxy, monitor) | Yes |
 | Maker daemon `maker/` | Yes |
+| P2P Fiat: market app (`web/src/p2p`), API and Telegram bot (`workers/src/api/p2p`) | Yes |
+| P2P Fiat arbiter `arbiter/` (third key of the 2-of-3 escrow) | Yes (high priority) |
+| Browser-extension wallet `wallet/` | Yes |
 | `research/` folder | No (throwaway research code) |
 
 ---

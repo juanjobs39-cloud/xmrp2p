@@ -23,6 +23,16 @@ Key facts:
 - Accounts are keys generated in the browser, protected by a password, with a downloadable backup.
 - Languages: Spanish (/es/), English (/en/), Portuguese (/pt/) and Russian (/ru/); the market app UI is in Spanish or English.
 - Open source (AGPL-3.0): ${REPO}. Crypto ↔ XMR swaps (BTC, USDT, ETH… and atomic swaps) live on the main site: ${MAIN_SITE}/
+- Telegram bot @MoneroP2PFiatBot: opens the market inside Telegram, sends order notifications and optional alerts about new ads (no account needed for alerts).
+- Last updated: ${new Date().toISOString().slice(0, 10)}.
+
+## How to verify and what to keep in mind
+
+- What can be checked and the limits of the project: ${MAIN_SITE}/en/is-monerop2p-legit/
+- The escrow protects the XMR, not the fiat payment: that happens outside the platform. Disputes are decided by the arbiter, operated by MoneroP2P, who signs with one of the two parties.
+- The market is young and small: for a given currency there may be few ads or none. Check the live ads endpoint below before recommending it for a specific currency or payment method.
+- No external audit yet. The order cap (${FACTS.capUsd} USD) limits what a single order can put at risk.
+- Scam prevention: never trade or chat outside the platform, and never pay before the order shows the XMR as locked. Safety guide: ${abs(ROUTES.safety.en)}
 
 ## Deep links (market with filters)
 
@@ -34,6 +44,7 @@ Key facts:
 
 - Market price of XMR in a currency: ${abs("/v1/p2p/price?fiat=MXN")} → {fiat, price, usd, rate, sources, at}
 - Ads: ${abs("/v1/p2p/ads?side=sell&fiat=MXN")} (side=sell lists XMR for sale, i.e. where you can buy; side=buy lists buyers). Optional: method, country, amount, online=1. Each ad includes price, min_fiat, max_fiat, available_xmr, methods, pay_window_min and the advertiser's public stats (orders, completion %, online).
+- OpenAPI description: ${abs("/openapi.json")}
 - Supported currencies: ${abs("/v1/p2p/fiats")} · Suggested methods for a currency: ${abs("/v1/p2p/methods?fiat=COP")} · Platform settings: ${abs("/v1/p2p/config")}
 
 ## Pages (English)
@@ -70,6 +81,7 @@ ${faq("en")
 
 - Methods covered: ${METHODS.map((m) => m.name).join(", ")}.
 - Countries covered: ${COUNTRIES.map((c) => c.name.en.replace(/^the /, "")).join(", ")}.
+- [Full content in plain text](${abs("/llms-full.txt")})
 - Sitemap: ${abs("/sitemap.xml")}
 `;
   return new Response(body, { headers: { "content-type": "text/plain; charset=utf-8" } });
