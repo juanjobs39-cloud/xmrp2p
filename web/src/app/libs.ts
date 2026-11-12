@@ -58,6 +58,8 @@ export type Xmr = {
   makerClose(): Promise<void>;
   makerIncoming(): Promise<{ txid: string; amount: string; confirmations: number; inPool: boolean }[]>;
   makerKeys(): Promise<{ address: string; seed: string; viewKey: string; spendKey: string; restoreHeight: number }>;
+  // Wallet de la cuenta (sin conexión): dirección, llave de vista y semilla de 25 palabras.
+  walletKeys(a: { network: string; spendKey: string }): Promise<{ address: string; viewKey: string; seed: string }>;
   // P2P Fiat: wallet de escrow multisig 2 de 3 por orden.
   escrowCreate(a: { id: string; network: string; password: string }): Promise<string>;
   escrowOpen(a: { id: string; network: string; password: string; keysData: Uint8Array; cacheData?: Uint8Array; node?: string; restoreHeight?: number }): Promise<void>;

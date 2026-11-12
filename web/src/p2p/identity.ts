@@ -10,6 +10,7 @@ import { secp256k1 } from "@noble/curves/secp256k1";
 import { bytesToHex, hexToBytes } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { decryptRecovery, encryptRecovery, type RecoveryFile } from "../app/recovery";
+import { identityKey, newSeed } from "./wallets";
 
 export interface SavedMethod {
   fiat: string;
@@ -39,6 +40,15 @@ export interface P2PVault {
   key: `0x${string}`;
   methods: SavedMethod[];
   escrows: Record<string, EscrowState>;
+  /**
+   * Semilla maestra (12 palabras) de la que salen las wallets de la cuenta (wallets.ts). Las cuentas
+   * creadas antes de las wallets no la traen: se les agrega con `addSeed` sin tocar su `key`.
+   */
+  seed?: string;
+  /** true si `key` se derivó de `seed` (cuentas nuevas): las 12 palabras bastan para recuperar la cuenta. */
+  keyFromSeed?: boolean;
+  /** Altura de la cadena de Monero cuando se creó la semilla: la wallet escanea desde ahí. */
+  xmrHeight?: number;
 }
 
 const DB = "monerop2p-p2p";
@@ -69,8 +79,19 @@ const vaultKey = (net: string) => `vault:${net}`;
 
 export const hasVault = async (net: string) => !!(await kv.get(vaultKey(net)));
 
-export function newVault(network: P2PVault["network"]): P2PVault {
-  return { v: 1, kind: "p2p", network, created_at: Date.now(), key: generatePrivateKey(), methods: [], escrows: {} };
+export function newVault(network: P2PVault["network"], withSeed = false): P2PVault {
+  const base = { v: 1 as const, kind: "p2p" as const, network, created_at: Date.now(), methods: [], escrows: {} };
+  if (!withSeed) return { ...base, key: generatePrivateKey() };
+  const seed = newSeed();
+  return { ...base, key: identityKey(seed), seed, keyFromSeed: true };
+}
+
+/** Agrega la semilla maestra a una cuenta que no la tenía. No cambia su llave ni su apodo. */
+export function addSeed(v: P2PVault, xmrHeight?: number): void {
+  if (v.seed) return;
+  v.seed = newSeed();
+  v.keyFromSeed = false;
+  if (xmrHeight !== undefined) v.xmrHeight = xmrHeight;
 }
 
 export async function saveVault(v: P2PVault, pass: string): Promise<RecoveryFile> {

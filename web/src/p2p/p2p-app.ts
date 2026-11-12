@@ -17,6 +17,7 @@ import { marketView } from "./market";
 import { newAdView } from "./new-ad";
 import { myAdsView, orderView, ordersView } from "./orders";
 import { adminView } from "./admin";
+import { WALLETS_ON, walletView } from "./wallet-view";
 
 export { h, fmtXmr, nowS, type Child };
 
@@ -76,7 +77,7 @@ export class P2PApp {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
     const [, view = "", arg] = location.hash.split("?")[0]!.replace(/^#\/?/, "/").split("/");
-    const needs = ["nuevo", "ordenes", "orden", "anuncios", "cuenta", "admin"].includes(view);
+    const needs = ["nuevo", "ordenes", "orden", "anuncios", "cuenta", "admin", "wallet"].includes(view);
     if (needs && !this.vault) return this.accountView(view === "cuenta" ? "" : location.hash);
     this.nav(view);
     try {
@@ -85,6 +86,7 @@ export class P2PApp {
       else if (view === "orden" && arg) await orderView(this, arg);
       else if (view === "anuncios") await myAdsView(this);
       else if (view === "cuenta") await this.profileView();
+      else if (view === "wallet" && WALLETS_ON) await walletView(this);
       else if (view === "admin") await adminView(this, arg);
       else await marketView(this);
     } catch (e) {
@@ -107,6 +109,7 @@ export class P2PApp {
       link("#/nuevo", "plus", this.t("Publicar", "Post ad"), "nuevo"),
       link("#/ordenes", "orders", this.t("Mis órdenes", "My orders"), "ordenes", this.pending),
       link("#/anuncios", "ads", this.t("Mis anuncios", "My ads"), "anuncios"),
+      WALLETS_ON ? link("#/wallet", "lock", "Wallet", "wallet") : "",
       link("#/cuenta", "user", this.me ? this.me.nickname : this.t("Cuenta", "Account"), "cuenta"),
       this.isAdmin ? link("#/admin", "shield", "Admin", "admin") : "",
     );
@@ -433,7 +436,7 @@ export class P2PApp {
         async () => {
           if (p1.value.length < 10) throw new Error(this.t("La contraseña debe tener al menos 10 caracteres.", "The password must be at least 10 characters."));
           if (p1.value !== p2.value) throw new Error(this.t("Las contraseñas no coinciden.", "Passwords do not match."));
-          const v = newVault(net);
+          const v = newVault(net, WALLETS_ON);
           await signed(account(v), "PUT", "/v1/p2p/me", { nickname: nick.value.trim(), enc_pubkey: await encPublic(v) });
           await saveVault(v, p1.value);
           await this.unlocked(v, p1.value, next);

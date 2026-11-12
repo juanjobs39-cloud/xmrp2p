@@ -358,3 +358,18 @@ a.p2p-tab { text-align: center; text-decoration: none; }
   .p2p-hero { margin-bottom: 1rem; }
 }
 .p2p-nav:empty { display: none; }
+
+/* ---------- Wallets de la cuenta ---------- */
+.p2p-wallets { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr)); margin: 1rem 0; align-items: start; }
+.p2p-wallet { display: grid; gap: 0.5rem; }
+.p2p-wallet-head { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; }
+.p2p-wallet-head h3 { margin: 0; }
+.p2p-wallet-bal { display: grid; gap: 0.1rem; padding: 0.7rem 0.9rem; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-soft); }
+.p2p-wallet-amt { margin: 0; color: var(--muted); }
+.p2p-wallet-amt strong { font-family: var(--mono); font-size: 1.35rem; letter-spacing: -0.02em; color: var(--fg); }
+.p2p-wallet .p2p-sub { margin: 0.4rem 0 0; }
+.p2p-wallet .p2p-copy, .p2p-secret .p2p-copy { flex-wrap: wrap; }
+.p2p-wallet .p2p-copy code, .p2p-secret .p2p-copy code { flex: 1 1 14rem; }
+.p2p-wallet-qr { display: grid; place-items: center; padding: 0.6rem 0; }
+.p2p-secret { display: grid; gap: 0.2rem; margin: 0.8rem 0; }
+.p2p-secret .p2p-sub { margin: 0; }

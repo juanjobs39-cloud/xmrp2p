@@ -92,6 +92,20 @@ async function makerInfo() {
   };
 }
 
+/**
+ * Wallet de la cuenta: a partir de la llave privada de gasto (derivada de la semilla de la cuenta en
+ * src/p2p/wallets.ts) devuelve dirección, llave de vista y la semilla estándar de 25 palabras.
+ * Sin conexión: no consulta ningún nodo.
+ */
+export async function walletKeys({ network, spendKey }) {
+  const w = await moneroTs.createWalletKeys({ networkType: NET[network], privateSpendKey: spendKey });
+  try {
+    return { address: await w.getPrimaryAddress(), viewKey: await w.getPrivateViewKey(), seed: await w.getSeed() };
+  } finally {
+    await w.close();
+  }
+}
+
 /** Crea (sin semilla), restaura (con semilla) o reabre (con keysData/cacheData) la wallet del maker. */
 export async function makerOpen({ node, network, password, seed, restoreHeight, keysData, cacheData }) {
   if (maker) await makerClose();
