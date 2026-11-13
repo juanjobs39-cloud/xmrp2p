@@ -8,9 +8,8 @@
  */
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { bytesToHex, hexToBytes } from "viem";
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { privateKeyToAccount } from "viem/accounts";
 import { decryptRecovery, encryptRecovery, type RecoveryFile } from "../app/recovery";
-import { cleanSeed, identityKey, newSeed } from "./wallets";
 
 export interface SavedMethod {
   fiat: string;
@@ -94,25 +93,7 @@ export const saveXmrCache = (net: string, c: XmrCache) => kv.put(cacheKey(net), 
 
 export const hasVault = async (net: string) => !!(await kv.get(vaultKey(net)));
 
-export function newVault(network: P2PVault["network"], withSeed = false): P2PVault {
-  const base = { v: 1 as const, kind: "p2p" as const, network, created_at: Date.now(), methods: [], escrows: {} };
-  if (!withSeed) return { ...base, key: generatePrivateKey() };
-  return vaultFromSeed(network, newSeed());
-}
-
-/** Cuenta a partir de una semilla (nueva, o escrita por el usuario para recuperar su cuenta). */
-export function vaultFromSeed(network: P2PVault["network"], seed: string, xmrHeight?: number): P2PVault {
-  const clean = cleanSeed(seed);
-  return { v: 1, kind: "p2p", network, created_at: Date.now(), methods: [], escrows: {}, key: identityKey(clean), seed: clean, keyFromSeed: true, ...(xmrHeight !== undefined ? { xmrHeight } : {}) };
-}
-
-/** Agrega la semilla maestra a una cuenta que no la tenía. No cambia su llave ni su apodo. */
-export function addSeed(v: P2PVault, xmrHeight?: number): void {
-  if (v.seed) return;
-  v.seed = newSeed();
-  v.keyFromSeed = false;
-  if (xmrHeight !== undefined) v.xmrHeight = xmrHeight;
-}
+export { addSeed, newVault, vaultFromSeed } from "./vault-seed";
 
 export async function saveVault(v: P2PVault, pass: string): Promise<RecoveryFile> {
   const file = await encryptRecovery(v, pass, { network: `p2p-${v.network}` });

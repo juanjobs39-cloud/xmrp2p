@@ -170,6 +170,10 @@ export async function userSync(onProgress, onChange) {
     async onOutputReceived() {
       onChange?.();
     }
+    // Cada bloque nuevo cambia las confirmaciones de los movimientos recientes.
+    async onNewBlock() {
+      onChange?.();
+    }
   })();
   await w.addListener(userListener);
   await w.sync();
