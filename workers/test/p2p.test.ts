@@ -6,6 +6,8 @@ import worker from "../src/api/index";
 import { sweepOrders } from "../src/api/p2p/orders";
 import { sendAdAlerts } from "../src/api/p2p/alerts";
 import { setupWebhook } from "../src/api/p2p/telegram";
+import { addressMessage } from "../src/api/p2p/addresses";
+import { verifyMessage } from "viem";
 
 // Llaves generadas en cada corrida: ninguna llave privada vive en el repositorio.
 const newKey = () => privateKeyToAccount(generatePrivateKey());
@@ -826,5 +828,91 @@ describe("P2P Fiat", () => {
   it("el árbitro necesita su token", async () => {
     expect((await call("/v1/p2p/arbiter/tasks")).status).toBe(401);
     expect((await call("/v1/p2p/arbiter/tasks", { headers: { authorization: "Bearer otro" } })).status).toBe(401);
+  });
+});
+
+describe("recibir por apodo: direcciones firmadas", () => {
+  const EVM = "0x000000000000000000000000000000000000dEaD";
+  const XMR = STAGENET("B").slice(0, 95);
+  const nowS = () => Math.floor(Date.now() / 1000);
+  const record = async (k: Key, asset: string, address: string, at = nowS(), network = "stagenet") => ({ asset, address, at, sig: await k.signMessage({ message: addressMessage(k.address, network, asset, address, at) }) });
+  const nickOf = async (k: Key) => (await signed(k, "GET", "/v1/p2p/me")).body.nickname as string;
+
+  it("publica, se consulta por apodo y la firma verifica contra la cuenta", async () => {
+    const k = await newUser();
+    const put = await signed(k, "PUT", "/v1/p2p/me/addresses", { addresses: [await record(k, "evm", EVM), await record(k, "xmr", XMR)] });
+    expect(put.status).toBe(200);
+    const nick = await nickOf(k);
+    const r = await call(`/v1/p2p/pay/${nick.toUpperCase()}`);
+    expect(r.status).toBe(200);
+    expect(r.body.user).toEqual({ id: k.address.toLowerCase(), nickname: nick });
+    expect(r.body.network).toBe("stagenet");
+    expect(r.body.addresses.map((a: any) => a.asset)).toEqual(["evm", "xmr"]);
+    // Quien envía vuelve a verificar la firma sin confiar en el servidor.
+    for (const a of r.body.addresses) expect(await verifyMessage({ address: k.address, message: addressMessage(r.body.user.id, r.body.network, a.asset, a.address, a.at), signature: a.sig })).toBe(true);
+    // La respuesta pública no trae reputación ni actividad.
+    expect(Object.keys(r.body.user)).toEqual(["id", "nickname"]);
+  });
+
+  it("rechaza una dirección firmada por otra cuenta", async () => {
+    const victim = await newUser();
+    const attacker = await newUser();
+    const r = await signed(victim, "PUT", "/v1/p2p/me/addresses", { addresses: [await record(attacker, "evm", attacker.address)] });
+    expect(r.status).toBe(400);
+    expect((await call(`/v1/p2p/pay/${await nickOf(victim)}`)).body.addresses).toEqual([]);
+  });
+
+  it("nadie publica en la cuenta de otro: la petición va firmada", async () => {
+    const victim = await newUser();
+    const attacker = await newUser();
+    // El atacante firma la petición con su llave: se guarda en SU cuenta, no en la de la víctima.
+    await signed(attacker, "PUT", "/v1/p2p/me/addresses", { addresses: [await record(attacker, "evm", attacker.address)] });
+    expect((await call(`/v1/p2p/pay/${await nickOf(victim)}`)).body.addresses).toEqual([]);
+    expect((await call("/v1/p2p/me/addresses", { method: "PUT", body: JSON.stringify({ addresses: [] }) })).status).toBe(401);
+  });
+
+  it("valida moneda, formato, red y fecha", async () => {
+    const k = await newUser();
+    const bad = async (rec: unknown) => (await signed(k, "PUT", "/v1/p2p/me/addresses", { addresses: [rec] })).status;
+    expect(await bad(await record(k, "btc", EVM))).toBe(400);
+    expect(await bad(await record(k, "evm", "0x123"))).toBe(400);
+    expect(await bad(await record(k, "xmr", MAINNET.slice(0, 95)))).toBe(400); // dirección de mainnet en stagenet
+    expect(await bad(await record(k, "xmr", XMR.slice(0, 90)))).toBe(400);
+    expect(await bad(await record(k, "evm", EVM, nowS() - 2 * 86400))).toBe(400);
+    expect(await bad(await record(k, "evm", EVM, nowS() + 3600))).toBe(400);
+    expect(await bad(await record(k, "evm", EVM, nowS(), "mainnet"))).toBe(400); // firmada para otra red
+    expect((await signed(k, "PUT", "/v1/p2p/me/addresses", { addresses: [] })).status).toBe(400);
+    const two = await record(k, "evm", EVM);
+    expect((await signed(k, "PUT", "/v1/p2p/me/addresses", { addresses: [two, two] })).status).toBe(400);
+  });
+
+  it("un registro más viejo no reemplaza al actual", async () => {
+    const k = await newUser();
+    const other = "0x00000000000000000000000000000000000000aa";
+    const t = nowS();
+    await signed(k, "PUT", "/v1/p2p/me/addresses", { addresses: [await record(k, "evm", EVM, t)] });
+    await signed(k, "PUT", "/v1/p2p/me/addresses", { addresses: [await record(k, "evm", other, t - 100)] });
+    const nick = await nickOf(k);
+    expect((await call(`/v1/p2p/pay/${nick}`)).body.addresses[0].address).toBe(EVM);
+    await signed(k, "PUT", "/v1/p2p/me/addresses", { addresses: [await record(k, "evm", other, t + 1)] });
+    expect((await call(`/v1/p2p/pay/${nick}`)).body.addresses[0].address).toBe(other);
+  });
+
+  it("se puede dejar de recibir por apodo, por moneda", async () => {
+    const k = await newUser();
+    await signed(k, "PUT", "/v1/p2p/me/addresses", { addresses: [await record(k, "evm", EVM), await record(k, "xmr", XMR)] });
+    const del = await signed(k, "DELETE", "/v1/p2p/me/addresses/evm", {});
+    expect(del.status).toBe(200);
+    expect((await call(`/v1/p2p/pay/${await nickOf(k)}`)).body.addresses.map((a: any) => a.asset)).toEqual(["xmr"]);
+    expect((await signed(k, "DELETE", "/v1/p2p/me/addresses/btc", {})).status).toBe(400);
+  });
+
+  it("apodo inexistente o cuenta suspendida: 404", async () => {
+    expect((await call("/v1/p2p/pay/nadie_con_este_apodo")).status).toBe(404);
+    const k = await newUser();
+    await signed(k, "PUT", "/v1/p2p/me/addresses", { addresses: [await record(k, "evm", EVM)] });
+    const nick = await nickOf(k);
+    await DB.prepare("UPDATE p2p_users SET banned = 1 WHERE id = ?").bind(k.address.toLowerCase()).run();
+    expect((await call(`/v1/p2p/pay/${nick}`)).status).toBe(404);
   });
 });

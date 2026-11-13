@@ -3,6 +3,7 @@ import { createAd, getAd, getMe, getProfile, listAds, myAds, publicAd, putMe, up
 import { FIATS, POPULAR_FIATS, requireFiat, suggestedMethods, xmrPrice } from "./catalog";
 import { activeUser, settings, signer, text, xmrNetwork, type P2PEnv } from "./common";
 import { handleAdmin, handleArbiter } from "./admin";
+import { deleteAddress, getPay, putAddresses } from "./addresses";
 import { subscribe, unsubscribe } from "./push";
 import { link, swapNotice, telegramBot, unlink, webhook } from "./telegram";
 import { createOrder, FINAL, getOrder, getOrderView, myOrders, orderAction, roleOf, roomEvent, sweepOrders } from "./orders";
@@ -48,6 +49,8 @@ export async function handleP2P(req: Request, env: P2PEnv, url: URL): Promise<Re
   if (adGet && get) return json(publicAd(await getAd(env, adGet[1]!), (await xmrPrice((await getAd(env, adGet[1]!)).fiat).catch(() => null))?.price ?? null));
   const prof = /^\/v1\/p2p\/users\/(0x[0-9a-fA-F]{40})$/.exec(p);
   if (prof && get) return getProfile(env, prof[1]!);
+  const pay = /^\/v1\/p2p\/pay\/([A-Za-z0-9_.-]{3,20})$/.exec(p);
+  if (pay && get) return getPay(env, pay[1]!);
 
   // ---- Telegram (el webhook lo autentica su propio secreto) ----
   if (p === "/v1/p2p/telegram/webhook" && req.method === "POST") return webhook(req, env);
@@ -64,6 +67,9 @@ export async function handleP2P(req: Request, env: P2PEnv, url: URL): Promise<Re
     if (req.method === "PUT") return putMe(req, env, p);
     if (get) return getMe(req, env, p);
   }
+  if (p === "/v1/p2p/me/addresses" && req.method === "PUT") return putAddresses(req, env, p);
+  const addr = /^\/v1\/p2p\/me\/addresses\/([a-z]{3,5})$/.exec(p);
+  if (addr && req.method === "DELETE") return deleteAddress(req, env, p, addr[1]!);
   if (p === "/v1/p2p/telegram/link" && req.method === "POST") return link(req, env, p);
   if (p === "/v1/p2p/telegram" && req.method === "DELETE") return unlink(req, env, p);
   if (p === "/v1/p2p/push") {

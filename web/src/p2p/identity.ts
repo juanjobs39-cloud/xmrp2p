@@ -50,6 +50,8 @@ export interface P2PVault {
   xmrHeight?: number;
   /** Contraseña interna (aleatoria) con la que monero-ts cifra el caché de la wallet de la cuenta. */
   xmrPass?: string;
+  /** Usuarios a los que ya se les envió por apodo, con la llave de su cuenta (clave: apodo en minúsculas). */
+  contacts?: Record<string, import("./pay").Contact>;
 }
 
 const DB = "monerop2p-p2p";
