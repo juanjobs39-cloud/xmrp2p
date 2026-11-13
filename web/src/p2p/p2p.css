@@ -373,3 +373,14 @@ a.p2p-tab { text-align: center; text-decoration: none; }
 .p2p-wallet-qr { display: grid; place-items: center; padding: 0.6rem 0; }
 .p2p-secret { display: grid; gap: 0.2rem; margin: 0.8rem 0; }
 .p2p-secret .p2p-sub { margin: 0; }
+.p2p-wallet-amt small { font-size: 0.82rem; }
+.p2p-wallet .p2p-more { margin: 0.2rem 0 0; }
+.p2p-wallet .p2p-form { margin: 0.6rem 0 0; }
+.p2p-wallet .p2p-kv { margin: 0.6rem 0; }
+.p2p-txs { list-style: none; margin: 0.5rem 0 0; padding: 0; display: grid; gap: 0.1rem; }
+.p2p-txs li { display: grid; grid-template-columns: 1fr auto auto; gap: 0.8rem; align-items: baseline; padding: 0.45rem 0; border-top: 1px solid var(--line); font-size: 0.92rem; }
+.p2p-txs li:first-child { border-top: 0; }
+.p2p-in, .p2p-out { font-family: var(--mono); font-weight: 600; letter-spacing: -0.02em; }
+.p2p-in { color: var(--p2p-buy); }
+.p2p-out { color: var(--fg); }
+#p2p-root textarea { width: 100%; font: inherit; font-family: var(--mono); font-size: 0.95rem; padding: 0.6rem 0.7rem; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--bg-soft); color: var(--fg); }

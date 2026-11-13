@@ -42,6 +42,24 @@ export interface MakerWalletInfo {
   unlocked: string;
 }
 
+export interface UserWalletInfo {
+  address: string;
+  balance: string;
+  unlocked: string;
+  height: number;
+}
+
+export interface UserTx {
+  txid: string;
+  incoming: boolean;
+  amount: string;
+  fee: string;
+  confirmations: number;
+  height: number;
+  timestamp: number;
+  pending: boolean;
+}
+
 export type Xmr = {
   init(worker: string): void;
   verifyLock(a: { node: string; network: string; txid: string; txKey: string; address: string }): Promise<{ received: string; confirmations: number; inPool: boolean }>;
@@ -60,6 +78,17 @@ export type Xmr = {
   makerKeys(): Promise<{ address: string; seed: string; viewKey: string; spendKey: string; restoreHeight: number }>;
   // Wallet de la cuenta (sin conexión): dirección, llave de vista y semilla de 25 palabras.
   walletKeys(a: { network: string; spendKey: string }): Promise<{ address: string; viewKey: string; seed: string }>;
+  // Wallet de la cuenta: completa, una por pestaña.
+  userIsOpen(): boolean;
+  validAddress(address: string, network: string): Promise<boolean>;
+  userOpen(a: { node: string; network: string; password: string; seed: string; restoreHeight?: number; keysData?: Uint8Array; cacheData?: Uint8Array }): Promise<UserWalletInfo>;
+  userInfo(): Promise<UserWalletInfo>;
+  userSync(onProgress?: (pct: number, height: number, end: number) => void, onChange?: () => void): Promise<UserWalletInfo>;
+  userData(): Promise<{ keysData: Uint8Array; cacheData: Uint8Array }>;
+  userTxs(): Promise<UserTx[]>;
+  userPrepare(address: string, amount: string): Promise<{ txid: string; fee: string; amount: string; address: string; metadata: string }>;
+  userRelay(metadata: string): Promise<string>;
+  userClose(): Promise<void>;
   // P2P Fiat: wallet de escrow multisig 2 de 3 por orden.
   escrowCreate(a: { id: string; network: string; password: string }): Promise<string>;
   escrowOpen(a: { id: string; network: string; password: string; keysData: Uint8Array; cacheData?: Uint8Array; node?: string; restoreHeight?: number }): Promise<void>;

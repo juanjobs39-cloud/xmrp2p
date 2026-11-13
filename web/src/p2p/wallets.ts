@@ -54,6 +54,27 @@ export const evmKey = (seed: string): `0x${string}` => bytesToHex(child(seed, PA
 /** Dirección en redes tipo Ethereum. */
 export const evmAddress = (seed: string): `0x${string}` => privateKeyToAccount(evmKey(seed)).address;
 
+/**
+ * "1.5" → unidades mínimas con `decimals` decimales. Acepta coma decimal. Lanza si no es un número
+ * positivo o si trae más decimales de los que la moneda admite (nunca redondea un monto).
+ */
+export function parseAmount(text: string, decimals: number): bigint {
+  const s = text.trim().replace(",", ".");
+  if (!/^\d+(\.\d+)?$/.test(s)) throw new Error("monto inválido");
+  const [i, f = ""] = s.split(".");
+  if (f.length > decimals) throw new Error("demasiados decimales");
+  const n = BigInt(i!) * 10n ** BigInt(decimals) + BigInt(f.padEnd(decimals, "0") || "0");
+  if (n <= 0n) throw new Error("monto inválido");
+  return n;
+}
+
+/** Unidades mínimas → texto, con `max` decimales como mucho y sin ceros de relleno (trunca, no redondea). */
+export function formatAmount(v: bigint, decimals: number, max = decimals): string {
+  const base = 10n ** BigInt(decimals);
+  const f = (v % base).toString().padStart(decimals, "0").slice(0, max).replace(/0+$/, "");
+  return `${v / base}${f ? "." + f : ""}`;
+}
+
 /** Reduce 32 bytes (little-endian) módulo ℓ, como sc_reduce32 de Monero. */
 export function scReduce32(bytes: Uint8Array): Uint8Array {
   if (bytes.length !== 32) throw new Error("se esperaban 32 bytes");

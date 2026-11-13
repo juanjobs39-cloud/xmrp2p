@@ -10,14 +10,14 @@ import { moneroWallet, walletAddressButton } from "../app/wallet-provider";
 import { closingConfirmation, initTelegram, inTelegram } from "./tg";
 import { ApiError, get, signed, type Ad, type Method, type OrderView, type P2PConfig, type PublicUser, type RoomMessage } from "./api";
 import { EscrowDriver, type EscrowNote } from "./escrow";
-import { account, encPublic, hasVault, newVault, open, openVault, saveVault, seal, type P2PVault, type SavedMethod } from "./identity";
+import { account, encPublic, hasVault, newVault, open, openVault, saveVault, seal, vaultFromSeed, type P2PVault, type SavedMethod } from "./identity";
 import "./p2p.css";
 import { avatar, h, fmtXmr, icon, nowS, type Child } from "./ui";
 import { marketView } from "./market";
 import { newAdView } from "./new-ad";
 import { myAdsView, orderView, ordersView } from "./orders";
 import { adminView } from "./admin";
-import { WALLETS_ON, walletView } from "./wallet-view";
+import { WALLETS_ON, walletView, XMR_SINCE } from "./wallet-view";
 
 export { h, fmtXmr, nowS, type Child };
 
@@ -461,6 +461,30 @@ export class P2PApp {
         out,
       );
 
+    const words = h("textarea", { id: "p2p-words", rows: 3, autocomplete: "off", spellcheck: false, autocapitalize: "none" });
+    const w1 = h("input", { id: "p2p-w1", type: "password", autocomplete: "new-password" });
+    const w2 = h("input", { id: "p2p-w2", type: "password", autocomplete: "new-password" });
+    const fromWords = h("button", { class: "btn secondary", type: "button" }, this.t("Recuperar", "Recover"));
+    fromWords.onclick = () =>
+      void this.busy(
+        fromWords,
+        async () => {
+          if (w1.value.length < 10) throw new Error(this.t("La contraseña debe tener al menos 10 caracteres.", "The password must be at least 10 characters."));
+          if (w1.value !== w2.value) throw new Error(this.t("Las contraseñas no coinciden.", "Passwords do not match."));
+          let v: P2PVault;
+          try {
+            // Escanea Monero desde que existen las wallets: no sabemos cuándo se creó esta cuenta.
+            v = vaultFromSeed(net, words.value, XMR_SINCE[net]);
+          } catch {
+            throw new Error(this.t("Revisa las 12 palabras: deben ser las de tu cuenta, en inglés y en orden.", "Check the 12 words: they must be your account's, in English and in order."));
+          }
+          words.value = "";
+          await saveVault(v, w1.value);
+          await this.unlocked(v, w1.value, next);
+        },
+        out,
+      );
+
     this.show(
       out,
       exists
@@ -483,6 +507,18 @@ export class P2PApp {
         this.field(this.t("Contraseña del respaldo", "Backup password"), rpass),
         h("p", {}, restore),
       ),
+      WALLETS_ON
+        ? h(
+            "details",
+            { class: "card p2p-box" },
+            h("summary", {}, this.t("Recuperar con mis 12 palabras", "Recover with my 12 words")),
+            h("p", {}, h("small", { class: "muted" }, this.t("Sirve para cuentas creadas con wallets. Recupera tu apodo y tus wallets; los escrows de órdenes abiertas solo están en el archivo de respaldo.", "Works for accounts created with wallets. It recovers your nickname and your wallets; the escrows of open orders are only in the backup file."))),
+            this.field(this.t("Tus 12 palabras", "Your 12 words"), words),
+            this.field(this.t("Contraseña nueva para este navegador", "New password for this browser"), w1),
+            this.field(this.t("Repite la contraseña", "Repeat the password"), w2),
+            h("p", {}, fromWords),
+          )
+        : null,
     );
   }
 

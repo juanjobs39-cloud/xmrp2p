@@ -66,3 +66,21 @@ test("rechaza semillas mal escritas", () => {
   assert.throws(() => cleanSeed("abandon abandon"), /12 palabras/);
   assert.throws(() => cleanSeed(TEST.replace("about", "abouty")), /palabra desconocida/);
 });
+
+import { formatAmount, parseAmount } from "../src/p2p/wallets.ts";
+
+test("montos: de texto a unidades mínimas sin redondear nunca", () => {
+  assert.equal(parseAmount("1.5", 12), 1_500_000_000_000n);
+  assert.equal(parseAmount("0,25", 6), 250_000n);
+  assert.equal(parseAmount(" 10 ", 6), 10_000_000n);
+  assert.equal(parseAmount("0.000000000001", 12), 1n);
+  for (const bad of ["", "0", "0.0", "-1", "1e3", "1.2.3", "abc", "1.0000001"]) assert.throws(() => parseAmount(bad, 6), Error, bad);
+});
+
+test("montos: de unidades mínimas a texto, truncando", () => {
+  assert.equal(formatAmount(1_500_000_000_000n, 12), "1.5");
+  assert.equal(formatAmount(1n, 12), "0.000000000001");
+  assert.equal(formatAmount(1_999_999n, 6, 2), "1.99");
+  assert.equal(formatAmount(0n, 18, 6), "0");
+  assert.equal(formatAmount(parseAmount("123.456789", 6), 6), "123.456789");
+});

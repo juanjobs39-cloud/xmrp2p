@@ -10,7 +10,7 @@ import { secp256k1 } from "@noble/curves/secp256k1";
 import { bytesToHex, hexToBytes } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { decryptRecovery, encryptRecovery, type RecoveryFile } from "../app/recovery";
-import { identityKey, newSeed } from "./wallets";
+import { cleanSeed, identityKey, newSeed } from "./wallets";
 
 export interface SavedMethod {
   fiat: string;
@@ -49,6 +49,8 @@ export interface P2PVault {
   keyFromSeed?: boolean;
   /** Altura de la cadena de Monero cuando se creó la semilla: la wallet escanea desde ahí. */
   xmrHeight?: number;
+  /** Contraseña interna (aleatoria) con la que monero-ts cifra el caché de la wallet de la cuenta. */
+  xmrPass?: string;
 }
 
 const DB = "monerop2p-p2p";
@@ -77,13 +79,31 @@ const kv = {
 };
 const vaultKey = (net: string) => `vault:${net}`;
 
+/**
+ * Caché de la wallet de Monero de la cuenta (ya cifrado por monero-ts): evita volver a escanear la
+ * cadena al entrar. No contiene nada que no se pueda reconstruir desde la semilla.
+ */
+export interface XmrCache {
+  address: string;
+  keysData: Uint8Array;
+  cacheData: Uint8Array;
+}
+const cacheKey = (net: string) => `xmr-wallet:${net}`;
+export const loadXmrCache = (net: string) => kv.get<XmrCache>(cacheKey(net));
+export const saveXmrCache = (net: string, c: XmrCache) => kv.put(cacheKey(net), c);
+
 export const hasVault = async (net: string) => !!(await kv.get(vaultKey(net)));
 
 export function newVault(network: P2PVault["network"], withSeed = false): P2PVault {
   const base = { v: 1 as const, kind: "p2p" as const, network, created_at: Date.now(), methods: [], escrows: {} };
   if (!withSeed) return { ...base, key: generatePrivateKey() };
-  const seed = newSeed();
-  return { ...base, key: identityKey(seed), seed, keyFromSeed: true };
+  return vaultFromSeed(network, newSeed());
+}
+
+/** Cuenta a partir de una semilla (nueva, o escrita por el usuario para recuperar su cuenta). */
+export function vaultFromSeed(network: P2PVault["network"], seed: string, xmrHeight?: number): P2PVault {
+  const clean = cleanSeed(seed);
+  return { v: 1, kind: "p2p", network, created_at: Date.now(), methods: [], escrows: {}, key: identityKey(clean), seed: clean, keyFromSeed: true, ...(xmrHeight !== undefined ? { xmrHeight } : {}) };
 }
 
 /** Agrega la semilla maestra a una cuenta que no la tenía. No cambia su llave ni su apodo. */

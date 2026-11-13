@@ -106,6 +106,144 @@ export async function walletKeys({ network, spendKey }) {
   }
 }
 
+// ------------------------------------------------------------------ wallet de la cuenta (P2P Fiat)
+// Una wallet completa por pestaña, abierta desde la semilla de 25 palabras que sale de la llave de
+// gasto de la cuenta. El caché (cifrado por monero-ts con `password`) lo guarda la página en el
+// navegador para no volver a escanear la cadena.
+
+let user = null;
+let userListener = null;
+
+function userW() {
+  if (!user) throw new Error("wallet cerrada");
+  return user;
+}
+
+export const userIsOpen = () => !!user;
+
+/** ¿Es una dirección válida de esta red? (estándar, subdirección o integrada) */
+export async function validAddress(address, network) {
+  try {
+    return await moneroTs.MoneroUtils.isValidAddress(address, NET[network]);
+  } catch {
+    return false;
+  }
+}
+
+/** Abre la wallet desde el caché (rápido) o desde la semilla (escanea desde restoreHeight). */
+export async function userOpen({ node, network, password, seed, restoreHeight, keysData, cacheData }) {
+  await userClose();
+  const base = { networkType: NET[network], server: { uri: node }, password, proxyToWorker: true };
+  if (keysData && cacheData) {
+    try {
+      user = await moneroTs.openWalletFull({ ...base, keysData, cacheData });
+      return userInfo();
+    } catch {
+      // Caché dañado, de otra versión o con otra contraseña: se reconstruye desde la semilla.
+    }
+  }
+  user = await moneroTs.createWalletFull({ ...base, seed, restoreHeight: restoreHeight ?? 0 });
+  return userInfo();
+}
+
+export async function userInfo() {
+  const w = userW();
+  return {
+    address: await w.getPrimaryAddress(),
+    balance: String(await w.getBalance()),
+    unlocked: String(await w.getUnlockedBalance()),
+    height: Number(await w.getHeight()),
+  };
+}
+
+/** Sincroniza una vez con progreso y deja la sincronización corriendo en segundo plano. */
+export async function userSync(onProgress, onChange) {
+  const w = userW();
+  if (userListener) await w.removeListener(userListener);
+  userListener = new (class extends moneroTs.MoneroWalletListener {
+    async onSyncProgress(height, start, end, pct) {
+      onProgress?.(pct, height, end);
+    }
+    async onBalancesChanged() {
+      onChange?.();
+    }
+    async onOutputReceived() {
+      onChange?.();
+    }
+  })();
+  await w.addListener(userListener);
+  await w.sync();
+  await w.startSyncing(20_000);
+  return userInfo();
+}
+
+/** Datos de la wallet para guardarlos en el navegador (ya cifrados por monero-ts). */
+export async function userData() {
+  const [k, c] = await userW().getData();
+  const bytes = (d) => new Uint8Array(d.buffer.slice(d.byteOffset, d.byteOffset + d.byteLength));
+  return { keysData: bytes(k), cacheData: bytes(c) };
+}
+
+/** Movimientos: los pendientes primero y luego del más nuevo al más viejo. */
+export async function userTxs() {
+  const list = await userW().getTxs();
+  return list
+    .map((t) => {
+      const incoming = !t.getIsOutgoing();
+      return {
+        txid: t.getHash(),
+        incoming,
+        amount: String((incoming ? t.getIncomingAmount() : t.getOutgoingAmount()) ?? 0n),
+        fee: String(t.getFee() ?? 0n),
+        confirmations: Number(t.getNumConfirmations() ?? 0),
+        height: Number(t.getHeight() ?? 0),
+        timestamp: Number(t.getBlock?.()?.getTimestamp?.() ?? 0),
+        pending: !t.getIsConfirmed(),
+      };
+    })
+    .sort((a, b) => (a.pending === b.pending ? b.height - a.height : a.pending ? -1 : 1));
+}
+
+/**
+ * Prepara un envío SIN transmitirlo, para mostrar la comisión exacta y pedir confirmación.
+ * `amount`: piconero en texto, o "all" para enviar todo el saldo disponible (la comisión de red se
+ * descuenta del propio envío).
+ */
+export async function userPrepare(address, amount) {
+  const w = userW();
+  let dest;
+  let subtractFeeFrom;
+  if (amount === "all") {
+    const unlocked = BigInt(await w.getUnlockedBalance(0));
+    if (unlocked <= 0n) throw new Error("not enough unlocked money");
+    dest = { address, amount: unlocked };
+    subtractFeeFrom = [0];
+  } else {
+    dest = { address, amount: BigInt(amount) };
+  }
+  const tx = await w.createTx({ accountIndex: 0, destinations: [dest], subtractFeeFrom, relay: false });
+  const sent = tx.getOutgoingTransfer()?.getDestinations()?.find((d) => d.getAddress() === address)?.getAmount();
+  return { txid: tx.getHash(), fee: String(tx.getFee()), amount: String(sent ?? dest.amount), address, metadata: tx.getMetadata() };
+}
+
+/** Transmite un envío preparado. */
+export async function userRelay(metadata) {
+  return userW().relayTx(metadata);
+}
+
+export async function userClose() {
+  if (!user) return;
+  const w = user;
+  user = null;
+  userListener = null;
+  try {
+    await w.stopSyncing().catch(() => {});
+    await w.close(false);
+  } catch {
+    /* ya cerrada */
+  }
+}
+
 /** Crea (sin semilla), restaura (con semilla) o reabre (con keysData/cacheData) la wallet del maker. */
 export async function makerOpen({ node, network, password, seed, restoreHeight, keysData, cacheData }) {
   if (maker) await makerClose();
