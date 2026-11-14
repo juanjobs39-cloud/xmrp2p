@@ -19,8 +19,8 @@ import { newAdView } from "./new-ad";
 import { myAdsView, orderView, ordersView } from "./orders";
 import { adminView } from "./admin";
 import { swapView } from "./swap-view";
-import { WALLETS_ON, walletView, XMR_SINCE } from "./wallet-view";
-import { moneroSpendKey } from "./wallets";
+import { accountSummary, copyButton, WALLETS_ON, walletView, XMR_SINCE, xmrPeek } from "./wallet-view";
+import { formatAmount, moneroSpendKey } from "./wallets";
 
 export { h, fmtXmr, nowS, type Child };
 
@@ -45,6 +45,9 @@ export class P2PApp {
   private beat: ReturnType<typeof setInterval> | null = null;
   private flash: ReturnType<typeof setInterval> | null = null;
   private view = "";
+  /** Hay una cuenta guardada en este navegador (abierta o no). */
+  hasAcct = false;
+  private lastRoute: string | null = null;
 
   constructor(public lang: Lang) {
     this.root = document.getElementById("p2p-root")!;
@@ -64,6 +67,7 @@ export class P2PApp {
       return;
     }
     if (this.cfg.xmr_network === "mainnet") this.node = XMR_MAINNET.defaultNode;
+    this.hasAcct = await hasVault(this.cfg.xmr_network).catch(() => false);
     window.addEventListener("hashchange", () => void this.route());
     // En Telegram: pedir confirmación al cerrar mientras el navegador firma un escrow.
     if (inTelegram()) setInterval(() => closingConfirmation(this.drivers.size > 0), 3000);
@@ -80,6 +84,10 @@ export class P2PApp {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
     const [, view = "", arg] = location.hash.split("?")[0]!.replace(/^#\/?/, "/").split("/");
+    // Al cambiar de pantalla el contenido queda arriba (no al refrescar la misma).
+    const here = `${view}/${arg ?? ""}`;
+    if (this.lastRoute !== null && this.lastRoute !== here) window.scrollTo({ top: 0, behavior: "instant" });
+    this.lastRoute = here;
     const needs = ["nuevo", "ordenes", "orden", "anuncios", "cuenta", "admin", "wallet", "cambiar"].includes(view);
     if (needs && !this.vault) return this.accountView(view === "cuenta" ? "" : location.hash);
     this.nav(view);
@@ -108,15 +116,51 @@ export class P2PApp {
         h("span", {}, label),
         dot ? h("b", { class: "p2p-dot", title: this.t("Esperan tu acción", "Waiting for you") }, String(dot)) : null,
       );
+    // Cinco como máximo: con wallets, «Mis anuncios» vive en Publicar y en Mi cuenta, y «Cambiar» dentro de Wallet.
+    const on = (key: string) => (WALLETS_ON && ((key === "nuevo" && view === "anuncios") || (key === "wallet" && view === "cambiar")) ? view : key);
     document.getElementById("p2p-nav")!.replaceChildren(
       link("#/", "market", this.t("Mercado", "Market"), ""),
-      link("#/nuevo", "plus", this.t("Publicar", "Post ad"), "nuevo"),
-      link("#/ordenes", "orders", this.t("Mis órdenes", "My orders"), "ordenes", this.pending),
-      link("#/anuncios", "ads", this.t("Mis anuncios", "My ads"), "anuncios"),
-      WALLETS_ON ? link("#/cambiar", "swap", this.t("Cambiar", "Swap"), "cambiar") : "",
-      WALLETS_ON ? link("#/wallet", "lock", "Wallet", "wallet") : "",
-      link("#/cuenta", "user", this.me ? this.me.nickname : this.t("Cuenta", "Account"), "cuenta"),
+      link("#/ordenes", "orders", this.t("Órdenes", "Orders"), "ordenes", this.pending),
+      link("#/nuevo", "plus", this.t("Publicar", "Post ad"), on("nuevo")),
+      WALLETS_ON ? link("#/wallet", "wallet", "Wallet", on("wallet")) : link("#/anuncios", "ads", this.t("Anuncios", "My ads"), "anuncios"),
+      link("#/cuenta", "user", this.t("Cuenta", "Account"), "cuenta"),
       this.isAdmin ? link("#/admin", "shield", "Admin", "admin") : "",
+    );
+    // La cabecera completa solo en el mercado: en las demás pantallas el contenido va arriba.
+    const main = document.querySelector<HTMLElement>("main.p2p-page");
+    if (main) main.dataset.view = view || "mercado";
+    this.drawStrip();
+  }
+
+  /** Franja de cuenta, siempre arriba: crear cuenta, entrar, o tu apodo y tu saldo. */
+  drawStrip() {
+    const el = document.getElementById("p2p-acct");
+    if (!el) return;
+    const t = this.t;
+    if (this.vault) {
+      const name = this.me?.nickname;
+      const st = WALLETS_ON && this.vault.seed ? xmrPeek(this) : null;
+      const bal = st?.info ? `${formatAmount(BigInt(st.info.balance), 12, 4)} XMR` : null;
+      return void el.replaceChildren(
+        h(
+          "a",
+          { class: "p2p-acct-in", href: "#/cuenta", "aria-label": t("Mi cuenta", "My account") },
+          name ? avatar(name, true) : h("span", { class: "p2p-ico", "aria-hidden": "true" }, icon("user")),
+          h("span", { class: "p2p-acct-txt" }, h("strong", {}, name ? "@" + name : t("Mi cuenta", "My account")), h("small", {}, bal ?? t("Sesión abierta", "Signed in"))),
+          h("span", { class: "p2p-acct-go" }, t("Mi cuenta", "My account"), " ›"),
+        ),
+      );
+    }
+    // En la propia pantalla de crear o entrar, la franja sobra.
+    if (this.view === "cuenta") return void el.replaceChildren();
+    if (this.hasAcct)
+      return void el.replaceChildren(
+        h("span", {}, t("Tu cuenta está guardada en este navegador.", "Your account is saved in this browser.")),
+        h("span", { class: "p2p-acct-btns" }, h("a", { class: "btn small", href: "#/cuenta" }, t("Entrar", "Unlock"))),
+      );
+    el.replaceChildren(
+      h("span", {}, t("Sin correo ni KYC: tu cuenta se crea aquí, en un minuto.", "No email, no KYC: your account is created here, in a minute.")),
+      h("span", { class: "p2p-acct-btns" }, h("a", { class: "btn small", href: "#/cuenta" }, t("Crear cuenta", "Create account")), h("a", { href: "#/cuenta?entrar" }, t("Ya tengo cuenta", "I have an account"))),
     );
   }
 
@@ -440,7 +484,22 @@ export class P2PApp {
     this.nav("cuenta");
     const net = this.cfg.xmr_network;
     const out = h("div");
-    const exists = await hasVault(net);
+    const exists = (this.hasAcct = await hasVault(net));
+    this.drawStrip();
+    // Si llegó por tocar otra pantalla, decir por qué se le pide la cuenta.
+    const [, wanted = ""] = next.split("?")[0]!.replace(/^#\/?/, "/").split("/");
+    const goal: Record<string, [string, string]> = {
+      wallet: ["Para usar tu wallet", "To use your wallet"],
+      cambiar: ["Para cambiar monedas", "To swap coins"],
+      nuevo: ["Para publicar un anuncio", "To post an ad"],
+      ordenes: ["Para ver tus órdenes", "To see your orders"],
+      orden: ["Para ver esa orden", "To see that order"],
+      anuncios: ["Para ver tus anuncios", "To see your ads"],
+    };
+    const g = goal[wanted];
+    const why = g
+      ? h("p", { class: "notice p2p-why" }, this.t(`${g[0]} ${exists ? "entra a tu cuenta." : "necesitas una cuenta. Se crea aquí mismo, en un minuto."}`, `${g[1]}, ${exists ? "unlock your account." : "you need an account. It is created right here, in a minute."}`))
+      : null;
     const pass = h("input", { id: "p2p-pass", type: "password", autocomplete: "current-password" });
     const unlock = h("button", { class: "btn", type: "button" }, this.t("Entrar", "Unlock"));
     unlock.onclick = () => void this.busy(unlock, async () => this.unlocked(await openVault(net, pass.value), pass.value, next), out);
@@ -458,8 +517,8 @@ export class P2PApp {
           const v = newVault(net, WALLETS_ON);
           await signed(account(v), "PUT", "/v1/p2p/me", { nickname: nick.value.trim(), enc_pubkey: await encPublic(v) });
           await saveVault(v, p1.value);
-          await this.unlocked(v, p1.value, next);
-          await this.downloadBackup();
+          await this.session(v, p1.value);
+          this.backupStep(next);
         },
         out,
       );
@@ -504,23 +563,42 @@ export class P2PApp {
         out,
       );
 
+    pass.onkeydown = (e) => e.key === "Enter" && unlock.click();
+    const wantsIn = location.hash.includes("?entrar");
     this.show(
+      exists ? null : this.signupSteps(1),
+      why,
       out,
       exists
-        ? h("section", { class: "card p2p-box" }, h("h2", {}, this.t("Entra a tu cuenta", "Unlock your account")), this.field(this.t("Contraseña", "Password"), pass), h("p", {}, unlock))
+        ? h(
+            "section",
+            { class: "card p2p-box" },
+            h("h2", {}, this.t("Entra a tu cuenta", "Unlock your account")),
+            h("p", {}, this.t("Tu cuenta está guardada en este navegador. Escribe tu contraseña para abrirla.", "Your account is saved in this browser. Enter your password to open it.")),
+            this.field(this.t("Contraseña", "Password"), pass),
+            h("p", {}, unlock),
+          )
         : h(
             "section",
             { class: "card p2p-box" },
-            h("h2", {}, this.t("Crea tu cuenta P2P", "Create your P2P account")),
-            h("p", {}, this.t("Sin correo ni KYC: tu cuenta es una llave que se crea en este navegador. Guarda el respaldo; sin él no la recuperas.", "No email, no KYC: your account is a key created in this browser. Keep the backup; without it you cannot recover it.")),
-            this.field(this.t("Apodo público", "Public nickname"), nick, this.t("3–20 letras, números, punto o guion.", "3–20 letters, numbers, dot or dash.")),
-            this.field(this.t("Contraseña", "Password"), p1, this.t("Cifra la cuenta y el respaldo.", "Encrypts the account and the backup.")),
+            h("h2", {}, this.t("Crea tu cuenta", "Create your account")),
+            h(
+              "p",
+              {},
+              WALLETS_ON
+                ? this.t("Sin correo ni KYC. Con tu cuenta publicas y tomas anuncios, y tienes tu propia wallet de Monero y de USDT. Se crea en este navegador: nosotros no vemos tu contraseña ni tus llaves.", "No email, no KYC. With your account you post and take ads, and you get your own Monero and USDT wallet. It is created in this browser: we never see your password or your keys.")
+                : this.t("Sin correo ni KYC: tu cuenta es una llave que se crea en este navegador. Nosotros no vemos tu contraseña.", "No email, no KYC: your account is a key created in this browser. We never see your password."),
+            ),
+            this.field(this.t("Apodo público", "Public nickname"), nick, this.t("Así te ven los demás. 3–20 letras, números, punto o guion.", "This is how others see you. 3–20 letters, numbers, dot or dash.")),
+            this.field(this.t("Contraseña", "Password"), p1, this.t("Mínimo 10 caracteres. No se puede recuperar si la olvidas: apúntala.", "At least 10 characters. It cannot be recovered if you forget it: write it down.")),
             this.field(this.t("Repite la contraseña", "Repeat the password"), p2),
             h("p", {}, create),
+            h("p", {}, h("small", { class: "muted" }, this.t("Siguiente paso: guardar tu respaldo.", "Next step: save your backup."))),
           ),
+      exists ? null : h("p", { class: "p2p-sub" }, this.t("¿Ya tienes cuenta?", "Already have an account?")),
       h(
         "details",
-        { class: "card p2p-box" },
+        { class: "card p2p-box", open: wantsIn && !exists },
         h("summary", {}, this.t("Restaurar desde un respaldo", "Restore from a backup")),
         this.field(this.t("Archivo de respaldo", "Backup file"), file),
         this.field(this.t("Contraseña del respaldo", "Backup password"), rpass),
@@ -541,18 +619,124 @@ export class P2PApp {
     );
   }
 
-  async unlocked(v: P2PVault, pass: string, next: string) {
+  /** Deja la cuenta abierta en esta pestaña (sin cambiar de pantalla). */
+  private async session(v: P2PVault, pass: string) {
     this.vault = v;
     this.pass = pass;
     this.acct = account(v);
+    this.hasAcct = true;
     try {
       this.me = await this.req<PublicUser>("GET", "/v1/p2p/me");
     } catch (e) {
       if (!(e instanceof ApiError && e.status === 404)) throw e;
     }
     this.startBeat();
-    if (location.hash === next || !next) await this.route();
-    else location.hash = next;
+  }
+
+  async unlocked(v: P2PVault, pass: string, next: string) {
+    await this.session(v, pass);
+    this.go(next.replace(/\?entrar$/, ""));
+  }
+
+  /** Va a una pantalla; si ya está en esa dirección, la vuelve a dibujar. */
+  private go(hash: string) {
+    if (!hash || location.hash === hash) void this.route();
+    else location.hash = hash;
+  }
+
+  // ------------------------------------------------------------ alta guiada
+
+  private signupSteps(now: 1 | 2 | 3) {
+    const labels = this.lang === "es" ? ["Apodo y contraseña", "Respaldo", "Listo"] : ["Nickname and password", "Backup", "Done"];
+    return h("ol", { class: "p2p-steps" }, labels.map((l, k) => h("li", { class: k + 1 < now ? "done" : k + 1 === now ? "now" : "" }, l)));
+  }
+
+  /** Paso 2 del alta: qué es el respaldo, descargarlo y confirmar que se guardó. */
+  private backupStep(next: string) {
+    const t = this.t;
+    this.nav("cuenta");
+    window.scrollTo({ top: 0, behavior: "instant" });
+    const out = h("div");
+    const note = h("div");
+    let got = false;
+    const ok = h("input", { id: "p2p-bk-ok", type: "checkbox" });
+    const cont = h("button", { class: "btn", type: "button", disabled: true }, t("Continuar", "Continue"));
+    const update = () => (cont.disabled = !(got && ok.checked));
+    ok.onchange = update;
+    const dl = h("button", { class: "btn", type: "button" }, t("Descargar respaldo", "Download backup"));
+    dl.onclick = () =>
+      void this.busy(
+        dl,
+        async () => {
+          await this.downloadBackup();
+          got = true;
+          dl.classList.add("secondary");
+          dl.textContent = t("Descargar otra vez", "Download again");
+          note.replaceChildren(h("p", { class: "notice ok" }, t("Descargado. Búscalo en tu carpeta de descargas: se llama «monerop2p-p2p-respaldo…».", "Downloaded. Look in your downloads folder: it is called “monerop2p-p2p-respaldo…”.")));
+          update();
+        },
+        out,
+      );
+    cont.onclick = () => this.doneStep(next, true);
+    const later = h("button", { class: "p2p-link", type: "button", onclick: () => this.doneStep(next, false) }, t("Guardarlo después", "Save it later"));
+    this.show(
+      this.signupSteps(2),
+      out,
+      h(
+        "section",
+        { class: "card p2p-box" },
+        h("h2", {}, t("Guarda tu respaldo", "Save your backup")),
+        h("p", {}, t("Tu cuenta vive solo en este navegador. El respaldo es un archivo cifrado con tu contraseña: con él y tu contraseña recuperas tu cuenta en otro teléfono o si se borran los datos del navegador.", "Your account lives only in this browser. The backup is a file encrypted with your password: with it and your password you recover your account on another phone or if the browser data is erased.")),
+        h("p", { class: "notice warn" }, t("Sin el respaldo y tu contraseña nadie puede recuperar tu cuenta ni tus fondos, tampoco nosotros.", "Without the backup and your password nobody can recover your account or your funds, not even us.")),
+        h("p", {}, dl),
+        note,
+        h("p", {}, h("small", { class: "muted" }, t("Guárdalo fuera de este dispositivo: en una USB o en tu gestor de contraseñas.", "Keep it off this device: on a USB drive or in your password manager."))),
+        h("label", { class: "p2p-check" }, ok, " ", t("Ya guardé mi respaldo en un lugar seguro.", "I have saved my backup in a safe place.")),
+        h("p", { class: "row wrap" }, cont, later),
+      ),
+    );
+  }
+
+  /** Paso 3 del alta: cuenta lista, su dirección para recibir y a dónde ir. */
+  private doneStep(next: string, saved: boolean) {
+    const t = this.t;
+    const v = this.vault!;
+    window.scrollTo({ top: 0, behavior: "instant" });
+    const addr = h("div");
+    if (WALLETS_ON && v.seed) {
+      const seed = v.seed;
+      addr.append(h("p", { class: "p2p-sub" }, t("Tu dirección de Monero para recibir", "Your Monero address to receive")), h("small", { class: "muted" }, "…"));
+      void xmrLib()
+        .then((x) => x.walletKeys({ network: v.network, spendKey: moneroSpendKey(seed) }))
+        .then((k) =>
+          addr.replaceChildren(
+            h("p", { class: "p2p-sub" }, t("Tu dirección de Monero para recibir", "Your Monero address to receive")),
+            h("div", { class: "p2p-copy" }, h("code", { class: "p2p-addr" }, k.address), copyButton(this, k.address)),
+            h("small", { class: "muted" }, t("También tienes una dirección de Arbitrum para USDT y ETH: está en Wallet.", "You also have an Arbitrum address for USDT and ETH: it is under Wallet.")),
+          ),
+        )
+        .catch(() => addr.replaceChildren());
+    }
+    const [, wanted = ""] = next.split("?")[0]!.replace(/^#\/?/, "/").split("/");
+    const to = (hash: string, label: string, cls = "") => h("button", { class: "btn " + cls, type: "button", onclick: () => this.go(hash) }, label);
+    const main =
+      wanted && wanted !== "cuenta" && wanted !== "wallet"
+        ? to(next, t("Continuar", "Continue"))
+        : WALLETS_ON
+          ? to("#/wallet", t("Ir a mi wallet", "Go to my wallet"))
+          : to("#/", t("Ver el mercado", "See the market"));
+    this.show(
+      this.signupSteps(3),
+      h(
+        "section",
+        { class: "card p2p-box" },
+        h("h2", {}, this.me ? t(`Listo, @${this.me.nickname}`, `All set, @${this.me.nickname}`) : t("Listo", "All set")),
+        h("p", {}, t("Tu cuenta está creada y abierta en este navegador. Arriba siempre verás tu apodo: tócalo para ir a «Mi cuenta».", "Your account is created and open in this browser. Your nickname always shows at the top: tap it to go to “My account”.")),
+        saved ? null : h("p", { class: "notice warn" }, t("Aún no guardas tu respaldo. Puedes descargarlo cuando quieras en «Mi cuenta»; hazlo antes de recibir fondos.", "You have not saved your backup yet. You can download it any time under “My account”; do it before receiving funds.")),
+        addr,
+        h("p", { class: "row wrap" }, main, WALLETS_ON || main.textContent !== t("Ver el mercado", "See the market") ? to("#/", t("Ver el mercado", "See the market"), "secondary") : null, to("#/cuenta", t("Mi cuenta", "My account"), "secondary")),
+      ),
+    );
   }
 
   async downloadBackup() {
@@ -579,21 +763,46 @@ export class P2PApp {
     const backup = h("button", { class: "btn secondary", type: "button", onclick: () => void this.downloadBackup() }, this.t("Descargar respaldo", "Download backup"));
     const lock = h("button", { class: "btn secondary", type: "button" }, this.t("Cerrar sesión en esta pestaña", "Lock this tab"));
     lock.onclick = () => location.reload();
+    const t = this.t;
+    const item = (href: string, ico: Parameters<typeof icon>[0], label: string, hint: string) =>
+      h("a", { href }, h("span", { class: "p2p-ico", "aria-hidden": "true" }, icon(ico)), h("span", { class: "p2p-menu-txt" }, h("strong", {}, label), h("small", {}, hint)), h("span", { class: "p2p-chev", "aria-hidden": "true" }, "›"));
+    const hasSeed = WALLETS_ON && !!this.vault!.seed;
     this.show(
       out,
+      // Todo lo tuyo en una pantalla: quién eres, cuánto tienes y qué puedes hacer.
+      h(
+        "section",
+        { class: "card p2p-box p2p-me" },
+        h("h2", {}, t("Mi cuenta", "My account")),
+        this.me ? this.userLine(this.me) : h("p", { class: "notice warn" }, t("Aún no tienes perfil: elige un apodo abajo.", "You have no profile yet: choose a nickname below.")),
+        WALLETS_ON ? accountSummary(this) : null,
+      ),
+      h(
+        "nav",
+        { class: "card p2p-menu", "aria-label": t("Mi cuenta", "My account") },
+        item("#/anuncios", "ads", t("Mis anuncios", "My ads"), t("Pausar, editar o cerrar lo que publicaste", "Pause, edit or close what you posted")),
+        item("#/ordenes", "orders", t("Mis órdenes", "My orders"), t("Compras y ventas en curso y terminadas", "Ongoing and finished trades")),
+        hasSeed ? item("#/wallet?ver=mas", "lock", t("Semilla, llaves y cobros", "Seed, keys and requests"), t("Exportar tus llaves, recibir por apodo y enlaces de cobro", "Export your keys, receive by nickname and payment links")) : null,
+      ),
       h(
         "section",
         { class: "card p2p-box" },
-        h("h2", {}, this.t("Tu cuenta", "Your account")),
-        this.me ? this.userLine(this.me) : h("p", { class: "notice warn" }, this.t("Aún no tienes perfil: elige un apodo.", "You have no profile yet: choose a nickname.")),
-        h("p", {}, h("small", {}, `ID: ${this.acct!.address}`)),
-        this.field(this.t("Apodo", "Nickname"), nick),
-        h("p", { class: "row wrap" }, save, backup, lock),
-        h("p", {}, h("small", {}, this.t("El respaldo incluye las llaves de tus escrows abiertos. Descárgalo de nuevo después de cada orden.", "The backup includes the keys of your open escrows. Download it again after each order."))),
+        h("h3", {}, t("Respaldo", "Backup")),
+        h("p", {}, t("Con este archivo y tu contraseña recuperas tu cuenta en otro dispositivo. Incluye las llaves de tus escrows abiertos: descárgalo de nuevo después de cada orden.", "With this file and your password you recover your account on another device. It includes the keys of your open escrows: download it again after each order.")),
+        h("p", {}, backup),
+      ),
+      h(
+        "details",
+        { class: "card p2p-box", open: !this.me },
+        h("summary", {}, t("Cambiar apodo", "Change nickname")),
+        this.field(t("Apodo", "Nickname"), nick),
+        h("p", {}, save),
+        h("p", {}, h("small", { class: "muted" }, `ID: ${this.acct!.address}`)),
       ),
       this.me && (this.cfg.telegram_bot || this.pushSupported())
-        ? h("section", { class: "card p2p-box" }, h("h2", {}, this.t("Avisos", "Notifications")), this.telegramButton(), this.pushButton())
+        ? h("section", { class: "card p2p-box" }, h("h3", {}, t("Avisos", "Notifications")), this.telegramButton(), this.pushButton())
         : null,
+      h("p", { class: "row wrap" }, lock, h("small", { class: "muted" }, t("Tu cuenta sigue guardada en este navegador; para volver a entrar solo pide tu contraseña.", "Your account stays saved in this browser; unlocking again only asks for your password."))),
     );
   }
 

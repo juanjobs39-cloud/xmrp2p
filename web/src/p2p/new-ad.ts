@@ -333,7 +333,7 @@ export async function newAdView(app: P2PApp) {
     );
   fiat.onchange = () => ((chosen.length = 0), (fixed.value = ""), renderChosen(), void loadMarket(), void loadMethods());
 
-  app.show(h("div", { class: "row between wrap" }, h("h2", {}, t("Publicar anuncio", "Post an ad"))), steps, out, pane1, pane2, pane3, h("p", { class: "row wrap p2p-nav-btns" }, back, next, publish));
+  app.show(h("div", { class: "row between wrap" }, h("h2", {}, t("Publicar anuncio", "Post an ad")), h("a", { class: "btn secondary small", href: "#/anuncios" }, t("Mis anuncios", "My ads"))), steps, out, pane1, pane2, pane3, h("p", { class: "row wrap p2p-nav-btns" }, back, next, publish));
   renderSide();
   renderType();
   syncType();

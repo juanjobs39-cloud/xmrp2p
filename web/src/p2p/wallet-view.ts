@@ -48,12 +48,16 @@ export function startXmr(app: P2PApp): XmrState {
   const st: XmrState = { owner: v.key, txs: [], pct: 0, synced: false };
   X = st;
   const net = v.network;
+  const ping = () => {
+    st.onUpdate?.();
+    app.drawStrip();
+  };
   void (async () => {
     try {
       const xmr = await xmrLib();
       const keys = await xmr.walletKeys({ network: net, spendKey: moneroSpendKey(v.seed!) });
       st.address = keys.address;
-      st.onUpdate?.();
+      ping();
 
       let dirty = false;
       if (!v.xmrPass) {
@@ -73,18 +77,18 @@ export function startXmr(app: P2PApp): XmrState {
       const cache = await loadXmrCache(net);
       const mine = cache && cache.address === keys.address ? cache : undefined;
       st.info = await xmr.userOpen({ node: app.node, network: net, password: v.xmrPass, seed: keys.seed, restoreHeight: v.xmrHeight, keysData: mine?.keysData, cacheData: mine?.cacheData });
-      st.onUpdate?.();
+      ping();
 
       const refresh = async () => {
         if (X !== st) return;
         st.info = await xmr.userInfo();
         st.txs = await xmr.userTxs();
-        st.onUpdate?.();
+        ping();
       };
       await xmr.userSync(
         (pct) => {
           st.pct = pct;
-          st.onUpdate?.();
+          ping();
         },
         () => void refresh().catch(() => {}),
       );
@@ -93,10 +97,15 @@ export function startXmr(app: P2PApp): XmrState {
       await saveXmrCache(net, { address: keys.address, ...(await xmr.userData()) });
     } catch (e) {
       st.error = e instanceof Error ? e.message : String(e);
-      st.onUpdate?.();
+      ping();
     }
   })();
   return st;
+}
+
+/** La wallet de Monero de esta cuenta si ya se abrió en esta pestaña (no la abre). */
+export function xmrPeek(app: P2PApp): XmrState | null {
+  return X && app.vault && X.owner === app.vault.key ? X : null;
 }
 
 /** Espera a que la wallet de Monero de la cuenta tenga dirección (y, si se pide, a que termine de sincronizar). */
@@ -134,6 +143,69 @@ function receiveBox(app: P2PApp, name: string, address: string): Child[] {
   const qr = h("button", { class: "btn secondary small", type: "button" }, "QR");
   qr.onclick = () => (qrBox.hidden = !qrBox.hidden);
   return [h("p", { class: "p2p-sub" }, app.t("Tu dirección para recibir", "Your address to receive")), h("div", { class: "p2p-copy" }, h("code", { class: "p2p-addr" }, address), copyButton(app, address), qr), qrBox];
+}
+
+/** Pestañas dentro de una tarjeta (Recibir / Enviar / …): lo importante a la vista, sin plegar. */
+function tabs(items: [key: string, label: string, panel: HTMLElement][], first: string): { el: HTMLElement; select: (key: string) => void } {
+  const bar = h("div", { class: "p2p-seg small p2p-wtabs", role: "tablist" });
+  const btns = items.map(([key, label]) => h("button", { class: "p2p-seg-btn", type: "button", role: "tab", onclick: () => select(key) }, label));
+  const select = (key: string) =>
+    items.forEach(([k, , panel], i) => {
+      const on = k === key;
+      panel.hidden = !on;
+      btns[i]!.classList.toggle("on", on);
+      btns[i]!.setAttribute("aria-selected", String(on));
+    });
+  bar.append(...btns);
+  select(first);
+  return { el: h("div", { class: "p2p-wtab-box" }, bar, ...items.map(([, , panel]) => panel)), select };
+}
+
+/** Resumen para «Mi cuenta»: saldos de las wallets y las tres acciones de siempre. */
+export function accountSummary(app: P2PApp): HTMLElement {
+  const t = app.t;
+  const v = app.vault!;
+  if (!v.seed)
+    return h(
+      "div",
+      { class: "p2p-sum" },
+      h("p", {}, t("Tu cuenta todavía no tiene wallets. Créalas para recibir, enviar y pagar el escrow desde aquí.", "Your account has no wallets yet. Create them to receive, send and fund the escrow from here.")),
+      h("p", {}, h("a", { class: "btn", href: "#/wallet" }, t("Crear mis wallets", "Create my wallets"))),
+    );
+  const real = v.network === "mainnet";
+  const net: EvmNetwork = NETWORKS[real ? "arbitrum_one" : "arbitrum_sepolia"]!;
+  const cell = (symbol: string) => {
+    const amt = h("strong", {}, "…");
+    return { amt, el: h("div", { class: "p2p-bal" }, h("small", {}, symbol), amt) };
+  };
+  const xmr = cell("XMR");
+  const usdt = cell(net.tokenSymbol);
+  const eth = cell("ETH");
+  const note = h("small", { class: "muted" });
+  const st = startXmr(app);
+  const draw = () => {
+    if (!document.contains(xmr.amt)) return void (st.onUpdate = undefined);
+    if (st.error) return void (note.textContent = st.error);
+    if (!st.info) return void (note.textContent = t("Abriendo tu wallet de Monero…", "Opening your Monero wallet…"));
+    xmr.amt.textContent = formatAmount(BigInt(st.info.balance), XMR_DECIMALS, 6);
+    note.textContent = st.synced ? "" : t(`Sincronizando Monero… ${Math.floor(st.pct * 100)} %`, `Syncing Monero… ${Math.floor(st.pct * 100)}%`);
+  };
+  st.onUpdate = draw;
+  queueMicrotask(draw);
+  void balances(publicClient(net), net, evmAddress(v.seed))
+    .then((b) => {
+      usdt.amt.textContent = formatAmount(b.token, TOKEN_DECIMALS, 2) || "0";
+      eth.amt.textContent = formatAmount(b.eth, 18, 6);
+    })
+    .catch(() => (usdt.amt.textContent = eth.amt.textContent = "—"));
+  const act = (href: string, ico: Parameters<typeof icon>[0], label: string, cls = "secondary") => h("a", { class: "btn " + cls, href }, h("span", { class: "p2p-ico", "aria-hidden": "true" }, icon(ico)), label);
+  return h(
+    "div",
+    { class: "p2p-sum" },
+    h("div", { class: "p2p-bals" }, xmr.el, usdt.el, eth.el),
+    note,
+    h("div", { class: "p2p-acts" }, act("#/wallet", "receive", t("Recibir", "Receive"), ""), act("#/wallet?ver=enviar", "send", t("Enviar", "Send")), act("#/cambiar", "swap", t("Cambiar", "Swap"))),
+  );
 }
 
 export const kv = (rows: [string, Child][]) => h("dl", { class: "p2p-kv" }, rows.flatMap(([k, v]) => [h("dt", {}, k), h("dd", {}, v)]));
@@ -234,7 +306,7 @@ function nickCard(app: P2PApp, evm: string, st: XmrState): { el: HTMLElement; re
   const body = h("div");
   const card = h("section", { class: "card p2p-box" }, h("h3", {}, t("Recibir por apodo", "Receive by nickname")), body);
   if (!app.me) {
-    body.append(h("p", { class: "notice warn" }, t("Primero elige un apodo en «Cuenta».", "First choose a nickname under “Account”.")));
+    body.append(h("p", { class: "notice warn" }, t("Primero elige un apodo en «Mi cuenta».", "First choose a nickname under “My account”.")));
     return { el: card, refresh: () => {} };
   }
   const nick = app.me.nickname;
@@ -519,14 +591,28 @@ export async function walletView(app: P2PApp): Promise<void> {
     return box;
   })();
 
+  const evmTabs = tabs(
+    [
+      [
+        "recibir",
+        t("Recibir", "Receive"),
+        h(
+          "div",
+          {},
+          ...receiveBox(app, "Arbitrum", evm),
+          h("p", {}, h("small", { class: "muted" }, t("La misma dirección sirve para USDT y ETH. Envía y recibe solo por la red Arbitrum.", "The same address works for USDT and ETH. Send and receive only over the Arbitrum network."))),
+        ),
+      ],
+      ["enviar", t("Enviar", "Send"), evmSend],
+    ],
+    "recibir",
+  );
   const evmCard = h(
     "section",
     { class: "card p2p-wallet" },
     h("header", { class: "p2p-wallet-head" }, h("h3", {}, "Arbitrum"), h("span", { class: "badge muted" }, net.name)),
     evmBal,
-    ...receiveBox(app, "Arbitrum", evm),
-    h("p", {}, h("small", { class: "muted" }, t("Cuenta tipo Ethereum estándar: la misma dirección sirve para USDT y ETH. Envía y recibe solo por la red Arbitrum.", "Standard Ethereum-type account: the same address works for USDT and ETH. Send and receive only over the Arbitrum network."))),
-    h("details", { class: "p2p-more" }, h("summary", {}, t("Enviar", "Send")), evmSend),
+    evmTabs.el,
   );
   void loadEvm();
 
@@ -541,10 +627,11 @@ export async function walletView(app: P2PApp): Promise<void> {
   const drawXmr = () => {
     if (!document.contains(xmrBal)) return void (st.onUpdate = undefined);
     if (st.error) return xmrBal.replaceChildren(app.error(new Error(st.error)));
-    if (st.address && !xmrRecv.childElementCount) {
+    if (st.address && !xmrRecv.querySelector("code")) {
       xmrRecv.replaceChildren(...(receiveBox(app, "Monero", st.address).filter(Boolean) as Node[]));
       nick?.refresh();
     }
+    if (!xmrRecv.childElementCount) xmrRecv.replaceChildren(h("small", { class: "muted" }, t("Tu dirección aparece aquí en unos segundos…", "Your address shows here in a few seconds…")));
     if (!st.info) return xmrBal.replaceChildren(h("small", { class: "muted" }, t("Abriendo tu wallet de Monero…", "Opening your Monero wallet…")));
     const locked = BigInt(st.info.balance) - BigInt(st.info.unlocked);
     xmrBal.replaceChildren(
@@ -629,6 +716,7 @@ export async function walletView(app: P2PApp): Promise<void> {
                 st.info = await xmr.userInfo();
                 st.txs = await xmr.userTxs();
                 drawXmr();
+                app.drawStrip();
                 await persistXmr(v.network);
               },
               err,
@@ -653,14 +741,20 @@ export async function walletView(app: P2PApp): Promise<void> {
     xmrSendBox.append(form);
   })();
 
+  const xmrTabs = tabs(
+    [
+      ["recibir", t("Recibir", "Receive"), xmrRecv],
+      ["enviar", t("Enviar", "Send"), xmrSendBox],
+      ["movimientos", t("Movimientos", "History"), xmrTxs],
+    ],
+    "recibir",
+  );
   const xmrCard = h(
     "section",
     { class: "card p2p-wallet" },
     h("header", { class: "p2p-wallet-head" }, h("h3", {}, "Monero"), h("span", { class: "badge muted" }, real ? "Mainnet" : "Stagenet")),
     xmrBal,
-    xmrRecv,
-    h("details", { class: "p2p-more" }, h("summary", {}, t("Enviar", "Send")), xmrSendBox),
-    h("details", { class: "p2p-more" }, h("summary", {}, t("Movimientos", "Transactions")), xmrTxs),
+    xmrTabs.el,
   );
 
   // ---------------------------------------------------------------- exportar
@@ -695,11 +789,11 @@ export async function walletView(app: P2PApp): Promise<void> {
       secrets,
     );
 
-  app.show(
-    out,
-    h("h2", {}, icon("lock"), " ", t("Tus wallets", "Your wallets")),
-    h("p", {}, h("small", { class: "muted" }, t("Sin custodia: las llaves están cifradas en este navegador y en tu respaldo. MoneroP2P no puede ver ni mover estos fondos, ni recuperarlos si pierdes el respaldo y la contraseña.", "Non-custodial: the keys are encrypted in this browser and in your backup. MoneroP2P cannot see or move these funds, or recover them if you lose the backup and the password."))),
-    h("div", { class: "p2p-wallets" }, xmrCard, evmCard),
+  // Lo que se usa de vez en cuando queda plegado.
+  const more = h(
+    "details",
+    { class: "p2p-more p2p-adv" },
+    h("summary", {}, t("Más opciones: recibir por apodo, cobrar con enlace, contactos y exportar llaves", "More options: receive by nickname, payment links, contacts and key export")),
     (nick = nickCard(app, evm, st)).el,
     requestCard(app, net.tokenSymbol),
     contactsCard(app),
@@ -713,7 +807,27 @@ export async function walletView(app: P2PApp): Promise<void> {
       secrets,
     ),
   );
+
+  app.show(
+    out,
+    h(
+      "div",
+      { class: "row between wrap" },
+      h("h2", {}, icon("wallet"), " ", t("Tu wallet", "Your wallet")),
+      h("a", { class: "btn secondary small", href: "#/cambiar" }, icon("swap"), " ", t("Cambiar monedas", "Swap coins")),
+    ),
+    h("div", { class: "p2p-wallets" }, xmrCard, evmCard),
+    h("p", {}, h("small", { class: "muted" }, t("Sin custodia: las llaves están cifradas en este navegador y en tu respaldo. MoneroP2P no puede ver ni mover estos fondos, ni recuperarlos si pierdes el respaldo y la contraseña.", "Non-custodial: the keys are encrypted in this browser and in your backup. MoneroP2P cannot see or move these funds, or recover them if you lose the backup and the password."))),
+    more,
+  );
   drawXmr();
+
+  const ver = new URLSearchParams(location.hash.split("?")[1] ?? "").get("ver");
+  if (ver === "enviar") xmrTabs.select("enviar");
+  if (ver === "mas") {
+    more.open = true;
+    more.scrollIntoView({ block: "start" });
+  }
 
   // Enlace de cobro (#/wallet?to=@apodo&coin=usdt&amount=50): deja el envío lleno; el usuario revisa y confirma.
   const ask = parsePayQuery(location.hash.split("?")[1] ?? "");
@@ -724,8 +838,7 @@ export async function walletView(app: P2PApp): Promise<void> {
     set(isXmr ? "p2p-x-to" : "p2p-e-to", "@" + ask.to);
     if (ask.amount) set(isXmr ? "p2p-x-amt" : "p2p-e-amt", ask.amount);
     if (!isXmr) set("p2p-e-asset", ask.coin === "eth" ? "eth" : "token");
-    const send = card.querySelector("details");
-    if (send) send.open = true;
+    (isXmr ? xmrTabs : evmTabs).select("enviar");
     card.scrollIntoView({ block: "start" });
   }
 }
