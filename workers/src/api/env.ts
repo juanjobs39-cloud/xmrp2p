@@ -15,6 +15,8 @@ export interface Env {
   API_URL?: string;
   /** Intercambios por Trocador: llave (secreto), clave del webhook (secreto) y ajustes. */
   TROCADOR_API_KEY?: string;
+  /** Solo para pruebas locales: otra URL en lugar de la API real de Trocador. */
+  TROCADOR_API_URL?: string;
   TROCADOR_WEBHOOK_KEY?: string;
   TROCADOR_MIN_KYC?: string;
   TROCADOR_MARKUP?: string;

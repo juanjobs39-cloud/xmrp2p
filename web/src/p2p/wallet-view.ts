@@ -22,11 +22,11 @@ export const WALLETS_ON = (import.meta.env.PUBLIC_P2P_WALLETS as string | undefi
 export const XMR_SINCE: Record<string, number> = { mainnet: 3_805_000, stagenet: 2_249_000 };
 
 const XMR_DECIMALS = 12;
-const XMR_EXPLORER: Record<string, string> = { mainnet: "https://xmrchain.net/tx/", stagenet: "https://stagenet.xmrchain.net/tx/" };
+export const XMR_EXPLORER: Record<string, string> = { mainnet: "https://xmrchain.net/tx/", stagenet: "https://stagenet.xmrchain.net/tx/" };
 
 // ------------------------------------------------------------------ estado de la wallet de Monero (una por pestaña)
 
-interface XmrState {
+export interface XmrState {
   owner: string; // llave de la cuenta: si cambia de cuenta se vuelve a abrir
   address?: string;
   info?: UserWalletInfo;
@@ -41,7 +41,7 @@ let X: XmrState | null = null;
 const randomHex = (n: number) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 
 /** Abre y sincroniza la wallet de Monero de la cuenta (una sola vez por sesión). */
-function startXmr(app: P2PApp): XmrState {
+export function startXmr(app: P2PApp): XmrState {
   const v = app.vault!;
   if (X && X.owner === v.key) return X;
   const st: XmrState = { owner: v.key, txs: [], pct: 0, synced: false };
@@ -98,15 +98,28 @@ function startXmr(app: P2PApp): XmrState {
   return st;
 }
 
+/** Espera a que la wallet de Monero de la cuenta tenga dirección (y, si se pide, a que termine de sincronizar). */
+export function xmrReady(st: XmrState, synced: boolean, onWait?: (pct: number) => void): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const check = () => {
+      if (st.error) return reject(new Error(st.error));
+      if (st.address && (!synced || st.synced)) return resolve();
+      onWait?.(st.pct);
+      st.onUpdate = check;
+    };
+    check();
+  });
+}
+
 /** Guarda el caché tras un envío, para que al volver a entrar no se escanee de nuevo. */
-async function persistXmr(net: string): Promise<void> {
+export async function persistXmr(net: string): Promise<void> {
   const xmr = await xmrLib();
   if (X?.address && xmr.userIsOpen()) await saveXmrCache(net, { address: X.address, ...(await xmr.userData()) });
 }
 
 // ------------------------------------------------------------------ piezas de interfaz
 
-function copyButton(app: P2PApp, text: string): HTMLButtonElement {
+export function copyButton(app: P2PApp, text: string): HTMLButtonElement {
   const b = h("button", { class: "btn secondary small", type: "button" }, app.t("Copiar", "Copy"));
   b.onclick = () => void navigator.clipboard?.writeText(text).then(() => (b.textContent = app.t("¡Copiado!", "Copied!")));
   return b;
@@ -122,10 +135,10 @@ function receiveBox(app: P2PApp, name: string, address: string): Child[] {
   return [h("p", { class: "p2p-sub" }, app.t("Tu dirección para recibir", "Your address to receive")), h("div", { class: "p2p-copy" }, h("code", { class: "p2p-addr" }, address), copyButton(app, address), qr), qrBox];
 }
 
-const kv = (rows: [string, Child][]) => h("dl", { class: "p2p-kv" }, rows.flatMap(([k, v]) => [h("dt", {}, k), h("dd", {}, v)]));
+export const kv = (rows: [string, Child][]) => h("dl", { class: "p2p-kv" }, rows.flatMap(([k, v]) => [h("dt", {}, k), h("dd", {}, v)]));
 
 /** Texto para los errores con código de la cuenta de Arbitrum. */
-function evmError(app: P2PApp, e: unknown): Error {
+export function evmError(app: P2PApp, e: unknown): Error {
   if (!(e instanceof WalletError)) return e instanceof Error ? e : new Error(String(e));
   const msg = {
     insufficient: app.t("No tienes saldo suficiente para ese envío y su comisión de red.", "You do not have enough balance for that transfer and its network fee."),
@@ -137,7 +150,7 @@ function evmError(app: P2PApp, e: unknown): Error {
 }
 
 /** Mensajes de monero-ts más comunes, en palabras del usuario. */
-function xmrError(app: P2PApp, e: unknown): Error {
+export function xmrError(app: P2PApp, e: unknown): Error {
   const m = e instanceof Error ? e.message : String(e);
   if (/not enough|unlocked/i.test(m)) return new Error(app.t("No tienes suficiente XMR disponible. Los fondos recién recibidos tardan unos 20 minutos (10 confirmaciones) en poder gastarse.", "You do not have enough spendable XMR. Newly received funds take about 20 minutes (10 confirmations) to become spendable."));
   return e instanceof Error ? e : new Error(m);

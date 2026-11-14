@@ -5,6 +5,7 @@
  */
 import type { PrivateKeyAccount } from "viem";
 import { MONERO, XMR_MAINNET } from "../app/config";
+import { xmrLib } from "../app/libs";
 import type { RecoveryFile } from "../app/recovery";
 import { moneroWallet, walletAddressButton } from "../app/wallet-provider";
 import { closingConfirmation, initTelegram, inTelegram } from "./tg";
@@ -17,7 +18,9 @@ import { marketView } from "./market";
 import { newAdView } from "./new-ad";
 import { myAdsView, orderView, ordersView } from "./orders";
 import { adminView } from "./admin";
+import { swapView } from "./swap-view";
 import { WALLETS_ON, walletView, XMR_SINCE } from "./wallet-view";
+import { moneroSpendKey } from "./wallets";
 
 export { h, fmtXmr, nowS, type Child };
 
@@ -77,7 +80,7 @@ export class P2PApp {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
     const [, view = "", arg] = location.hash.split("?")[0]!.replace(/^#\/?/, "/").split("/");
-    const needs = ["nuevo", "ordenes", "orden", "anuncios", "cuenta", "admin", "wallet"].includes(view);
+    const needs = ["nuevo", "ordenes", "orden", "anuncios", "cuenta", "admin", "wallet", "cambiar"].includes(view);
     if (needs && !this.vault) return this.accountView(view === "cuenta" ? "" : location.hash);
     this.nav(view);
     try {
@@ -87,6 +90,7 @@ export class P2PApp {
       else if (view === "anuncios") await myAdsView(this);
       else if (view === "cuenta") await this.profileView();
       else if (view === "wallet" && WALLETS_ON) await walletView(this);
+      else if (view === "cambiar" && WALLETS_ON) await swapView(this);
       else if (view === "admin") await adminView(this, arg);
       else await marketView(this);
     } catch (e) {
@@ -109,6 +113,7 @@ export class P2PApp {
       link("#/nuevo", "plus", this.t("Publicar", "Post ad"), "nuevo"),
       link("#/ordenes", "orders", this.t("Mis órdenes", "My orders"), "ordenes", this.pending),
       link("#/anuncios", "ads", this.t("Mis anuncios", "My ads"), "anuncios"),
+      WALLETS_ON ? link("#/cambiar", "swap", this.t("Cambiar", "Swap"), "cambiar") : "",
       WALLETS_ON ? link("#/wallet", "lock", "Wallet", "wallet") : "",
       link("#/cuenta", "user", this.me ? this.me.nickname : this.t("Cuenta", "Account"), "cuenta"),
       this.isAdmin ? link("#/admin", "shield", "Admin", "admin") : "",
@@ -331,6 +336,20 @@ export class P2PApp {
 
   /** Con MoneroP2P Wallet instalada: botón junto al campo que lo llena con una subdirección nueva. */
   walletFill(input: HTMLInputElement): void {
+    // Con wallets en la cuenta: la dirección de la wallet de Monero de la cuenta va por defecto (se puede cambiar).
+    const v = this.vault;
+    if (WALLETS_ON && v?.seed) {
+      const seed = v.seed;
+      void xmrLib()
+        .then((x) => x.walletKeys({ network: v.network, spendKey: moneroSpendKey(seed) }))
+        .then((k) => {
+          if (input.value) return;
+          input.value = k.address;
+          input.dispatchEvent(new Event("input"));
+          input.parentElement?.append(h("small", { class: "muted" }, this.t("Es tu wallet de Monero de MoneroP2P. Puedes poner otra dirección.", "This is your MoneroP2P Monero wallet. You can enter another address.")));
+        })
+        .catch(() => {});
+    }
     void walletAddressButton(input, this.cfg.xmr_network, this.t("Usar mi MoneroP2P Wallet", "Use my MoneroP2P Wallet"), (m) => input.parentElement?.append(this.error(new Error(m)))).then(
       (b) => b && input.insertAdjacentElement("afterend", b),
     );

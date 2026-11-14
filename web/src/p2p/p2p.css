@@ -386,6 +386,9 @@ a.p2p-tab { text-align: center; text-decoration: none; }
 #p2p-root textarea { width: 100%; font: inherit; font-family: var(--mono); font-size: 0.95rem; padding: 0.6rem 0.7rem; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--bg-soft); color: var(--fg); }
 .p2p-nick-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.6rem 0; border-top: 1px solid var(--line); }
 .p2p-warn { color: var(--warn-fg); }
-.p2p-contacts { list-style: none; margin: 0; padding: 0; }
+.p2p-contacts, .p2p-quotes { list-style: none; margin: 0; padding: 0; }
+.p2p-quotes li { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.6rem; padding: 0.6rem 0; border-top: 1px solid var(--line); }
+.p2p-quotes li:first-child { border-top: 0; }
+.p2p-quotes li > span { flex: 1 1 14rem; min-width: 0; }
 .p2p-contacts li { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; padding: 0.5rem 0; border-top: 1px solid var(--line); }
 .p2p-contacts li:first-child { border-top: 0; }

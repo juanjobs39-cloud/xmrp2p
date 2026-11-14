@@ -5,6 +5,7 @@ import { EscrowDriver, type EscrowNote } from "./escrow";
 import { open, seal } from "./identity";
 import type { P2PApp } from "./p2p-app";
 import { moneroWallet } from "../app/wallet-provider";
+import { accountDeposit } from "./escrow-pay";
 import { clock, fmtFiat, fmtXmr, h, icon, kids, nowS, offPlatformWarning, pct, statusTone, type Child } from "./ui";
 
 export async function myAdsView(app: P2PApp) {
@@ -311,6 +312,7 @@ export async function orderView(app: P2PApp, id: string) {
         h("div", { class: "card p2p-deposit" },
           h("p", {}, h("strong", {}, app.t(`Deposita exactamente ${o.deposit_required_xmr} XMR`, `Deposit exactly ${o.deposit_required_xmr} XMR`))),
           h("div", { class: "p2p-copy" }, h("code", { class: "p2p-addr" }, note.address), h("button", { class: "btn secondary small", type: "button", onclick: (e: Event) => void navigator.clipboard?.writeText(depAddr).then(() => ((e.target as HTMLElement).textContent = app.t("¡Copiada!", "Copied!"))) }, app.t("Copiar", "Copy"))),
+          accountDeposit(app, o.id, depAddr, o.deposit_required_xmr),
           payWithWallet(app, depAddr, o.deposit_required_xmr),
           depositShortcuts(app, depAddr, o.deposit_required_xmr),
           h("small", {}, app.t("Incluye el XMR de la orden, la comisión y una pequeña reserva para la comisión de red. Si depositas de más, o sobra de la reserva, se te devuelve automáticamente a tu dirección de reembolso al cerrar la orden. Si depositas de menos, la orden se cancela y se te reembolsa (menos la comisión de red); si te faltó, manda la diferencia a esta misma dirección antes de que venza el plazo. Tu navegador calculó esta dirección.", "Includes the order XMR, the fee and a small reserve for the network fee. If you deposit more, or part of the reserve is left over, it is returned automatically to your refund address when the order closes. If you deposit too little, the order is cancelled and refunded to you (minus the network fee); if you are short, send the difference to this same address before the deadline. Your browser computed this address.")),

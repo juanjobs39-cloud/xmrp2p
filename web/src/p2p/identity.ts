@@ -29,6 +29,8 @@ export interface EscrowState {
   restoreHeight?: number;
   /** Exportación del árbitro (`n`) con la que se armó el último pago enviado. */
   spentFor?: string;
+  /** Transacción con la que la wallet de la cuenta depositó al escrow (para no depositar dos veces). */
+  depositTx?: string;
 }
 
 export interface P2PVault {
@@ -52,6 +54,8 @@ export interface P2PVault {
   xmrPass?: string;
   /** Usuarios a los que ya se les envió por apodo, con la llave de su cuenta (clave: apodo en minúsculas). */
   contacts?: Record<string, import("./pay").Contact>;
+  /** Cambios hechos con la cuenta (vía Trocador), el más nuevo primero. */
+  swaps?: import("./swap").SwapRecord[];
 }
 
 const DB = "monerop2p-p2p";

@@ -29,11 +29,11 @@ async function parse<T>(r: Response): Promise<T> {
 export const get = <T>(path: string) => fetch(P2P_API + path).then((r) => parse<T>(r));
 
 /** Petición firmada. En escrituras agrega un nonce al azar (dos peticiones iguales no comparten firma). */
-export async function signed<T>(acct: PrivateKeyAccount, method: string, path: string, body?: Record<string, unknown>): Promise<T> {
+export async function signed<T>(acct: PrivateKeyAccount, method: string, path: string, body?: Record<string, unknown>, base: string = P2P_API): Promise<T> {
   const raw = body === undefined ? "" : JSON.stringify({ ...body, nonce: crypto.randomUUID() });
   const ts = String(Math.floor(Date.now() / 1000));
   const signature = await acct.signMessage({ message: await signedMessage(method, path.split("?")[0]!, acct.address, ts, raw) });
-  const r = await fetch(P2P_API + path, {
+  const r = await fetch(base + path, {
     method,
     body: raw || undefined,
     headers: { "content-type": "application/json", "x-maker-address": acct.address, "x-timestamp": ts, "x-signature": signature },

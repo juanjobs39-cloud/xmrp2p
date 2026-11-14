@@ -10,7 +10,10 @@
  *    y el navegador del usuario ligados al ID del intercambio (solo en intercambios por Trocador),
  *    para responder solicitudes de autoridades que Trocador nos reenvíe. Lo dice la política de privacidad.
  */
+import { getAddress, verifyMessage } from "viem";
+import { verifyMaker } from "./auth";
 import { clientIp, decimal, Env, HttpError, json, readJson, sha256Hex } from "./env";
+import { addressMessage } from "./p2p/addresses";
 
 const API = "https://api.trocador.app";
 /** Monero en Trocador. */
@@ -141,7 +144,7 @@ function apiKey(env: Env): string {
 }
 
 async function trocador(env: Env, method: string, params: Record<string, string>): Promise<Record<string, unknown>> {
-  const url = new URL(`${API}/${method}`);
+  const url = new URL(`${env.TROCADOR_API_URL || API}/${method}`);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
   let r: Response;
   try {
@@ -212,6 +215,7 @@ interface TradeBody {
   address_memo?: unknown;
   refund?: unknown;
   notify?: unknown;
+  proof?: unknown;
 }
 
 const XMR_MAIN = /^[48][1-9A-HJ-NP-Za-km-z]{94}([1-9A-HJ-NP-Za-km-z]{11})?$/;
@@ -261,9 +265,42 @@ function publicTrade(t: Record<string, unknown>) {
   };
 }
 
+/**
+ * Wallet interna en la que se recibe una moneda, o null si la plataforma no tiene wallet para ella.
+ * Igual que internalAsset() de web/src/p2p/swap.ts.
+ */
+export function internalAsset(side: Side, coin: { ticker: string; network: string }): "xmr" | "evm" | null {
+  if (side === "buy") return "xmr";
+  return coin.network === "Arbitrum" && (coin.ticker === "usdt" || coin.ticker === "eth") ? "evm" : null;
+}
+
+const PROOF_MAX_AGE_S = 86400;
+const PROOF_MAX_AHEAD_S = 600;
+
+/**
+ * Intercambio hecho CON cuenta: lo comprado solo puede llegar a una wallet de esa cuenta. La cuenta
+ * lo declara firmando la dirección con su llave (mismo mensaje que «recibir por apodo», sin publicarla).
+ * Si la moneda no tiene wallet interna, el destino es libre. Es una regla de producto: el exchange
+ * sin cuenta sigue aceptando cualquier dirección.
+ */
+async function requireOwnWallet(account: string, side: Side, coin: { ticker: string; network: string }, address: string, proof: unknown): Promise<void> {
+  const asset = internalAsset(side, coin);
+  if (!asset) return;
+  const fail = () => new HttpError(400, "con tu cuenta, lo que compras llega a tu wallet de la plataforma; para otra dirección usa el exchange sin cuenta");
+  const p = proof as { at?: unknown; sig?: unknown } | null;
+  const at = p?.at;
+  const sig = typeof p?.sig === "string" ? p.sig : "";
+  const now = Math.floor(Date.now() / 1000);
+  if (typeof at !== "number" || !Number.isInteger(at) || at > now + PROOF_MAX_AHEAD_S || at < now - PROOF_MAX_AGE_S || !/^0x[0-9a-fA-F]{130}$/.test(sig)) throw fail();
+  const ok = await verifyMessage({ address: getAddress(account), message: addressMessage(account, "mainnet", asset, address, at), signature: sig as `0x${string}` }).catch(() => false);
+  if (!ok) throw fail();
+}
+
 /** POST /v1/trocador/trades — crea el intercambio con la cotización elegida y guarda los datos del usuario. */
 async function createTrade(req: Request, env: Env): Promise<Response> {
-  const { data } = await readJson<TradeBody>(req);
+  const { raw, data } = await readJson<TradeBody>(req);
+  // Con cabeceras de firma es un intercambio hecho con cuenta (no se guarda cuál: solo se aplica la regla).
+  const account = req.headers.get("x-signature") ? await verifyMaker(req, "/v1/trocador/trades", raw) : null;
   const rateId = str(data.rate_id, 100);
   const provider = str(data.provider, 100);
   const address = str(data.address, 120).trim();
@@ -286,6 +323,7 @@ async function createTrade(req: Request, env: Env): Promise<Response> {
     if (refund && !XMR_MAIN.test(refund)) throw new HttpError(400, "el reembolso debe ser una dirección de Monero");
     if (coin.memo && !/^[A-Za-z0-9 _.:-]{1,100}$/.test(memo)) throw new HttpError(400, "esta moneda necesita memo o tag");
   }
+  if (account) await requireOwnWallet(account, side, coin, address, data.proof);
   await limitTrocador(env, req);
   if (side === "sell") {
     // Una sola consulta extra, solo al crear: que la dirección sirva para esa moneda y red.
