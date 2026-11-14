@@ -212,22 +212,36 @@ export async function userTxs() {
  * Prepara un envío SIN transmitirlo, para mostrar la comisión exacta y pedir confirmación.
  * `amount`: piconero en texto, o "all" para enviar todo el saldo disponible (la comisión de red se
  * descuenta del propio envío).
+ * `rule` (opcional): comisión de retiro de MoneroP2P `{ address, bps, min }` (bps y min en texto).
+ * Va como una salida más de la misma transacción; si no alcanza el mínimo, no se agrega.
  */
-export async function userPrepare(address, amount) {
+export async function userPrepare(address, amount, rule) {
   const w = userW();
+  const bps = rule ? BigInt(rule.bps) : 0n;
+  const min = rule ? BigInt(rule.min) : 0n;
   let dest;
   let subtractFeeFrom;
+  let platformFee = 0n;
   if (amount === "all") {
     const unlocked = BigInt(await w.getUnlockedBalance(0));
     if (unlocked <= 0n) throw new Error("not enough unlocked money");
-    dest = { address, amount: unlocked };
+    if (rule) {
+      platformFee = (unlocked * bps) / (10000n + bps);
+      if (platformFee < min) platformFee = 0n;
+    }
+    dest = { address, amount: unlocked - platformFee };
     subtractFeeFrom = [0];
   } else {
     dest = { address, amount: BigInt(amount) };
+    if (rule) {
+      platformFee = (dest.amount * bps) / 10000n;
+      if (platformFee < min) platformFee = 0n;
+    }
   }
-  const tx = await w.createTx({ accountIndex: 0, destinations: [dest], subtractFeeFrom, relay: false });
+  const destinations = platformFee > 0n ? [dest, { address: rule.address, amount: platformFee }] : [dest];
+  const tx = await w.createTx({ accountIndex: 0, destinations, subtractFeeFrom, relay: false });
   const sent = tx.getOutgoingTransfer()?.getDestinations()?.find((d) => d.getAddress() === address)?.getAmount();
-  return { txid: tx.getHash(), fee: String(tx.getFee()), amount: String(sent ?? dest.amount), address, metadata: tx.getMetadata() };
+  return { txid: tx.getHash(), fee: String(tx.getFee()), amount: String(sent ?? dest.amount), address, platformFee: String(platformFee), metadata: tx.getMetadata() };
 }
 
 /** Transmite un envío preparado. */

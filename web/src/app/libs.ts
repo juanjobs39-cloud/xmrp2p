@@ -86,7 +86,7 @@ export type Xmr = {
   userSync(onProgress?: (pct: number, height: number, end: number) => void, onChange?: () => void): Promise<UserWalletInfo>;
   userData(): Promise<{ keysData: Uint8Array; cacheData: Uint8Array }>;
   userTxs(): Promise<UserTx[]>;
-  userPrepare(address: string, amount: string): Promise<{ txid: string; fee: string; amount: string; address: string; metadata: string }>;
+  userPrepare(address: string, amount: string, rule?: { address: string; bps: string; min: string }): Promise<{ txid: string; fee: string; amount: string; address: string; platformFee: string; metadata: string }>;
   userRelay(metadata: string): Promise<string>;
   userClose(): Promise<void>;
   // P2P Fiat: wallet de escrow multisig 2 de 3 por orden.

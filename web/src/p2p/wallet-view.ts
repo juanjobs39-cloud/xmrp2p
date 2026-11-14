@@ -8,6 +8,7 @@
 import { NETWORKS, type EvmNetwork } from "../app/config";
 import { xmrLib, type UserTx, type UserWalletInfo } from "../app/libs";
 import { ApiError, get } from "./api";
+import { chargeable, feePercentLabel, withdrawRule, type FeeRule } from "./fee";
 import { addSeed, loadXmrCache, openVault, saveXmrCache } from "./identity";
 import { checkContact, isNickInput, parseNick, parsePayQuery, payQuery, signAddress, verifyAddress, type AddressRecord, type ContactCheck, type PayAsset } from "./pay";
 import type { P2PApp } from "./p2p-app";
@@ -346,6 +347,27 @@ function contactsCard(app: P2PApp): HTMLElement | null {
   );
 }
 
+// ------------------------------------------------------------------ comisión de retiro
+
+const feeLabel = (app: P2PApp, rule: FeeRule) => app.t(`Comisión de MoneroP2P (${feePercentLabel(rule)})`, `MoneroP2P fee (${feePercentLabel(rule)})`);
+
+/** Aviso bajo el formulario de envío; nada en redes donde no se cobra. */
+function feeNote(app: P2PApp, rule: FeeRule | null): HTMLElement | null {
+  if (!rule) return null;
+  return h(
+    "p",
+    {},
+    h(
+      "small",
+      { class: "muted" },
+      app.t(
+        `Retirar a una dirección externa paga ${feePercentLabel(rule)} a MoneroP2P, visible antes de confirmar. Enviar a otro usuario por @apodo no paga comisión de la plataforma; los montos muy chicos tampoco.`,
+        `Withdrawing to an external address pays ${feePercentLabel(rule)} to MoneroP2P, shown before you confirm. Sending to another user by @nickname pays no platform fee; neither do very small amounts.`,
+      ),
+    ),
+  );
+}
+
 // ------------------------------------------------------------------ vista
 
 export async function walletView(app: P2PApp): Promise<void> {
@@ -422,10 +444,12 @@ export async function walletView(app: P2PApp): Promise<void> {
       app.field(t("Moneda", "Coin"), asset),
       app.field(t("Destino: dirección de Arbitrum o @apodo", "Destination: Arbitrum address or @nickname"), to),
       app.field(t("Monto", "Amount"), h("div", { class: "p2p-suffix" }, amt, max)),
+      feeNote(app, withdrawRule("token", net.chainId)),
       h("p", {}, review),
       formMsg,
     );
     const symbol = (a: Asset) => (a === "eth" ? "ETH" : net.tokenSymbol);
+    const evmRule = (a: Asset) => withdrawRule(a, net.chainId);
     const dec = (a: Asset) => (a === "eth" ? 18 : TOKEN_DECIMALS);
 
     const confirm = (p: PreparedEvm, d: Dest) => {
@@ -460,8 +484,15 @@ export async function walletView(app: P2PApp): Promise<void> {
           [d.nick ? t("Su dirección", "Their address") : t("Destino", "To"), h("code", { class: "p2p-addr" }, p.to)],
           [t("Red", "Network"), net.name],
           [t("Recibe", "Receives"), h("strong", {}, `${formatAmount(p.amount, dec(p.asset))} ${symbol(p.asset)}`)],
+          ...(p.platformFee > 0n
+            ? ([
+                [feeLabel(app, evmRule(p.asset)!), `${formatAmount(p.platformFee, dec(p.asset))} ${symbol(p.asset)}`],
+                [t("Total que sale", "Total leaving"), `${formatAmount(p.amount + p.platformFee, dec(p.asset))} ${symbol(p.asset)}`],
+              ] as [string, Child][])
+            : []),
           [t("Comisión de red (máx.)", "Network fee (max)"), `${formatAmount(p.fee, 18, 8)} ETH`],
         ]),
+        p.platformFee > 0n ? h("p", {}, h("small", { class: "muted" }, t("La comisión de MoneroP2P sale en una segunda transferencia, justo después de tu envío.", "The MoneroP2P fee leaves in a second transfer, right after yours."))) : "",
         h("p", { class: "notice warn" }, t("Los envíos no se pueden deshacer. Comprueba que la dirección sea de la red Arbitrum: si la mandas a otra red, los fondos se pierden.", "Transfers cannot be undone. Check that the address is on the Arbitrum network: if you send to another network, the funds are lost.")),
         h("p", { class: "row wrap" }, go, back),
         msg,
@@ -480,7 +511,7 @@ export async function walletView(app: P2PApp): Promise<void> {
             throw new Error(t("Escribe un monto válido.", "Enter a valid amount."));
           }
           const d = await resolveDest(app, to.value, "evm");
-          confirm(await prepareEvm(pub, net, evm, a, d.address, amount).catch((e) => Promise.reject(evmError(app, e))), d);
+          confirm(await prepareEvm(pub, net, evm, a, d.address, amount, chargeable(evmRule(a), d, [evm])).catch((e) => Promise.reject(evmError(app, e))), d);
         },
         formMsg,
       );
@@ -554,7 +585,8 @@ export async function walletView(app: P2PApp): Promise<void> {
     amt.oninput = () => (all = false);
     const review = h("button", { class: "btn", type: "button" }, t("Revisar envío", "Review transfer"));
     const msg = h("div");
-    const form = h("div", { class: "p2p-form" }, app.field(t("Destino: dirección de Monero o @apodo", "Destination: Monero address or @nickname"), to), app.field(t("Monto en XMR", "Amount in XMR"), h("div", { class: "p2p-suffix" }, amt, max)), h("p", {}, review), msg);
+    const xmrRule = withdrawRule("xmr", v.network);
+    const form = h("div", { class: "p2p-form" }, app.field(t("Destino: dirección de Monero o @apodo", "Destination: Monero address or @nickname"), to), app.field(t("Monto en XMR", "Amount in XMR"), h("div", { class: "p2p-suffix" }, amt, max)), feeNote(app, xmrRule), h("p", {}, review), msg);
 
     review.onclick = () =>
       void app.busy(
@@ -571,7 +603,9 @@ export async function walletView(app: P2PApp): Promise<void> {
           } catch {
             throw new Error(t("Escribe un monto válido.", "Enter a valid amount."));
           }
-          const p = await xmr.userPrepare(address, amount).catch((e) => Promise.reject(xmrError(app, e)));
+          const rule = chargeable(xmrRule, d, st.address ? [st.address] : []);
+          const p = await xmr.userPrepare(address, amount, rule ? { address: rule.address, bps: String(rule.bps), min: String(rule.min) } : undefined).catch((e) => Promise.reject(xmrError(app, e)));
+          const pf = BigInt(p.platformFee || "0");
           const go = h("button", { class: "btn", type: "button" }, t("Confirmar y enviar", "Confirm and send"));
           const back = h("button", { class: "btn secondary", type: "button", onclick: () => xmrSendBox.replaceChildren(form) }, t("Cancelar", "Cancel"));
           const err = h("div");
@@ -605,8 +639,9 @@ export async function walletView(app: P2PApp): Promise<void> {
               ...destRows(app, d),
               [d.nick ? t("Su dirección", "Their address") : t("Destino", "To"), h("code", { class: "p2p-addr" }, p.address)],
               [t("Recibe", "Receives"), h("strong", {}, `${formatAmount(BigInt(p.amount), XMR_DECIMALS)} XMR`)],
+              ...(pf > 0n && rule ? ([[feeLabel(app, rule), `${formatAmount(pf, XMR_DECIMALS)} XMR`]] as [string, Child][]) : []),
               [t("Comisión de red", "Network fee"), `${formatAmount(BigInt(p.fee), XMR_DECIMALS)} XMR`],
-              [t("Total que sale", "Total leaving"), `${formatAmount(BigInt(p.amount) + BigInt(p.fee), XMR_DECIMALS)} XMR`],
+              [t("Total que sale", "Total leaving"), `${formatAmount(BigInt(p.amount) + BigInt(p.fee) + pf, XMR_DECIMALS)} XMR`],
             ]),
             h("p", { class: "notice warn" }, t("Los envíos de Monero no se pueden deshacer ni rastrear para recuperarlos. Revisa bien la dirección.", "Monero transfers cannot be undone or traced to recover them. Check the address carefully.")),
             h("p", { class: "row wrap" }, go, back),
