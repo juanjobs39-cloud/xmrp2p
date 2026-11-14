@@ -271,6 +271,16 @@ describe("precio de referencia", () => {
     expect(aggregate({ kraken: 600, coingecko: 601, kucoin: 599 }).price).toBe(600);
     expect(() => aggregate({ kraken: 600 })).toThrow(/fuentes/);
     expect(() => aggregate({ kraken: 600, coingecko: 600, kucoin: 700 })).toThrow(/divergentes/);
+    // Una fuente se sale y tres coinciden: se descarta y no entra en la mediana.
+    const one = aggregate({ kraken: 530, kucoin: 531, htx: 529, mexc: 518 });
+    expect(one.price).toBe(530);
+    expect(one.dropped).toEqual(["mexc"]);
+    expect(one.sources).not.toHaveProperty("mexc");
+    expect(aggregate({ kraken: 530, kucoin: 531, htx: 529, coingecko: 530, mexc: 400 }).price).toBe(530);
+    // Sin mayoría de 3 que coincidan, sigue fallando.
+    expect(() => aggregate({ kraken: 530, kucoin: 531, mexc: 519 })).toThrow(/divergentes: mexc/);
+    expect(() => aggregate({ kraken: 530, kucoin: 531, mexc: 400, htx: 401 })).toThrow(/divergentes/);
+    expect(() => aggregate({ kraken: 500, kucoin: 520, htx: 540, mexc: 560 })).toThrow(/divergentes/);
     expect(aggregate({ kraken: 600, coingecko: Number.NaN, kucoin: 602 }).price).toBe(601);
   });
 });
