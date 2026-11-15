@@ -21,6 +21,8 @@ const trocador = `https://trocador.app/${["es", "pt", "ru", "fr", "de", "it"].in
 // Llega con USDT (Arbitrum) → XMR preseleccionados; la app agrega amount_from con el monto.
 const trocadorWidget = `https://trocador.app/widget/?ticker_from=usdt&network_from=Arbitrum&ticker_to=xmr&network_to=Mainnet${trocadorRef ? `&ref=${encodeURIComponent(trocadorRef)}` : ""}`;
 const draftUi = import.meta.env.PUBLIC_DRAFT_UI !== "off";
+// Solo cuando las wallets de la cuenta están activas existe «Cambiar» con cuenta en el sitio Fiat.
+const walletsOn = import.meta.env.PUBLIC_P2P_WALLETS === "on";
 
 // CSP estricta: solo código propio. 'wasm-unsafe-eval' es necesario para WebAssembly
 // (núcleo cripto y monero-ts); no habilita eval de JavaScript.
@@ -76,6 +78,12 @@ const softwareLd = {
       <a href={ROUTES.app[lang]} aria-current="page">{t("Cripto ↔ Cripto", "Crypto ↔ Crypto")}</a>
       <a href={fiatHref(lang)}>{t("Con pesos, dólares… (P2P)", "With cash or bank (P2P)")}</a>
     </nav>
+    {walletsOn && (
+      <p class="notice acct-hint">
+        {t("¿Tienes cuenta en MoneroP2P? Cambia desde tu wallet: lo que compras llega a tu cuenta, sin copiar direcciones.", "Have a MoneroP2P account? Swap from your wallet: what you buy lands in your account, with no addresses to copy.")}
+        {" "}<a href={`${fiatHref(lang)}app/#/cambiar`}>{t("Entrar con mi cuenta", "Sign in with my account")}</a>
+      </p>
+    )}
     <h1>{t("Cambiar USDT por XMR", "Swap USDT for XMR")} <span class="badge only-test">Testnet</span><span class="badge real only-real">{t("Dinero real", "Real money")}</span></h1>
     <NetSwitch lang={lang} />
     {draftUi && (

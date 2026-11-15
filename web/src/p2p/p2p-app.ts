@@ -500,6 +500,18 @@ export class P2PApp {
     const why = g
       ? h("p", { class: "notice p2p-why" }, this.t(`${g[0]} ${exists ? "entra a tu cuenta." : "necesitas una cuenta. Se crea aquí mismo, en un minuto."}`, `${g[1]}, ${exists ? "unlock your account." : "you need an account. It is created right here, in a minute."}`))
       : null;
+    // Quien solo quiere cambiar sin registrarse sigue teniendo el exchange sin cuenta (otro dominio).
+    const mainSite = ((import.meta.env.PUBLIC_SITE_URL as string | undefined) ?? "https://monerop2p.app").replace(/\/$/, "");
+    const noAcct =
+      wanted === "cambiar"
+        ? h(
+            "p",
+            { class: "p2p-alt" },
+            this.t("Con tu cuenta, lo que cambias llega a tu wallet sin copiar direcciones. ¿Prefieres no crear cuenta? ", "With your account, what you swap lands in your wallet with no addresses to copy. Rather not create one? "),
+            h("a", { href: `${mainSite}/${this.lang === "es" ? "es" : "en"}/app/` }, this.t("Usa el exchange sin cuenta", "Use the no-account exchange")),
+            ".",
+          )
+        : null;
     const pass = h("input", { id: "p2p-pass", type: "password", autocomplete: "current-password" });
     const unlock = h("button", { class: "btn", type: "button" }, this.t("Entrar", "Unlock"));
     unlock.onclick = () => void this.busy(unlock, async () => this.unlocked(await openVault(net, pass.value), pass.value, next), out);
@@ -568,6 +580,7 @@ export class P2PApp {
     this.show(
       exists ? null : this.signupSteps(1),
       why,
+      exists ? null : noAcct,
       out,
       exists
         ? h(
