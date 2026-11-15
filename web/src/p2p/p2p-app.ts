@@ -88,6 +88,8 @@ export class P2PApp {
     const here = `${view}/${arg ?? ""}`;
     if (this.lastRoute !== null && this.lastRoute !== here) window.scrollTo({ top: 0, behavior: "instant" });
     this.lastRoute = here;
+    // Cambiar no obliga a tener cuenta: sin sesión se elige entre el exchange sin cuenta y entrar.
+    if (view === "cambiar" && WALLETS_ON && !this.vault && !location.hash.includes("?cuenta")) return this.swapChoice();
     const needs = ["nuevo", "ordenes", "orden", "anuncios", "cuenta", "admin", "wallet", "cambiar"].includes(view);
     if (needs && !this.vault) return this.accountView(view === "cuenta" ? "" : location.hash);
     this.nav(view);
@@ -501,14 +503,13 @@ export class P2PApp {
       ? h("p", { class: "notice p2p-why" }, this.t(`${g[0]} ${exists ? "entra a tu cuenta." : "necesitas una cuenta. Se crea aquí mismo, en un minuto."}`, `${g[1]}, ${exists ? "unlock your account." : "you need an account. It is created right here, in a minute."}`))
       : null;
     // Quien solo quiere cambiar sin registrarse sigue teniendo el exchange sin cuenta (otro dominio).
-    const mainSite = ((import.meta.env.PUBLIC_SITE_URL as string | undefined) ?? "https://monerop2p.app").replace(/\/$/, "");
     const noAcct =
       wanted === "cambiar"
         ? h(
             "p",
             { class: "p2p-alt" },
             this.t("Con tu cuenta, lo que cambias llega a tu wallet sin copiar direcciones. ¿Prefieres no crear cuenta? ", "With your account, what you swap lands in your wallet with no addresses to copy. Rather not create one? "),
-            h("a", { href: `${mainSite}/${this.lang === "es" ? "es" : "en"}/app/` }, this.t("Usa el exchange sin cuenta", "Use the no-account exchange")),
+            h("a", { href: this.openSwapUrl }, this.t("Usa el exchange sin cuenta", "Use the no-account exchange")),
             ".",
           )
         : null;
@@ -629,6 +630,40 @@ export class P2PApp {
             h("p", {}, fromWords),
           )
         : null,
+    );
+  }
+
+  /** El exchange sin cuenta vive en el sitio principal (otro dominio). */
+  private get openSwapUrl() {
+    const site = ((import.meta.env.PUBLIC_SITE_URL as string | undefined) ?? "https://monerop2p.app").replace(/\/$/, "");
+    return `${site}/${this.lang === "es" ? "es" : "en"}/app/`;
+  }
+
+  /** «Cambiar» sin sesión: la cuenta es opcional. Primero el exchange sin cuenta; al lado, hacerlo con la cuenta. */
+  private swapChoice() {
+    const t = this.t;
+    this.nav("cambiar");
+    this.show(
+      h("h2", {}, t("Cambiar cripto", "Swap crypto")),
+      h("p", { class: "p2p-alt" }, t("No necesitas cuenta para cambiar. Si tienes una, puedes usarla para que todo llegue a tu wallet.", "You do not need an account to swap. If you have one, you can use it so everything lands in your wallet.")),
+      h(
+        "div",
+        { class: "p2p-choice" },
+        h(
+          "section",
+          { class: "card p2p-box" },
+          h("h3", {}, t("Sin cuenta", "No account")),
+          h("p", {}, t("Sin registro ni KYC: eliges las monedas, pones tu dirección para recibir y envías el depósito desde tu propia wallet.", "No sign-up, no KYC: you pick the coins, enter your receiving address and send the deposit from your own wallet.")),
+          h("p", {}, h("a", { class: "btn", href: this.openSwapUrl }, t("Cambiar sin cuenta", "Swap without an account"))),
+        ),
+        h(
+          "section",
+          { class: "card p2p-box" },
+          h("h3", {}, t("Con mi cuenta", "With my account"), " ", h("span", { class: "badge muted" }, t("Opcional", "Optional"))),
+          h("p", {}, t("Cambias entre tus wallets de MoneroP2P: lo que compras llega a tu wallet y el depósito sale de ella, sin copiar direcciones.", "You swap between your MoneroP2P wallets: what you buy lands in your wallet and the deposit leaves from it, with no addresses to copy.")),
+          h("p", {}, h("a", { class: "btn secondary", href: "#/cambiar?cuenta" }, this.hasAcct ? t("Entrar a mi cuenta", "Unlock my account") : t("Crear cuenta o entrar", "Create account or sign in"))),
+        ),
+      ),
     );
   }
 
