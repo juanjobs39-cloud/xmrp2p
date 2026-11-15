@@ -130,3 +130,5 @@ Sí, en monerop2p.app y fiat.monerop2p.app. Cada conexión o firma pide tu aprob
 El código está en [GitHub](https://github.com/juanjobs39-cloud/xmrp2p/tree/main/wallet). Usar cripto tiene riesgos: lee el [aviso de riesgos](/es/aviso-de-riesgos/).
 
 [Ver MoneroP2P Wallet →](/es/wallet/)
+
+¿No quieres instalar nada? Cada cuenta de P2P Fiat ya trae una wallet web sin custodia: [wallet de Monero y USDT en tu cuenta](/es/novedades/wallet-de-monero-y-usdt-sin-custodia-en-tu-cuenta/).

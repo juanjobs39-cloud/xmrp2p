@@ -130,3 +130,5 @@ Por enquanto em inglês e espanhol.
 O código está no [GitHub](https://github.com/juanjobs39-cloud/xmrp2p/tree/main/wallet). Usar cripto tem riscos: leia o [aviso de riscos](/pt/risk-notice/).
 
 [Ver a MoneroP2P Wallet →](/pt/wallet/)
+
+Não quer instalar nada? Cada conta do P2P Fiat já traz uma carteira web sem custódia: [carteira de Monero e USDT na sua conta](/pt/news/non-custodial-monero-and-usdt-wallet-in-your-account/).

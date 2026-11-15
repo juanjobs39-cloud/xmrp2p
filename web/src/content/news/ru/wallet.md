@@ -130,3 +130,5 @@ MoneroP2P Wallet объединяет всё в одном расширении:
 Код на [GitHub](https://github.com/juanjobs39-cloud/xmrp2p/tree/main/wallet). Работа с криптовалютой связана с риском: прочитайте [предупреждение о рисках](/ru/risk-notice/).
 
 [Открыть MoneroP2P Wallet →](/ru/wallet/)
+
+Не хотите ничего устанавливать? В каждом аккаунте P2P Fiat уже есть некастодиальный веб-кошелёк: [кошелёк Monero и USDT в вашем аккаунте](/ru/news/non-custodial-monero-and-usdt-wallet-in-your-account/).

@@ -130,3 +130,5 @@ Yes, on monerop2p.app and fiat.monerop2p.app. Every connection or signature asks
 The code is on [GitHub](https://github.com/juanjobs39-cloud/xmrp2p/tree/main/wallet). Using crypto carries risk: read the [risk notice](/en/risk-notice/).
 
 [See MoneroP2P Wallet →](/en/wallet/)
+
+Rather not install anything? Every P2P Fiat account now includes a non-custodial web wallet: [Monero and USDT wallet in your account](/en/news/non-custodial-monero-and-usdt-wallet-in-your-account/).

@@ -135,3 +135,5 @@ Más respuestas en las [preguntas frecuentes de P2P Fiat](https://fiat.monerop2p
 [Abrir P2P Fiat →](https://fiat.monerop2p.app/es/app/)
 
 ¿Prefieres hacerlo desde el celular? El mercado también se abre dentro de Telegram, con avisos de tus órdenes y alertas de anuncios nuevos: [comprar y vender Monero por Telegram](/es/novedades/comprar-monero-por-telegram-bot/).
+
+¿No quieres instalar nada? Cada cuenta de P2P Fiat ya trae una wallet web sin custodia: [wallet de Monero y USDT en tu cuenta](/es/novedades/wallet-de-monero-y-usdt-sin-custodia-en-tu-cuenta/).
