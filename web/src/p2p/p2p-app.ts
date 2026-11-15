@@ -577,7 +577,10 @@ export class P2PApp {
         out,
       );
 
-    pass.onkeydown = (e) => e.key === "Enter" && unlock.click();
+    // Con llaves: un manejador on* que devuelve false cancela la tecla (no dejaba borrar ni escribir).
+    pass.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") unlock.click();
+    });
     const wantsIn = location.hash.includes("?entrar");
     this.show(
       exists ? null : this.signupSteps(1),
@@ -710,7 +713,9 @@ export class P2PApp {
     let got = false;
     const ok = h("input", { id: "p2p-bk-ok", type: "checkbox" });
     const cont = h("button", { class: "btn", type: "button", disabled: true }, t("Continuar", "Continue"));
-    const update = () => (cont.disabled = !(got && ok.checked));
+    const update = () => {
+      cont.disabled = !(got && ok.checked);
+    };
     ok.onchange = update;
     const dl = h("button", { class: "btn", type: "button" }, t("Descargar respaldo", "Download backup"));
     dl.onclick = () =>
