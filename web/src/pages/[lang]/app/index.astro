@@ -81,7 +81,7 @@ const softwareLd = {
     {walletsOn && (
       <p class="notice acct-hint">
         {t("¿Tienes cuenta en MoneroP2P? Cambia desde tu wallet: lo que compras llega a tu cuenta, sin copiar direcciones.", "Have a MoneroP2P account? Swap from your wallet: what you buy lands in your account, with no addresses to copy.")}
-        {" "}<a href={`${fiatHref(lang)}app/#/cambiar`}>{t("Entrar con mi cuenta", "Sign in with my account")}</a>
+        {" "}<a href={`${fiatHref(lang)}app/#/cambiar?cuenta`}>{t("Entrar con mi cuenta", "Sign in with my account")}</a>
       </p>
     )}
     <h1>{t("Cambiar USDT por XMR", "Swap USDT for XMR")} <span class="badge only-test">Testnet</span><span class="badge real only-real">{t("Dinero real", "Real money")}</span></h1>

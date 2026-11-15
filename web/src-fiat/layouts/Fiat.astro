@@ -99,7 +99,7 @@ const nav: [RouteKey, string][] = [
         <nav aria-label={t("Principal", "Main")}>
           <ul>
             {nav.map(([k, label]) => <li><a href={ROUTES[k][lang]} aria-current={path === ROUTES[k][lang] ? "page" : undefined}>{label}</a></li>)}
-            <li><a class="nav-cta" href={import.meta.env.PUBLIC_P2P_WALLETS === "on" ? `${ROUTES.app[lang]}#/cambiar` : mainPath("app/", "app/")}>{t("Swaps cripto", "Crypto swaps")}</a></li>
+            <li><a class="nav-cta" href={mainPath("app/", "app/")}>{t("Swaps cripto", "Crypto swaps")}</a></li>
             <li><a class="nav-cta primary" href={ROUTES.app[lang]} aria-current={path === ROUTES.app[lang] ? "page" : undefined}>{t("Abrir mercado", "Open market")}</a></li>
           </ul>
         </nav>
