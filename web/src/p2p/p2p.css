@@ -449,3 +449,5 @@ main.p2p-page[data-view]:not([data-view="mercado"]) .p2p-hero { margin-bottom: 0
 .p2p-alt { max-width: 46rem; margin: 0 0 0.9rem; font-size: 0.92rem; color: var(--muted); }
 .p2p-choice { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); align-items: start; }
 .p2p-choice .p2p-box { margin: 0; }
+.p2p-bk { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; margin: 0 0 1rem; max-width: 46rem; box-sizing: border-box; }
+.p2p-bk > span { flex: 1 1 14rem; }

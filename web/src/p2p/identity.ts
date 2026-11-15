@@ -56,6 +56,8 @@ export interface P2PVault {
   contacts?: Record<string, import("./pay").Contact>;
   /** Cambios hechos con la cuenta (vía Trocador), el más nuevo primero. */
   swaps?: import("./swap").SwapRecord[];
+  /** true mientras el respaldo descargado no incluya lo último importante (cuenta nueva o wallets recién agregadas). */
+  backupDue?: boolean;
 }
 
 const DB = "monerop2p-p2p";

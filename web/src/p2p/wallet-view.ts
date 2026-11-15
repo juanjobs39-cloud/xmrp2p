@@ -810,6 +810,7 @@ export async function walletView(app: P2PApp): Promise<void> {
 
   app.show(
     out,
+    app.backupNotice(),
     h(
       "div",
       { class: "row between wrap" },

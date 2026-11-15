@@ -11,7 +11,7 @@ import { moneroWallet, walletAddressButton } from "../app/wallet-provider";
 import { closingConfirmation, initTelegram, inTelegram } from "./tg";
 import { ApiError, get, signed, type Ad, type Method, type OrderView, type P2PConfig, type PublicUser, type RoomMessage } from "./api";
 import { EscrowDriver, type EscrowNote } from "./escrow";
-import { account, encPublic, hasVault, newVault, open, openVault, saveVault, seal, vaultFromSeed, type P2PVault, type SavedMethod } from "./identity";
+import { account, addSeed, encPublic, hasVault, newVault, open, openVault, saveVault, seal, vaultFromSeed, type P2PVault, type SavedMethod } from "./identity";
 import "./p2p.css";
 import { avatar, h, fmtXmr, icon, nowS, type Child } from "./ui";
 import { marketView } from "./market";
@@ -131,6 +131,13 @@ export class P2PApp {
     // La cabecera completa solo en el mercado: en las demás pantallas el contenido va arriba.
     const main = document.querySelector<HTMLElement>("main.p2p-page");
     if (main) main.dataset.view = view || "mercado";
+    // Con la sesión abierta, «Swaps cripto» abre el cambio con tu cuenta aquí mismo; salir a otro
+    // dominio cerraría la sesión. Sin sesión va al exchange sin cuenta, como siempre.
+    const cta = document.querySelector<HTMLAnchorElement>("a.nav-cta:not(.primary)");
+    if (cta && WALLETS_ON) {
+      cta.dataset.main ??= cta.getAttribute("href") ?? "";
+      cta.setAttribute("href", this.vault ? "#/cambiar" : cta.dataset.main);
+    }
     this.drawStrip();
   }
 
@@ -529,6 +536,7 @@ export class P2PApp {
           if (p1.value.length < 10) throw new Error(this.t("La contraseña debe tener al menos 10 caracteres.", "The password must be at least 10 characters."));
           if (p1.value !== p2.value) throw new Error(this.t("Las contraseñas no coinciden.", "Passwords do not match."));
           const v = newVault(net, WALLETS_ON);
+          v.backupDue = true;
           await signed(account(v), "PUT", "/v1/p2p/me", { nickname: nick.value.trim(), enc_pubkey: await encPublic(v) });
           await saveVault(v, p1.value);
           await this.session(v, p1.value);
@@ -677,6 +685,18 @@ export class P2PApp {
     this.pass = pass;
     this.acct = account(v);
     this.hasAcct = true;
+    // Las cuentas anteriores a las wallets las reciben al entrar, sin pasos extra: la identidad no cambia.
+    if (WALLETS_ON && !v.seed) {
+      let height: number | undefined;
+      try {
+        height = Math.max(0, Number(await (await xmrLib()).daemonHeight(this.node)) - 5);
+      } catch {
+        // Sin nodo a la mano la wallet escaneará desde más atrás; no impide crearla.
+      }
+      addSeed(v, height);
+      v.backupDue = true;
+      await saveVault(v, pass);
+    }
     try {
       this.me = await this.req<PublicUser>("GET", "/v1/p2p/me");
     } catch (e) {
@@ -793,7 +813,21 @@ export class P2PApp {
     );
   }
 
+  /** Aviso mientras el respaldo guardado no incluya las wallets de la cuenta. */
+  backupNotice(): HTMLElement | null {
+    if (!this.vault?.backupDue) return null;
+    const box = h("div", { class: "notice warn p2p-bk" });
+    const b = h("button", { class: "btn small", type: "button" }, this.t("Descargar respaldo", "Download backup"));
+    b.onclick = () => void this.busy(b, async () => (await this.downloadBackup(), box.remove()), box);
+    box.append(
+      h("span", {}, this.t("Guarda tu respaldo nuevo: incluye tus wallets. Sin él y tu contraseña nadie puede recuperar tus fondos.", "Save your new backup: it includes your wallets. Without it and your password nobody can recover your funds.")),
+      b,
+    );
+    return box;
+  }
+
   async downloadBackup() {
+    this.vault!.backupDue = false;
     const file = await saveVault(this.vault!, this.pass);
     const a = h("a", { href: URL.createObjectURL(new Blob([JSON.stringify(file, null, 1)], { type: "application/json" })), download: `monerop2p-p2p-respaldo-${new Date().toISOString().slice(0, 10)}.json` });
     a.click();
@@ -823,6 +857,7 @@ export class P2PApp {
     const hasSeed = WALLETS_ON && !!this.vault!.seed;
     this.show(
       out,
+      this.backupNotice(),
       // Todo lo tuyo en una pantalla: quién eres, cuánto tienes y qué puedes hacer.
       h(
         "section",
