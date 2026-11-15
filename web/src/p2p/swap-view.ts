@@ -7,6 +7,7 @@
  * después de que el usuario revisa y confirma. Solo existe con PUBLIC_P2P_WALLETS=on.
  */
 import type { TrocadorCoin, TrocadorQuote, TrocadorRates, TrocadorTrade } from "../app/api";
+import { COINS, iconEl } from "../app/coins";
 import { API_URL, NETWORKS, type EvmNetwork } from "../app/config";
 import { xmrLib } from "../app/libs";
 import { signed } from "./api";
@@ -14,7 +15,7 @@ import { signAddress } from "./pay";
 import type { P2PApp } from "./p2p-app";
 import { qrSvg } from "./qr";
 import { autoDeposit, DECIMALS, isFinal, planSwap, upsertSwap, type Internal, type Leg, type SwapPlan, type SwapRecord } from "./swap";
-import { h, type Child } from "./ui";
+import { h, icon, type Child } from "./ui";
 import { balances, prepareEvm, publicClient, sendEvm } from "./wallet-evm";
 import { copyButton, evmError, kv, persistXmr, startXmr, xmrError, xmrReady, XMR_EXPLORER } from "./wallet-view";
 import { evmAddress, evmKey, formatAmount, parseAmount } from "./wallets";
@@ -33,6 +34,14 @@ async function call<T>(path: string): Promise<T> {
 }
 
 const NAME: Record<Internal, string> = { xmr: "XMR", usdt: "USDT", eth: "ETH" };
+const INTERNAL_NET: Record<Internal, string> = { xmr: "Monero", usdt: "Arbitrum One", eth: "Arbitrum One" };
+
+/** Un lado del cambio: una wallet de la cuenta u otra moneda de la lista de Trocador. */
+type Choice = { internal: Internal } | { other: TrocadorCoin };
+const isInt = (c: Choice): c is { internal: Internal } => "internal" in c;
+const ticker = (c: Choice) => (isInt(c) ? NAME[c.internal] : c.other.ticker.toUpperCase());
+const network = (c: Choice) => (isInt(c) ? INTERNAL_NET[c.internal] : c.other.network);
+const coinIcon = (c: Choice, size: number) => (isInt(c) ? iconEl(c.internal, undefined, SWAP_API, size) : iconEl(c.other.ticker, c.other.img, SWAP_API, size));
 const clean = (s: string) => s.trim().replace(",", ".");
 
 export async function swapView(app: P2PApp): Promise<void> {
@@ -53,52 +62,90 @@ export async function swapView(app: P2PApp): Promise<void> {
   const st = startXmr(app);
 
   // ---------------------------------------------------------------- formulario
-  const legSelect = (id: string, value: string) =>
-    h(
-      "select",
-      { id },
-      (["xmr", "usdt", "eth"] as Internal[]).map((c) => h("option", { value: c, selected: c === value }, c === "xmr" ? t("XMR · tu wallet", "XMR · your wallet") : t(`${NAME[c]} (Arbitrum) · tu wallet`, `${NAME[c]} (Arbitrum) · your wallet`))),
-      h("option", { value: "other" }, t("Otra moneda…", "Another coin…")),
-    );
-  const from = legSelect("p2p-s-from", "usdt");
-  const to = legSelect("p2p-s-to", "xmr");
-  const otherIn = h("input", { id: "p2p-s-other", type: "text", autocomplete: "off", spellcheck: false, autocapitalize: "none", placeholder: "BTC · Mainnet" });
-  otherIn.setAttribute("list", "p2p-s-coins");
-  const coinList = h("datalist", { id: "p2p-s-coins" });
-  const otherF = app.field(t("Qué moneda", "Which coin"), otherIn, t("Escribe para buscar y elige de la lista (moneda · red).", "Type to search and pick from the list (coin · network)."));
-  const amt = h("input", { id: "p2p-s-amt", type: "text", inputMode: "decimal", autocomplete: "off", placeholder: "0.00" });
+  // Mismo formato que el exchange de monerop2p.app: selector con ícono, monto grande, invertir y cotizar.
+  const sel: { from: Choice; to: Choice } = { from: { internal: "usdt" }, to: { internal: "xmr" } };
+  const mine = (c: Choice) => (isInt(c) ? " · " + t("tu wallet", "your wallet") : "");
+
+  let coins: TrocadorCoin[] | null = null;
+  const loadCoins = async () => {
+    coins ??= await call<TrocadorCoin[]>("/v1/trocador/coins?v=2");
+  };
+
+  const amt = h("input", { id: "p2p-s-amt", type: "text", inputMode: "decimal", autocomplete: "off", placeholder: "50" });
   const max = h("button", { class: "p2p-link", type: "button" }, t("Todo", "Max"));
+  const unit = h("span", { class: "quick-unit" });
   const dest = h("input", { id: "p2p-s-dest", type: "text", autocomplete: "off", spellcheck: false, autocapitalize: "none" });
   const destF = app.field(t("Tu dirección para recibir", "Your address to receive"), dest, t("Esta moneda todavía no tiene wallet en la plataforma: se envía a la dirección que pongas. Revisa que sea de esa red.", "This coin has no wallet on the platform yet: it is sent to the address you enter. Check that it is on that network."));
   const memo = h("input", { id: "p2p-s-memo", type: "text", autocomplete: "off", spellcheck: false });
   const memoF = app.field(t("Memo o tag", "Memo or tag"), memo, t("Esta moneda lo necesita para acreditar el pago.", "This coin needs it to credit the payment."));
   const refund = h("input", { id: "p2p-s-refund", type: "text", autocomplete: "off", spellcheck: false, autocapitalize: "none" });
   const refundF = app.field(t("Dirección de reembolso (opcional)", "Refund address (optional)"), refund, t("De la moneda que envías, por si el exchange tiene que devolverla.", "Of the coin you send, in case the exchange has to return it."));
-  const quoteBtn = h("button", { class: "btn", type: "button" }, t("Ver cotizaciones", "Get quotes"));
+  const quoteBtn = h("button", { class: "btn big", type: "button" }, t("Ver cotizaciones", "Get quotes"));
   const formMsg = h("div");
   const stage = h("div");
-  const hint = h("p", {}, h("small", { class: "muted" }));
+  const hint = h("p", { class: "meta" });
 
-  let coins: TrocadorCoin[] | null = null;
-  const loadCoins = async () => {
-    if (coins) return;
-    coins = await call<TrocadorCoin[]>("/v1/trocador/coins?v=2");
-    coinList.replaceChildren(...coins.map((c) => h("option", { value: `${c.ticker.toUpperCase()} · ${c.network}` }, c.name)));
+  /** Selector de moneda con ícono: primero tus wallets, luego el buscador con el resto. */
+  function picker(side: "from" | "to") {
+    const btn = h("button", { class: "coin-btn", type: "button", "aria-expanded": "false", "aria-label": side === "from" ? t("Moneda que envías", "Coin you send") : t("Moneda que recibes", "Coin you get") });
+    const search = h("input", { class: "p2p-coin-search", type: "search", autocomplete: "off", spellcheck: false, placeholder: t("Busca otra moneda o red", "Search another coin or network") });
+    const list = h("ul", { class: "coin-list" });
+    const panel = h("div", { class: "coin-panel", hidden: true }, search, list);
+    const wrap = h("div", { class: "coin-pick" }, btn, panel);
+    const close = () => {
+      panel.hidden = true;
+      btn.setAttribute("aria-expanded", "false");
+    };
+    const option = (c: Choice) => {
+      const b = h("button", { class: "coin-opt", type: "button" }, coinIcon(c, 22), h("strong", {}, ticker(c)), h("span", {}, network(c) + mine(c)));
+      b.onclick = () => {
+        close();
+        pick(side, c);
+      };
+      return h("li", {}, b);
+    };
+    const fill = () => {
+      const q = search.value.trim().toLowerCase();
+      // Las de la cuenta ya salen arriba; XMR siempre es una wallet propia.
+      const outside = (c: TrocadorCoin) => c.ticker.toLowerCase() !== "xmr" && !(c.network === "Arbitrum" && ["usdt", "eth"].includes(c.ticker.toLowerCase()));
+      const all = (coins ?? []).filter(outside);
+      const others = q
+        ? all.filter((c) => `${c.ticker} ${c.name} ${c.network}`.toLowerCase().includes(q)).slice(0, 40)
+        : COINS.map((k) => all.find((c) => c.ticker.toLowerCase() === k.ticker && c.network.toLowerCase() === k.network.toLowerCase())).filter((c): c is TrocadorCoin => !!c);
+      list.replaceChildren(
+        ...(q ? [] : [h("li", { class: "meta" }, t("Tus wallets", "Your wallets")), ...(["xmr", "usdt", "eth"] as Internal[]).map((c) => option({ internal: c }))]),
+        h("li", { class: "meta" }, !coins ? t("Cargando más monedas…", "Loading more coins…") : q ? (others.length ? t("Resultados", "Results") : t("Ninguna moneda coincide.", "No coin matches.")) : t("Otras monedas populares. Escribe para buscar entre más de 2 500.", "Other popular coins. Type to search 2,500+.")),
+        ...others.map((c) => option({ other: c })),
+      );
+    };
+    search.oninput = fill;
+    btn.onclick = () => {
+      const opening = panel.hidden;
+      for (const other of pickers) other.close();
+      if (!opening) return;
+      panel.hidden = false;
+      btn.setAttribute("aria-expanded", "true");
+      search.value = "";
+      fill();
+      void loadCoins().then(fill, (e) => formMsg.replaceChildren(app.error(e)));
+    };
+    const render = (c: Choice) => btn.replaceChildren(h("span", { class: "coin-sel" }, coinIcon(c, 22), h("strong", {}, ticker(c)), h("small", {}, network(c) + mine(c))), h("span", { class: "coin-caret", "aria-hidden": "true" }, icon("chevron")));
+    return { wrap, render, close };
+  }
+  const pickers: ReturnType<typeof picker>[] = [];
+  const pickFrom = picker("from");
+  const pickTo = picker("to");
+  pickers.push(pickFrom, pickTo);
+  // Tocar fuera cierra el selector abierto; el aviso se quita solo al salir de esta pantalla.
+  const outsideClick = (e: MouseEvent) => {
+    if (!document.contains(pickFrom.wrap)) return document.removeEventListener("click", outsideClick);
+    for (const pk of pickers) if (!pk.wrap.contains(e.target as Node)) pk.close();
   };
-  const otherCoin = (): TrocadorCoin | null => {
-    const m = /^\s*(\S+)\s*·\s*(.+?)\s*$/.exec(otherIn.value);
-    return (m && coins?.find((c) => c.ticker.toLowerCase() === m[1]!.toLowerCase() && c.network.toLowerCase() === m[2]!.toLowerCase())) || null;
-  };
-  const leg = (sel: HTMLSelectElement): Leg | null => {
-    if (sel.value !== "other") return { kind: "internal", coin: sel.value as Internal };
-    const c = otherCoin();
-    return c ? { kind: "other", ticker: c.ticker, network: c.network, memo: c.memo } : null;
-  };
+  document.addEventListener("click", outsideClick);
+
+  const leg = (c: Choice): Leg => (isInt(c) ? { kind: "internal", coin: c.internal } : { kind: "other", ticker: c.other.ticker, network: c.other.network, memo: c.other.memo });
   const currentPlan = (): SwapPlan => {
-    const a = leg(from);
-    const b = leg(to);
-    if (!a || !b) throw new Error(t("Elige la otra moneda de la lista (moneda · red).", "Pick the other coin from the list (coin · network)."));
-    const p = planSwap(a, b);
+    const p = planSwap(leg(sel.from), leg(sel.to));
     if (p === "same") throw new Error(t("Elige dos monedas distintas.", "Pick two different coins."));
     if (p === "need_xmr") throw new Error(t("Por ahora uno de los dos lados debe ser Monero (XMR).", "For now one of the two sides must be Monero (XMR)."));
     return p;
@@ -108,30 +155,35 @@ export async function swapView(app: P2PApp): Promise<void> {
     return p.side === "buy" ? { from: other, to: "XMR" } : { from: "XMR", to: other };
   };
 
-  const sync = (changed?: HTMLSelectElement) => {
-    // Uno de los dos lados es siempre Monero: al mover uno, el otro se acomoda.
-    if (changed) {
-      const other = changed === from ? to : from;
-      if (changed.value !== "xmr") other.value = "xmr";
-      else if (other.value === "xmr") other.value = "usdt";
-    }
-    const isOther = from.value === "other" || to.value === "other";
-    otherF.hidden = !isOther;
-    if (isOther) void loadCoins().catch((e) => formMsg.replaceChildren(app.error(e)));
-    const c = otherCoin();
-    destF.hidden = to.value !== "other";
-    memoF.hidden = !(to.value === "other" && c?.memo);
-    refundF.hidden = from.value !== "other";
-    max.hidden = from.value === "other";
-    hint.firstElementChild!.textContent =
-      to.value === "other"
-        ? ""
-        : t(`Lo que compres llega a tu wallet de ${to.value === "xmr" ? "Monero" : "Arbitrum"} de la plataforma. Para sacarlo a otra wallet, envíalo después desde la pestaña Wallet.`, `What you buy arrives in your platform ${to.value === "xmr" ? "Monero" : "Arbitrum"} wallet. To move it to another wallet, send it afterwards from the Wallet tab.`);
+  const sync = () => {
+    pickFrom.render(sel.from);
+    pickTo.render(sel.to);
+    unit.replaceChildren(h("span", { class: "unit-top" }, coinIcon(sel.from, 26), h("span", {}, ticker(sel.from))), " ", h("small", {}, network(sel.from)));
+    const to = sel.to;
+    destF.hidden = isInt(to);
+    memoF.hidden = isInt(to) || !to.other.memo;
+    refundF.hidden = isInt(sel.from);
+    max.hidden = !isInt(sel.from);
+    hint.textContent = isInt(to)
+      ? t(`Lo que compres llega a tu wallet de ${to.internal === "xmr" ? "Monero" : "Arbitrum"}. Para sacarlo a otra wallet, envíalo después desde Wallet.`, `What you buy lands in your ${to.internal === "xmr" ? "Monero" : "Arbitrum"} wallet. To move it elsewhere, send it afterwards from Wallet.`)
+      : "";
+    hint.hidden = !isInt(to);
     stage.replaceChildren();
   };
-  from.onchange = () => sync(from);
-  to.onchange = () => sync(to);
-  otherIn.oninput = () => sync();
+  /** Uno de los dos lados es siempre Monero: al elegir uno, el otro se acomoda. */
+  const isXmr = (c: Choice) => isInt(c) && c.internal === "xmr";
+  function pick(side: "from" | "to", c: Choice) {
+    const other = side === "from" ? "to" : "from";
+    sel[side] = c;
+    if (!isXmr(c)) sel[other] = { internal: "xmr" };
+    else if (isXmr(sel[other])) sel[other] = { internal: "usdt" };
+    sync();
+  }
+  const flip = h("button", { class: "quick-flip", type: "button", "aria-label": t("Invertir dirección", "Swap direction"), title: t("Invertir dirección", "Swap direction") }, icon("market"));
+  flip.onclick = () => {
+    [sel.from, sel.to] = [sel.to, sel.from];
+    sync();
+  };
   amt.oninput = () => stage.replaceChildren();
 
   /** Monto máximo que se puede cambiar desde una wallet interna, dejando lo necesario para la comisión de red. */
@@ -156,7 +208,7 @@ export async function swapView(app: P2PApp): Promise<void> {
     void app.busy(
       max,
       async () => {
-        amt.value = await maxAmount(from.value as Internal);
+        if (isInt(sel.from)) amt.value = await maxAmount(sel.from.internal);
         stage.replaceChildren();
       },
       formMsg,
@@ -183,18 +235,25 @@ export async function swapView(app: P2PApp): Promise<void> {
   function showQuotes(plan: SwapPlan, amount: string, rates: TrocadorRates) {
     const l = labels(plan);
     const rows = rates.quotes.slice(0, 8).map((q, i) => {
-      const pick = h("button", { class: "btn small " + (i ? "secondary" : ""), type: "button" }, t("Elegir", "Choose"));
-      pick.onclick = () => void app.busy(pick, () => review(plan, amount, rates, q), stage);
+      const choose = h("button", { class: "btn " + (i ? "secondary" : ""), type: "button" }, t("Elegir", "Choose"));
+      choose.onclick = () => void app.busy(choose, () => review(plan, amount, rates, q), stage);
+      const logo = iconEl(q.provider, q.logo, SWAP_API, 18);
+      logo.classList.add("prov-logo");
       return h(
         "li",
-        {},
-        h("span", {}, h("strong", {}, `${q.amount_to} ${l.to}`), h("small", { class: "muted" }, ` · ${q.provider} · KYC ${q.kycrating} · ${q.fixed ? t("precio fijo", "fixed rate") : t("precio flotante", "floating rate")}${q.eta ? ` · ~${Math.round(q.eta)} min` : ""}`)),
-        pick,
+        { class: "quick-item" + (i ? "" : " best") },
+        h(
+          "div",
+          {},
+          h("p", { class: "quick-amount" }, coinIcon(sel.to, 20), ` ${q.amount_to} ${ticker(sel.to)}`, i ? null : h("span", { class: "badge ok" }, t("Mejor precio", "Best rate"))),
+          h("p", { class: "meta" }, logo, `${q.provider} · KYC ${q.kycrating} · ${q.fixed ? t("precio fijo", "fixed rate") : t("precio flotante", "floating rate")}${q.eta ? ` · ~${Math.round(q.eta)} min` : ""}`),
+        ),
+        choose,
       );
     });
     stage.replaceChildren(
       h("h4", {}, t(`Cotizaciones para ${amount} ${l.from}`, `Quotes for ${amount} ${l.from}`)),
-      h("ul", { class: "p2p-quotes" }, rows),
+      h("ul", { class: "quick-list" }, rows),
       h("p", {}, h("small", { class: "muted" }, t("La letra KYC es la calificación de Trocador: A casi nunca pide identificación; C o D pueden retener el cambio y pedirla. Solo se muestran exchanges con B o mejor.", "The KYC letter is Trocador's rating: A almost never asks for ID; C or D may hold the swap and ask for it. Only exchanges rated B or better are shown."))),
     );
   }
@@ -438,20 +497,22 @@ export async function swapView(app: P2PApp): Promise<void> {
     title,
     h("p", {}, h("small", { class: "muted" }, t("Cambia entre tus wallets sin custodia. El cambio lo ejecuta un exchange externo elegido a través de Trocador; MoneroP2P no toca los fondos.", "Swap between your non-custodial wallets. The swap is executed by an external exchange chosen through Trocador; MoneroP2P does not touch the funds."))),
     h(
-      "section",
-      { class: "card p2p-box" },
-      h("div", { class: "p2p-grid" }, app.field(t("Envías", "You send"), from), app.field(t("Recibes", "You get"), to)),
-      otherF,
-      coinList,
-      app.field(t("Monto que envías", "Amount you send"), h("div", { class: "p2p-suffix" }, amt, max)),
+      "div",
+      { class: "quick-form p2p-swap" },
+      h("label", { for: "p2p-s-amt" }, t("Envías", "You send")),
+      pickFrom.wrap,
+      h("div", { class: "quick-row" }, amt, max, unit),
+      flip,
+      h("label", {}, t("Recibes", "You get")),
+      pickTo.wrap,
       destF,
       memoF,
       refundF,
+      quoteBtn,
       hint,
-      h("p", {}, quoteBtn),
       formMsg,
-      stage,
     ),
+    stage,
     active,
     history,
   );

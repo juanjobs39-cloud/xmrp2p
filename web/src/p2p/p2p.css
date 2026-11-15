@@ -451,3 +451,15 @@ main.p2p-page[data-view]:not([data-view="mercado"]) .p2p-hero { margin-bottom: 0
 .p2p-choice .p2p-box { margin: 0; }
 .p2p-bk { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; margin: 0 0 1rem; max-width: 46rem; box-sizing: border-box; }
 .p2p-bk > span { flex: 1 1 14rem; }
+
+/* ---------- Cambiar: mismo formato que el exchange de monerop2p.app ---------- */
+.p2p-swap { max-width: 30rem; margin: 0.8rem 0 1rem; }
+#p2p-root .p2p-swap .quick-row input#p2p-s-amt { flex: 1; min-width: 0; min-height: 0; border: 0; background: transparent; padding: 0.3rem 0; border-radius: 0; font-family: var(--mono); font-size: 2rem; font-weight: 600; letter-spacing: -0.03em; }
+#p2p-root .p2p-swap .quick-row input#p2p-s-amt:focus-visible { outline: none; }
+#p2p-root .p2p-coin-search { width: 100%; }
+.p2p-swap .field.app { margin: 0; }
+.p2p-swap .meta { margin: 0; }
+.p2p-swap .coin-list .meta { font-size: 0.8rem; color: var(--muted); }
+#p2p-root .quick-list { margin: 0.5rem 0; max-width: 46rem; }
+#p2p-root .quick-item .quick-amount { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0; }
+@media (max-width: 40rem) { #p2p-root .p2p-swap .quick-row input#p2p-s-amt { font-size: 1.5rem; } }

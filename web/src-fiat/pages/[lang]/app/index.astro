@@ -20,7 +20,8 @@ const csp = [
   "script-src 'self' 'wasm-unsafe-eval'",
   "worker-src 'self' blob:",
   `connect-src 'self' ${hosts.join(" ")} https:${REAL ? "" : " http://127.0.0.1:* http://localhost:*"}`,
-  "img-src 'self' data:",
+  // Íconos de monedas y logos de exchanges en «Cambiar»: se piden a nuestra API, nunca a terceros.
+  `img-src 'self' data: ${new URL((import.meta.env.PUBLIC_API_URL as string | undefined) ?? "https://api.monerop2p.app").origin}`,
   "style-src 'self'",
   "object-src 'none'",
   "base-uri 'none'",
