@@ -498,13 +498,14 @@ export class P2PApp {
       orden: ["Para ver esa orden", "To see that order"],
       anuncios: ["Para ver tus anuncios", "To see your ads"],
     };
-    const g = goal[wanted];
+    // Sin wallets activas, Wallet y Cambiar no existen: no se anuncian.
+    const g = !WALLETS_ON && (wanted === "wallet" || wanted === "cambiar") ? undefined : goal[wanted];
     const why = g
       ? h("p", { class: "notice p2p-why" }, this.t(`${g[0]} ${exists ? "entra a tu cuenta." : "necesitas una cuenta. Se crea aquí mismo, en un minuto."}`, `${g[1]}, ${exists ? "unlock your account." : "you need an account. It is created right here, in a minute."}`))
       : null;
     // Quien solo quiere cambiar sin registrarse sigue teniendo el exchange sin cuenta (otro dominio).
     const noAcct =
-      wanted === "cambiar"
+      WALLETS_ON && wanted === "cambiar"
         ? h(
             "p",
             { class: "p2p-alt" },
