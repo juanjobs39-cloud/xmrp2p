@@ -285,6 +285,14 @@ export async function swapView(app: P2PApp): Promise<void> {
             await confirm(plan, amount, rates, q, receive);
           } catch (e) {
             back.disabled = false;
+            // El exchange elegido no pudo crear el cambio: se vuelve a la lista sin él para elegir otro.
+            const rest = rates.quotes.filter((x) => x.provider !== q.provider);
+            if (e instanceof Error && /no pudo crear el cambio|could not be generated/i.test(e.message) && rest.length) {
+              showQuotes(plan, amount, { ...rates, quotes: rest });
+              stage.prepend(app.error(new Error(t(`${q.provider} no pudo crear el cambio en este momento. No se envió nada: elige otro exchange de la lista.`, `${q.provider} could not create the swap right now. Nothing was sent: pick another exchange from the list.`))));
+              stage.scrollIntoView({ block: "start" });
+              return;
+            }
             throw e;
           }
         },
@@ -299,14 +307,6 @@ export async function swapView(app: P2PApp): Promise<void> {
         [t("Exchange", "Exchange"), `${q.provider} · KYC ${q.kycrating} · ${q.fixed ? t("precio fijo", "fixed rate") : t("precio flotante", "floating rate")}`],
         ...feeRow,
       ]),
-      h(
-        "p",
-        { class: "notice warn" },
-        t(
-          "El cambio lo hace ese exchange, no MoneroP2P: mientras dura, lo que envías está en sus manos. Si el precio es flotante, el monto final puede variar. Un envío no se puede deshacer.",
-          "The swap is done by that exchange, not MoneroP2P: while it lasts, what you send is in their hands. With a floating rate the final amount may vary. A transfer cannot be undone.",
-        ),
-      ),
       h("p", { class: "row wrap" }, go, back),
       msg,
     );

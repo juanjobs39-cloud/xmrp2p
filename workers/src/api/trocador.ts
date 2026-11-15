@@ -345,7 +345,12 @@ async function createTrade(req: Request, env: Env): Promise<Response> {
   };
   if (refund) Object.assign(params, { refund, refund_memo: "0" });
   if (env.TROCADOR_WEBHOOK_KEY) Object.assign(params, { webhook: `${site}/v1/trocador/webhook`, webhook_key: env.TROCADOR_WEBHOOK_KEY });
-  const body = await trocador(env, "new_trade", params);
+  // A veces el exchange elegido no logra crear el intercambio (falla suya, no de los datos): se dice
+  // claro para que el usuario elija otro de la lista, en vez de mostrar el error genérico de Trocador.
+  const body = await trocador(env, "new_trade", params).catch((e) => {
+    if (e instanceof HttpError && /could not be generated/i.test(e.message)) throw new HttpError(502, `${provider} no pudo crear el cambio en este momento. Elige otro exchange de la lista; no se envió nada.`);
+    throw e;
+  });
   let trade = publicTrade(body);
   if (!trade.trade_id || !trade.address_provider) throw new HttpError(502, "Trocador no devolvió la dirección de depósito");
   // new_trade no trae la hora de vencimiento; la consulta de estado sí (quotes.expiresAt). Una sola petición.
