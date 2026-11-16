@@ -103,9 +103,10 @@ export const MAINNET_ON = env.PUBLIC_MAINNET === "on" && isDeployed(NETWORKS.arb
 /**
  * Red elegida en la página: dinero real por defecto (si está activo); `?red=prueba` para la red de
  * práctica. Un swap guardado siempre usa la red con la que se creó.
+ * El exchange pasa allowPractice=false: con dinero real activo solo opera en la red real.
  */
-export function selectedNetwork(search = typeof location === "undefined" ? "" : location.search): EvmNetwork {
-  const practica = new URLSearchParams(search).get("red") === "prueba";
+export function selectedNetwork(search = typeof location === "undefined" ? "" : location.search, allowPractice = true): EvmNetwork {
+  const practica = allowPractice && new URLSearchParams(search).get("red") === "prueba";
   return MAINNET_ON && !practica ? NETWORKS.arbitrum_one! : NETWORKS.arbitrum_sepolia!;
 }
 

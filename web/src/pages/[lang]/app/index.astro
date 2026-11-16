@@ -2,7 +2,6 @@
 import { makeT } from "../../../i18n/ui";
 import Base from "../../../layouts/Base.astro";
 import { fiatHref, LANGS, ROUTES, SITE, type Lang } from "../../../site";
-import NetSwitch from "../../../components/NetSwitch.astro";
 import Verified from "../../../components/Verified.astro";
 import Icon from "../../../components/Icon.astro";
 
@@ -86,7 +85,6 @@ const softwareLd = {
       </p>
     )}
     <h1>{t("Cambiar USDT por XMR", "Swap USDT for XMR")} <span class="badge only-test">Testnet</span><span class="badge real only-real">{t("Dinero real", "Real money")}</span></h1>
-    <NetSwitch lang={lang} />
     {draftUi && (
       <section id="step-quick" class="quick">
         <form id="form-quick" class="quick-form">

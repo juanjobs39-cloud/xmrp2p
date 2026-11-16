@@ -42,7 +42,6 @@ MoneroP2P is an independent open-source project. The protocol builds on the atom
 
 ## Before you use it
 
-1. Try the practice mode with test funds: add `?red=prueba` to the [swap app](/en/app/).
-2. Start with a small amount.
-3. Read [how it works](/en/how-it-works/) and the [security page](/en/security/).
-4. Never trade outside the platform, even if someone asks you to.
+1. Start with a small amount.
+2. Read [how it works](/en/how-it-works/) and the [security page](/en/security/).
+3. Never trade outside the platform, even if someone asks you to.

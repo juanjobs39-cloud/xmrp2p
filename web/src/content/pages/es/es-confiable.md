@@ -42,7 +42,6 @@ MoneroP2P es un proyecto independiente de código abierto. El protocolo se basa 
 
 ## Antes de usarlo
 
-1. Prueba el modo de práctica con fondos de prueba: agrega `?red=prueba` a la [app de swaps](/es/app/).
-2. Empieza con un monto pequeño.
-3. Lee [cómo funciona](/es/como-funciona/) y la [página de seguridad](/es/seguridad/).
-4. Nunca operes fuera de la plataforma, aunque te lo pidan.
+1. Empieza con un monto pequeño.
+2. Lee [cómo funciona](/es/como-funciona/) y la [página de seguridad](/es/seguridad/).
+3. Nunca operes fuera de la plataforma, aunque te lo pidan.

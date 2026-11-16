@@ -104,8 +104,8 @@ export class SwapApp {
   private evm: Evm | null = null;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private busy = false;
-  /** Red elegida en la página (?red=real). Un swap reanudado usa la suya. */
-  private net: EvmNetwork = selectedNetwork();
+  /** Exchange: solo dinero real cuando está activo (sin modo práctica). Un swap reanudado usa la suya. */
+  private net: EvmNetwork = selectedNetwork(undefined, false);
 
   constructor(private lang: Lang) {}
 
