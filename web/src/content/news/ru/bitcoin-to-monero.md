@@ -77,3 +77,5 @@ faq:
 Да, кнопкой ⇅ в приложении или сразу по ссылке [monerop2p.app/ru/app/?side=sell](/ru/app/?side=sell&coin=btc%7CMainnet).
 
 Перед использованием любого обменника прочитайте [предупреждение о рисках](/ru/risk-notice/).
+
+Другая монета? Обменник принимает более 2500 монет без лимита суммы: [обмен криптовалюты на Monero без KYC](/ru/news/no-kyc-crypto-to-monero-exchange/).

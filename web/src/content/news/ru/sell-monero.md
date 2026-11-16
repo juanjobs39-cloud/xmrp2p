@@ -145,3 +145,5 @@ faq:
 Перед использованием любого обменника прочитайте [уведомление о рисках](/ru/risk-notice/).
 
 [Продать XMR за USDT →](/ru/app/?side=sell&coin=usdt%7CTRC20) · [Продать XMR за BTC →](/ru/app/?side=sell&coin=btc%7CMainnet)
+
+Другая монета? Обменник принимает более 2500 монет без лимита суммы: [обмен криптовалюты на Monero без KYC](/ru/news/no-kyc-crypto-to-monero-exchange/).

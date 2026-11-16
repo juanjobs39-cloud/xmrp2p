@@ -77,3 +77,5 @@ Com BTC, não: a exchange guarda os fundos durante a troca. Os atomic swaps sem 
 Sim, com o botão ⇅ do app, ou direto em [monerop2p.app/pt/app/?side=sell](/pt/app/?side=sell&coin=btc%7CMainnet).
 
 Antes de usar qualquer exchange, leia o [aviso de riscos](/pt/risk-notice/).
+
+Tem outra moeda? A exchange aceita mais de 2500 e sem limite de valor: [exchange de cripto para Monero sem KYC](/pt/news/no-kyc-crypto-to-monero-exchange/).

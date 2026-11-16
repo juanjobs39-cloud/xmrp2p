@@ -145,3 +145,5 @@ Yes, on [P2P Fiat](https://fiat.monerop2p.app/en/app/#/?lado=vender), with a 2-o
 Before using any exchange, read the [risk notice](/en/risk-notice/).
 
 [Sell XMR for USDT →](/en/app/?side=sell&coin=usdt%7CTRC20) · [Sell XMR for BTC →](/en/app/?side=sell&coin=btc%7CMainnet)
+
+Have another coin? The exchange takes 2,500+ coins with no amount limit: [no-KYC crypto to Monero exchange](/en/news/no-kyc-crypto-to-monero-exchange/).

@@ -77,3 +77,5 @@ Not for BTC: the exchange holds the funds during the swap. MoneroP2P's non-custo
 Yes, with the ⇅ button in the app, or directly at [monerop2p.app/en/app/?side=sell](/en/app/?side=sell&coin=btc%7CMainnet).
 
 Before using any exchange, read the [risk notice](/en/risk-notice/).
+
+Have another coin? The exchange takes 2,500+ coins with no amount limit: [no-KYC crypto to Monero exchange](/en/news/no-kyc-crypto-to-monero-exchange/).

@@ -145,3 +145,5 @@ Sim, no [P2P Fiat](https://fiat.monerop2p.app/pt/app/#/?lado=vender), com escrow
 Antes de usar qualquer exchange, leia o [aviso de riscos](/pt/risk-notice/).
 
 [Vender XMR por USDT →](/pt/app/?side=sell&coin=usdt%7CTRC20) · [Vender XMR por BTC →](/pt/app/?side=sell&coin=btc%7CMainnet)
+
+Tem outra moeda? A exchange aceita mais de 2500 e sem limite de valor: [exchange de cripto para Monero sem KYC](/pt/news/no-kyc-crypto-to-monero-exchange/).

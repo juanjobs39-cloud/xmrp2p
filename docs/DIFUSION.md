@@ -96,6 +96,7 @@ Ajustar el tono a cada comunidad y responder los comentarios con datos. No publi
 
 Entradas de Novedades pensadas para enlazar desde foros, canales y redes (cada una tiene versión en español, inglés, portugués y ruso):
 
+- **Exchange de cripto a Monero sin KYC** (2500+ monedas, sin límite de monto, compara hasta 14 exchanges): https://monerop2p.app/es/novedades/exchange-de-criptomonedas-a-monero-sin-kyc/ · https://monerop2p.app/en/news/no-kyc-crypto-to-monero-exchange/
 - **Monero por Telegram** (bot con alertas, sin KYC): https://monerop2p.app/es/novedades/comprar-monero-por-telegram-bot/ · https://monerop2p.app/en/news/buy-monero-on-telegram-bot/
 - **Alternativas a LocalMonero:** https://monerop2p.app/es/novedades/alternativas-a-localmonero-2026/ · https://monerop2p.app/en/news/localmonero-alternatives-2026/
 
