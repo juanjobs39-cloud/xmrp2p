@@ -64,7 +64,7 @@
   "quick_none_test": "目前没有可兑换 {usdt} USDT 的练习做市方{range}。请换个金额或稍后再来。",
   "quick_none": "目前没有可兑换 {usdt} USDT 的 MoneroP2P 做市方{range}。以下是通过 Trocador 的即时兑换平台：",
   "quick_range": "（现有报价范围为 {min} 至 {max} USDT）",
-  "quick_over": "MoneroP2P 每笔兑换最多 100 USDT。对于 {usdt} USDT，以下是通过 Trocador 的即时兑换平台：",
+  "quick_over": "对于 {usdt} USDT，以下是通过 Trocador 的即时兑换平台：",
   "quick_bad": "请输入有效的金额。",
   "troc_title": "{usdt} {coin} 共有 {n} 个通过 Trocador 的即时兑换平台",
   "troc_meta": "{provider} · KYC {kyc} · {kind}",

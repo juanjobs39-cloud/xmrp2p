@@ -64,7 +64,7 @@
   "quick_none_test": "अभी {usdt} USDT के लिए अभ्यास वाले मेकर नहीं हैं{range}. कोई दूसरी राशि आज़माएँ या बाद में लौटें.",
   "quick_none": "अभी {usdt} USDT के लिए MoneroP2P मेकर नहीं हैं{range}. Trocador के ज़रिए ये इंस्टेंट एक्सचेंज हैं:",
   "quick_range": " ({min} से {max} USDT तक के ऑफ़र हैं)",
-  "quick_over": "MoneroP2P हर स्वैप में 100 USDT तक की अनुमति देता है. {usdt} USDT के लिए Trocador के ज़रिए ये इंस्टेंट एक्सचेंज हैं:",
+  "quick_over": "{usdt} USDT के लिए Trocador के ज़रिए ये इंस्टेंट एक्सचेंज हैं:",
   "quick_bad": "सही राशि डालें.",
   "troc_title": "{usdt} {coin} के लिए Trocador के ज़रिए {n} इंस्टेंट एक्सचेंज",
   "troc_meta": "{provider} · KYC {kyc} · {kind}",

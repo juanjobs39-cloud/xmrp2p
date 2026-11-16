@@ -64,7 +64,7 @@
   "quick_none_test": "No momento não há makers de prática para {usdt} USDT{range}. Tente outro valor ou volte mais tarde.",
   "quick_none": "No momento não há makers do MoneroP2P para {usdt} USDT{range}. Veja exchanges instantâneas via Trocador:",
   "quick_range": " (há ofertas de {min} a {max} USDT)",
-  "quick_over": "O MoneroP2P permite até 100 USDT por swap. Para {usdt} USDT, veja exchanges instantâneas via Trocador:",
+  "quick_over": "Para {usdt} USDT, veja exchanges instantâneas via Trocador:",
   "quick_bad": "Digite um valor válido.",
   "troc_title": "{n} exchanges instantâneas via Trocador para {usdt} {coin}",
   "troc_meta": "{provider} · KYC {kyc} · {kind}",

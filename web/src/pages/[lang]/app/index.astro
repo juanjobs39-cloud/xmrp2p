@@ -114,8 +114,7 @@ const softwareLd = {
             <div id="slot-get"></div>
           </div>
           <button class="btn big" type="submit">{t("Intercambiar", "Exchange")}</button>
-          <p class="meta" id="quick-note">{t("Sin custodia · sin registro · hasta 100 USDT por swap con makers de MoneroP2P", "Non-custodial · no sign-up · up to 100 USDT per swap with MoneroP2P makers")}</p>
-          <p id="quick-more" class="quick-more only-real">{t("¿Más de 100 USDT? Escribe el monto que quieras: para montos mayores te mostramos exchanges instantáneos vía Trocador.", "More than 100 USDT? Enter any amount: for larger amounts we show you instant exchanges via Trocador.")}</p>
+          <p class="meta" id="quick-note">{t("Sin custodia · sin registro · escribe el monto que quieras", "Non-custodial · no sign-up · enter any amount")}</p>
         </form>
         <div id="quick-results" hidden>
           <p id="quick-why" class="notice" hidden></p>
@@ -173,8 +172,8 @@ const softwareLd = {
     </p>
     <p class:list={["notice danger only-real", { later: draftUi }]}>
       {t(
-        "Dinero real (Arbitrum One + Monero). Máximo 100 USDT por swap.",
-        "Real money (Arbitrum One + Monero). Maximum 100 USDT per swap.",
+        "Dinero real (Arbitrum One + Monero).",
+        "Real money (Arbitrum One + Monero).",
       )}
     </p>
     <ul class:list={["trust", { later: draftUi }]}>
@@ -228,10 +227,9 @@ const softwareLd = {
         <button class="btn" type="submit">{t("Pedir el swap", "Request the swap")}</button>
       </form>
       <p id="trocador-alt" class="notice only-real" hidden>
-        {t("¿No hay ofertas o necesitas más de 100 USDT?", "No offers, or need more than 100 USDT?")}
+        {t("¿No hay ofertas para tu monto?", "No offers for your amount?")}
         <a href={trocador} rel="noopener sponsored" target="_blank">{t("Compara exchanges instantáneos en Trocador →", "Compare instant exchanges on Trocador →")}</a>
       </p>
-      <p class="meta only-real">{t("¿Más de 100 USDT?", "More than 100 USDT?")} <a href={trocador} rel="noopener sponsored" target="_blank">{t("Compara exchanges instantáneos en Trocador", "Compare instant exchanges on Trocador")}</a></p>
     </section>
 
     <section id="step-recovery" data-step hidden>

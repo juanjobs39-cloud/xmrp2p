@@ -64,7 +64,7 @@
   "quick_none_test": "지금은 {usdt} USDT에 맞는 연습용 메이커가 없습니다{range}. 다른 금액으로 해 보거나 나중에 다시 오세요.",
   "quick_none": "지금은 {usdt} USDT에 맞는 MoneroP2P 메이커가 없습니다{range}. Trocador를 통한 즉시 교환소는 다음과 같습니다:",
   "quick_range": "({min}~{max} USDT 오퍼가 있습니다)",
-  "quick_over": "MoneroP2P는 스왑 1회당 최대 100 USDT입니다. {usdt} USDT라면 Trocador를 통한 즉시 교환소는 다음과 같습니다:",
+  "quick_over": "{usdt} USDT라면 Trocador를 통한 즉시 교환소는 다음과 같습니다:",
   "quick_bad": "올바른 금액을 입력하세요.",
   "troc_title": "{usdt} {coin}에 맞는 Trocador 즉시 교환소 {n}곳",
   "troc_meta": "{provider} · KYC {kyc} · {kind}",

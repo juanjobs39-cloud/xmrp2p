@@ -64,7 +64,7 @@
   "quick_none_test": "現在、{usdt} USDTに対応する練習用メイカーはいません{range}。別の金額を試すか、しばらくしてからまた来てください。",
   "quick_none": "現在、{usdt} USDTに対応するMoneroP2Pのメイカーはいません{range}。Trocador経由のインスタント交換所はこちら：",
   "quick_range": "（{min}〜{max} USDTのオファーがあります）",
-  "quick_over": "MoneroP2Pは1回のスワップが最大100 USDTです。{usdt} USDTなら、Trocador経由のインスタント交換所はこちら：",
+  "quick_over": "{usdt} USDTなら、Trocador経由のインスタント交換所はこちら：",
   "quick_bad": "正しい金額を入力してください。",
   "troc_title": "{usdt} {coin}に対応するTrocador経由のインスタント交換所：{n}件",
   "troc_meta": "{provider} · KYC {kyc} · {kind}",

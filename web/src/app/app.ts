@@ -220,7 +220,6 @@ export class SwapApp {
     $("quick-get-xmr").hidden = sell;
     $("quick-get-coin").hidden = !sell;
     $("quick-note").hidden = sell;
-    $("quick-more").hidden = sell || this.net.testnet || coinId(c) !== DEFAULT_COIN;
     $("quick-flip").classList.toggle("on", sell);
   }
 

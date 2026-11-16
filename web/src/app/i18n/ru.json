@@ -64,7 +64,7 @@
   "quick_none_test": "Сейчас нет тренировочных мейкеров для {usdt} USDT{range}. Попробуйте другую сумму или зайдите позже.",
   "quick_none": "Сейчас нет мейкеров MoneroP2P для {usdt} USDT{range}. Вот мгновенные обменники через Trocador:",
   "quick_range": " (есть предложения от {min} до {max} USDT)",
-  "quick_over": "MoneroP2P позволяет до 100 USDT за своп. Для {usdt} USDT вот мгновенные обменники через Trocador:",
+  "quick_over": "Для {usdt} USDT вот мгновенные обменники через Trocador:",
   "quick_bad": "Введите корректную сумму.",
   "troc_title": "Мгновенных обменников через Trocador для {usdt} {coin}: {n}",
   "troc_meta": "{provider} · KYC {kyc} · {kind}",

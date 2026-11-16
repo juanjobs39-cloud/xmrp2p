@@ -64,7 +64,7 @@
   "quick_none_test": "در حال حاضر میکر تمرینی برای {usdt} USDT نیست{range}. مقدار دیگری را امتحان کنید یا بعداً برگردید.",
   "quick_none": "در حال حاضر میکری از MoneroP2P برای {usdt} USDT نیست{range}. این‌ها صرافی‌های فوری از طریق Trocador هستند:",
   "quick_range": " (پیشنهادها از {min} تا {max} USDT هستند)",
-  "quick_over": "MoneroP2P حداکثر ۱۰۰ USDT در هر سواپ را مجاز می‌داند. برای {usdt} USDT، این‌ها صرافی‌های فوری از طریق Trocador هستند:",
+  "quick_over": "برای {usdt} USDT، این‌ها صرافی‌های فوری از طریق Trocador هستند:",
   "quick_bad": "مقدار معتبری وارد کنید.",
   "troc_title": "{n} صرافی فوری از طریق Trocador برای {usdt} {coin}",
   "troc_meta": "{provider} · KYC {kyc} · {kind}",
