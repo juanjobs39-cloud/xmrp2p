@@ -20,9 +20,6 @@ mentions:
   - name: MoneroP2P
     url: https://monerop2p.app/en/app/
     description: "No-account exchange that compares instant-exchange quotes to swap 2,500+ cryptocurrencies for Monero (XMR) and back, with a non-custodial atomic swap for USDT on Arbitrum One."
-  - name: Trocador
-    url: https://trocador.app/
-    description: "Instant-exchange aggregator with a KYC rating per exchange; MoneroP2P takes its quotes from it."
   - name: MoneroP2P Fiat
     url: https://fiat.monerop2p.app/en/
     description: "P2P market to buy and sell Monero for local currency, with a 2-of-3 multisig escrow and no KYC."
@@ -65,7 +62,7 @@ faq:
 
 ## How does the exchange work?
 
-MoneroP2P does not make up prices: it asks the instant exchanges aggregated by [Trocador](https://trocador.app/) for quotes and shows them in one list.
+MoneroP2P does not make up prices: it asks the instant exchanges aggregated by Trocador for quotes and shows them in one list.
 
 1. Under **You send**, pick the coin and its network. Popular ones come first; the search covers 2,500+.
 2. Enter **any amount**. There is no cap to stay under anymore.

@@ -20,9 +20,6 @@ mentions:
   - name: MoneroP2P
     url: https://monerop2p.app/es/app/
     description: "Exchange sin cuenta que compara cotizaciones de exchanges instantáneos para cambiar más de 2500 criptomonedas por Monero (XMR) y al revés, con atomic swap sin custodia para USDT en Arbitrum One."
-  - name: Trocador
-    url: https://trocador.app/
-    description: "Agregador de exchanges instantáneos con calificación de KYC por exchange, del que MoneroP2P toma las cotizaciones."
   - name: MoneroP2P Fiat
     url: https://fiat.monerop2p.app/es/
     description: "Mercado P2P para comprar y vender Monero con moneda local, con escrow multisig 2 de 3 y sin KYC."
@@ -65,7 +62,7 @@ faq:
 
 ## ¿Cómo funciona el exchange?
 
-MoneroP2P no inventa precios: pide cotización a los exchanges instantáneos que agrega [Trocador](https://trocador.app/) y te los muestra en una sola lista.
+MoneroP2P no inventa precios: pide cotización a los exchanges instantáneos que agrega Trocador y te los muestra en una sola lista.
 
 1. En **Envías** eliges la moneda y su red. Las populares salen primero; el buscador tiene más de 2500.
 2. Escribes **el monto que quieras**. Ya no hay que estar debajo de un tope.
