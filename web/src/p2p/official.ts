@@ -66,7 +66,7 @@ const TXT = {
   limit: ["Límite", "Limit", "Limite", "Лимит", "Limit", "Limite", "Limite"],
   noMax: ["Sin máximo", "No maximum", "Sem máximo", "Без максимума", "Kein Maximum", "Sans maximum", "Nessun massimo"],
   time: ["Tiempo", "Time", "Tempo", "Время", "Dauer", "Durée", "Tempo"],
-  getIn: ["Recibes en", "You get it in", "Você recebe em", "Получаете в", "Du erhältst es in", "Tu reçois dans", "Ricevi in"],
+  getIn: ["Recibes en", "You get it in", "Você recebe em", "Получаете в", "Du erhältst es in", "Tu reçois dans", "Ricevi nel"],
   platWallet: [
     "tu wallet de la plataforma",
     "your platform wallet",
