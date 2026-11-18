@@ -180,6 +180,7 @@ export function accountSummary(app: P2PApp): HTMLElement {
   };
   const xmr = cell("XMR");
   const usdt = cell(net.tokenSymbol);
+  const usdc = net.usdc ? cell("USDC") : null;
   const eth = cell("ETH");
   const note = h("small", { class: "muted" });
   const st = startXmr(app);
@@ -195,14 +196,18 @@ export function accountSummary(app: P2PApp): HTMLElement {
   void balances(publicClient(net), net, evmAddress(v.seed))
     .then((b) => {
       usdt.amt.textContent = formatAmount(b.token, TOKEN_DECIMALS, 2) || "0";
+      if (usdc) usdc.amt.textContent = formatAmount(b.usdc, TOKEN_DECIMALS, 2) || "0";
       eth.amt.textContent = formatAmount(b.eth, 18, 6);
     })
-    .catch(() => (usdt.amt.textContent = eth.amt.textContent = "—"));
+    .catch(() => {
+      usdt.amt.textContent = eth.amt.textContent = "—";
+      if (usdc) usdc.amt.textContent = "—";
+    });
   const act = (href: string, ico: Parameters<typeof icon>[0], label: string, cls = "secondary") => h("a", { class: "btn " + cls, href }, h("span", { class: "p2p-ico", "aria-hidden": "true" }, icon(ico)), label);
   return h(
     "div",
     { class: "p2p-sum" },
-    h("div", { class: "p2p-bals" }, xmr.el, usdt.el, eth.el),
+    h("div", { class: "p2p-bals" }, xmr.el, usdt.el, usdc?.el ?? null, eth.el),
     note,
     h("div", { class: "p2p-acts" }, act("#/wallet", "receive", t("Recibir", "Receive"), ""), act("#/wallet?ver=enviar", "send", t("Enviar", "Send")), act("#/cambiar", "swap", t("Cambiar", "Swap"))),
   );
@@ -245,7 +250,7 @@ interface Dest {
   status?: ContactCheck;
 }
 
-const ASSET_NAME: Record<PayAsset, string> = { xmr: "Monero", evm: "Arbitrum (USDT / ETH)" };
+const ASSET_NAME: Record<PayAsset, string> = { xmr: "Monero", evm: "Arbitrum (USDT / USDC / ETH)" };
 
 /**
  * Convierte lo que el usuario escribió en «destino» en una dirección. Si es @apodo, pide sus
@@ -369,14 +374,14 @@ function nickCard(app: P2PApp, evm: string, st: XmrState): { el: HTMLElement; re
 function requestCard(app: P2PApp, tokenSymbol: string): HTMLElement | null {
   const t = app.t;
   if (!app.me) return null;
-  const coin = h("select", { id: "p2p-r-coin" }, h("option", { value: "usdt" }, tokenSymbol), h("option", { value: "xmr" }, "XMR"), h("option", { value: "eth" }, "ETH"));
+  const coin = h("select", { id: "p2p-r-coin" }, h("option", { value: "usdt" }, tokenSymbol), h("option", { value: "usdc" }, "USDC"), h("option", { value: "xmr" }, "XMR"), h("option", { value: "eth" }, "ETH"));
   const amt = h("input", { id: "p2p-r-amt", type: "text", inputMode: "decimal", autocomplete: "off", placeholder: t("opcional", "optional") });
   const out = h("div");
   const make = h("button", { class: "btn secondary", type: "button" }, t("Crear enlace de cobro", "Create payment link"));
   make.onclick = () => {
     const amount = amt.value.trim().replace(",", ".");
     if (amount && !/^\d{1,12}(\.\d{1,12})?$/.test(amount)) return void out.replaceChildren(app.error(new Error(t("Escribe un monto válido o déjalo vacío.", "Enter a valid amount or leave it empty."))));
-    const link = `${location.origin}${location.pathname}#/wallet${payQuery({ to: app.me!.nickname, coin: coin.value as "xmr" | "usdt" | "eth", ...(amount ? { amount } : {}) })}`;
+    const link = `${location.origin}${location.pathname}#/wallet${payQuery({ to: app.me!.nickname, coin: coin.value as "xmr" | "usdt" | "usdc" | "eth", ...(amount ? { amount } : {}) })}`;
     out.replaceChildren(h("div", { class: "p2p-copy" }, h("code", { class: "p2p-addr" }, link), copyButton(app, link)), h("div", { class: "p2p-wallet-qr" }, qrSvg(link, t("Código QR del enlace de cobro", "QR code of the payment link"))));
   };
   return h(
@@ -475,7 +480,7 @@ export async function walletView(app: P2PApp): Promise<void> {
         "section",
         { class: "card p2p-box" },
         h("h2", {}, t("Tus wallets", "Your wallets")),
-        h("p", {}, t("Tu cuenta puede tener wallets propias de Monero y de Arbitrum (USDT y ETH). Las llaves se crean en este navegador y se guardan cifradas con tu contraseña: MoneroP2P nunca las ve ni puede mover tus fondos.", "Your account can have its own Monero and Arbitrum (USDT and ETH) wallets. The keys are created in this browser and stored encrypted with your password: MoneroP2P never sees them and cannot move your funds.")),
+        h("p", {}, t("Tu cuenta puede tener wallets propias de Monero y de Arbitrum (USDT, USDC y ETH). Las llaves se crean en este navegador y se guardan cifradas con tu contraseña: MoneroP2P nunca las ve ni puede mover tus fondos.", "Your account can have its own Monero and Arbitrum (USDT, USDC and ETH) wallets. The keys are created in this browser and stored encrypted with your password: MoneroP2P never sees them and cannot move your funds.")),
         h("p", { class: "notice warn" }, t("Al crearlas se descarga un respaldo nuevo. Sin ese archivo y tu contraseña nadie puede recuperar los fondos, tampoco nosotros.", "Creating them downloads a new backup. Without that file and your password nobody can recover the funds, not even us.")),
         h("label", { class: "p2p-check" }, ok, " ", t("Entiendo que soy responsable de mi respaldo y mi contraseña.", "I understand I am responsible for my backup and my password.")),
         h("p", {}, create),
@@ -490,15 +495,21 @@ export async function walletView(app: P2PApp): Promise<void> {
   // ---------------------------------------------------------------- Arbitrum
   const evm = evmAddress(seed);
   const pub = publicClient(net);
-  const evmBal = h("div", { class: "p2p-wallet-bal" }, amountLine("…", net.tokenSymbol), amountLine("…", "ETH"));
+  const evmBal = h("div", { class: "p2p-wallet-bal" }, amountLine("…", net.tokenSymbol), net.usdc ? amountLine("…", "USDC") : null, amountLine("…", "ETH"));
   const loadEvm = () =>
     balances(pub, net, evm)
-      .then((b) => evmBal.replaceChildren(amountLine(formatAmount(b.token, TOKEN_DECIMALS, 2) || "0", net.tokenSymbol), amountLine(formatAmount(b.eth, 18, 6), "ETH")))
+      .then((b) =>
+        evmBal.replaceChildren(
+          amountLine(formatAmount(b.token, TOKEN_DECIMALS, 2) || "0", net.tokenSymbol),
+          ...(net.usdc ? [amountLine(formatAmount(b.usdc, TOKEN_DECIMALS, 2) || "0", "USDC")] : []),
+          amountLine(formatAmount(b.eth, 18, 6), "ETH"),
+        ),
+      )
       .catch(() => evmBal.replaceChildren(h("small", { class: "muted" }, t("No se pudo consultar el saldo.", "Could not load the balance."))));
 
   const evmSend = (() => {
     const box = h("div");
-    const asset = h("select", { id: "p2p-e-asset" }, h("option", { value: "token" }, net.tokenSymbol), h("option", { value: "eth" }, "ETH"));
+    const asset = h("select", { id: "p2p-e-asset" }, h("option", { value: "token" }, net.tokenSymbol), net.usdc ? h("option", { value: "usdc" }, "USDC") : null, h("option", { value: "eth" }, "ETH"));
     const to = h("input", { id: "p2p-e-to", type: "text", autocomplete: "off", spellcheck: false, autocapitalize: "none", placeholder: t("0x… o @apodo", "0x… or @nickname") });
     const amt = h("input", { id: "p2p-e-amt", type: "text", inputMode: "decimal", autocomplete: "off", placeholder: "0.00" });
     let all = false;
@@ -520,7 +531,7 @@ export async function walletView(app: P2PApp): Promise<void> {
       h("p", {}, review),
       formMsg,
     );
-    const symbol = (a: Asset) => (a === "eth" ? "ETH" : net.tokenSymbol);
+    const symbol = (a: Asset) => (a === "eth" ? "ETH" : a === "usdc" ? "USDC" : net.tokenSymbol);
     const evmRule = (a: Asset) => withdrawRule(a, net.chainId);
     const dec = (a: Asset) => (a === "eth" ? 18 : TOKEN_DECIMALS);
 
@@ -600,7 +611,7 @@ export async function walletView(app: P2PApp): Promise<void> {
           "div",
           {},
           ...receiveBox(app, "Arbitrum", evm),
-          h("p", {}, h("small", { class: "muted" }, t("La misma dirección sirve para USDT y ETH. Envía y recibe solo por la red Arbitrum.", "The same address works for USDT and ETH. Send and receive only over the Arbitrum network."))),
+          h("p", {}, h("small", { class: "muted" }, t("La misma dirección sirve para USDT, USDC y ETH. Envía y recibe solo por la red Arbitrum.", "The same address works for USDT, USDC and ETH. Send and receive only over the Arbitrum network."))),
         ),
       ],
       ["enviar", t("Enviar", "Send"), evmSend],
@@ -838,7 +849,7 @@ export async function walletView(app: P2PApp): Promise<void> {
     const set = (id: string, value: string) => ((document.getElementById(id) as HTMLInputElement | HTMLSelectElement).value = value);
     set(isXmr ? "p2p-x-to" : "p2p-e-to", "@" + ask.to);
     if (ask.amount) set(isXmr ? "p2p-x-amt" : "p2p-e-amt", ask.amount);
-    if (!isXmr) set("p2p-e-asset", ask.coin === "eth" ? "eth" : "token");
+    if (!isXmr) set("p2p-e-asset", ask.coin === "eth" ? "eth" : ask.coin === "usdc" ? "usdc" : "token");
     (isXmr ? xmrTabs : evmTabs).select("enviar");
     card.scrollIntoView({ block: "start" });
   }

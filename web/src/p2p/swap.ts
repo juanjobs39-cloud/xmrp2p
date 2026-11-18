@@ -6,16 +6,17 @@
 import { parseAmount } from "./wallets.ts";
 
 /** Monedas con wallet interna. */
-export type Internal = "xmr" | "usdt" | "eth";
+export type Internal = "xmr" | "usdt" | "usdc" | "eth";
 /** Un lado del cambio: una wallet interna u otra moneda de la lista de Trocador. */
 export type Leg = { kind: "internal"; coin: Internal } | { kind: "other"; ticker: string; network: string; memo?: boolean };
 
 /** Cómo llama Trocador a las monedas internas que no son Monero (todas en Arbitrum). */
 export const TROCADOR: Record<Exclude<Internal, "xmr">, { ticker: string; network: string }> = {
   usdt: { ticker: "usdt", network: "Arbitrum" },
+  usdc: { ticker: "usdc", network: "Arbitrum" },
   eth: { ticker: "eth", network: "Arbitrum" },
 };
-export const DECIMALS: Record<Internal, number> = { xmr: 12, usdt: 6, eth: 18 };
+export const DECIMALS: Record<Internal, number> = { xmr: 12, usdt: 6, usdc: 6, eth: 18 };
 
 const isXmr = (l: Leg) => l.kind === "internal" && l.coin === "xmr";
 
@@ -36,7 +37,7 @@ export interface SwapPlan {
 /** Wallet interna en la que se recibe una moneda. Igual que internalAsset() de workers/src/api/trocador.ts. */
 export function internalAsset(side: "buy" | "sell", coin: { ticker: string; network: string }): "xmr" | "evm" | null {
   if (side === "buy") return "xmr";
-  return coin.network === "Arbitrum" && (coin.ticker === "usdt" || coin.ticker === "eth") ? "evm" : null;
+  return coin.network === "Arbitrum" && (coin.ticker === "usdt" || coin.ticker === "usdc" || coin.ticker === "eth") ? "evm" : null;
 }
 
 export type PlanError = "same" | "need_xmr";
@@ -108,6 +109,12 @@ export interface SwapRecord {
   /** Hash del depósito que firmó la wallet interna (si lo hizo). */
   deposit_tx?: string;
   status?: string;
+  /** Abierto desde el anuncio oficial del mercado (se ve como orden en #/oficial/<id> y en Órdenes). */
+  official?: boolean;
+  /** Fin del plazo para depositar (segundos Unix), si el exchange lo dio. */
+  expires_at?: number;
+  /** Dirección del depósito, monto exacto, memo y red, para mostrar la orden sin pedirla otra vez. */
+  deposit?: { address: string; memo?: string; ticker: string; network: string };
 }
 
 const FINAL = new Set(["finished", "failed", "refunded", "expired", "halted"]);

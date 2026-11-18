@@ -76,7 +76,7 @@ export function checkContact(contacts: Record<string, Contact> | undefined, nick
 
 export interface PayRequest {
   to: string; // apodo, sin @
-  coin?: "xmr" | "usdt" | "eth";
+  coin?: "xmr" | "usdt" | "usdc" | "eth";
   amount?: string;
 }
 
@@ -97,7 +97,7 @@ export function parsePayQuery(query: string): PayRequest | null {
   const amount = q.get("amount") ?? "";
   return {
     to,
-    ...(coin === "xmr" || coin === "usdt" || coin === "eth" ? { coin } : {}),
+    ...(coin === "xmr" || coin === "usdt" || coin === "usdc" || coin === "eth" ? { coin } : {}),
     ...(/^\d{1,12}([.,]\d{1,12})?$/.test(amount) ? { amount: amount.replace(",", ".") } : {}),
   };
 }

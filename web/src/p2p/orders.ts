@@ -4,6 +4,8 @@ import { get, type Ad, type OrderView, type PublicUser, type RoomMessage } from 
 import { EscrowDriver, type EscrowNote } from "./escrow";
 import { open, seal } from "./identity";
 import type { P2PApp } from "./p2p-app";
+import { officialOrderRow } from "./official";
+import { isFinal, type SwapRecord } from "./swap";
 import { moneroWallet } from "../app/wallet-provider";
 import { accountDeposit } from "./escrow-pay";
 import { clock, fmtFiat, fmtXmr, h, icon, kids, nowS, offPlatformWarning, pct, statusTone, type Child } from "./ui";
@@ -112,10 +114,15 @@ export async function ordersView(app: P2PApp) {
   const asks = r.orders.filter((o) => o.status === "requested" && o.is_maker);
   const open = r.orders.filter((o) => !FINAL.includes(o.status) && !asks.includes(o));
   const done = r.orders.filter((o) => FINAL.includes(o.status));
-  const rows = (list: typeof r.orders) =>
+  // Intercambios del anuncio oficial (Trocador): viven en el vault, no en el servidor P2P.
+  const off = (app.vault?.swaps ?? []).filter((s) => s.official).sort((a, b) => b.at - a.at);
+  const offOpen = off.filter((s) => !isFinal(s.status));
+  const offDone = off.filter((s) => isFinal(s.status));
+  const rows = (list: typeof r.orders, extra: SwapRecord[] = []) =>
     h(
       "div",
       { class: "p2p-table orders", role: "table" },
+      extra.map((s) => officialOrderRow(app, s)),
       list.map((o) =>
         h(
           "a",
@@ -130,7 +137,7 @@ export async function ordersView(app: P2PApp) {
     );
   app.show(
     h("h2", {}, t("Mis órdenes", "My orders")),
-    ...(r.orders.length
+    ...(r.orders.length || off.length
       ? [
           ...(asks.length
             ? [
@@ -139,9 +146,9 @@ export async function ordersView(app: P2PApp) {
                 rows(asks),
               ]
             : []),
-          h("h3", { class: "p2p-sub" }, `${t("En curso", "In progress")} (${open.length})`),
-          open.length ? rows(open) : h("p", { class: "muted" }, t("No tienes órdenes en curso.", "You have no orders in progress.")),
-          ...(done.length ? [h("h3", { class: "p2p-sub" }, `${t("Terminadas", "Finished")} (${done.length})`), rows(done)] : []),
+          h("h3", { class: "p2p-sub" }, `${t("En curso", "In progress")} (${open.length + offOpen.length})`),
+          open.length || offOpen.length ? rows(open, offOpen) : h("p", { class: "muted" }, t("No tienes órdenes en curso.", "You have no orders in progress.")),
+          ...(done.length || offDone.length ? [h("h3", { class: "p2p-sub" }, `${t("Terminadas", "Finished")} (${done.length + offDone.length})`), rows(done, offDone)] : []),
         ]
       : [h("div", { class: "p2p-empty" }, h("p", { class: "p2p-empty-ico", "aria-hidden": "true" }, icon("orders")), h("p", {}, t("Aún no tienes órdenes.", "You have no orders yet.")), h("p", {}, h("a", { class: "btn", href: "#/" }, t("Ir al mercado", "Go to the market"))))]),
   );

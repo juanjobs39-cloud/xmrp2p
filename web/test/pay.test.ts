@@ -70,3 +70,7 @@ test("enlace de cobro: ida y vuelta, e ignora lo que no tiene forma válida", ()
   assert.equal(parsePayQuery("?coin=usdt"), null);
   assert.equal(parsePayQuery("?to=<img>"), null);
 });
+
+test("los enlaces de cobro aceptan USDC", () => {
+  assert.deepEqual(parsePayQuery(payQuery({ to: "juan", coin: "usdc", amount: "20" })), { to: "juan", coin: "usdc", amount: "20" });
+});

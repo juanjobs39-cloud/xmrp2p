@@ -85,3 +85,12 @@ test("historial: actualiza sin duplicar, el más nuevo primero y máximo 30", ()
   assert.equal(isFinal("confirming"), false);
   assert.equal(isFinal(undefined), false);
 });
+
+test("USDC en Arbitrum es una wallet interna de la cuenta", () => {
+  const usdc: Leg = { kind: "internal", coin: "usdc" };
+  const xmrLeg: Leg = { kind: "internal", coin: "xmr" };
+  assert.deepEqual(planSwap(usdc, xmrLeg), { side: "buy", ticker: "usdc", network: "Arbitrum", payFrom: "usdc", receiveIn: "xmr", memo: false });
+  assert.deepEqual(planSwap(xmrLeg, usdc), { side: "sell", ticker: "usdc", network: "Arbitrum", payFrom: "xmr", receiveIn: "evm", memo: false });
+  assert.equal(internalAsset("sell", { ticker: "usdc", network: "Arbitrum" }), "evm");
+  assert.equal(internalAsset("sell", { ticker: "usdc", network: "SOL" }), null);
+});

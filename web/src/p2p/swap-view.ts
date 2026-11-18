@@ -16,7 +16,7 @@ import type { P2PApp } from "./p2p-app";
 import { qrSvg } from "./qr";
 import { autoDeposit, DECIMALS, isFinal, planSwap, upsertSwap, type Internal, type Leg, type SwapPlan, type SwapRecord } from "./swap";
 import { h, icon, type Child } from "./ui";
-import { balances, prepareEvm, publicClient, sendEvm } from "./wallet-evm";
+import { balances, prepareEvm, publicClient, sendEvm, type Asset } from "./wallet-evm";
 import { copyButton, evmError, kv, persistXmr, startXmr, xmrError, xmrReady, XMR_EXPLORER } from "./wallet-view";
 import { evmAddress, evmKey, formatAmount, parseAmount } from "./wallets";
 
@@ -33,8 +33,8 @@ async function call<T>(path: string): Promise<T> {
   return body;
 }
 
-const NAME: Record<Internal, string> = { xmr: "XMR", usdt: "USDT", eth: "ETH" };
-const INTERNAL_NET: Record<Internal, string> = { xmr: "Monero", usdt: "Arbitrum One", eth: "Arbitrum One" };
+const NAME: Record<Internal, string> = { xmr: "XMR", usdt: "USDT", usdc: "USDC", eth: "ETH" };
+const INTERNAL_NET: Record<Internal, string> = { xmr: "Monero", usdt: "Arbitrum One", usdc: "Arbitrum One", eth: "Arbitrum One" };
 
 /** Un lado del cambio: una wallet de la cuenta u otra moneda de la lista de Trocador. */
 type Choice = { internal: Internal } | { other: TrocadorCoin };
@@ -43,6 +43,8 @@ const ticker = (c: Choice) => (isInt(c) ? NAME[c.internal] : c.other.ticker.toUp
 const network = (c: Choice) => (isInt(c) ? INTERNAL_NET[c.internal] : c.other.network);
 const coinIcon = (c: Choice, size: number) => (isInt(c) ? iconEl(c.internal, undefined, SWAP_API, size) : iconEl(c.other.ticker, c.other.img, SWAP_API, size));
 const clean = (s: string) => s.trim().replace(",", ".");
+/** Wallet interna de Arbitrum → activo de wallet-evm. */
+export const evmAsset = (c: Internal): Asset => (c === "eth" ? "eth" : c === "usdc" ? "usdc" : "token");
 
 export async function swapView(app: P2PApp): Promise<void> {
   const t = app.t;
@@ -107,13 +109,13 @@ export async function swapView(app: P2PApp): Promise<void> {
     const fill = () => {
       const q = search.value.trim().toLowerCase();
       // Las de la cuenta ya salen arriba; XMR siempre es una wallet propia.
-      const outside = (c: TrocadorCoin) => c.ticker.toLowerCase() !== "xmr" && !(c.network === "Arbitrum" && ["usdt", "eth"].includes(c.ticker.toLowerCase()));
+      const outside = (c: TrocadorCoin) => c.ticker.toLowerCase() !== "xmr" && !(c.network === "Arbitrum" && ["usdt", "usdc", "eth"].includes(c.ticker.toLowerCase()));
       const all = (coins ?? []).filter(outside);
       const others = q
         ? all.filter((c) => `${c.ticker} ${c.name} ${c.network}`.toLowerCase().includes(q)).slice(0, 40)
         : COINS.map((k) => all.find((c) => c.ticker.toLowerCase() === k.ticker && c.network.toLowerCase() === k.network.toLowerCase())).filter((c): c is TrocadorCoin => !!c);
       list.replaceChildren(
-        ...(q ? [] : [h("li", { class: "meta" }, t("Tus wallets", "Your wallets")), ...(["xmr", "usdt", "eth"] as Internal[]).map((c) => option({ internal: c }))]),
+        ...(q ? [] : [h("li", { class: "meta" }, t("Tus wallets", "Your wallets")), ...(["xmr", "usdt", "usdc", "eth"] as Internal[]).map((c) => option({ internal: c }))]),
         h("li", { class: "meta" }, !coins ? t("Cargando más monedas…", "Loading more coins…") : q ? (others.length ? t("Resultados", "Results") : t("Ninguna moneda coincide.", "No coin matches.")) : t("Otras monedas populares. Escribe para buscar entre más de 2 500.", "Other popular coins. Type to search 2,500+.")),
         ...others.map((c) => option({ other: c })),
       );
@@ -151,7 +153,7 @@ export async function swapView(app: P2PApp): Promise<void> {
     return p;
   };
   const labels = (p: SwapPlan) => {
-    const other = p.network === "Arbitrum" && (p.ticker === "usdt" || p.ticker === "eth") ? `${p.ticker.toUpperCase()} (Arbitrum)` : `${p.ticker.toUpperCase()} (${p.network})`;
+    const other = p.network === "Arbitrum" && (p.ticker === "usdt" || p.ticker === "usdc" || p.ticker === "eth") ? `${p.ticker.toUpperCase()} (Arbitrum)` : `${p.ticker.toUpperCase()} (${p.network})`;
     return p.side === "buy" ? { from: other, to: "XMR" } : { from: "XMR", to: other };
   };
 
@@ -189,6 +191,7 @@ export async function swapView(app: P2PApp): Promise<void> {
   /** Monto máximo que se puede cambiar desde una wallet interna, dejando lo necesario para la comisión de red. */
   async function maxAmount(coin: Internal): Promise<string> {
     if (coin === "usdt") return formatAmount((await balances(pub, net, evm)).token, DECIMALS.usdt);
+    if (coin === "usdc") return formatAmount((await balances(pub, net, evm)).usdc, DECIMALS.usdc);
     if (coin === "eth") {
       const p = await prepareEvm(pub, net, evm, "eth", evm, "all").catch((e) => Promise.reject(evmError(app, e)));
       // Doble reserva: la comisión puede subir entre ahora y el depósito.
@@ -268,7 +271,7 @@ export async function swapView(app: P2PApp): Promise<void> {
       const p = await (await xmrLib()).userPrepare(st.address!, String(parseAmount(amount, DECIMALS.xmr))).catch((e) => Promise.reject(xmrError(app, e)));
       feeRow = [[t("Comisión de red (aprox.)", "Network fee (approx.)"), `${formatAmount(BigInt(p.fee), DECIMALS.xmr)} XMR`]];
     } else if (pay) {
-      const p = await prepareEvm(pub, net, evm, pay === "eth" ? "eth" : "token", evm, parseAmount(amount, DECIMALS[pay])).catch((e) => Promise.reject(evmError(app, e)));
+      const p = await prepareEvm(pub, net, evm, evmAsset(pay), evm, parseAmount(amount, DECIMALS[pay])).catch((e) => Promise.reject(evmError(app, e)));
       feeRow = [[t("Comisión de red (máx.)", "Network fee (max)"), `${formatAmount(p.fee, 18, 8)} ETH`]];
     } else await xmrReady(st, false);
 
@@ -374,7 +377,7 @@ export async function swapView(app: P2PApp): Promise<void> {
       tx = p.txid;
       void persistXmr("mainnet").catch(() => {});
     } else {
-      const p = await prepareEvm(pub, net, evm, d.coin === "eth" ? "eth" : "token", d.to, d.amount).catch((e) => Promise.reject(evmError(app, e)));
+      const p = await prepareEvm(pub, net, evm, evmAsset(d.coin), d.to, d.amount).catch((e) => Promise.reject(evmError(app, e)));
       tx = await sendEvm(net, evmKey(seed), p).catch((e) => Promise.reject(evmError(app, e)));
     }
     rec.deposit_tx = tx;
@@ -523,16 +526,18 @@ export async function swapView(app: P2PApp): Promise<void> {
   const want = sp.get("coin");
   if (want && want.includes("|")) {
     const [tk, nw] = want.toLowerCase().split("|");
-    void loadCoins().then(
+    const side = sp.get("dir") === "sell" ? "to" : "from";
+    if (nw === "arbitrum" && (tk === "usdc" || tk === "usdt" || tk === "eth")) pick(side, { internal: tk });
+    else void loadCoins().then(
       () => {
         const c = coins?.find((x) => x.ticker.toLowerCase() === tk && x.network.toLowerCase() === nw);
         if (!c) return;
-        pick(sp.get("dir") === "sell" ? "to" : "from", { other: c });
+        pick(side, { other: c });
       },
       (e) => formMsg.replaceChildren(app.error(e)),
     );
   }
   // Si hay un cambio sin terminar, se retoma al entrar.
-  const pending = (v.swaps ?? []).find((r) => !isFinal(r.status) && Date.now() / 1000 - r.at < 86_400);
+  const pending = (v.swaps ?? []).find((r) => !r.official && !isFinal(r.status) && Date.now() / 1000 - r.at < 86_400);
   if (pending) void showTrade(pending).catch(() => {});
 }

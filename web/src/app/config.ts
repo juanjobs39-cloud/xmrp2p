@@ -28,6 +28,8 @@ export interface EvmNetwork {
   factory: `0x${string}`;
   token: `0x${string}`;
   tokenSymbol: string;
+  /** USDC nativo (Circle) en esa red, si hay: wallet USDC de la cuenta P2P. */
+  usdc?: `0x${string}`;
   testnet: boolean;
   monero: MoneroNet;
   /** Tope de USDT por swap (el contrato también lo impone). */
@@ -58,6 +60,7 @@ export const NETWORKS: Record<string, EvmNetwork> = {
     factory: (env.PUBLIC_ARBITRUM_SEPOLIA_FACTORY ?? ZERO) as `0x${string}`,
     token: (env.PUBLIC_ARBITRUM_SEPOLIA_TOKEN ?? ZERO) as `0x${string}`,
     tokenSymbol: "tUSDT",
+    usdc: "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d", // USDC de prueba de Circle (faucet.circle.com)
     testnet: true,
     monero: STAGENET,
   },
@@ -70,6 +73,7 @@ export const NETWORKS: Record<string, EvmNetwork> = {
     factory: (env.PUBLIC_ARBITRUM_ONE_FACTORY ?? ZERO) as `0x${string}`,
     token: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", // USD₮0
     tokenSymbol: "USDT",
+    usdc: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", // USDC nativo
     testnet: false,
     monero: XMR_MAINNET,
     maxUsdt: 100,

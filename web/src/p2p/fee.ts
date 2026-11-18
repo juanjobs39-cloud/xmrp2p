@@ -13,12 +13,13 @@
 /** 0.5 % en puntos básicos. */
 export const WITHDRAW_BPS = 50n;
 
-export type FeeAsset = "xmr" | "token" | "eth";
+export type FeeAsset = "xmr" | "token" | "usdc" | "eth";
 
 /** Por debajo de esto no se cobra: no vale la salida o la transferencia extra. Unidad mínima de cada activo. */
 export const FEE_MIN: Record<FeeAsset, bigint> = {
   xmr: 10_000_000n, // 0.00001 XMR
   token: 50_000n, // 0.05 USDT (6 decimales): retiros desde 10 USDT
+  usdc: 50_000n, // 0.05 USDC (6 decimales)
   eth: 20_000_000_000_000n, // 0.00002 ETH
 };
 

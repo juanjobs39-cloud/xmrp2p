@@ -58,6 +58,8 @@ describe("intercambio con cuenta: lo comprado llega a una wallet de la cuenta", 
     expect(internalAsset("buy", { ticker: "btc", network: "Mainnet" })).toBe("xmr");
     expect(internalAsset("sell", { ticker: "usdt", network: "Arbitrum" })).toBe("evm");
     expect(internalAsset("sell", { ticker: "eth", network: "Arbitrum" })).toBe("evm");
+    expect(internalAsset("sell", { ticker: "usdc", network: "Arbitrum" })).toBe("evm");
+    expect(internalAsset("sell", { ticker: "usdc", network: "SOL" })).toBeNull();
     expect(internalAsset("sell", { ticker: "usdt", network: "TRC20" })).toBeNull();
     expect(internalAsset("sell", { ticker: "btc", network: "Mainnet" })).toBeNull();
   });

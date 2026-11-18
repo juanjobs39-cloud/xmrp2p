@@ -1,5 +1,5 @@
 /**
- * Cuenta tipo Ethereum de la wallet (Arbitrum): saldos y envíos de ETH y del token (USDT).
+ * Cuenta tipo Ethereum de la wallet (Arbitrum): saldos y envíos de ETH, USDT y USDC.
  * Cada envío se prepara primero (con su comisión de red estimada) y solo se firma y transmite
  * cuando el usuario confirma. La llave privada nunca sale de este módulo hacia la red: viem firma
  * localmente y manda al nodo la transacción ya firmada.
@@ -12,7 +12,16 @@ import { feeFor, splitAll, type FeeRule } from "./fee";
 export const TOKEN_DECIMALS = 6;
 const ERC20 = parseAbi(["function balanceOf(address) view returns (uint256)", "function transfer(address to, uint256 amount) returns (bool)"]);
 
-export type Asset = "eth" | "token";
+export type Asset = "eth" | "token" | "usdc";
+
+/** Contrato del token de cada activo: «token» es el USDT de la red; «usdc», el USDC nativo. */
+export function tokenOf(net: EvmNetwork, asset: Exclude<Asset, "eth">): `0x${string}` {
+  if (asset === "usdc") {
+    if (!net.usdc) throw new WalletError("bad_amount");
+    return net.usdc;
+  }
+  return net.token;
+}
 
 export interface PreparedEvm {
   asset: Asset;
@@ -44,9 +53,13 @@ const chainOf = (net: EvmNetwork) =>
 
 export const publicClient = (net: EvmNetwork): PublicClient => createPublicClient({ chain: chainOf(net), transport: http(net.rpc) }) as PublicClient;
 
-export async function balances(pub: PublicClient, net: EvmNetwork, address: `0x${string}`): Promise<{ eth: bigint; token: bigint }> {
-  const [eth, token] = await Promise.all([pub.getBalance({ address }), pub.readContract({ address: net.token, abi: ERC20, functionName: "balanceOf", args: [address] })]);
-  return { eth, token };
+export async function balances(pub: PublicClient, net: EvmNetwork, address: `0x${string}`): Promise<{ eth: bigint; token: bigint; usdc: bigint }> {
+  const [eth, token, usdc] = await Promise.all([
+    pub.getBalance({ address }),
+    pub.readContract({ address: net.token, abi: ERC20, functionName: "balanceOf", args: [address] }),
+    net.usdc ? pub.readContract({ address: net.usdc, abi: ERC20, functionName: "balanceOf", args: [address] }) : Promise.resolve(0n),
+  ]);
+  return { eth, token, usdc };
 }
 
 /** Margen sobre el gas estimado: en Arbitrum la parte de datos de L1 puede subir entre estimar y enviar. */
@@ -85,17 +98,19 @@ export async function prepareEvm(pub: PublicClient, net: EvmNetwork, from: `0x${
     return { asset, to, amount: value, gas, maxFeePerGas, maxPriorityFeePerGas, fee, platformFee: 0n };
   }
 
-  const split = amount === "all" ? splitAll(bal.token, rule) : { dest: amount, fee: feeFor(amount, rule) };
+  const contract = tokenOf(net, asset);
+  const held = asset === "usdc" ? bal.usdc : bal.token;
+  const split = amount === "all" ? splitAll(held, rule) : { dest: amount, fee: feeFor(amount, rule) };
   const value = split.dest;
   const platformFee = split.fee;
-  if (value <= 0n || value + platformFee > bal.token) throw new WalletError("insufficient");
+  if (value <= 0n || value + platformFee > held) throw new WalletError("insufficient");
   // Sin ETH no se puede ni estimar: el aviso útil es que falta para la comisión.
   if (bal.eth === 0n) throw new WalletError("need_gas");
   const data = encodeFunctionData({ abi: ERC20, functionName: "transfer", args: [to, value] });
-  const gas = withMargin(await pub.estimateGas({ account: from, to: net.token, data }));
+  const gas = withMargin(await pub.estimateGas({ account: from, to: contract, data }));
   const feeGas =
     platformFee > 0n && feeTo
-      ? withMargin(await pub.estimateGas({ account: from, to: net.token, data: encodeFunctionData({ abi: ERC20, functionName: "transfer", args: [feeTo, platformFee] }) }))
+      ? withMargin(await pub.estimateGas({ account: from, to: contract, data: encodeFunctionData({ abi: ERC20, functionName: "transfer", args: [feeTo, platformFee] }) }))
       : 0n;
   const fee = (gas + feeGas) * maxFeePerGas;
   if (fee > bal.eth) throw new WalletError("need_gas");
@@ -114,7 +129,7 @@ export async function sendEvm(net: EvmNetwork, key: `0x${string}`, p: PreparedEv
   const transfer = (to: `0x${string}`, amount: bigint, gas: bigint, nonce?: number) =>
     p.asset === "eth"
       ? wallet.sendTransaction({ ...fees, gas, nonce, to, value: amount })
-      : wallet.sendTransaction({ ...fees, gas, nonce, to: net.token, data: encodeFunctionData({ abi: ERC20, functionName: "transfer", args: [to, amount] }) });
+      : wallet.sendTransaction({ ...fees, gas, nonce, to: tokenOf(net, p.asset), data: encodeFunctionData({ abi: ERC20, functionName: "transfer", args: [to, amount] }) });
   if (!(p.platformFee > 0n && p.feeTo && p.feeGas)) return transfer(p.to, p.amount, p.gas);
   const nonce = await publicClient(net).getTransactionCount({ address: account.address, blockTag: "pending" });
   const hash = await transfer(p.to, p.amount, p.gas, nonce);

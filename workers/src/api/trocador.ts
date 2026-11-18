@@ -271,7 +271,7 @@ function publicTrade(t: Record<string, unknown>) {
  */
 export function internalAsset(side: Side, coin: { ticker: string; network: string }): "xmr" | "evm" | null {
   if (side === "buy") return "xmr";
-  return coin.network === "Arbitrum" && (coin.ticker === "usdt" || coin.ticker === "eth") ? "evm" : null;
+  return coin.network === "Arbitrum" && (coin.ticker === "usdt" || coin.ticker === "usdc" || coin.ticker === "eth") ? "evm" : null;
 }
 
 const PROOF_MAX_AGE_S = 86400;

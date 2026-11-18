@@ -16,6 +16,7 @@ import "./p2p.css";
 import { avatar, h, fmtXmr, icon, nowS, type Child } from "./ui";
 import { marketView } from "./market";
 import { newAdView } from "./new-ad";
+import { officialView } from "./official";
 import { myAdsView, orderView, ordersView } from "./orders";
 import { adminView } from "./admin";
 import { swapView } from "./swap-view";
@@ -90,13 +91,14 @@ export class P2PApp {
     this.lastRoute = here;
     // Cambiar no obliga a tener cuenta: sin sesión se elige entre el exchange sin cuenta y entrar.
     if (view === "cambiar" && WALLETS_ON && !this.vault && !location.hash.includes("?cuenta")) return this.swapChoice();
-    const needs = ["nuevo", "ordenes", "orden", "anuncios", "cuenta", "admin", "wallet", "cambiar"].includes(view);
+    const needs = ["nuevo", "ordenes", "orden", "anuncios", "cuenta", "admin", "wallet", "cambiar", "oficial"].includes(view);
     if (needs && !this.vault) return this.accountView(view === "cuenta" ? "" : location.hash);
     this.nav(view);
     try {
       if (view === "nuevo") await newAdView(this);
       else if (view === "ordenes") await ordersView(this);
       else if (view === "orden" && arg) await orderView(this, arg);
+      else if (view === "oficial" && arg) await officialView(this, decodeURIComponent(arg));
       else if (view === "anuncios") await myAdsView(this);
       else if (view === "cuenta") await this.profileView();
       else if (view === "wallet" && WALLETS_ON) await walletView(this);
@@ -113,7 +115,7 @@ export class P2PApp {
     const link = (hash: string, ico: Parameters<typeof icon>[0], label: string, key: string, dot = 0) =>
       h(
         "a",
-        { href: hash, "aria-current": view === key || (key === "ordenes" && view === "orden") ? "page" : undefined },
+        { href: hash, "aria-current": view === key || (key === "ordenes" && (view === "orden" || view === "oficial")) ? "page" : undefined },
         h("span", { class: "p2p-ico", "aria-hidden": "true" }, icon(ico)),
         h("span", {}, label),
         dot ? h("b", { class: "p2p-dot", title: this.t("Esperan tu acción", "Waiting for you") }, String(dot)) : null,
@@ -786,7 +788,7 @@ export class P2PApp {
           addr.replaceChildren(
             h("p", { class: "p2p-sub" }, t("Tu dirección de Monero para recibir", "Your Monero address to receive")),
             h("div", { class: "p2p-copy" }, h("code", { class: "p2p-addr" }, k.address), copyButton(this, k.address)),
-            h("small", { class: "muted" }, t("También tienes una dirección de Arbitrum para USDT y ETH: está en Wallet.", "You also have an Arbitrum address for USDT and ETH: it is under Wallet.")),
+            h("small", { class: "muted" }, t("También tienes una dirección de Arbitrum para USDT, USDC y ETH: está en Wallet.", "You also have an Arbitrum address for USDT, USDC and ETH: it is under Wallet.")),
           ),
         )
         .catch(() => addr.replaceChildren());

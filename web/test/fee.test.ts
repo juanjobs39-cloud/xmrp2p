@@ -59,3 +59,7 @@ test("no se cobra entre usuarios, a direcciones propias ni a la de comisiones", 
   assert.equal(chargeable(rule, { address: ` ${rule.address.toUpperCase().replace("0X", "0x")} ` }, [mine]), null);
   assert.equal(chargeable(null, { address: other }, [mine]), null);
 });
+
+test("USDC tiene mínimo de comisión de 0.05 (6 decimales)", () => {
+  assert.equal(FEE_MIN.usdc, 50_000n);
+});

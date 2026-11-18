@@ -1,6 +1,7 @@
 /** Mercado: anuncios de compra y venta con filtros, y el panel para abrir una orden. */
 import { MONERO } from "../app/config";
 import { get, type Ad, type Method, type OrderView, type PublicUser } from "./api";
+import { contactUrl, officialSheet, ot, USDC_NETS } from "./official";
 import type { P2PApp } from "./p2p-app";
 import { fmtFiat, fmtWait, fmtXmr, h, icon, kids, offPlatformWarning, pct, skeleton } from "./ui";
 
@@ -94,6 +95,7 @@ export async function marketView(app: P2PApp) {
   // Fila oficial (USDC vía Trocador): sale en todas las monedas, salvo que se filtre por otro método.
   const metodo = (sp.get("metodo") ?? "").trim();
   const official = OFFICIAL_ON && (!metodo || /usdc/i.test(metodo)) ? officialRow(app, wantBuy) : null;
+  if (OFFICIAL_ON) reopenOfficial(app);
 
   if (!r.ads.length) {
     list.replaceChildren(
@@ -171,41 +173,37 @@ function adRow(app: P2PApp, ad: MarketAd, wantBuy: boolean, market: number | nul
 
 /** Fila oficial «Paga con USDC»: se apaga con PUBLIC_P2P_OFFICIAL_USDC=off. */
 const OFFICIAL_ON = (import.meta.env.PUBLIC_P2P_OFFICIAL_USDC as string | undefined) !== "off";
-/** Redes de USDC (ids de Trocador, iguales a web/src/app/coins.ts). Solana primero: la red cuesta centavos. */
-const USDC_NETS = [
-  { id: "SOL", label: "Solana" },
-  { id: "ERC20", label: "Ethereum" },
-  { id: "Arbitrum", label: "Arbitrum" },
-  { id: "base", label: "Base" },
-] as const;
 const NET_KEY = "p2p-usdc-net";
 
+/** Fila del anuncio oficial «Verificado · Garantizado» (USDC vía Trocador). Textos en los 7 idiomas. */
 function officialRow(app: P2PApp, wantBuy: boolean): HTMLElement {
-  const t = app.t;
-  let net: string = USDC_NETS[0].id;
+  // Al vender, por defecto se recibe en la wallet USDC de Arbitrum de la cuenta.
+  let net: string = wantBuy ? "SOL" : "Arbitrum";
   try {
-    const saved = localStorage.getItem(NET_KEY);
+    const saved = localStorage.getItem(NET_KEY + (wantBuy ? "" : "-sell"));
     if (saved && USDC_NETS.some((n) => n.id === saved)) net = saved;
   } catch {}
-  const target = () => `#/cambiar?${app.vault ? "" : "cuenta&"}coin=usdc|${net}&dir=${wantBuy ? "buy" : "sell"}`;
-  const go = h("a", { class: "btn " + (wantBuy ? "buy" : "sell"), href: target() }, app.vault ? (wantBuy ? t("Comprar con USDC", "Buy with USDC") : t("Vender por USDC", "Sell for USDC")) : t("Crear cuenta y empezar", "Create account and start"));
-  const chips = USDC_NETS.map((n) => {
-    const b = h("button", { type: "button", class: "p2p-net" + (n.id === net ? " on" : ""), "aria-pressed": String(n.id === net) }, n.label);
+  const nets = wantBuy ? [...USDC_NETS.filter((n) => n.id !== "Arbitrum"), USDC_NETS[0]] : USDC_NETS;
+  const go = h("button", { class: "btn " + (wantBuy ? "buy" : "sell"), type: "button" }, app.vault ? (wantBuy ? ot("btnBuy") : ot("btnSell")) : ot("btnStart"));
+  go.onclick = () => {
+    if (!app.vault) return void (window.scrollTo({ top: 0, behavior: "instant" }), app.accountView(`#/?oficial=${wantBuy ? "buy" : "sell"}&red=${encodeURIComponent(net)}`));
+    officialSheet(app, wantBuy, net);
+  };
+  const chips = nets.map((n) => {
+    const b = h("button", { type: "button", class: "p2p-net" + (n.id === net ? " on" : ""), "aria-pressed": String(n.id === net) }, n.id === "Arbitrum" && !wantBuy ? `${n.label} · ${ot("yourWallet")}` : n.label);
     b.onclick = () => {
       net = n.id;
       try {
-        localStorage.setItem(NET_KEY, net);
+        localStorage.setItem(NET_KEY + (wantBuy ? "" : "-sell"), net);
       } catch {}
       for (const c of chips) {
         const on = c === b;
         c.classList.toggle("on", on);
         c.setAttribute("aria-pressed", String(on));
       }
-      go.setAttribute("href", target());
     };
     return b;
   });
-  const contact = `https://monerop2p.app/${app.lang}/${app.lang === "es" ? "contacto" : "contact"}/`;
   return h(
     "article",
     { class: "p2p-row p2p-official", role: "row" },
@@ -213,28 +211,30 @@ function officialRow(app: P2PApp, wantBuy: boolean): HTMLElement {
       "div",
       { class: "p2p-cell user", role: "cell" },
       h("strong", {}, "MoneroP2P"),
-      h("span", { class: "badge ok p2p-verified", title: t("Anuncio oficial de la plataforma", "Official platform listing") }, icon("shield"), t("Verificado · Garantizado", "Verified · Guaranteed")),
-      h("small", { class: "muted" }, wantBuy ? t("Compra XMR pagando con USDC", "Buy XMR paying with USDC") : t("Vende XMR y recibe USDC", "Sell XMR and get USDC")),
+      h("span", { class: "badge ok p2p-verified", title: ot("officialTip") }, icon("shield"), ot("verified")),
+      h("small", { class: "muted" }, wantBuy ? ot("buyTitle") : ot("sellTitle")),
     ),
-    h("div", { class: "p2p-cell price", role: "cell" }, h("span", { class: "p2p-price" }, t("En vivo", "Live")), h("small", { class: "muted" }, t("Mejor de hasta 14 exchanges", "Best of up to 14 exchanges"))),
+    h("div", { class: "p2p-cell price", role: "cell" }, h("span", { class: "p2p-price" }, ot("live")), h("small", { class: "muted" }, ot("best"))),
     h(
       "div",
       { class: "p2p-cell limits", role: "cell" },
-      h("span", {}, h("small", { class: "muted" }, t("Límite", "Limit") + " "), t("Sin máximo", "No maximum")),
-      h("span", {}, h("small", { class: "muted" }, t("Tiempo", "Time") + " "), "10–60 min"),
-      h("span", {}, h("small", { class: "muted" }, t("Recibes en", "You get it in") + " "), wantBuy ? t("tu wallet de la plataforma", "your platform wallet") : "USDC"),
+      h("span", {}, h("small", { class: "muted" }, ot("limit") + " "), ot("noMax")),
+      h("span", {}, h("small", { class: "muted" }, ot("time") + " "), "10–60 min"),
+      h("span", {}, h("small", { class: "muted" }, ot("getIn") + " "), ot("platWallet")),
     ),
-    h("div", { class: "p2p-cell methods", role: "cell" }, h("div", { class: "p2p-tags" }, h("span", { class: "p2p-tag" }, "USDC")), h("div", { class: "p2p-nets", role: "group", "aria-label": t("Red de USDC", "USDC network") }, chips)),
+    h("div", { class: "p2p-cell methods", role: "cell" }, h("div", { class: "p2p-tags" }, h("span", { class: "p2p-tag" }, "USDC")), h("div", { class: "p2p-nets", role: "group", "aria-label": ot("netLabel") }, chips)),
     h("div", { class: "p2p-cell act", role: "cell" }, go),
-    h(
-      "p",
-      { class: "p2p-official-note" },
-      h("strong", {}, t("Garantía MoneroP2P: ", "MoneroP2P guarantee: ")),
-      t("si no recibes lo que compraste y el exchange no te reembolsa, MoneroP2P te devuelve tu pago. ", "if you don't receive what you bought and the exchange doesn't refund you, MoneroP2P pays you back. "),
-      h("a", { href: contact, target: "_blank", rel: "noopener" }, t("Escríbenos con el ID del intercambio", "Contact us with the swap ID")),
-      ".",
-    ),
+    h("p", { class: "p2p-official-note" }, h("strong", {}, ot("guarTitle") + ": "), ot("guarText") + " ", h("a", { href: contactUrl(), target: "_blank", rel: "noopener" }, ot("contact")), "."),
   );
+}
+
+/** Tras crear la cuenta desde el anuncio oficial se vuelve a #/?oficial=buy|sell&red=… y se abre el panel. */
+function reopenOfficial(app: P2PApp) {
+  const q = new URLSearchParams(location.hash.split("?")[1] ?? "");
+  const side = q.get("oficial");
+  if (!app.vault || (side !== "buy" && side !== "sell")) return;
+  history.replaceState(null, "", location.pathname + location.search + "#/");
+  officialSheet(app, side === "buy", q.get("red") ?? undefined);
 }
 
 /** «Suele responder en ~2 h» (o el plazo máximo si todavía no hay historial). */
