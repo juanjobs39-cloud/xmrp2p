@@ -108,3 +108,5 @@ Saque para a sua carteira antes do prazo. Depois a exchange pode converter seu s
 Comprar e vender cripto tem riscos e as leis variam de país para país: leia o [aviso de riscos](/pt/risk-notice/).
 
 [Comprar Monero agora →](/pt/buy-monero/)
+
+Mora na Alemanha? [Como comprar Monero na Alemanha em 2026](/pt/news/buy-monero-in-germany/).

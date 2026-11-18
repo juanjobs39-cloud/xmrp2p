@@ -140,3 +140,5 @@ Plus dans [sécurité](https://fiat.monerop2p.app/fr/safety/).
 [Ouvrir le marché P2P →](https://fiat.monerop2p.app/fr/app/) · [Voir tous les pays →](https://fiat.monerop2p.app/fr/countries/) · [Échanger des cryptos contre du XMR →](/fr/app/?coin=usdt%7CTRC20)
 
 Les cryptos sont volatiles et les transactions sont irréversibles. Lis l'[avertissement sur les risques](/fr/risk-notice/) et respecte les lois de ton pays.
+
+Tu vis en Allemagne ? [Acheter du Monero en Allemagne en 2026](/fr/news/buy-monero-in-germany/).

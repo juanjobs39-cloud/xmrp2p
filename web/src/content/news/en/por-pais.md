@@ -143,3 +143,5 @@ More in [safety](https://fiat.monerop2p.app/en/safety/).
 [Open the P2P market →](https://fiat.monerop2p.app/en/app/) · [See all countries →](https://fiat.monerop2p.app/en/countries/) · [Swap crypto for XMR →](/en/app/?coin=usdt%7CTRC20)
 
 Crypto is volatile and transactions cannot be reversed. Read the [risk notice](/en/risk-notice/) and follow the laws of your country.
+
+In Germany? [How to buy Monero in Germany in 2026](/en/news/buy-monero-in-germany/).

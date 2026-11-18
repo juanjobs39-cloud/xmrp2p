@@ -140,3 +140,5 @@ Mehr in [Sicherheit](https://fiat.monerop2p.app/de/safety/).
 [P2P-Markt öffnen →](https://fiat.monerop2p.app/de/app/) · [Alle Länder ansehen →](https://fiat.monerop2p.app/de/countries/) · [Krypto in XMR tauschen →](/de/app/?coin=usdt%7CTRC20)
 
 Krypto ist volatil und Transaktionen lassen sich nicht rückgängig machen. Lies den [Risikohinweis](/de/risk-notice/) und halte die Gesetze deines Landes ein.
+
+Du bist in Deutschland? [Monero kaufen in Deutschland 2026](/de/news/monero-kaufen-in-deutschland/).

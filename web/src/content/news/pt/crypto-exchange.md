@@ -143,3 +143,5 @@ O que dá para verificar da plataforma e quais são seus limites: [O MoneroP2P �
 Cripto é volátil e as transações não podem ser revertidas. Leia o [aviso de riscos](/pt/risk-notice/) e cumpra as leis do seu país.
 
 Onde você está? Guia com o método de pagamento local de cada país: [como comprar Monero no seu país](/pt/news/how-to-buy-monero-in-your-country/).
+
+Mora na Alemanha? [Como comprar Monero na Alemanha em 2026](/pt/news/buy-monero-in-germany/).

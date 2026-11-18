@@ -97,6 +97,7 @@ Ajustar el tono a cada comunidad y responder los comentarios con datos. No publi
 Entradas de Novedades pensadas para enlazar desde foros, canales y redes (cada una tiene versión en español, inglés, portugués y ruso):
 
 - **Comprar Monero en México** (SPEI, OXXO, sin KYC, legalidad): https://monerop2p.app/es/novedades/donde-comprar-monero-en-mexico/ · https://monerop2p.app/en/news/where-to-buy-monero-in-mexico/
+- **Comprar Monero en Alemania** (público alemán, tras el delisting de Kraken; lleva al exchange): https://monerop2p.app/de/news/monero-kaufen-in-deutschland/ · https://monerop2p.app/en/news/buy-monero-in-germany/ · https://monerop2p.app/es/novedades/comprar-monero-en-alemania/ (también pt, ru, fr, it)
 - **Comprar Monero en tu país** (160 monedas, método local por país): https://monerop2p.app/es/novedades/como-comprar-monero-en-tu-pais/ · https://monerop2p.app/en/news/how-to-buy-monero-in-your-country/
 - **Exchange de cripto a Monero sin KYC** (2500+ monedas, sin límite de monto, compara hasta 14 exchanges): https://monerop2p.app/es/novedades/exchange-de-criptomonedas-a-monero-sin-kyc/ · https://monerop2p.app/en/news/no-kyc-crypto-to-monero-exchange/
 - **Monero por Telegram** (bot con alertas, sin KYC): https://monerop2p.app/es/novedades/comprar-monero-por-telegram-bot/ · https://monerop2p.app/en/news/buy-monero-on-telegram-bot/

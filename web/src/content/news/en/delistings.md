@@ -108,3 +108,5 @@ Withdraw it to your wallet before the deadline. After that the exchange may conv
 Buying and selling crypto carries risk and the law varies by country: read the [risk notice](/en/risk-notice/).
 
 [Buy Monero now →](/en/buy-monero/)
+
+In Germany? [How to buy Monero in Germany in 2026](/en/news/buy-monero-in-germany/).

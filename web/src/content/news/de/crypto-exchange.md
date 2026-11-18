@@ -143,3 +143,5 @@ Was du über die Plattform und ihre Limits prüfen kannst: [Ist MoneroP2P seriö
 Krypto ist volatil und Transaktionen lassen sich nicht rückgängig machen. Lies den [Risikohinweis](/de/risk-notice/) und halte die Gesetze deines Landes ein.
 
 Wo bist du? Ratgeber mit lokaler Zahlungsmethode: [Monero in deinem Land kaufen](/de/news/how-to-buy-monero-in-your-country/).
+
+Du bist in Deutschland? [Monero kaufen in Deutschland 2026](/de/news/monero-kaufen-in-deutschland/).

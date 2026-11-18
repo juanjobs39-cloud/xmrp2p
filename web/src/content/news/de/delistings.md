@@ -108,3 +108,5 @@ Zieh es vor der Frist in deine Wallet ab. Danach kann die Börse dein Guthaben i
 Krypto zu kaufen und zu verkaufen birgt Risiken, und die Gesetze sind je nach Land verschieden: Lies den [Risikohinweis](/de/risk-notice/).
 
 [Jetzt Monero kaufen →](/de/buy-monero/)
+
+Du bist in Deutschland? [Monero kaufen in Deutschland 2026](/de/news/monero-kaufen-in-deutschland/).

@@ -108,3 +108,5 @@ Retíralo a tu wallet antes de la fecha límite. Después el exchange puede conv
 Comprar y vender cripto tiene riesgos y las leyes cambian según el país: lee el [aviso de riesgos](/es/aviso-de-riesgos/).
 
 [Comprar Monero ahora →](/es/comprar-monero/)
+
+¿Vives en Alemania? [Cómo comprar Monero en Alemania en 2026](/es/novedades/comprar-monero-en-alemania/).

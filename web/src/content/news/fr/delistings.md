@@ -108,3 +108,5 @@ Retire-le vers ton portefeuille avant la date limite. Ensuite, la plateforme peu
 Acheter et vendre des cryptos comporte des risques et la loi varie selon les pays : lis l'[avertissement sur les risques](/fr/risk-notice/).
 
 [Acheter du Monero maintenant →](/fr/buy-monero/)
+
+Tu vis en Allemagne ? [Acheter du Monero en Allemagne en 2026](/fr/news/buy-monero-in-germany/).

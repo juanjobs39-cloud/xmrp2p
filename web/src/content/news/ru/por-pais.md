@@ -140,3 +140,5 @@ faq:
 [Открыть P2P-рынок →](https://fiat.monerop2p.app/ru/app/) · [Все страны →](https://fiat.monerop2p.app/ru/countries/) · [Обменять криптовалюту на XMR →](/ru/app/?coin=usdt%7CTRC20)
 
 Криптовалюта волатильна, а транзакции нельзя отменить. Прочитайте [уведомление о рисках](/ru/risk-notice/) и соблюдайте законы своей страны.
+
+Живёте в Германии? [Как купить Monero в Германии в 2026 году](/ru/news/buy-monero-in-germany/).

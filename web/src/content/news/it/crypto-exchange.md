@@ -143,3 +143,5 @@ Cosa puoi verificare sulla piattaforma e i suoi limiti: [MoneroP2P è affidabile
 Le crypto sono volatili e le transazioni non si possono annullare. Leggi l'[avviso sui rischi](/it/risk-notice/) e rispetta le leggi del tuo paese.
 
 Dove sei? Guide con il metodo di pagamento locale: [comprare Monero nel tuo paese](/it/news/how-to-buy-monero-in-your-country/).
+
+Vivi in Germania? [Comprare Monero in Germania nel 2026](/it/news/buy-monero-in-germany/).
