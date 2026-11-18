@@ -74,7 +74,7 @@ const TXT = {
     "кошелёк на платформе",
     "deiner Plattform-Wallet",
     "ton portefeuille de la plateforme",
-    "il tuo wallet della piattaforma",
+    "wallet della piattaforma",
   ],
   btnBuy: ["Comprar con USDC", "Buy with USDC", "Comprar com USDC", "Купить за USDC", "Mit USDC kaufen", "Acheter en USDC", "Compra con USDC"],
   btnSell: ["Vender por USDC", "Sell for USDC", "Vender por USDC", "Продать за USDC", "Gegen USDC verkaufen", "Vendre contre USDC", "Vendi per USDC"],
