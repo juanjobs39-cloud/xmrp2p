@@ -463,3 +463,19 @@ main.p2p-page[data-view]:not([data-view="mercado"]) .p2p-hero { margin-bottom: 0
 #p2p-root .quick-list { margin: 0.5rem 0; max-width: 46rem; }
 #p2p-root .quick-item .quick-amount { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0; }
 @media (max-width: 40rem) { #p2p-root .p2p-swap .quick-row input#p2p-s-amt { font-size: 1.5rem; } }
+
+/* ---------- Fila oficial (USDC vía Trocador) ---------- */
+.p2p-row.p2p-official { background: var(--p2p-ok-bg); border: 2px solid var(--p2p-ok-fg); border-radius: 12px; margin: 0.4rem 0; }
+.p2p-row.p2p-official:hover { background: var(--p2p-ok-bg); }
+.p2p-official .user { display: flex; flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+.p2p-verified { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.78rem; font-weight: 700; }
+.p2p-verified svg { width: 1rem; height: 1rem; }
+.p2p-nets { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; }
+.p2p-net { font: inherit; font-size: 0.75rem; padding: 0.2rem 0.55rem; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--fg); cursor: pointer; }
+.p2p-net.on { border-color: var(--p2p-ok-fg); background: var(--p2p-ok-fg); color: var(--card); font-weight: 700; }
+.p2p-official-note { grid-column: 1 / -1; margin: 0; font-size: 0.8rem; color: var(--fg); }
+@media (max-width: 860px) {
+  .p2p-row.p2p-official { grid-template-areas: "user user" "price price" "limits limits" "methods methods" "act act" "note note"; }
+  .p2p-official-note { grid-area: note; }
+  .p2p-official .act .btn { width: 100%; text-align: center; }
+}

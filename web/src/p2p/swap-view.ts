@@ -518,6 +518,20 @@ export async function swapView(app: P2PApp): Promise<void> {
   );
   sync();
   drawHistory();
+  // Llegada desde la fila oficial del mercado: #/cambiar?coin=usdc|SOL&dir=buy (o sell).
+  const sp = new URLSearchParams(location.hash.split("?")[1] ?? "");
+  const want = sp.get("coin");
+  if (want && want.includes("|")) {
+    const [tk, nw] = want.toLowerCase().split("|");
+    void loadCoins().then(
+      () => {
+        const c = coins?.find((x) => x.ticker.toLowerCase() === tk && x.network.toLowerCase() === nw);
+        if (!c) return;
+        pick(sp.get("dir") === "sell" ? "to" : "from", { other: c });
+      },
+      (e) => formMsg.replaceChildren(app.error(e)),
+    );
+  }
   // Si hay un cambio sin terminar, se retoma al entrar.
   const pending = (v.swaps ?? []).find((r) => !isFinal(r.status) && Date.now() / 1000 - r.at < 86_400);
   if (pending) void showTrade(pending).catch(() => {});
