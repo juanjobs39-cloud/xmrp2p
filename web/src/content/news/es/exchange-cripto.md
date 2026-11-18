@@ -141,3 +141,5 @@ Qué se puede comprobar de la plataforma y qué límites tiene: [¿MoneroP2P es 
 [Cambiar USDT por XMR →](/es/app/?coin=usdt%7CTRC20) · [Cambiar BTC por XMR →](/es/app/?coin=btc%7CMainnet) · [Cambiar ETH por XMR →](/es/app/?coin=eth%7CERC20)
 
 Las cripto son volátiles y las transacciones no se pueden revertir. Lee el [aviso de riesgos](/es/aviso-de-riesgos/) y cumple las leyes de tu país.
+
+¿Dónde estás? Guías con el método de pago local: [comprar Monero en México](/es/novedades/donde-comprar-monero-en-mexico/) · [comprar Monero en tu país](/es/novedades/como-comprar-monero-en-tu-pais/).

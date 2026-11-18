@@ -137,3 +137,5 @@ More answers in the [P2P Fiat FAQ](https://fiat.monerop2p.app/en/faq/). Buying a
 Prefer your phone? The market also opens inside Telegram, with order notifications and alerts for new ads: [buy and sell Monero on Telegram](/en/news/buy-monero-on-telegram-bot/).
 
 Rather not install anything? Every P2P Fiat account now includes a non-custodial web wallet: [Monero and USDT wallet in your account](/en/news/non-custodial-monero-and-usdt-wallet-in-your-account/).
+
+Where are you? Guides with the local payment method: [buy Monero in Mexico](/en/news/where-to-buy-monero-in-mexico/) · [buy Monero in your country](/en/news/how-to-buy-monero-in-your-country/).

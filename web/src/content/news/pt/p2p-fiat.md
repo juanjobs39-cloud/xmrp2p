@@ -123,3 +123,5 @@ Comprar e vender cripto tem riscos: leia o [aviso de riscos](/pt/risk-notice/).
 Prefere usar o celular? O mercado também abre dentro do Telegram, com avisos das suas ordens e alertas de novos anúncios: [comprar e vender Monero pelo Telegram](/pt/news/buy-monero-on-telegram-bot/).
 
 Não quer instalar nada? Cada conta do P2P Fiat já traz uma carteira web sem custódia: [carteira de Monero e USDT na sua conta](/pt/news/non-custodial-monero-and-usdt-wallet-in-your-account/).
+
+Onde você está? Guia com o método de pagamento local de cada país: [como comprar Monero no seu país](/pt/news/how-to-buy-monero-in-your-country/).

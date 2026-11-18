@@ -141,3 +141,5 @@ What you can verify about the platform and its limits: [Is MoneroP2P legit?](/en
 [Swap USDT for XMR →](/en/app/?coin=usdt%7CTRC20) · [Swap BTC for XMR →](/en/app/?coin=btc%7CMainnet) · [Swap ETH for XMR →](/en/app/?coin=eth%7CERC20)
 
 Crypto is volatile and transactions cannot be reversed. Read the [risk notice](/en/risk-notice/) and follow the laws of your country.
+
+Where are you? Guides with the local payment method: [buy Monero in Mexico](/en/news/where-to-buy-monero-in-mexico/) · [buy Monero in your country](/en/news/how-to-buy-monero-in-your-country/).

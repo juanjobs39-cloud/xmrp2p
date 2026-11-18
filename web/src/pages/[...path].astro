@@ -176,6 +176,12 @@ if (kind === "page") {
     ...(n.mentions.length
       ? { mentions: n.mentions.map((m: { name: string; url: string; description?: string }) => ({ "@type": "WebApplication", name: m.name, url: m.url, applicationCategory: "FinanceApplication", operatingSystem: "Web", ...(m.description ? { description: m.description } : {}) })) }
       : {}),
+    ...(n.place
+      ? (() => {
+          const place = { "@type": "Country", name: n.place.name, sameAs: [`https://www.wikidata.org/wiki/${n.place.wikidata}`, ...(n.place.wikipedia ? [n.place.wikipedia] : [])] };
+          return { spatialCoverage: place, contentLocation: place, audience: { "@type": "Audience", geographicArea: place } };
+        })()
+      : {}),
     encoding: { "@type": "MediaObject", encodingFormat: "text/markdown", contentUrl: new URL(mdAlt, Astro.site).href },
     author: org,
     publisher: org,

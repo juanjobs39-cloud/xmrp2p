@@ -73,6 +73,8 @@ const news = defineCollection({
         steps: z.array(z.object({ name: z.string(), text: z.string() })),
       })
       .optional(),
+    /** País o región del que trata la entrada (GEO): spatialCoverage, contentLocation y audience en el BlogPosting. */
+    place: z.object({ name: z.string(), wikidata: z.string().regex(/^Q\d+$/), wikipedia: z.string().url().optional() }).optional(),
   }),
 });
 

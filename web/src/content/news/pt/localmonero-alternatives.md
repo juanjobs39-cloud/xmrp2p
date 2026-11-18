@@ -140,3 +140,5 @@ Usar cripto tem riscos: leia o [aviso de riscos](/pt/risk-notice/).
 [Comprar Monero com moeda local →](https://fiat.monerop2p.app/pt/app/) · [Trocar cripto por XMR →](/pt/app/)
 
 Prefere usar o celular? O mercado também abre dentro do Telegram, com avisos das suas ordens e alertas de novos anúncios: [comprar e vender Monero pelo Telegram](/pt/news/buy-monero-on-telegram-bot/).
+
+Onde você está? Guia com o método de pagamento local de cada país: [como comprar Monero no seu país](/pt/news/how-to-buy-monero-in-your-country/).
