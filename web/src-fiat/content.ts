@@ -9,13 +9,48 @@
 import { appendFileSync } from "node:fs";
 import ptDict from "./i18n/pt.json";
 import ruDict from "./i18n/ru.json";
+import deDict from "./i18n/de.json";
+import frDict from "./i18n/fr.json";
+import itDict from "./i18n/it.json";
 import { COUNTRY_I18N, METHOD_I18N } from "./i18n/entities";
 
-export type L = "es" | "en" | "pt" | "ru";
-export const FIAT_LANGS: L[] = ["es", "en", "pt", "ru"];
-export const LANG_NAME: Record<L, string> = { es: "Español", en: "English", pt: "Português", ru: "Русский" };
-export const OG_LOCALE: Record<L, string> = { es: "es_419", en: "en_US", pt: "pt_BR", ru: "ru_RU" };
-const DICT: Record<"pt" | "ru", Record<string, string>> = { pt: ptDict, ru: ruDict };
+export type L = "es" | "en" | "pt" | "ru" | "de" | "fr" | "it";
+/** Idiomas que solo traducen desde el diccionario (rutas y datos de métodos y países en inglés). */
+export type LX = "de" | "fr" | "it";
+export const FIAT_LANGS: L[] = ["es", "en", "pt", "ru", "de", "fr", "it"];
+export const LANG_NAME: Record<L, string> = { es: "Español", en: "English", pt: "Português", ru: "Русский", de: "Deutsch", fr: "Français", it: "Italiano" };
+export const OG_LOCALE: Record<L, string> = { es: "es_419", en: "en_US", pt: "pt_BR", ru: "ru_RU", de: "de_DE", fr: "fr_FR", it: "it_IT" };
+const DICT: Record<"pt" | "ru" | LX, Record<string, string>> = { pt: ptDict, ru: ruDict, de: deDict, fr: frDict, it: itDict };
+const isLX = (l: L): l is LX => l === "de" || l === "fr" || l === "it";
+/** Plantillas del diccionario con {0}, {1}…: «Buy Monero in {0}» traduce «Buy Monero in Mexico» y también el dato si está en el diccionario. */
+const TPL: Partial<Record<LX, { re: RegExp; out: string }[]>> = {};
+const escRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const tpl = (lang: LX) =>
+  (TPL[lang] ??= Object.entries(DICT[lang])
+    .filter(([k]) => /\{\d\}/.test(k))
+    .sort(([a], [b]) => b.length - a.length)
+    .map(([k, out]) => ({
+      re: new RegExp("^" + k.split(/\{(\d)\}/).map((p, i) => (i % 2 ? `(?<g${p}>[\\s\\S]+?)` : escRe(p))).join("") + "$"),
+      out,
+    })));
+/**
+ * Busca en el diccionario. En las plantillas, {0} traduce el dato (o cada elemento de una lista «a, b, c»);
+ * {in:0} y {of:0} usan las entradas «in México» / «of Mexico» para la preposición correcta de cada país.
+ */
+const fromDict = (lang: LX, en: string): string | undefined => {
+  const d = DICT[lang];
+  if (d[en] !== undefined) return d[en];
+  const one = (v: string) => d[v] ?? (v.includes(", ") ? v.split(", ").map((x) => d[x] ?? x).join(", ") : v);
+  for (const { re, out } of tpl(lang)) {
+    const m = en.match(re);
+    if (m)
+      return out.replace(/\{(?:(in|of):)?(\d)\}/g, (_, pre: string | undefined, i: string) => {
+        const v = m.groups?.["g" + i] ?? "";
+        return pre ? (d[`${pre} ${v}`] ?? one(v)) : one(v);
+      });
+  }
+  return undefined;
+};
 const dump = typeof process !== "undefined" ? process.env.FIAT_I18N_DUMP : undefined;
 const seen = new Set<string>();
 export const tr =
@@ -23,14 +58,19 @@ export const tr =
   (es: string, en: string, pt?: string, ru?: string): string => {
     if (lang === "es") return es;
     if (lang === "en") return en;
-    const inline = lang === "pt" ? pt : ru;
-    if (inline !== undefined) return inline;
-    if (dump && !seen.has(en)) {
-      seen.add(en);
-      appendFileSync(dump, JSON.stringify(en) + "\n");
+    if (lang === "pt" || lang === "ru") {
+      const inline = lang === "pt" ? pt : ru;
+      if (inline !== undefined) return inline;
     }
-    return DICT[lang][en] ?? en;
+    const out = isLX(lang) ? fromDict(lang, en) : DICT[lang][en];
+    if (dump && out === undefined && !seen.has(lang + en)) {
+      seen.add(lang + en);
+      appendFileSync(dump, JSON.stringify([lang, en]) + "\n");
+    }
+    return out ?? en;
   };
+/** Texto de un método o país (escrito en inglés) en alemán, francés o italiano, desde el diccionario. */
+const tx = (lang: LX, en: string): string => tr(lang)(en, en);
 
 /** Red de Monero del sitio: mainnet (dinero real) salvo en la beta de pruebas (PUBLIC_P2P_NET=stagenet). */
 export const REAL = (import.meta.env.PUBLIC_P2P_NET ?? "mainnet") !== "stagenet";
@@ -52,7 +92,7 @@ export const FACTS = {
 };
 
 /** Rutas por idioma. El ruso usa las rutas en inglés con su prefijo. */
-const R = (es: string, en: string, pt: string) => ({ es: `/es/${es}`, en: `/en/${en}`, pt: `/pt/${pt}`, ru: `/ru/${en}` });
+const R = (es: string, en: string, pt: string) => ({ es: `/es/${es}`, en: `/en/${en}`, pt: `/pt/${pt}`, ru: `/ru/${en}`, de: `/de/${en}`, fr: `/fr/${en}`, it: `/it/${en}` });
 export const ROUTES = {
   home: R("", "", ""),
   app: R("app/", "app/", "app/"),
@@ -79,7 +119,8 @@ type T2 = Record<L, string>;
 type T2in = Record<"es" | "en", string>;
 type MethodIn = Omit<PayMethod, "id" | "slug" | "where" | "intro" | "tips"> & { where: T2in; intro: T2in; tips: Record<"es" | "en", string[]> };
 type CountryIn = Omit<Country, "id" | "slug" | "name" | "fiatName" | "note" | "loc"> & { name: T2in; fiatName: T2in; note: T2in };
-const t4 = (x: T2in, pt?: string, ru?: string): T2 => ({ ...x, pt: pt ?? x.en, ru: ru ?? x.en });
+const t4 = (x: T2in, pt?: string, ru?: string): T2 => ({ ...x, pt: pt ?? x.en, ru: ru ?? x.en, de: tx("de", x.en), fr: tx("fr", x.en), it: tx("it", x.en) });
+const enSlugs = (s: string) => ({ de: s, fr: s, it: s });
 export interface PayMethod {
   id: string;
   slug: T2;
@@ -100,10 +141,10 @@ const pm = (id: string, esSlug: string, enSlug: string, d: MethodIn): PayMethod 
   return {
     id,
     ...d,
-    slug: { es: `comprar-monero-con-${esSlug}`, en: `buy-monero-with-${enSlug}`, pt: `comprar-monero-com-${x?.pt.slug ?? enSlug}`, ru: `buy-monero-with-${enSlug}` },
+    slug: { es: `comprar-monero-con-${esSlug}`, en: `buy-monero-with-${enSlug}`, pt: `comprar-monero-com-${x?.pt.slug ?? enSlug}`, ru: `buy-monero-with-${enSlug}`, ...enSlugs(`buy-monero-with-${enSlug}`) },
     where: t4(d.where, x?.pt.where, x?.ru.where),
     intro: t4(d.intro, x?.pt.intro, x?.ru.intro),
-    tips: { ...d.tips, pt: x?.pt.tips ?? d.tips.en, ru: x?.ru.tips ?? d.tips.en },
+    tips: { ...d.tips, pt: x?.pt.tips ?? d.tips.en, ru: x?.ru.tips ?? d.tips.en, de: d.tips.en.map((s) => tx("de", s)), fr: d.tips.en.map((s) => tx("fr", s)), it: d.tips.en.map((s) => tx("it", s)) },
   };
 };
 
@@ -432,7 +473,7 @@ const ct = (id: string, esSlug: string, enSlug: string, d: CountryIn): Country =
   return {
     id,
     ...d,
-    slug: { es: `comprar-monero-en-${esSlug}`, en: `buy-monero-in-${enSlug}`, pt: `comprar-monero-${x?.pt.slug ?? enSlug}`, ru: `buy-monero-in-${enSlug}` },
+    slug: { es: `comprar-monero-en-${esSlug}`, en: `buy-monero-in-${enSlug}`, pt: `comprar-monero-${x?.pt.slug ?? enSlug}`, ru: `buy-monero-in-${enSlug}`, ...enSlugs(`buy-monero-in-${enSlug}`) },
     name: t4(d.name, x?.pt.name, x?.ru.name),
     fiatName: t4(d.fiatName, x?.pt.fiatName, x?.ru.fiatName),
     note: t4(d.note, x?.pt.note, x?.ru.note),

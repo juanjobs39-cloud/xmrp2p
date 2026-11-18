@@ -16,12 +16,26 @@ export const GET: APIRoute = async ({ site }) => {
   const en = await guides("en");
   const newsEn = await newsList("en");
   const newsEs = await newsList("es");
+  const EU = [
+    { lang: "de" as const, h: "Deutsch" },
+    { lang: "fr" as const, h: "Français" },
+    { lang: "it" as const, h: "Italiano" },
+  ];
+  const euBlocks = await Promise.all(EU.map(async ({ lang, h }) => {
+    const g = await guides(lang);
+    const n = await newsList(lang);
+    return `## ${h}
+
+- [${SITE.brand}](${abs(`/${lang}/`)}) · [App](${abs(`/${lang}/app/`)}) · [P2P Fiat](${fiatHref(lang)})
+${g.map((x) => `- [${x.data.title}](${abs(guidePath(x))})`).join("\n")}
+${n.map((x) => `- [${x.data.title}](${abs(newsPath(x))})`).join("\n")}`;
+  }));
   const body = `# ${SITE.brand}
 
 > ${SITE.brand} is a non-custodial peer-to-peer platform to swap USDT for Monero (XMR) through atomic swaps that run in the user's browser. Nobody holds funds: a smart contract locks the USDT and only releases it to the seller (maker) when the maker reveals the secret that lets the buyer take the XMR; if anything fails, the buyer gets the USDT back. Live with real money on Arbitrum One + Monero, maximum 100 USDT per swap. Tested end to end with real funds (first swap completed on October 26, 2026).
 
 Key facts:
-- Networks: USDT (USD₮0) on Arbitrum One and Monero mainnet. A testnet practice mode (Arbitrum Sepolia + Monero stagenet) is also available.
+- Networks: USDT (USD₮0) on Arbitrum One and Monero mainnet. The maker panel also has a testnet practice mode (Arbitrum Sepolia + Monero stagenet); the exchange itself is real money only.
 - Swap contract (SwapFactory) on Arbitrum One: 0x88fc05Cb07C5b69fbed1F7B1c1F784Cd26e99535 — source verified on Sourcify (exact match).
 - Limits: maximum 100 USDT per swap, enforced by the contract itself.
 - Fee: 0.5% of each completed swap, paid by the maker from the USDT they receive; the buyer pays only network gas. The contract caps the fee at 1%.
@@ -35,7 +49,7 @@ Key facts:
 - Revenue: the 0.5% atomic-swap fee above, plus a 1% margin included in the quotes of instant exchanges via Trocador. No other charges, no token, no deposits held.
 - Telegram bot @MoneroP2PFiatBot: opens the exchange and the P2P market inside Telegram, sends order notifications and optional alerts about new ads. It needs no account for alerts.
 - MoneroP2P Wallet: an open-source browser extension wallet for Monero. Details: ${abs(ROUTES.wallet.en)}
-- 10 languages: English, Spanish, Portuguese, Russian, Ukrainian, Chinese, Japanese, Korean, Hindi and Persian.
+- Languages: the site, guides and news are in English, Spanish, Portuguese, Russian, German, French and Italian (German, French and Italian also cover P2P Fiat). The swap app also supports Ukrainian, Chinese, Japanese, Korean, Hindi and Persian.
 - Last updated: ${new Date().toISOString().slice(0, 10)}.
 
 ## How to verify these claims
@@ -91,6 +105,8 @@ ${newsEn.map((n) => `- [${n.data.title}](${abs(newsPath(n))}): ${n.data.descript
 ## Novedades (español)
 
 ${newsEs.map((n) => `- [${n.data.title}](${abs(newsPath(n))}): ${n.data.description}`).join("\n")}
+
+${euBlocks.join("\n\n")}
 
 ## API
 

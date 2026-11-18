@@ -5,7 +5,7 @@ import { ROUTES } from "../../../site";
 import { makeT } from "../../../i18n/ui";
 
 interface Doc {
-  lang: "es" | "en" | "pt" | "ru" | "uk" | "zh" | "ja" | "ko" | "hi" | "fa";
+  lang: "es" | "en" | "pt" | "ru" | "de" | "fr" | "it" | "uk" | "zh" | "ja" | "ko" | "hi" | "fa";
   title: string;
   description: string;
   date: Date;

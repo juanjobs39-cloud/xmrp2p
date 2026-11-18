@@ -53,7 +53,7 @@ const faqLd = {
   <main id="contenido" class="fiat">
     <section class="fiat-hero">
       <div>
-        <h1>{lang === "es" ? <Fragment>Compra y vende <em>Monero</em> con pesos, de persona a persona</Fragment> : <Fragment>Buy and sell <em>Monero</em> for local money, person to person</Fragment>}</h1>
+        <h1 set:html={t("Compra y vende <em>Monero</em> con pesos, de persona a persona", "Buy and sell <em>Monero</em> for local money, person to person")} />
         <p class="lead">{t(
           "Paga con SPEI, Nequi, Pix, Yape, transferencia o efectivo. El XMR queda bloqueado en un escrow 2 de 3 hasta que el vendedor confirma tu pago. Sin KYC, sin correo.",
           "Pay by bank transfer, Zelle, SEPA, Pix or cash. The XMR is locked in a 2-of-3 escrow until the seller confirms your payment. No KYC, no email.",

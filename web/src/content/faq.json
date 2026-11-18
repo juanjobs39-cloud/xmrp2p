@@ -296,6 +296,228 @@
     ]
   },
   {
+    "id": "de",
+    "lang": "de",
+    "items": [
+      {
+        "q": "Was ist MoneroP2P?",
+        "a": "Eine quelloffene P2P-Plattform, um USDT per Atomic Swap, der in deinem Browser läuft, gegen Monero (XMR) zu tauschen. Niemand verwahrt deine Mittel: Ein Vertrag hält die USDT und gibt sie dem Maker erst frei, wenn du das XMR nehmen kannst."
+      },
+      {
+        "q": "Brauche ich ein Konto oder eine Identitätsprüfung?",
+        "a": "Nein. Es gibt keine Konten. Du brauchst eine Browser-Wallet mit USDT, eine Monero-Adresse und ein Passwort für deine Wiederherstellungsdatei."
+      },
+      {
+        "q": "Kann ich es mit echtem Geld nutzen?",
+        "a": "Ja. Es läuft mit echtem Geld auf Arbitrum One (USDT) und Monero, mit einem vom Vertrag selbst erzwungenen Maximum von 100 USDT pro Swap. Der Vertrag ist mit Halmos, Aderyn und Slither geprüft und sein Quellcode auf Sourcify veröffentlicht. Ein Übungsmodus im Testnet ist ebenfalls verfügbar."
+      },
+      {
+        "q": "Was verlangt MoneroP2P?",
+        "a": "Der Vertrag erhebt beim Abschluss des Swaps einen Prozentsatz der USDT. Der Prozentsatz wird beim Deployment des Vertrags festgelegt und ist im Code auf 1 % begrenzt, was niemand ändern kann. Rückerstattungen zahlen keine Gebühr. Dazu zahlst du Gas im USDT-Netzwerk und die Gebühr des Monero-Netzwerks."
+      },
+      {
+        "q": "Wer legt den Preis fest?",
+        "a": "Jeder Maker veröffentlicht seinen Preis in USDT pro XMR. Der Maker-Daemon berechnet ihn aus mehreren öffentlichen Quellen plus seiner Marge. Die App zeigt den genauen XMR-Betrag, bevor du einzahlst."
+      },
+      {
+        "q": "Wie lange dauert ein Swap?",
+        "a": "Meist 30 bis 60 Minuten, vor allem wegen der Bestätigungen im Monero-Netzwerk, auf die die App wartet, bevor sie dich um Bestätigung bittet."
+      },
+      {
+        "q": "Was, wenn der Maker das XMR nicht sendet?",
+        "a": "Du bestätigst nicht und lässt dir deine USDT vor der Frist t0 erstatten. Die App fordert dich automatisch dazu auf, wenn das XMR kurz vor dieser Frist nicht verifiziert ist."
+      },
+      {
+        "q": "Was, wenn ich den Tab schließe?",
+        "a": "Öffne die App wieder, klicke auf Fortsetzen und nutze deine Wiederherstellungsdatei mit deinem Passwort. Mach es bald: Wenn das XMR nicht angekommen ist, musst du dir vor t0 erstatten lassen."
+      },
+      {
+        "q": "Was ist die Wiederherstellungsdatei?",
+        "a": "Eine mit Passwort verschlüsselte Datei mit deiner Hälfte des Swap-Schlüssels. Mit ihr kannst du den Swap abschließen, das XMR beanspruchen oder dir die USDT in jedem Browser erstatten lassen. Ohne sie und ohne den ursprünglichen Browser lassen sich die Mittel eines laufenden Swaps nicht wiederherstellen."
+      },
+      {
+        "q": "Was sind t0 und t1?",
+        "a": "Die zwei Fristen des Vertrags. Vor t0 kannst du bestätigen oder dir erstatten lassen. Nach deiner Bestätigung oder zwischen t0 und t1 kann der Maker kassieren. Ab t1 kannst du dir erstatten lassen, wenn der Maker nicht kassiert hat."
+      },
+      {
+        "q": "Können meine Mittel gesperrt werden?",
+        "a": "Tether, der Emittent von USDT, kann Adressen sperren. Jeder Swap nutzt einen eigenen Vertrag, damit eine Sperre andere nicht betrifft, aber das Risiko besteht. XMR kann von keinem Emittenten gesperrt werden."
+      },
+      {
+        "q": "Welche USDT-Netzwerke werden unterstützt?",
+        "a": "USDT auf Arbitrum One (USD₮0). Der Übungsmodus nutzt Arbitrum Sepolia. Tron ist in Prüfung; sein Vertrag kompiliert bereits, braucht aber noch Tests."
+      },
+      {
+        "q": "Brauche ich neben USDT auch ETH?",
+        "a": "Ja, etwas von der Coin des Netzwerks (ETH auf Arbitrum), um das Gas für Einzahlung, Bestätigung und eine mögliche Rückerstattung zu zahlen."
+      },
+      {
+        "q": "Laufen meine Schlüssel über eure Server?",
+        "a": "Nein. Die Schlüssel werden in deinem Browser erzeugt. Das Backend leitet nur öffentliche Protokollnachrichten weiter und lehnt jede Nachricht ab, die einen vollständigen privaten Schlüssel enthält."
+      },
+      {
+        "q": "Ist der Code Open Source?",
+        "a": "Ja, unter der Lizenz AGPL-3.0, auf github.com/juanjobs39-cloud/xmrp2p. Wir veröffentlichen SHA-256-Summen jeder Datei der Website, damit du prüfen kannst, dass die App dem Code entspricht."
+      },
+      {
+        "q": "Kann ich Maker werden?",
+        "a": "Ja. Du kannst es im Browser ohne Installation tun oder 24/7 mit dem Maker-Daemon, monero-wallet-rpc und einem Konto mit Gas im USDT-Netzwerk. Anleitungen findest du auf der Seite Maker werden."
+      },
+      {
+        "q": "Ist das in meinem Land legal?",
+        "a": "Das hängt von deinem Land ab. Du bist dafür verantwortlich, seine Gesetze einzuhalten, einschließlich der Steuerregeln. Wir geben keine Rechtsberatung."
+      }
+    ]
+  },
+  {
+    "id": "fr",
+    "lang": "fr",
+    "items": [
+      {
+        "q": "Qu'est-ce que MoneroP2P ?",
+        "a": "Une plateforme P2P open source pour échanger de l'USDT contre du Monero (XMR) par des atomic swaps qui tournent dans ton navigateur. Personne ne détient tes fonds : un contrat garde l'USDT et ne le libère au maker que lorsque tu peux prendre le XMR."
+      },
+      {
+        "q": "Ai-je besoin d'un compte ou d'une vérification d'identité ?",
+        "a": "Non. Il n'y a pas de comptes. Il te faut un portefeuille de navigateur avec de l'USDT, une adresse Monero et un mot de passe pour ton fichier de récupération."
+      },
+      {
+        "q": "Puis-je l'utiliser avec de l'argent réel ?",
+        "a": "Oui. Il fonctionne avec de l'argent réel sur Arbitrum One (USDT) et Monero, avec un maximum de 100 USDT par swap imposé par le contrat lui-même. Le contrat est vérifié avec Halmos, Aderyn et Slither et son code est publié sur Sourcify. Un mode entraînement sur le testnet est aussi disponible."
+      },
+      {
+        "q": "Combien prend MoneroP2P ?",
+        "a": "Le contrat prélève un pourcentage de l'USDT à la fin du swap. Ce pourcentage est fixé au déploiement du contrat et plafonné à 1 % dans le code, que personne ne peut modifier. Les remboursements ne paient pas de frais. Tu paies aussi le gas sur le réseau de l'USDT et les frais du réseau Monero."
+      },
+      {
+        "q": "Qui fixe le prix ?",
+        "a": "Chaque maker publie son prix en USDT par XMR. Le daemon du maker le calcule à partir de plusieurs sources publiques plus sa marge. L'app affiche le montant exact de XMR avant que tu déposes."
+      },
+      {
+        "q": "Combien de temps dure un swap ?",
+        "a": "En général 30 à 60 minutes, surtout à cause des confirmations du réseau Monero que l'app attend avant de te demander de confirmer."
+      },
+      {
+        "q": "Et si le maker n'envoie pas le XMR ?",
+        "a": "Tu ne confirmes pas et tu te fais rembourser ton USDT avant le délai t0. L'app te le demande automatiquement si le XMR n'est pas vérifié à l'approche de ce délai."
+      },
+      {
+        "q": "Et si je ferme l'onglet ?",
+        "a": "Rouvre l'app, clique sur Reprendre et utilise ton fichier de récupération avec ton mot de passe. Fais-le vite : si le XMR n'est pas arrivé, tu dois te faire rembourser avant t0."
+      },
+      {
+        "q": "Qu'est-ce que le fichier de récupération ?",
+        "a": "Un fichier chiffré par mot de passe contenant ta moitié de la clé du swap. Avec lui, tu peux terminer le swap, réclamer le XMR ou te faire rembourser l'USDT depuis n'importe quel navigateur. Sans lui et sans le navigateur d'origine, les fonds d'un swap en cours ne peuvent pas être récupérés."
+      },
+      {
+        "q": "Que sont t0 et t1 ?",
+        "a": "Les deux délais du contrat. Avant t0, tu peux confirmer ou te faire rembourser. Après ta confirmation, ou entre t0 et t1, le maker peut encaisser. À partir de t1, tu peux te faire rembourser si le maker n'a pas encaissé."
+      },
+      {
+        "q": "Mes fonds peuvent-ils être gelés ?",
+        "a": "Tether, l'émetteur de l'USDT, peut geler des adresses. Chaque swap utilise un contrat séparé pour qu'un gel n'affecte pas les autres, mais le risque existe. Le XMR ne peut être gelé par aucun émetteur."
+      },
+      {
+        "q": "Quels réseaux USDT sont pris en charge ?",
+        "a": "L'USDT sur Arbitrum One (USD₮0). Le mode entraînement utilise Arbitrum Sepolia. Tron est à l'étude ; son contrat compile déjà mais doit encore être testé."
+      },
+      {
+        "q": "Ai-je besoin d'ETH en plus de l'USDT ?",
+        "a": "Oui, un peu de la crypto du réseau (de l'ETH sur Arbitrum) pour payer le gas du dépôt, de la confirmation et d'un éventuel remboursement."
+      },
+      {
+        "q": "Mes clés passent-elles par vos serveurs ?",
+        "a": "Non. Les clés sont générées dans ton navigateur. Le backend ne relaie que des messages publics du protocole et rejette tout message contenant une clé privée complète."
+      },
+      {
+        "q": "Le code est-il open source ?",
+        "a": "Oui, sous licence AGPL-3.0, sur github.com/juanjobs39-cloud/xmrp2p. Nous publions les sommes SHA-256 de chaque fichier du site pour que tu vérifies que l'app correspond au code."
+      },
+      {
+        "q": "Puis-je devenir maker ?",
+        "a": "Oui. Tu peux le faire depuis ton navigateur sans rien installer, ou 24 h/24 avec le daemon maker, monero-wallet-rpc et un compte avec du gas sur le réseau de l'USDT. Les instructions sont sur la page Devenir maker."
+      },
+      {
+        "q": "Est-ce légal dans mon pays ?",
+        "a": "Cela dépend de ton pays. Tu es responsable du respect de ses lois, y compris fiscales. Nous ne donnons pas de conseil juridique."
+      }
+    ]
+  },
+  {
+    "id": "it",
+    "lang": "it",
+    "items": [
+      {
+        "q": "Cos'è MoneroP2P?",
+        "a": "Una piattaforma P2P open source per scambiare USDT con Monero (XMR) tramite atomic swap che girano nel tuo browser. Nessuno custodisce i tuoi fondi: un contratto tiene gli USDT e li rilascia al maker solo quando puoi prendere gli XMR."
+      },
+      {
+        "q": "Mi serve un account o una verifica dell'identità?",
+        "a": "No. Non ci sono account. Ti servono un wallet nel browser con USDT, un indirizzo Monero e una password per il file di recupero."
+      },
+      {
+        "q": "Posso usarlo con denaro reale?",
+        "a": "Sì. Funziona con denaro reale su Arbitrum One (USDT) e Monero, con un massimo di 100 USDT per swap imposto dal contratto stesso. Il contratto è verificato con Halmos, Aderyn e Slither e il codice è pubblicato su Sourcify. È disponibile anche una modalità di prova su testnet."
+      },
+      {
+        "q": "Quanto costa MoneroP2P?",
+        "a": "Il contratto applica una percentuale degli USDT quando lo swap si completa. La percentuale si fissa al deploy del contratto ed è limitata all'1% nel codice, che nessuno può cambiare. I rimborsi non pagano commissioni. Paghi anche il gas sulla rete di USDT e la commissione della rete Monero."
+      },
+      {
+        "q": "Chi fissa il prezzo?",
+        "a": "Ogni maker pubblica il proprio prezzo in USDT per XMR. Il daemon del maker lo calcola da varie fonti pubbliche più il suo margine. L'app mostra l'importo esatto in XMR prima che tu depositi."
+      },
+      {
+        "q": "Quanto dura uno swap?",
+        "a": "Di solito da 30 a 60 minuti, soprattutto per le conferme della rete Monero che l'app aspetta prima di chiederti di confermare."
+      },
+      {
+        "q": "E se il maker non invia gli XMR?",
+        "a": "Non confermi e chiedi il rimborso dei tuoi USDT prima della scadenza t0. L'app te lo chiede automaticamente se gli XMR non sono verificati all'avvicinarsi di quella scadenza."
+      },
+      {
+        "q": "E se chiudo la scheda?",
+        "a": "Riapri l'app, clicca su Riprendi e usa il file di recupero con la tua password. Fallo presto: se gli XMR non sono arrivati, devi chiedere il rimborso prima di t0."
+      },
+      {
+        "q": "Cos'è il file di recupero?",
+        "a": "Un file cifrato con password che contiene la tua metà della chiave dello swap. Con esso puoi completare lo swap, reclamare gli XMR o farti rimborsare gli USDT da qualsiasi browser. Senza di esso e senza il browser originale, i fondi di uno swap in corso non si possono recuperare."
+      },
+      {
+        "q": "Cosa sono t0 e t1?",
+        "a": "Le due scadenze del contratto. Prima di t0 puoi confermare o chiedere il rimborso. Dopo la tua conferma, o tra t0 e t1, il maker può incassare. Da t1 puoi chiedere il rimborso se il maker non ha incassato."
+      },
+      {
+        "q": "I miei fondi possono essere congelati?",
+        "a": "Tether, l'emittente di USDT, può congelare indirizzi. Ogni swap usa un contratto separato perché un congelamento non coinvolga gli altri, ma il rischio esiste. Gli XMR non possono essere congelati da nessun emittente."
+      },
+      {
+        "q": "Quali reti USDT sono supportate?",
+        "a": "USDT su Arbitrum One (USD₮0). La modalità di prova usa Arbitrum Sepolia. Tron è in valutazione; il suo contratto compila già ma deve ancora essere testato."
+      },
+      {
+        "q": "Mi serve ETH oltre agli USDT?",
+        "a": "Sì, un po' della moneta della rete (ETH su Arbitrum) per pagare il gas del deposito, della conferma e di un eventuale rimborso."
+      },
+      {
+        "q": "Le mie chiavi passano dai vostri server?",
+        "a": "No. Le chiavi vengono generate nel tuo browser. Il backend inoltra solo messaggi pubblici del protocollo e rifiuta qualsiasi messaggio che contenga una chiave privata completa."
+      },
+      {
+        "q": "Il codice è open source?",
+        "a": "Sì, con licenza AGPL-3.0, su github.com/juanjobs39-cloud/xmrp2p. Pubblichiamo le somme SHA-256 di ogni file del sito per verificare che l'app corrisponda al codice."
+      },
+      {
+        "q": "Posso diventare maker?",
+        "a": "Sì. Puoi farlo dal browser senza installare nulla, oppure 24/7 con il daemon del maker, monero-wallet-rpc e un account con gas sulla rete di USDT. Le istruzioni sono nella pagina Diventa maker."
+      },
+      {
+        "q": "È legale nel mio paese?",
+        "a": "Dipende dal tuo paese. Sei responsabile del rispetto delle sue leggi, comprese quelle fiscali. Non diamo consulenza legale."
+      }
+    ]
+  },
+  {
     "id": "uk",
     "lang": "uk",
     "items": [

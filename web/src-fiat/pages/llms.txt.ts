@@ -5,7 +5,7 @@ import { COUNTRIES, FACTS, faq, MAIN_SITE, METHODS, pageGroups, REAL, REPO, ROUT
 export const GET: APIRoute = ({ site }) => {
   const abs = (p: string) => new URL(p, site).href;
   const groups = pageGroups();
-  const list = (lang: "es" | "en", kind: string) =>
+  const list = (lang: "es" | "en" | "de" | "fr" | "it", kind: string) =>
     groups
       .filter((g) => g.kind === kind)
       .map((g) => `- [${g.name[lang]}](${abs(g.urls[lang])})`)
@@ -21,7 +21,7 @@ Key facts:
 - Prices are set by advertisers, usually as a margin over the market price (median of Kraken, KuCoin, MEXC, HTX and CoinGecko, converted with daily FX rates).
 - Reversible payment methods (PayPal, Mercado Pago, Revolut, cards) are flagged; sellers can require a minimum order history for them.
 - Accounts are keys generated in the browser, protected by a password, with a downloadable backup.
-- Languages: Spanish (/es/), English (/en/), Portuguese (/pt/) and Russian (/ru/); the market app UI is in Spanish or English.
+- Languages: Spanish (/es/), English (/en/), Portuguese (/pt/), Russian (/ru/), German (/de/), French (/fr/) and Italian (/it/); the market app UI is in Spanish or English.
 - Open source (AGPL-3.0): ${REPO}. Crypto ↔ XMR swaps (BTC, USDT, ETH… and atomic swaps) live on the main site: ${MAIN_SITE}/
 - Telegram bot @MoneroP2PFiatBot: opens the market inside Telegram, sends order notifications and optional alerts about new ads (no account needed for alerts).
 - Last updated: ${new Date().toISOString().slice(0, 10)}.
@@ -70,6 +70,42 @@ ${list("es", "method")}
 ### Países
 
 ${list("es", "country")}
+
+## Seiten (Deutsch)
+
+${list("de", "info")}
+
+### Zahlungsmethoden
+
+${list("de", "method")}
+
+### Länder
+
+${list("de", "country")}
+
+## Pages (français)
+
+${list("fr", "info")}
+
+### Moyens de paiement
+
+${list("fr", "method")}
+
+### Pays
+
+${list("fr", "country")}
+
+## Pagine (italiano)
+
+${list("it", "info")}
+
+### Metodi di pagamento
+
+${list("it", "method")}
+
+### Paesi
+
+${list("it", "country")}
 
 ## FAQ
 

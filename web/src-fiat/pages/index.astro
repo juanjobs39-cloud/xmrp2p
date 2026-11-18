@@ -1,8 +1,8 @@
 ---
-// Raíz de fiat.monerop2p.app: español si el navegador lo prefiere, si no inglés. Sin JavaScript, inglés.
+// Raíz de fiat.monerop2p.app: el idioma del navegador si lo tenemos (es, en, pt, ru, de, fr, it); si no, inglés. Sin JavaScript, inglés.
 const es = new URL("/es/", Astro.site).href;
 const en = new URL("/en/", Astro.site).href;
-const pick = `(function(){var A={es:1,en:1,pt:1,ru:1},L=navigator.languages||[navigator.language||"en"];for(var i=0;i<L.length;i++){var c=String(L[i]).toLowerCase().split("-")[0];if(A[c]){location.replace("/"+c+"/");return}}location.replace("/en/")})()`;
+const pick = `(function(){var A={es:1,en:1,pt:1,ru:1,de:1,fr:1,it:1},L=navigator.languages||[navigator.language||"en"];for(var i=0;i<L.length;i++){var c=String(L[i]).toLowerCase().split("-")[0];if(A[c]){location.replace("/"+c+"/");return}}location.replace("/en/")})()`;
 ---
 <!doctype html>
 <html lang="en">
@@ -21,9 +21,12 @@ const pick = `(function(){var A={es:1,en:1,pt:1,ru:1},L=navigator.languages||[na
     <link rel="alternate" hreflang="en" href={en} />
     <link rel="alternate" hreflang="pt" href={new URL("/pt/", Astro.site).href} />
     <link rel="alternate" hreflang="ru" href={new URL("/ru/", Astro.site).href} />
+    <link rel="alternate" hreflang="de" href={new URL("/de/", Astro.site).href} />
+    <link rel="alternate" hreflang="fr" href={new URL("/fr/", Astro.site).href} />
+    <link rel="alternate" hreflang="it" href={new URL("/it/", Astro.site).href} />
     <link rel="alternate" hreflang="x-default" href={en} />
   </head>
   <body>
-    <ul><li><a href="/es/" lang="es">Español</a></li><li><a href="/en/" lang="en">English</a></li><li><a href="/pt/" lang="pt">Português</a></li><li><a href="/ru/" lang="ru">Русский</a></li></ul>
+    <ul><li><a href="/es/" lang="es">Español</a></li><li><a href="/en/" lang="en">English</a></li><li><a href="/pt/" lang="pt">Português</a></li><li><a href="/ru/" lang="ru">Русский</a></li><li><a href="/de/" lang="de">Deutsch</a></li><li><a href="/fr/" lang="fr">Français</a></li><li><a href="/it/" lang="it">Italiano</a></li></ul>
   </body>
 </html>

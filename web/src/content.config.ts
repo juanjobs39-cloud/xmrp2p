@@ -1,7 +1,7 @@
 import { defineCollection, z } from "astro:content";
 import { file, glob } from "astro/loaders";
 
-const lang = z.enum(["es", "en", "pt", "ru", "uk", "zh", "ja", "ko", "hi", "fa"]);
+const lang = z.enum(["es", "en", "pt", "ru", "de", "fr", "it", "uk", "zh", "ja", "ko", "hi", "fa"]);
 
 /** Páginas institucionales y de producto. `key` las une entre idiomas (ver src/site.ts → ROUTES). */
 const pages = defineCollection({
@@ -49,12 +49,12 @@ const guides = defineCollection({
   }),
 });
 
-/** Novedades (español, inglés, portugués y ruso). Misma `key` en ambos idiomas; `slug` propio de cada idioma. */
+/** Novedades (español, inglés, portugués, ruso, alemán, francés e italiano). Misma `key` en ambos idiomas; `slug` propio de cada idioma. */
 const news = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./src/content/news", generateId: ({ entry }) => entry.replace(/\.md$/, "") }),
   schema: z.object({
     key: z.string(),
-    lang: z.enum(["es", "en", "pt", "ru"]),
+    lang: z.enum(["es", "en", "pt", "ru", "de", "fr", "it"]),
     slug: z.string(),
     title: z.string(),
     description: z.string().max(170),

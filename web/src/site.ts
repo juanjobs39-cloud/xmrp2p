@@ -8,11 +8,11 @@ export const SITE = {
   fiatUrl: (import.meta.env.PUBLIC_FIAT_SITE_URL as string | undefined) ?? "https://fiat.monerop2p.app",
 };
 
-/** Página de P2P Fiat en el idioma pedido (ese sitio existe en español, inglés, portugués y ruso). */
-export const fiatHref = (lang: string) => `${SITE.fiatUrl}/${["es", "pt", "ru"].includes(lang) ? lang : "en"}/`;
+/** Página de P2P Fiat en el idioma pedido (ese sitio existe en español, inglés, portugués, ruso, alemán, francés e italiano). */
+export const fiatHref = (lang: string) => `${SITE.fiatUrl}/${["es", "pt", "ru", "de", "fr", "it"].includes(lang) ? lang : "en"}/`;
 
-export type Lang = "es" | "en" | "pt" | "ru" | "uk" | "zh" | "ja" | "ko" | "hi" | "fa";
-export const LANGS: Lang[] = ["en", "es", "pt", "ru", "uk", "zh", "ja", "ko", "hi", "fa"];
+export type Lang = "es" | "en" | "pt" | "ru" | "de" | "fr" | "it" | "uk" | "zh" | "ja" | "ko" | "hi" | "fa";
+export const LANGS: Lang[] = ["en", "es", "pt", "ru", "de", "fr", "it", "uk", "zh", "ja", "ko", "hi", "fa"];
 
 /** Nombre de cada idioma en su propio idioma (selector), locale de Open Graph y de fechas. */
 export const LANG_INFO: Record<Lang, { name: string; og: string; locale: string; rtl?: boolean }> = {
@@ -20,6 +20,9 @@ export const LANG_INFO: Record<Lang, { name: string; og: string; locale: string;
   es: { name: "Español", og: "es_419", locale: "es-419" },
   pt: { name: "Português", og: "pt_BR", locale: "pt-BR" },
   ru: { name: "Русский", og: "ru_RU", locale: "ru-RU" },
+  de: { name: "Deutsch", og: "de_DE", locale: "de-DE" },
+  fr: { name: "Français", og: "fr_FR", locale: "fr-FR" },
+  it: { name: "Italiano", og: "it_IT", locale: "it-IT" },
   uk: { name: "Українська", og: "uk_UA", locale: "uk-UA" },
   zh: { name: "中文", og: "zh_CN", locale: "zh-CN" },
   ja: { name: "日本語", og: "ja_JP", locale: "ja-JP" },
