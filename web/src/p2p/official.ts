@@ -438,7 +438,7 @@ export function coinOptions(extra: TrocadorCoin[] | null): {
   const seen = new Set(usdcPop.map((c) => `${c.ticker}|${c.network}`));
   const usdcMore = (extra ?? []).filter((c) => c.ticker.toLowerCase() === "usdc" && !isInternalArb("usdc", c.network) && !seen.has(`usdc|${c.network}`));
   return {
-    usdc: [internalOpt("usdc"), ...usdcPop.map(otherOpt), ...usdcMore.map((c) => otherOpt({ ...c, ticker: "usdc" }))],
+    usdc: [internalOpt("usdc"), ...usdcPop.map(otherOpt), ...usdcMore.map((c) => otherOpt({ ...c, ticker: "usdc", label: `USDC · ${c.network}` }))],
     other: [internalOpt("usdt"), internalOpt("eth"), ...popular.filter((c) => c.ticker !== "usdc").map(otherOpt)],
   };
 }
@@ -451,7 +451,7 @@ const legNet = (l: Leg) => (l.kind === "internal" ? (l.coin === "xmr" ? "Monero"
 /** ¿Puede esta cuenta usar el anuncio oficial ahora? Si no, el motivo para mostrar. */
 function blocked(app: P2PApp): string | null {
   const v = app.vault;
-  if (!WALLETS_ON || !v || v.network !== "mainnet") return ot("onlyReal");
+  if (!WALLETS_ON || !v) return ot("onlyReal");
   if (!v.seed) return ot("needWallets");
   return null;
 }
@@ -511,10 +511,15 @@ export function officialSheet(app: P2PApp, wantBuy: boolean, startNet?: string) 
 
   const v = app.vault!;
   const seed = v.seed!;
+  // En la red de prueba se puede escribir el monto y ver la cotización real, pero no crear el cambio
+  // (Trocador no tiene red de prueba).
+  const practice = v.network !== "mainnet";
   const net: EvmNetwork = NETWORKS.arbitrum_one!;
   const evm = evmAddress(seed);
   const pub = publicClient(net);
-  const st = startXmr(app);
+  // La wallet de Monero arranca solo cuando hace falta (Máx. o crear el cambio).
+  let stX: ReturnType<typeof startXmr> | null = null;
+  const xmrSt = () => (stX ??= startXmr(app));
 
   // Selector de la moneda que no es XMR (lo que pagas al comprar, lo que recibes al vender).
   let extra: TrocadorCoin[] | null = null;
@@ -598,7 +603,7 @@ export function officialSheet(app: P2PApp, wantBuy: boolean, startNet?: string) 
     const sent = legs().from;
     unit.textContent = legName(sent);
     amount.placeholder = wantBuy ? "50" : "0.1";
-    max.hidden = sent.kind !== "internal";
+    max.hidden = practice || sent.kind !== "internal";
     destF.hidden = !!p.receiveIn;
     memoF.hidden = !p.memo;
     refundF.hidden = !!p.payFrom;
@@ -650,6 +655,7 @@ export function officialSheet(app: P2PApp, wantBuy: boolean, startNet?: string) 
         const sent = legs().from;
         if (sent.kind !== "internal") return;
         if (sent.coin === "xmr") {
+          const st = xmrSt();
           await xmrReady(st, true);
           amount.value = formatAmount(BigInt(st.info!.unlocked ?? st.info!.balance), DECIMALS.xmr);
         } else {
@@ -673,6 +679,7 @@ export function officialSheet(app: P2PApp, wantBuy: boolean, startNet?: string) 
         // Cotización fresca: la de la pantalla puede tener minutos.
         if (!quote || quote.amount !== amt || Date.now() - quote.at > 8 * 60_000) await getQuote(amt);
         if (!quote) throw new Error(ot("noQuote"));
+        const st = xmrSt();
         await xmrReady(st, false);
         const receive = p.receiveIn === "xmr" ? st.address! : p.receiveIn === "evm" ? evm : dest.value.trim();
         const ownRefund = p.payFrom === "xmr" ? st.address! : p.payFrom ? evm : refund.value.trim();
@@ -738,20 +745,28 @@ export function officialSheet(app: P2PApp, wantBuy: boolean, startNet?: string) 
       out,
     );
 
-  const fieldsBuy = [app.field(ot("payWith"), pick), app.field(ot("amountIn", "…"), h("div", { class: "p2p-suffix" }, amount, max, unit))];
-  const fieldsSell = [app.field(ot("youSell"), h("div", { class: "p2p-suffix" }, amount, max, unit)), app.field(ot("youReceive"), pick)];
+  // Un mismo elemento solo puede estar en un lugar: se arman únicamente los campos del lado elegido.
+  const amountF = app.field(ot("amountIn", "…"), h("div", { class: "p2p-suffix" }, amount, max, unit));
+  const pickF = app.field(wantBuy ? ot("payWith") : ot("youReceive"), pick);
+  const fieldsBuy = [pickF, amountF];
+  const fieldsSell = [amountF, pickF];
   out.replaceChildren(
-    ...(wantBuy ? fieldsBuy : fieldsSell),
-    est,
-    facts,
-    destF,
-    memoF,
-    refundF,
-    h("p", { class: "p2p-escrow-note" }, icon("shield"), h("span", {}, h("strong", {}, ot("guarTitle") + ": "), ot("guarText"))),
-    go,
+    ...kids(
+      ...(wantBuy ? fieldsBuy : fieldsSell),
+      est,
+      facts,
+      destF,
+      memoF,
+      refundF,
+      h("p", { class: "p2p-escrow-note" }, icon("shield"), h("span", {}, h("strong", {}, ot("guarTitle") + ": "), ot("guarText"))),
+      practice ? h("p", { class: "notice warn" }, ot("onlyReal")) : null,
+      go,
+    ),
   );
+  go.disabled = practice;
   // La etiqueta «Monto en X» depende de la moneda elegida.
   const amtLabel = (wantBuy ? fieldsBuy[1] : fieldsSell[0])!.querySelector("label");
+  amtLabel?.setAttribute("for", amount.id);
   const relabel = () => amtLabel && (amtLabel.textContent = ot("amountIn", legName(legs().from)));
   pick.addEventListener("change", relabel);
   relabel();

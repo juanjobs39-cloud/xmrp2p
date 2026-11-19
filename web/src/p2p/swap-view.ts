@@ -15,7 +15,8 @@ import { signAddress } from "./pay";
 import type { P2PApp } from "./p2p-app";
 import { qrSvg } from "./qr";
 import { autoDeposit, DECIMALS, isFinal, planSwap, upsertSwap, type Internal, type Leg, type SwapPlan, type SwapRecord } from "./swap";
-import { h, icon, type Child } from "./ui";
+import { ot, statusLabel } from "./official";
+import { clock, h, icon, nowS, type Child } from "./ui";
 import { balances, prepareEvm, publicClient, sendEvm, type Asset } from "./wallet-evm";
 import { copyButton, evmError, kv, persistXmr, startXmr, xmrError, xmrReady, XMR_EXPLORER } from "./wallet-view";
 import { evmAddress, evmKey, formatAmount, parseAmount } from "./wallets";
@@ -43,6 +44,10 @@ const ticker = (c: Choice) => (isInt(c) ? NAME[c.internal] : c.other.ticker.toUp
 const network = (c: Choice) => (isInt(c) ? INTERNAL_NET[c.internal] : c.other.network);
 const coinIcon = (c: Choice, size: number) => (isInt(c) ? iconEl(c.internal, undefined, SWAP_API, size) : iconEl(c.other.ticker, c.other.img, SWAP_API, size));
 const clean = (s: string) => s.trim().replace(",", ".");
+/** Dirección de otra moneda (mismo criterio que el exchange principal): 0x… con 40 hex, o texto razonable que no sea de Monero. */
+const destOk = (a: string) => (a.startsWith("0x") ? /^0x[0-9a-fA-F]{40}$/.test(a) : /^[A-Za-z0-9:_.-]{10,128}$/.test(a) && !/^[48][1-9A-HJ-NP-Za-km-z]{94}([1-9A-HJ-NP-Za-km-z]{11})?$/.test(a));
+/** Las cotizaciones de Trocador valen 10 minutos (igual que en el exchange principal). */
+const QUOTE_TTL = 10 * 60_000;
 /** Wallet interna de Arbitrum → activo de wallet-evm. */
 export const evmAsset = (c: Internal): Asset => (c === "eth" ? "eth" : c === "usdc" ? "usdc" : "token");
 
@@ -226,7 +231,9 @@ export async function swapView(app: P2PApp): Promise<void> {
         const amount = clean(amt.value);
         if (!/^\d{1,12}(\.\d{1,18})?$/.test(amount) || !(Number(amount) > 0)) throw new Error(t("Escribe un monto válido.", "Enter a valid amount."));
         const address = clean(dest.value);
-        if (!plan.receiveIn && !/^[A-Za-z0-9:_.-]{10,128}$/.test(address)) throw new Error(t("Escribe la dirección donde quieres recibir.", "Enter the address where you want to receive."));
+        if (!plan.receiveIn && !destOk(address)) throw new Error(t(`Revisa la dirección: debe ser de ${plan.ticker.toUpperCase()} en la red ${plan.network}.`, `Check the address: it must be ${plan.ticker.toUpperCase()} on the ${plan.network} network.`));
+        const own = clean(refund.value);
+        if (!plan.payFrom && own && !destOk(own)) throw new Error(t("Revisa la dirección de reembolso.", "Check the refund address."));
         if (plan.memo && !memo.value.trim()) throw new Error(t("Esta moneda necesita memo o tag.", "This coin needs a memo or tag."));
         const rates = await call<TrocadorRates>(`/v1/trocador/rates?side=${plan.side}&amount=${encodeURIComponent(amount)}&ticker=${encodeURIComponent(plan.ticker)}&network=${encodeURIComponent(plan.network)}`);
         if (!rates.quotes.length) throw new Error(t("Ningún exchange cotizó ese monto. Prueba con otro monto.", "No exchange quoted that amount. Try another amount."));
@@ -316,6 +323,7 @@ export async function swapView(app: P2PApp): Promise<void> {
   }
 
   async function confirm(plan: SwapPlan, amount: string, rates: TrocadorRates, q: TrocadorQuote, receive: string) {
+    if (Date.now() - rates.created_at > QUOTE_TTL) throw new Error(t("La cotización venció (duran 10 minutos). Pide cotizaciones otra vez.", "The quote expired (they last 10 minutes). Get quotes again."));
     const l = labels(plan);
     const pay = plan.payFrom;
     const proof = plan.receiveIn ? await signAddress(app.acct!, "mainnet", plan.receiveIn, receive) : null;
@@ -339,7 +347,7 @@ export async function swapView(app: P2PApp): Promise<void> {
       },
       SWAP_API,
     );
-    const rec: SwapRecord = { id: trade.trade_id, at: Math.floor(Date.now() / 1000), from: l.from, to: l.to, amount_from: amount, amount_to: trade.amount_to || q.amount_to, provider: trade.provider || q.provider, status: trade.status, ...(pay ? { pay } : {}) };
+    const rec: SwapRecord = { id: trade.trade_id, at: Math.floor(Date.now() / 1000), from: l.from, to: l.to, amount_from: amount, amount_to: trade.amount_to || q.amount_to, provider: trade.provider || q.provider, status: trade.status, ...(trade.expires_at ? { expires_at: trade.expires_at } : {}), ...(pay ? { pay } : {}) };
     v.swaps = upsertSwap(v.swaps, rec);
     await app.saveV();
     amt.value = "";
@@ -401,6 +409,8 @@ export async function swapView(app: P2PApp): Promise<void> {
     })[s] ?? s;
 
   const active = h("div");
+  const STEP: Record<string, number> = { new: 0, waiting: 0, confirming: 1, sending: 2, finished: 4 };
+  let clockIv: ReturnType<typeof setInterval> | undefined;
   async function showTrade(rec: SwapRecord, known?: TrocadorTrade, depositError?: unknown) {
     stage.replaceChildren();
     const box = h("section", { class: "card p2p-box", "data-swap": rec.id });
@@ -413,6 +423,29 @@ export async function swapView(app: P2PApp): Promise<void> {
         void app.saveV().then(drawHistory);
       }
       const waiting = trade.status === "new" || trade.status === "waiting";
+      if (trade.expires_at) rec.expires_at = trade.expires_at;
+      // Barra de pasos y contador para depositar, como en el exchange principal.
+      const at = STEP[trade.status];
+      const steps =
+        at === undefined
+          ? null
+          : h(
+              "ol",
+              { class: "p2p-steps" },
+              ot("steps")
+                .split("|")
+                .map((label, k) => h("li", { class: at > k || trade.status === "finished" ? "done" : at === k ? "now" : "" }, label)),
+            );
+      const count = h("span", { class: "p2p-count" });
+      const tick = () => {
+        const dl = trade.expires_at ?? 0;
+        if (!document.contains(count) || !waiting || !dl || rec.deposit_tx) return void (count.textContent = "");
+        const left = dl - nowS();
+        count.textContent = left > 0 ? `⏱ ${clock(left)} ${ot("toSend", rec.from.split(" ")[0]!)}` : ot("timeUp");
+        count.classList.toggle("late", left < 300);
+      };
+      clearInterval(clockIv);
+      clockIv = setInterval(() => (document.contains(box) ? tick() : clearInterval(clockIv)), 1000);
       const explorer = rec.deposit_tx ? (rec.pay === "xmr" ? XMR_EXPLORER.mainnet + rec.deposit_tx : `${net.explorer}/tx/${rec.deposit_tx}`) : "";
       const retry = h("button", { class: "btn small", type: "button" }, t("Depositar desde mi wallet", "Deposit from my wallet"));
       const retryMsg = h("div");
@@ -431,7 +464,9 @@ export async function swapView(app: P2PApp): Promise<void> {
       box.replaceChildren(
         ...([
           h("h3", {}, `${rec.amount_from} ${rec.from} → ${rec.to}`),
+          steps,
           h("p", { class: "notice " + (trade.status === "finished" ? "ok" : isFinal(trade.status) ? "danger" : "") }, statusText(trade.status, rec)),
+          count,
           err ? app.error(err) : null,
           rec.deposit_tx ? h("p", {}, t("Tu depósito: ", "Your deposit: "), h("a", { href: explorer, target: "_blank", rel: "noopener noreferrer" }, rec.deposit_tx.slice(0, 12) + "…")) : null,
           waiting && !rec.deposit_tx
@@ -456,16 +491,17 @@ export async function swapView(app: P2PApp): Promise<void> {
           h("p", { class: "row wrap" }, isFinal(trade.status) ? null : refresh),
         ].filter(Boolean) as Node[]),
       );
+      tick();
     };
     const poll = async () => {
       if (!document.contains(box)) return;
       const trade = await call<TrocadorTrade>(`/v1/trocador/trades/${encodeURIComponent(rec.id)}`);
       draw(trade);
-      if (!isFinal(trade.status) && location.hash.startsWith("#/cambiar")) app.timer = setTimeout(() => void poll().catch(() => {}), 20_000);
+      if (!isFinal(trade.status) && location.hash.startsWith("#/cambiar")) app.timer = setTimeout(() => void poll().catch(() => {}), 15_000);
     };
     if (known) {
       draw(known, depositError);
-      if (!isFinal(known.status)) app.timer = setTimeout(() => void poll().catch(() => {}), 20_000);
+      if (!isFinal(known.status)) app.timer = setTimeout(() => void poll().catch(() => {}), 15_000);
     } else {
       box.append(h("small", { class: "muted" }, "…"));
       await poll().catch((e) => box.replaceChildren(app.error(e)));
@@ -486,9 +522,9 @@ export async function swapView(app: P2PApp): Promise<void> {
           "ul",
           { class: "p2p-quotes" },
           list.map((r) => {
-            const open = h("button", { class: "btn secondary small", type: "button" }, t("Ver", "View"));
-            open.onclick = () => void app.busy(open, () => showTrade(r), history);
-            return h("li", {}, h("span", {}, h("strong", {}, `${r.amount_from} ${r.from} → ${r.to}`), h("small", { class: "muted" }, ` · ${new Date(r.at * 1000).toLocaleDateString(app.lang)} · ${r.provider} · ${r.status ?? "?"}`)), open);
+            const open = r.official ? h("a", { class: "btn secondary small", href: `#/oficial/${r.id}` }, t("Ver", "View")) : h("button", { class: "btn secondary small", type: "button" }, t("Ver", "View"));
+            if (!r.official) open.onclick = () => void app.busy(open as HTMLButtonElement, () => showTrade(r), history);
+            return h("li", {}, h("span", {}, h("strong", {}, `${r.amount_from} ${r.from} → ${r.to}`), h("small", { class: "muted" }, ` · ${new Date(r.at * 1000).toLocaleDateString(app.lang)} · ${r.provider} · ${statusLabel(r.status)}`)), open);
           }),
         ),
       ),
@@ -538,6 +574,6 @@ export async function swapView(app: P2PApp): Promise<void> {
     );
   }
   // Si hay un cambio sin terminar, se retoma al entrar.
-  const pending = (v.swaps ?? []).find((r) => !r.official && !isFinal(r.status) && Date.now() / 1000 - r.at < 86_400);
+  const pending = (v.swaps ?? []).find((r) => !r.official && !isFinal(r.status) && nowS() - r.at < 86_400 && !(!r.deposit_tx && (r.status === "new" || r.status === "waiting") && r.expires_at && r.expires_at < nowS()));
   if (pending) void showTrade(pending).catch(() => {});
 }
