@@ -242,6 +242,10 @@ const TXT = {
     "Non è stato possibile aprire il tuo wallet Monero ora. Controlla la connessione e riprova; se continua, apri la scheda Wallet per sincronizzarlo.",
   ],
   syncing: ["Sincronizando tu wallet de Monero… {0} %", "Syncing your Monero wallet… {0}%", "Sincronizando sua carteira Monero… {0}%", "Синхронизация кошелька Monero… {0}%", "Monero-Wallet wird synchronisiert… {0} %", "Synchronisation de ton portefeuille Monero… {0} %", "Sincronizzazione del wallet Monero… {0}%"],
+  searchCoin: ["Busca una moneda o red", "Search a coin or network", "Busque uma moeda ou rede", "Найдите монету или сеть", "Coin oder Netzwerk suchen", "Cherche une crypto ou un réseau", "Cerca una moneta o una rete"],
+  results: ["Resultados", "Results", "Resultados", "Результаты", "Ergebnisse", "Résultats", "Risultati"],
+  noMatch: ["Ninguna moneda coincide.", "No coin matches.", "Nenhuma moeda corresponde.", "Нет подходящих монет.", "Keine passende Coin.", "Aucune crypto ne correspond.", "Nessuna moneta corrisponde."],
+  loadingMore: ["Cargando más monedas…", "Loading more coins…", "Carregando mais moedas…", "Загружаем другие монеты…", "Weitere Coins werden geladen…", "Chargement d'autres cryptos…", "Caricamento di altre monete…"],
   close: ["Cerrar", "Close", "Fechar", "Закрыть", "Schließen", "Fermer", "Chiudi"],
   pillBuy: ["Compra", "Buy", "Compra", "Покупка", "Kauf", "Achat", "Acquisto"],
   pillSell: ["Venta", "Sell", "Venda", "Продажа", "Verkauf", "Vente", "Vendita"],
@@ -423,7 +427,7 @@ export const USDC_NETS = [
 ] as const;
 
 /** Una opción del selector: wallet interna u otra moneda de Trocador. */
-type Opt = { key: string; label: string; leg: Leg; usdc: boolean };
+type Opt = { key: string; label: string; leg: Leg; usdc: boolean; ticker: string; net: string; mine?: boolean; img?: string };
 const INTERNAL_LABEL: Record<Exclude<Internal, "xmr">, string> = {
   usdc: "USDC · Arbitrum One",
   usdt: "USDT · Arbitrum One",
@@ -434,14 +438,23 @@ const internalOpt = (c: Exclude<Internal, "xmr">): Opt => ({
   label: `${INTERNAL_LABEL[c]} — ${ot("yourWallet")}`,
   leg: { kind: "internal", coin: c },
   usdc: c === "usdc",
+  ticker: c,
+  net: "Arbitrum One",
+  mine: true,
 });
 const isInternalArb = (tk: string, nw: string) => nw === "Arbitrum" && ["usdt", "usdc", "eth"].includes(tk);
-const otherOpt = (c: { ticker: string; network: string; memo?: boolean; label?: string; name?: string }): Opt => ({
-  key: `o:${c.ticker}|${c.network}`,
-  label: c.label ?? `${c.ticker.toUpperCase()} · ${c.name ? `${c.name} (${c.network})` : c.network}`,
-  leg: { kind: "other", ticker: c.ticker, network: c.network, memo: !!c.memo },
-  usdc: c.ticker === "usdc",
-});
+const otherOpt = (c: { ticker: string; network: string; memo?: boolean; label?: string; name?: string; img?: string }): Opt => {
+  const label = c.label ?? `${c.ticker.toUpperCase()} · ${c.name ? (c.name.includes(`(${c.network})`) ? c.name : `${c.name} (${c.network})`) : c.network}`;
+  return {
+    key: `o:${c.ticker}|${c.network}`,
+    label,
+    leg: { kind: "other", ticker: c.ticker, network: c.network, memo: !!c.memo },
+    usdc: c.ticker === "usdc",
+    ticker: c.ticker,
+    net: label.includes(" · ") ? label.slice(label.indexOf(" · ") + 3) : c.network,
+    ...(c.img ? { img: c.img } : {}),
+  };
+};
 const USDC_ORDER = ["SOL", "ERC20", "base"];
 
 /**
@@ -457,7 +470,7 @@ export function coinOptions(extra: TrocadorCoin[] | null): {
   const seen = new Set(usdcPop.map((c) => `${c.ticker}|${c.network}`));
   const usdcMore = (extra ?? []).filter((c) => c.ticker.toLowerCase() === "usdc" && !isInternalArb("usdc", c.network) && !seen.has(`usdc|${c.network}`));
   return {
-    usdc: [internalOpt("usdc"), ...usdcPop.map(otherOpt), ...usdcMore.map((c) => otherOpt({ ...c, ticker: "usdc", label: `USDC · ${c.network}` }))],
+    usdc: [internalOpt("usdc"), ...usdcPop.map(otherOpt), ...usdcMore.map((c) => otherOpt({ ...c, ticker: "usdc", label: `USDC · ${c.network}`, img: c.img }))],
     other: [internalOpt("usdt"), internalOpt("eth"), ...popular.filter((c) => c.ticker !== "usdc").map(otherOpt)],
   };
 }
@@ -556,35 +569,85 @@ export function officialSheet(app: P2PApp, wantBuy: boolean, startNet?: string) 
 
   // Selector de la moneda que no es XMR (lo que pagas al comprar, lo que recibes al vender).
   let extra: TrocadorCoin[] | null = null;
-  const pick = h("select", { id: "p2p-o-coin" });
-  const fillPick = (keep?: string) => {
+  let opts: Opt[] = [];
+  let cur = wantBuy && startNet && startNet !== "Arbitrum" ? `o:usdc|${startNet}` : "i:usdc";
+  const optIcon = (o: Opt, size: number) => iconEl(o.ticker, o.img, SWAP_API, size);
+  const pickBtn = h("button", { id: "p2p-o-coin", class: "coin-btn", type: "button", "aria-expanded": "false" });
+  const search = h("input", { class: "p2p-coin-search", type: "search", autocomplete: "off", spellcheck: false, placeholder: ot("searchCoin") });
+  const list = h("ul", { class: "coin-list" });
+  const panel = h("div", { class: "coin-panel", hidden: true }, search, list);
+  const pickWrap = h("div", { class: "coin-pick" }, pickBtn, panel);
+  let onPick = () => {};
+  const closePanel = () => {
+    panel.hidden = true;
+    pickBtn.setAttribute("aria-expanded", "false");
+  };
+  const renderBtn = () => {
+    const o = optOf();
+    pickBtn.replaceChildren(h("span", { class: "coin-sel" }, optIcon(o, 22), h("strong", {}, o.ticker.toUpperCase()), h("small", {}, o.net + (o.mine ? " · " + ot("yourWallet") : ""))), h("span", { class: "coin-caret", "aria-hidden": "true" }, icon("chevron")));
+  };
+  const option = (o: Opt) => {
+    const b = h("button", { class: "coin-opt", type: "button" }, optIcon(o, 22), h("strong", {}, o.ticker.toUpperCase()), h("span", {}, o.net + (o.mine ? " · " + ot("yourWallet") : "")));
+    b.onclick = () => {
+      if (!opts.some((x) => x.key === o.key)) opts.push(o);
+      cur = o.key;
+      closePanel();
+      renderBtn();
+      onPick();
+    };
+    return h("li", {}, b);
+  };
+  const fillList = () => {
+    const { usdc, other } = coinOptions(extra);
+    const q = search.value.trim().toLowerCase();
+    if (!q) {
+      return list.replaceChildren(
+        h("li", { class: "meta" }, "USDC"),
+        ...usdc.map(option),
+        h("li", { class: "meta" }, extra ? ot("otherCrypto") : `${ot("otherCrypto")} · ${ot("loadingMore")}`),
+        ...other.map(option),
+      );
+    }
+    // Al buscar: las opciones conocidas y toda la lista de Trocador (sin XMR ni las wallets de Arbitrum, que ya están).
+    const known = [...usdc, ...other];
+    const rank = (o: Opt) => (o.ticker === q ? 0 : o.ticker.startsWith(q) ? 1 : 2);
+    const keys = new Set(known.map((o) => o.key));
+    const more = (extra ?? []).filter((c) => c.ticker.toLowerCase() !== "xmr" && !isInternalArb(c.ticker.toLowerCase(), c.network)).map((c) => otherOpt({ ...c, ticker: c.ticker.toLowerCase() })).filter((o) => !keys.has(o.key));
+    const hits = [...known, ...more].filter((o) => `${o.ticker} ${o.label} ${o.net}`.toLowerCase().includes(q))
+      // Primero la moneda exacta, luego las que empiezan igual.
+      .sort((a, b) => rank(a) - rank(b))
+      .slice(0, 40);
+    list.replaceChildren(h("li", { class: "meta" }, hits.length ? ot("results") : ot("noMatch")), ...hits.map(option));
+  };
+  search.oninput = fillList;
+  pickBtn.onclick = () => {
+    if (!panel.hidden) return closePanel();
+    panel.hidden = false;
+    pickBtn.setAttribute("aria-expanded", "true");
+    search.value = "";
+    fillList();
+    search.focus();
+  };
+  // Tocar fuera del selector lo cierra.
+  sheet.addEventListener("click", (e) => !pickWrap.contains(e.target as Node) && closePanel());
+  const resetOpts = () => {
     const { usdc, other } = coinOptions(extra);
     const all = [...usdc, ...other];
-    const cur = keep ?? pick.value;
-    pick.replaceChildren(
-      h(
-        "optgroup",
-        { label: "USDC" },
-        usdc.map((o) => h("option", { value: o.key }, o.label)),
-      ),
-      h(
-        "optgroup",
-        { label: ot("otherCrypto") },
-        other.map((o) => h("option", { value: o.key }, o.label)),
-      ),
-    );
-    pick.value = all.some((o) => o.key === cur) ? cur : usdc[0]!.key;
-    return all;
+    const chosen = opts.find((o) => o.key === cur);
+    opts = chosen && !all.some((o) => o.key === cur) ? [...all, chosen] : all;
+    if (!opts.some((o) => o.key === cur)) cur = usdc[0]!.key;
   };
-  let opts = fillPick(wantBuy && startNet && startNet !== "Arbitrum" ? `o:usdc|${startNet}` : "i:usdc");
+  resetOpts();
   void call<TrocadorCoin[]>("/v1/trocador/coins?v=2").then(
     (c) => {
       extra = c;
-      opts = fillPick();
+      resetOpts();
+      if (!panel.hidden) fillList();
     },
     () => {},
   );
-  const optOf = () => opts.find((o) => o.key === pick.value) ?? opts[0]!;
+  const optOf = () => opts.find((o) => o.key === cur) ?? opts[0]!;
+  renderBtn();
 
   const amount = h("input", {
     id: "p2p-o-amt",
@@ -679,7 +742,10 @@ export function officialSheet(app: P2PApp, wantBuy: boolean, startNet?: string) 
     );
   }
 
-  pick.onchange = sync;
+  onPick = () => {
+    sync();
+    relabel();
+  };
   amount.oninput = requote;
   max.onclick = () =>
     void app.busy(
@@ -791,7 +857,7 @@ export function officialSheet(app: P2PApp, wantBuy: boolean, startNet?: string) 
 
   // Un mismo elemento solo puede estar en un lugar: se arman únicamente los campos del lado elegido.
   const amountF = app.field(ot("amountIn", "…"), h("div", { class: "p2p-suffix" }, amount, max, unit));
-  const pickF = app.field(wantBuy ? ot("payWith") : ot("youReceive"), pick);
+  const pickF = app.field(wantBuy ? ot("payWith") : ot("youReceive"), pickWrap);
   const fieldsBuy = [pickF, amountF];
   const fieldsSell = [amountF, pickF];
   out.replaceChildren(
@@ -813,7 +879,6 @@ export function officialSheet(app: P2PApp, wantBuy: boolean, startNet?: string) 
   const amtLabel = (wantBuy ? fieldsBuy[1] : fieldsSell[0])!.querySelector("label");
   amtLabel?.setAttribute("for", amount.id);
   const relabel = () => amtLabel && (amtLabel.textContent = ot("amountIn", legName(legs().from)));
-  pick.addEventListener("change", relabel);
   relabel();
   sync();
   amount.focus();
