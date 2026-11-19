@@ -264,5 +264,8 @@
   "Non-custodial USDT to XMR atomic swaps": "Atomic swaps de USDT para XMR sem custódia",
   "Instant-exchange quotes for 2,500+ coins": "Cotações de exchanges instantâneas para mais de 2.500 moedas",
   "No account, no KYC": "Sem conta, sem KYC",
-  "Open source (AGPL-3.0)": "Código aberto (AGPL-3.0)"
+  "Open source (AGPL-3.0)": "Código aberto (AGPL-3.0)",
+  "MoneroP2P guarantee:": "Garantia MoneroP2P:",
+  "every transaction is backed by the platform. If you don't receive what you bought and you aren't refunded, MoneroP2P pays you back.": "todas as transações são respaldadas pela plataforma. Se você não receber o que comprou e não for reembolsado, a MoneroP2P devolve seu pagamento.",
+  "Contact us with the swap ID": "Fale conosco com o ID da troca"
 }

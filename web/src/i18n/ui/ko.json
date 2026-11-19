@@ -260,5 +260,8 @@
   "Non-custodial USDT to XMR atomic swaps": "USDT에서 XMR로의 비수탁형 아토믹 스왑",
   "Instant-exchange quotes for 2,500+ coins": "2,500개 이상 코인의 즉시 교환 견적",
   "No account, no KYC": "계정 없음, KYC 없음",
-  "Open source (AGPL-3.0)": "오픈소스 (AGPL-3.0)"
+  "Open source (AGPL-3.0)": "오픈소스 (AGPL-3.0)",
+  "MoneroP2P guarantee:": "MoneroP2P 보장:",
+  "every transaction is backed by the platform. If you don't receive what you bought and you aren't refunded, MoneroP2P pays you back.": "모든 거래는 플랫폼이 보장합니다. 구매한 것을 받지 못하고 환불도 받지 못하면 MoneroP2P가 결제 금액을 돌려드립니다.",
+  "Contact us with the swap ID": "교환 ID와 함께 문의하세요"
 }

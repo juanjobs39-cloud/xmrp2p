@@ -260,5 +260,8 @@
   "Non-custodial USDT to XMR atomic swaps": "USDT से XMR के नॉन-कस्टोडियल एटॉमिक स्वैप",
   "Instant-exchange quotes for 2,500+ coins": "2,500+ कॉइन के लिए इंस्टेंट एक्सचेंज कोट",
   "No account, no KYC": "न खाता, न KYC",
-  "Open source (AGPL-3.0)": "ओपन सोर्स (AGPL-3.0)"
+  "Open source (AGPL-3.0)": "ओपन सोर्स (AGPL-3.0)",
+  "MoneroP2P guarantee:": "MoneroP2P गारंटी:",
+  "every transaction is backed by the platform. If you don't receive what you bought and you aren't refunded, MoneroP2P pays you back.": "सभी लेन-देन प्लेटफ़ॉर्म द्वारा समर्थित हैं। अगर आपको खरीदी गई चीज़ नहीं मिलती और रिफ़ंड नहीं होता, तो MoneroP2P आपका भुगतान लौटा देगा।",
+  "Contact us with the swap ID": "स्वैप ID के साथ हमसे संपर्क करें"
 }

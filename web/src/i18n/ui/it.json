@@ -263,5 +263,8 @@
   "Return leftover gas to my payout address": "Restituisci il gas avanzato al mio indirizzo di pagamento",
   "The maker needs JavaScript.": "Il maker ha bisogno di JavaScript.",
   "Network": "Rete",
-  "Practice (testnet)": "Prova (testnet)"
+  "Practice (testnet)": "Prova (testnet)",
+  "MoneroP2P guarantee:": "Garanzia MoneroP2P:",
+  "every transaction is backed by the platform. If you don't receive what you bought and you aren't refunded, MoneroP2P pays you back.": "tutte le transazioni sono garantite dalla piattaforma. Se non ricevi ciò che hai comprato e non vieni rimborsato, MoneroP2P ti restituisce il pagamento.",
+  "Contact us with the swap ID": "Scrivici con l'ID dello scambio"
 }

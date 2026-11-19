@@ -260,5 +260,8 @@
   "Non-custodial USDT to XMR atomic swaps": "非托管的 USDT 到 XMR 原子交换",
   "Instant-exchange quotes for 2,500+ coins": "2,500 多种币的即时兑换报价",
   "No account, no KYC": "无需账户，无需 KYC",
-  "Open source (AGPL-3.0)": "开源 (AGPL-3.0)"
+  "Open source (AGPL-3.0)": "开源 (AGPL-3.0)",
+  "MoneroP2P guarantee:": "MoneroP2P 保障：",
+  "every transaction is backed by the platform. If you don't receive what you bought and you aren't refunded, MoneroP2P pays you back.": "所有交易均由平台担保。如果你没有收到所购资产且未获退款，MoneroP2P 将退还你的付款。",
+  "Contact us with the swap ID": "请附上兑换 ID 联系我们"
 }

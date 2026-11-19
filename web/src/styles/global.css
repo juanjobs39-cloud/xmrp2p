@@ -512,3 +512,8 @@ header.site nav a, footer.site a, .breadcrumbs a { transition: color 0.15s ease,
   details[open] > :not(summary) { animation: rise 0.2s ease both; }
 }
 .notice.acct-hint { background: var(--card); border-color: var(--line-strong); margin: 0 0 1rem; }
+
+/* Leyenda de garantía bajo el formulario del exchange. */
+.guarantee { display: flex; gap: 0.5rem; align-items: flex-start; margin: 0.8rem 0 0; padding: 0.7rem 0.9rem; border: 1px solid rgb(74 222 128 / 0.3); border-radius: 12px; background: rgb(74 222 128 / 0.07); font-size: 0.9rem; color: var(--fg); }
+.guarantee .ico { flex: none; width: 1.1em; height: 1.1em; margin-top: 0.15em; color: rgb(74 222 128); }
+.guarantee a { color: var(--accent); }

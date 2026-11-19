@@ -260,5 +260,8 @@
   "Non-custodial USDT to XMR atomic swaps": "اتمیک سواپ غیرامانی USDT به XMR",
   "Instant-exchange quotes for 2,500+ coins": "قیمت صرافی‌های فوری برای بیش از ۲٬۵۰۰ کوین",
   "No account, no KYC": "بدون حساب، بدون KYC",
-  "Open source (AGPL-3.0)": "متن‌باز (AGPL-3.0)"
+  "Open source (AGPL-3.0)": "متن‌باز (AGPL-3.0)",
+  "MoneroP2P guarantee:": "ضمانت MoneroP2P:",
+  "every transaction is backed by the platform. If you don't receive what you bought and you aren't refunded, MoneroP2P pays you back.": "همه تراکنش‌ها با پشتوانه پلتفرم انجام می‌شوند. اگر آنچه خریده‌اید را دریافت نکنید و مبلغ به شما بازگردانده نشود، MoneroP2P پرداخت شما را برمی‌گرداند.",
+  "Contact us with the swap ID": "با شناسه مبادله با ما تماس بگیرید"
 }

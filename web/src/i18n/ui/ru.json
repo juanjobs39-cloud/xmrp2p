@@ -264,5 +264,8 @@
   "Non-custodial USDT to XMR atomic swaps": "Некастодиальные атомарные свопы USDT на XMR",
   "Instant-exchange quotes for 2,500+ coins": "Котировки мгновенных обменников для 2500+ монет",
   "No account, no KYC": "Без аккаунта и KYC",
-  "Open source (AGPL-3.0)": "Открытый код (AGPL-3.0)"
+  "Open source (AGPL-3.0)": "Открытый код (AGPL-3.0)",
+  "MoneroP2P guarantee:": "Гарантия MoneroP2P:",
+  "every transaction is backed by the platform. If you don't receive what you bought and you aren't refunded, MoneroP2P pays you back.": "все сделки обеспечены платформой. Если вы не получили купленное и вам не вернули средства, MoneroP2P вернёт ваш платёж.",
+  "Contact us with the swap ID": "Напишите нам с ID обмена"
 }
