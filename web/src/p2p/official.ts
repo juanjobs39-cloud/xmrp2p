@@ -18,8 +18,8 @@ import { autoDeposit, DECIMALS, isFinal, planSwap, upsertSwap, type Internal, ty
 import { evmAsset } from "./swap-view";
 import { clock, h, icon, kids, nowS, type Child } from "./ui";
 import { balances, prepareEvm, publicClient, sendEvm } from "./wallet-evm";
-import { copyButton, evmError, kv, persistXmr, startXmr, WALLETS_ON, xmrError, xmrReady, XMR_EXPLORER } from "./wallet-view";
-import { evmAddress, evmKey, formatAmount, parseAmount } from "./wallets";
+import { copyButton, evmError, kv, persistXmr, retryXmr, startXmr, WALLETS_ON, xmrError, xmrReady, XMR_EXPLORER } from "./wallet-view";
+import { evmAddress, evmKey, formatAmount, moneroSpendKey, parseAmount } from "./wallets";
 
 // ---------------------------------------------------------------- idiomas
 const LANGS = ["es", "en", "pt", "ru", "de", "fr", "it"] as const;
@@ -223,6 +223,25 @@ const TXT = {
     "Crée d'abord tes portefeuilles dans l'onglet Wallet.",
     "Prima crea i tuoi wallet nella scheda Wallet.",
   ],
+  notEnough: [
+    "No tienes suficiente {0} disponible en tu wallet para este monto.",
+    "You don't have enough {0} available in your wallet for this amount.",
+    "Você não tem {0} suficiente disponível na carteira para este valor.",
+    "В кошельке недостаточно доступных {0} для этой суммы.",
+    "Du hast nicht genug verfügbares {0} in deiner Wallet für diesen Betrag.",
+    "Tu n'as pas assez de {0} disponible dans ton portefeuille pour ce montant.",
+    "Non hai abbastanza {0} disponibile nel wallet per questo importo.",
+  ],
+  xmrFail: [
+    "No se pudo abrir tu wallet de Monero en este momento. Revisa tu conexión e inténtalo de nuevo; si sigue, abre la pestaña Wallet para que se sincronice.",
+    "Your Monero wallet could not be opened right now. Check your connection and try again; if it keeps failing, open the Wallet tab so it syncs.",
+    "Não foi possível abrir sua carteira Monero agora. Verifique a conexão e tente de novo; se continuar, abra a aba Wallet para sincronizar.",
+    "Сейчас не удалось открыть ваш кошелёк Monero. Проверьте соединение и попробуйте снова; если не помогает, откройте вкладку Wallet для синхронизации.",
+    "Deine Monero-Wallet konnte gerade nicht geöffnet werden. Prüfe deine Verbindung und versuch es erneut; wenn es weiter fehlschlägt, öffne den Tab Wallet zum Synchronisieren.",
+    "Ton portefeuille Monero n'a pas pu s'ouvrir pour le moment. Vérifie ta connexion et réessaie ; si ça continue, ouvre l'onglet Wallet pour le synchroniser.",
+    "Non è stato possibile aprire il tuo wallet Monero ora. Controlla la connessione e riprova; se continua, apri la scheda Wallet per sincronizzarlo.",
+  ],
+  syncing: ["Sincronizando tu wallet de Monero… {0} %", "Syncing your Monero wallet… {0}%", "Sincronizando sua carteira Monero… {0}%", "Синхронизация кошелька Monero… {0}%", "Monero-Wallet wird synchronisiert… {0} %", "Synchronisation de ton portefeuille Monero… {0} %", "Sincronizzazione del wallet Monero… {0}%"],
   close: ["Cerrar", "Close", "Fechar", "Закрыть", "Schließen", "Fermer", "Chiudi"],
   pillBuy: ["Compra", "Buy", "Compra", "Покупка", "Kauf", "Achat", "Acquisto"],
   pillSell: ["Venta", "Sell", "Venda", "Продажа", "Verkauf", "Vente", "Vendita"],
@@ -519,7 +538,21 @@ export function officialSheet(app: P2PApp, wantBuy: boolean, startNet?: string) 
   const pub = publicClient(net);
   // La wallet de Monero arranca solo cuando hace falta (Máx. o crear el cambio).
   let stX: ReturnType<typeof startXmr> | null = null;
-  const xmrSt = () => (stX ??= startXmr(app));
+  const xmrSt = () => {
+    if (stX?.error) (retryXmr(app), (stX = null));
+    return (stX ??= startXmr(app));
+  };
+  /** Espera la wallet de Monero sincronizada, con avance en pantalla y error entendible. */
+  const xmrSynced = async () => {
+    const st = xmrSt();
+    await xmrReady(st, true, (pct) => msg.replaceChildren(h("small", { class: "muted" }, ot("syncing", String(Math.floor(pct * 100)))))).catch(() => Promise.reject(new Error(ot("xmrFail"))));
+    msg.replaceChildren();
+    return st;
+  };
+  /** Dirección Monero de la cuenta: sale de la semilla, no necesita abrir ni sincronizar la wallet. */
+  let xmrAddr: string | null = null;
+  const myXmr = async () => (xmrAddr ??= (await (await xmrLib()).walletKeys({ network: v.network, spendKey: moneroSpendKey(seed) })).address);
+  const msg = h("div");
 
   // Selector de la moneda que no es XMR (lo que pagas al comprar, lo que recibes al vender).
   let extra: TrocadorCoin[] | null = null;
@@ -655,8 +688,7 @@ export function officialSheet(app: P2PApp, wantBuy: boolean, startNet?: string) 
         const sent = legs().from;
         if (sent.kind !== "internal") return;
         if (sent.coin === "xmr") {
-          const st = xmrSt();
-          await xmrReady(st, true);
+          const st = await xmrSynced();
           amount.value = formatAmount(BigInt(st.info!.unlocked ?? st.info!.balance), DECIMALS.xmr);
         } else {
           const b = await balances(pub, net, evm);
@@ -664,7 +696,7 @@ export function officialSheet(app: P2PApp, wantBuy: boolean, startNet?: string) 
         }
         requote();
       },
-      out,
+      msg,
     );
 
   go.onclick = () =>
@@ -679,10 +711,22 @@ export function officialSheet(app: P2PApp, wantBuy: boolean, startNet?: string) 
         // Cotización fresca: la de la pantalla puede tener minutos.
         if (!quote || quote.amount !== amt || Date.now() - quote.at > 8 * 60_000) await getQuote(amt);
         if (!quote) throw new Error(ot("noQuote"));
-        const st = xmrSt();
-        await xmrReady(st, false);
-        const receive = p.receiveIn === "xmr" ? st.address! : p.receiveIn === "evm" ? evm : dest.value.trim();
-        const ownRefund = p.payFrom === "xmr" ? st.address! : p.payFrom ? evm : refund.value.trim();
+        // Antes de crear nada en el exchange: que la wallet de la cuenta de verdad tenga ese monto.
+        const sent = legs().from;
+        if (sent.kind === "internal") {
+          const need = parseAmount(amt, DECIMALS[sent.coin]);
+          if (sent.coin === "xmr") {
+            const st = await xmrSynced();
+            if (BigInt(st.info?.unlocked ?? 0) < need) throw new Error(ot("notEnough", "XMR"));
+          } else {
+            const b = await balances(pub, net, evm);
+            const have = sent.coin === "usdc" ? b.usdc : sent.coin === "usdt" ? b.token : b.eth;
+            if (have < need) throw new Error(ot("notEnough", sent.coin.toUpperCase()));
+          }
+        }
+        const mineXmr = p.receiveIn === "xmr" || p.payFrom === "xmr" ? await myXmr() : "";
+        const receive = p.receiveIn === "xmr" ? mineXmr : p.receiveIn === "evm" ? evm : dest.value.trim();
+        const ownRefund = p.payFrom === "xmr" ? mineXmr : p.payFrom ? evm : refund.value.trim();
         const proof = p.receiveIn ? await signAddress(app.acct!, "mainnet", p.receiveIn, receive) : null;
         let trade: TrocadorTrade | null = null;
         let last: unknown;
@@ -742,7 +786,7 @@ export function officialSheet(app: P2PApp, wantBuy: boolean, startNet?: string) 
         close();
         location.hash = `#/oficial/${rec.id}`;
       },
-      out,
+      msg,
     );
 
   // Un mismo elemento solo puede estar en un lugar: se arman únicamente los campos del lado elegido.
@@ -760,6 +804,7 @@ export function officialSheet(app: P2PApp, wantBuy: boolean, startNet?: string) 
       refundF,
       h("p", { class: "p2p-escrow-note" }, icon("shield"), h("span", {}, h("strong", {}, ot("guarTitle") + ": "), ot("guarText"))),
       practice ? h("p", { class: "notice warn" }, ot("onlyReal")) : null,
+      msg,
       go,
     ),
   );

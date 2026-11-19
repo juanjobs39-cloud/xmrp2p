@@ -103,6 +103,11 @@ export function startXmr(app: P2PApp): XmrState {
   return st;
 }
 
+/** Si la wallet de Monero falló al abrir o sincronizar, la olvida para que el siguiente startXmr lo intente de nuevo. */
+export function retryXmr(app: P2PApp): void {
+  if (X?.error && app.vault && X.owner === app.vault.key) X = null;
+}
+
 /** La wallet de Monero de esta cuenta si ya se abrió en esta pestaña (no la abre). */
 export function xmrPeek(app: P2PApp): XmrState | null {
   return X && app.vault && X.owner === app.vault.key ? X : null;
