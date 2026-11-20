@@ -148,3 +148,5 @@ Was du über die Plattform prüfen kannst: [Ist MoneroP2P seriös?](/de/is-moner
 Krypto ist volatil und Transaktionen lassen sich nicht rückgängig machen. Lies den [Risikohinweis](/de/risk-notice/).
 
 Nicht in Deutschland? [Monero in deinem Land kaufen](/de/news/how-to-buy-monero-in-your-country/).
+
+Du hast USDC? [Monero mit USDC kaufen: Solana, Arbitrum, Base oder Ethereum](/de/news/monero-mit-usdc-kaufen/).

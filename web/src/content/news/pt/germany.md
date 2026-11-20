@@ -146,3 +146,5 @@ O que você pode verificar sobre a plataforma: [A MoneroP2P é confiável?](/pt/
 Cripto é volátil e as transações não podem ser revertidas. Leia o [aviso de riscos](/pt/risk-notice/).
 
 Não está na Alemanha? [Como comprar Monero no seu país](/pt/news/how-to-buy-monero-in-your-country/).
+
+Tem USDC? [Como comprar Monero com USDC na Solana, Arbitrum, Base ou Ethereum](/pt/news/comprar-monero-com-usdc/).

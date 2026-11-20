@@ -146,3 +146,5 @@ faq:
 Криптовалюты волатильны, а транзакции необратимы. Прочитайте [уведомление о рисках](/ru/risk-notice/).
 
 Не в Германии? [Как купить Monero в своей стране](/ru/news/how-to-buy-monero-in-your-country/).
+
+Есть USDC? [Как купить Monero за USDC в Solana, Arbitrum, Base или Ethereum](/ru/news/buy-monero-with-usdc/).

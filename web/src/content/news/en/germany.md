@@ -147,3 +147,5 @@ What you can verify about the platform: [Is MoneroP2P legit?](/en/is-monerop2p-l
 Crypto is volatile and transactions cannot be reversed. Read the [risk notice](/en/risk-notice/).
 
 Not in Germany? [How to buy Monero in your country](/en/news/how-to-buy-monero-in-your-country/).
+
+Holding USDC? [How to buy Monero with USDC on Solana, Arbitrum, Base or Ethereum](/en/news/buy-monero-with-usdc/).

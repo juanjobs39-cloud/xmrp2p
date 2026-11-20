@@ -110,3 +110,5 @@ P2P-рынки с эскроу, такие как MoneroP2P Fiat, и децен�
 [Купить Monero сейчас →](/ru/buy-monero/)
 
 Живёте в Германии? [Как купить Monero в Германии в 2026 году](/ru/news/buy-monero-in-germany/).
+
+Есть USDC? [Как купить Monero за USDC в Solana, Arbitrum, Base или Ethereum](/ru/news/buy-monero-with-usdc/).

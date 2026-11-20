@@ -455,7 +455,7 @@ const otherOpt = (c: { ticker: string; network: string; memo?: boolean; label?: 
     ...(c.img ? { img: c.img } : {}),
   };
 };
-const USDC_ORDER = ["SOL", "ERC20", "base"];
+const USDC_ORDER = ["SOL", "ERC20", "base", "BEP20", "MATIC"];
 
 /**
  * Opciones del selector: primero USDC (la wallet de Arbitrum y luego todas las redes de USDC), después

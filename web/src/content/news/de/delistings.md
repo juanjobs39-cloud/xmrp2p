@@ -110,3 +110,5 @@ Krypto zu kaufen und zu verkaufen birgt Risiken, und die Gesetze sind je nach La
 [Jetzt Monero kaufen →](/de/buy-monero/)
 
 Du bist in Deutschland? [Monero kaufen in Deutschland 2026](/de/news/monero-kaufen-in-deutschland/).
+
+Du hast USDC? [Monero mit USDC kaufen: Solana, Arbitrum, Base oder Ethereum](/de/news/monero-mit-usdc-kaufen/).

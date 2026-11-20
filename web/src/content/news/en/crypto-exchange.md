@@ -145,3 +145,5 @@ Crypto is volatile and transactions cannot be reversed. Read the [risk notice](/
 Where are you? Guides with the local payment method: [buy Monero in Mexico](/en/news/where-to-buy-monero-in-mexico/) · [buy Monero in your country](/en/news/how-to-buy-monero-in-your-country/).
 
 In Germany? [How to buy Monero in Germany in 2026](/en/news/buy-monero-in-germany/).
+
+Holding USDC? [How to buy Monero with USDC on Solana, Arbitrum, Base or Ethereum](/en/news/buy-monero-with-usdc/).

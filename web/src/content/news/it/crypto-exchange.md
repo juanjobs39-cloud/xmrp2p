@@ -145,3 +145,5 @@ Le crypto sono volatili e le transazioni non si possono annullare. Leggi l'[avvi
 Dove sei? Guide con il metodo di pagamento locale: [comprare Monero nel tuo paese](/it/news/how-to-buy-monero-in-your-country/).
 
 Vivi in Germania? [Comprare Monero in Germania nel 2026](/it/news/buy-monero-in-germany/).
+
+Hai USDC? [Comprare Monero con USDC su Solana, Arbitrum, Base o Ethereum](/it/news/comprare-monero-con-usdc/).

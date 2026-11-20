@@ -31,6 +31,8 @@ export const COINS: Coin[] = [
   { ticker: "usdc", network: "Arbitrum", label: "USDC · Arbitrum One", evm: true },
   { ticker: "usdc", network: "base", label: "USDC · Base", evm: true },
   { ticker: "usdc", network: "SOL", label: "USDC · Solana", evm: false },
+  { ticker: "usdc", network: "BEP20", label: "USDC · BNB Chain (BEP20)", evm: true },
+  { ticker: "usdc", network: "MATIC", label: "USDC · Polygon", evm: true },
   { ticker: "sol", network: "Mainnet", label: "SOL · Solana", evm: false },
   { ticker: "bnb", network: "BEP20", label: "BNB · BNB Chain", evm: true },
   { ticker: "ltc", network: "Mainnet", label: "LTC · Litecoin", evm: false },

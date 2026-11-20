@@ -145,3 +145,5 @@ MoneroP2P не придумывает цены: он запрашивает ко
 Где вы находитесь? Гайд с местными способами оплаты для каждой страны: [как купить Monero в своей стране](/ru/news/how-to-buy-monero-in-your-country/).
 
 Живёте в Германии? [Как купить Monero в Германии в 2026 году](/ru/news/buy-monero-in-germany/).
+
+Есть USDC? [Как купить Monero за USDC в Solana, Arbitrum, Base или Ethereum](/ru/news/buy-monero-with-usdc/).

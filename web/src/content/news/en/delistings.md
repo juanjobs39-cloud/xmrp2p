@@ -110,3 +110,5 @@ Buying and selling crypto carries risk and the law varies by country: read the [
 [Buy Monero now →](/en/buy-monero/)
 
 In Germany? [How to buy Monero in Germany in 2026](/en/news/buy-monero-in-germany/).
+
+Holding USDC? [How to buy Monero with USDC on Solana, Arbitrum, Base or Ethereum](/en/news/buy-monero-with-usdc/).

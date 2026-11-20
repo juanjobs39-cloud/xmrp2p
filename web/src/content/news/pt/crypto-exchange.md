@@ -145,3 +145,5 @@ Cripto é volátil e as transações não podem ser revertidas. Leia o [aviso de
 Onde você está? Guia com o método de pagamento local de cada país: [como comprar Monero no seu país](/pt/news/how-to-buy-monero-in-your-country/).
 
 Mora na Alemanha? [Como comprar Monero na Alemanha em 2026](/pt/news/buy-monero-in-germany/).
+
+Tem USDC? [Como comprar Monero com USDC na Solana, Arbitrum, Base ou Ethereum](/pt/news/comprar-monero-com-usdc/).

@@ -145,3 +145,5 @@ Les cryptos sont volatiles et les transactions sont irréversibles. Lis l'[avert
 Où es-tu ? Guides avec le moyen de paiement local : [acheter du Monero dans ton pays](/fr/news/how-to-buy-monero-in-your-country/).
 
 Tu vis en Allemagne ? [Acheter du Monero en Allemagne en 2026](/fr/news/buy-monero-in-germany/).
+
+Tu as des USDC ? [Acheter du Monero avec des USDC sur Solana, Arbitrum, Base ou Ethereum](/fr/news/acheter-monero-avec-usdc/).
